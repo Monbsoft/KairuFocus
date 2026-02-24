@@ -12,12 +12,44 @@
 | ~~#1~~ | ~~BC Tasks — Domain, Application, Adapters, Infrastructure, SQLite, 23 tests~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
 | ~~#2~~ | ~~API REST (ASP.NET Core) + UI Blazor WebAssembly~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
 | ~~#2b~~ | ~~Réécriture spec.md (use cases + diagrammes Mermaid) + prompts agents~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
-| **#3** | **BC Pomodoro** — sessions de focus liées aux tâches | 🔜 Prévu | — |
+| **#3** | **BC Pomodoro** — sessions de focus, chrono circulaire, lien avec Tasks | 🔜 En cours | — |
 | #4 | Tests d'intégration SQLite (`Kairudev.Infrastructure.Tests`) | 📋 Planifié | — |
 | #5 | Configuration externalisée — URL API via `appsettings.json` | 📋 Planifié | — |
 | #6 | BC Journal — log d'activité quotidien alimenté par les sprints | 📋 Planifié | — |
 | #7 | BC Tickets — intégration Jira / Linear / GitHub Issues | 📋 Planifié | — |
 | #8 | .NET MAUI — application desktop/mobile | 📋 Planifié | — |
+
+---
+
+## Itération en cours
+
+**#3 — BC Pomodoro**
+
+### Périmètre validé
+- Configurer les durées (sprint, pause courte, pause longue) — UC-05
+- Démarrer un sprint (`Planned → Active`, chrono lancé) — UC-06
+- Lier une tâche existante au sprint actif — UC-07
+- Mettre à jour le statut d'une tâche depuis le sprint (`InProgress` / `Done`) — UC-08
+- Créer une tâche pendant un sprint (auto-liée) — UC-09
+- Interrompre un sprint (`Active → Interrupted`) — UC-10
+- Terminer un sprint automatiquement à zéro (`Active → Completed`, pause enchaînée) — UC-11
+- UI : horloge circulaire en mode chrono (Blazor WASM)
+
+### Règles métier
+- Durées configurables : sprint, pause courte, pause longue
+- Séquence fixe : 4 sprints complétés → pause longue, sinon pause courte
+- Fin de sprint : automatique à zéro
+- Interruption : possible à tout moment
+- Statuts `PomodoroSession` : `Planned | Active | Completed | Interrupted`
+- Cross-BC : Pomodoro référence Tasks par `TaskId` uniquement (pas d'objet graph)
+
+### Hors scope #3
+- Historique / consultation des sessions passées
+- Notifications sonores / système
+- BC Journal (alimenté par les sprints — itération #6)
+
+### Statut
+🔜 SPÉCIFIER validé — en attente de modélisation (étape 3)
 
 ---
 
