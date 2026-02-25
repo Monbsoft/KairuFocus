@@ -1,3 +1,4 @@
+using Kairudev.Domain.Pomodoro;
 using Kairudev.Domain.Tasks;
 using Kairudev.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,8 @@ public static class DependencyInjection
             options.UseSqlite(connectionString));
 
         services.AddScoped<ITaskRepository, SqliteTaskRepository>();
+        services.AddScoped<IPomodoroSessionRepository, SqlitePomodoroSessionRepository>();
+        services.AddScoped<IPomodoroSettingsRepository, SqlitePomodoroSettingsRepository>();
 
         return services;
     }
