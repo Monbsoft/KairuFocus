@@ -12,7 +12,7 @@
 | ~~#1~~ | ~~BC Tasks — Domain, Application, Adapters, Infrastructure, SQLite, 23 tests~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
 | ~~#2~~ | ~~API REST (ASP.NET Core) + UI Blazor WebAssembly~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
 | ~~#2b~~ | ~~Réécriture spec.md (use cases + diagrammes Mermaid) + prompts agents~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
-| **#3** | **BC Pomodoro** — sessions de focus, chrono circulaire, lien avec Tasks | 🔜 En cours | — |
+| ~~#3~~ | ~~BC Pomodoro — sessions de focus, chrono circulaire, lien avec Tasks~~ | ~~✅ Livré~~ | ~~2026-02-25~~ |
 | #4 | Tests d'intégration SQLite (`Kairudev.Infrastructure.Tests`) | 📋 Planifié | — |
 | #5 | Configuration externalisée — URL API via `appsettings.json` | 📋 Planifié | — |
 | #6 | BC Journal — log d'activité quotidien alimenté par les sprints | 📋 Planifié | — |
@@ -21,57 +21,27 @@
 
 ---
 
-## Itération en cours
-
-**#3 — BC Pomodoro**
-
-### Périmètre validé
-- Configurer les durées (sprint, pause courte, pause longue) — UC-05
-- Démarrer un sprint (`Planned → Active`, chrono lancé) — UC-06
-- Lier une tâche existante au sprint actif — UC-07
-- Mettre à jour le statut d'une tâche depuis le sprint (`InProgress` / `Done`) — UC-08
-- Créer une tâche pendant un sprint (auto-liée) — UC-09
-- Interrompre un sprint (`Active → Interrupted`) — UC-10
-- Terminer un sprint automatiquement à zéro (`Active → Completed`, pause enchaînée) — UC-11
-- UI : horloge circulaire en mode chrono (Blazor WASM)
-
-### Règles métier
-- Durées configurables : sprint, pause courte, pause longue
-- Séquence fixe : 4 sprints complétés → pause longue, sinon pause courte
-- Fin de sprint : automatique à zéro
-- Interruption : possible à tout moment
-- Statuts `PomodoroSession` : `Planned | Active | Completed | Interrupted`
-- Cross-BC : Pomodoro référence Tasks par `TaskId` uniquement (pas d'objet graph)
-
-### Hors scope #3
-- Historique / consultation des sessions passées
-- Notifications sonores / système
-- BC Journal (alimenté par les sprints — itération #6)
-
-### Statut
-⚙️ Plan d'implémentation validé — IMPLÉMENTER en cours (étape 5)
-
-### Décisions architecturales
-- ADR-006 : timer côté client (PeriodicTimer Blazor → PATCH complete)
-- ADR-007 : `Kairudev.Adapters` supprimé — ViewModels et presenters non-HTTP dans Application à partir de ce BC
-
----
-
 ## Dernière itération livrée
 
-**#2b** — Livrée le 2026-02-24
+**#3 — BC Pomodoro** — Livré le 2026-02-25
 
 ### Ce qui a été livré
-- `docs/spec.md` : réécriture complète (UC-01 à UC-04 avec template, diagrammes Mermaid par UC)
-- `CLAUDE.md` / `AGENTS.md` : template use case dans SPÉCIFIER, note Mermaid
-- `.github/copilot-instructions.md` : template use case + séparation spec/project-state
+- **Domain** : `PomodoroSession` (agrégat), `PomodoroSettings` (value object), `PomodoroSessionId`, `PomodoroSessionStatus`, `IPomodoroSessionRepository`, `IPomodoroSettingsRepository`, `DomainErrors.Pomodoro`
+- **Application** : 9 use cases — UC-05 (SaveSettings), UC-06 (StartSession), UC-07 (LinkTask), UC-08 (UpdateTaskStatus), UC-09 (CreateTaskDuringSession), UC-10 (InterruptSession), UC-11 (CompleteSession) + GetSettings + GetCurrentSession
+- **Infrastructure** : EF config (`PomodoroSessionConfiguration`, `PomodoroSettingsConfiguration`), singleton row (`PomodoroSettingsRow`), 2 repositories SQLite, migration `AddPomodoro`
+- **API** : `PomodoroController` (9 endpoints REST) + 9 Presenters HTTP
+- **Web** : `PomodoroApiClient`, `PomodoroDto`, `Pomodoro.razor` (horloge SVG circulaire + `PeriodicTimer` côté client, gestion tâches liées)
+- **Tests** : 35 Domain + 20 Application = **55 tests, 0 échec**
+- **ADR-006** : timer côté client (PeriodicTimer Blazor WASM → PATCH /complete à zéro)
+- **ADR-007** : `Kairudev.Adapters` éliminé — ViewModels et presenters non-HTTP dans Application
 
-### Dette technique
-- URL API hardcodée dans `Program.cs` du Web (`https://localhost:7056`)
-- Pas de tests d'intégration SQLite (`Kairudev.Infrastructure.Tests` vide)
+### Dette technique héritée et courante
+- URL API hardcodée dans `Program.cs` du Web (`https://localhost:7056`) → itération #5
+- Pas de tests d'intégration SQLite (`Kairudev.Infrastructure.Tests` vide) → itération #4
 - `TaskStatus` : alias `DomainTaskStatus` nécessaire dans les tests (conflit namespace)
+- `DomainErrors` : alias `PomodoroErrors` nécessaire quand Tasks et Pomodoro sont tous deux importés
 - `DeveloperTask.StartProgress()` codé dans le domaine, pas exposé en UC ni en endpoint
-- `Kairudev.Adapters` à supprimer et fusionner dans Application (ADR-007, fait dès #3)
+- `Kairudev.Adapters` : projet toujours présent dans la solution mais vide de sens (suppression à planifier)
 
 ---
 
@@ -87,15 +57,19 @@
 ```
 src/
 ├── Kairudev.Domain/
+│   ├── Tasks/
+│   └── Pomodoro/
 ├── Kairudev.Application/
-├── Kairudev.Adapters/
+│   ├── Tasks/
+│   └── Pomodoro/
+├── Kairudev.Adapters/          ← à supprimer (ADR-007)
 ├── Kairudev.Infrastructure/    ← migrations dans Persistence/Migrations/
-├── Kairudev.Api/               ← Tasks/TasksController + Tasks/Presenters/
-└── Kairudev.Web/               ← Services/TaskApiClient + Pages/Tasks.razor
+├── Kairudev.Api/               ← Tasks/ + Pomodoro/
+└── Kairudev.Web/               ← Services/ + Pages/
 tests/
-├── Kairudev.Domain.Tests/
-├── Kairudev.Application.Tests/
-└── Kairudev.Infrastructure.Tests/  ← vide, à compléter
+├── Kairudev.Domain.Tests/      ← Tasks/ + Pomodoro/
+├── Kairudev.Application.Tests/ ← Tasks/ + Pomodoro/
+└── Kairudev.Infrastructure.Tests/  ← vide, à compléter (#4)
 docs/
 ├── spec.md
 └── project-state.md
