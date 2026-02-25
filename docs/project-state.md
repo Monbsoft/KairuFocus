@@ -13,6 +13,7 @@
 | ~~#2~~ | ~~API REST (ASP.NET Core) + UI Blazor WebAssembly~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
 | ~~#2b~~ | ~~Réécriture spec.md (use cases + diagrammes Mermaid) + prompts agents~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
 | ~~#3~~ | ~~BC Pomodoro — sessions de focus, chrono circulaire, lien avec Tasks~~ | ~~✅ Livré~~ | ~~2026-02-25~~ |
+| ~~#3b~~ | ~~.NET Aspire 13.1.1 — AppHost + ServiceDefaults~~ | ~~✅ Livré~~ | ~~2026-02-25~~ |
 | #4 | Tests d'intégration SQLite (`Kairudev.Infrastructure.Tests`) | 📋 Planifié | — |
 | #5 | Configuration externalisée — URL API via `appsettings.json` | 📋 Planifié | — |
 | #6 | BC Journal — log d'activité quotidien alimenté par les sprints | 📋 Planifié | — |
@@ -23,17 +24,20 @@
 
 ## Dernière itération livrée
 
-**#3 — BC Pomodoro** — Livré le 2026-02-25
+**#3b — .NET Aspire** — Livré le 2026-02-25
 
 ### Ce qui a été livré
-- **Domain** : `PomodoroSession` (agrégat), `PomodoroSettings` (value object), `PomodoroSessionId`, `PomodoroSessionStatus`, `IPomodoroSessionRepository`, `IPomodoroSettingsRepository`, `DomainErrors.Pomodoro`
-- **Application** : 9 use cases — UC-05 (SaveSettings), UC-06 (StartSession), UC-07 (LinkTask), UC-08 (UpdateTaskStatus), UC-09 (CreateTaskDuringSession), UC-10 (InterruptSession), UC-11 (CompleteSession) + GetSettings + GetCurrentSession
-- **Infrastructure** : EF config (`PomodoroSessionConfiguration`, `PomodoroSettingsConfiguration`), singleton row (`PomodoroSettingsRow`), 2 repositories SQLite, migration `AddPomodoro`
-- **API** : `PomodoroController` (9 endpoints REST) + 9 Presenters HTTP
-- **Web** : `PomodoroApiClient`, `PomodoroDto`, `Pomodoro.razor` (horloge SVG circulaire + `PeriodicTimer` côté client, gestion tâches liées)
-- **Tests** : 35 Domain + 20 Application = **55 tests, 0 échec**
-- **ADR-006** : timer côté client (PeriodicTimer Blazor WASM → PATCH /complete à zéro)
-- **ADR-007** : `Kairudev.Adapters` éliminé — ViewModels et presenters non-HTTP dans Application
+- **`Kairudev.AppHost`** : orchestration `Kairudev.Api` + `Kairudev.Web` via `DistributedApplication`
+- **`Kairudev.ServiceDefaults`** : OpenTelemetry (traces, métriques, logs), health checks `/health` + `/alive`, service discovery, résilience HTTP
+- **`Kairudev.Api`** : `AddServiceDefaults()` + `MapDefaultEndpoints()` ajoutés
+- **`Kairudev.slnx`** : AppHost et ServiceDefaults ajoutés à la solution
+- **ADR-008** : Aspire NuGet-only (pas de workload) — proxy types via `<IsAspireProjectResource>true`
+
+### Démarrage
+```bash
+dotnet run --project src/Kairudev.AppHost
+# Dashboard : http://localhost:18888
+```
 
 ### Dette technique héritée et courante
 - URL API hardcodée dans `Program.cs` du Web (`https://localhost:7056`) → itération #5
@@ -46,12 +50,14 @@
 ---
 
 ## Stack technique
-- .NET 10 (preview)
+- .NET 10 GA (SDK 10.0.200-preview = SDK .NET 10.1 preview, runtime 10 GA)
 - SQLite + EF Core 10 (fichier local `kairudev.db`, hors git)
-- ASP.NET Core Web API (`Kairudev.Api`) — `https://localhost:7056`
-- Blazor WebAssembly (`Kairudev.Web`) — `https://localhost:7204`
+- ASP.NET Core Web API (`Kairudev.Api`)
+- Blazor WebAssembly (`Kairudev.Web`)
+- .NET Aspire 13.1.1 (`Kairudev.AppHost` + `Kairudev.ServiceDefaults`)
 - .NET MAUI — itération future
 - xUnit pour les tests
+- Solution : `Kairudev.slnx`
 
 ## Structure du projet
 ```
@@ -65,6 +71,8 @@ src/
 ├── Kairudev.Adapters/          ← à supprimer (ADR-007)
 ├── Kairudev.Infrastructure/    ← migrations dans Persistence/Migrations/
 ├── Kairudev.Api/               ← Tasks/ + Pomodoro/
+├── Kairudev.AppHost/           ← orchestration Aspire
+├── Kairudev.ServiceDefaults/   ← OTEL, health checks, service discovery
 └── Kairudev.Web/               ← Services/ + Pages/
 tests/
 ├── Kairudev.Domain.Tests/      ← Tasks/ + Pomodoro/
