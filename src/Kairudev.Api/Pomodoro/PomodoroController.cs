@@ -4,6 +4,7 @@ using Kairudev.Application.Pomodoro.CompleteSession;
 using Kairudev.Application.Pomodoro.CreateTaskDuringSession;
 using Kairudev.Application.Pomodoro.GetCurrentSession;
 using Kairudev.Application.Pomodoro.GetSettings;
+using Kairudev.Application.Pomodoro.GetSuggestedSessionType;
 using Kairudev.Application.Pomodoro.InterruptSession;
 using Kairudev.Application.Pomodoro.LinkTask;
 using Kairudev.Application.Pomodoro.SaveSettings;
@@ -60,6 +61,15 @@ public sealed class PomodoroController : ControllerBase
 
     // ── Session ────────────────────────────────────────────────────────────
 
+    [HttpGet("session/suggested")]
+    public async Task<IActionResult> GetSuggestedSessionType(CancellationToken cancellationToken)
+    {
+        var presenter = new GetSuggestedSessionTypeHttpPresenter();
+        await new GetSuggestedSessionTypeInteractor(_sessionRepository, _settingsRepository, presenter)
+            .Execute(cancellationToken);
+        return presenter.Result!;
+    }
+
     [HttpGet("session")]
     public async Task<IActionResult> GetCurrentSession(CancellationToken cancellationToken)
     {
@@ -70,11 +80,13 @@ public sealed class PomodoroController : ControllerBase
     }
 
     [HttpPost("session")]
-    public async Task<IActionResult> StartSession(CancellationToken cancellationToken)
+    public async Task<IActionResult> StartSession(
+        [FromQuery] string? type,
+        CancellationToken cancellationToken)
     {
         var presenter = new StartSessionHttpPresenter();
         await new StartSessionInteractor(_sessionRepository, _settingsRepository, presenter, _journalUseCase)
-            .Execute(new StartSessionRequest(), cancellationToken);
+            .Execute(new StartSessionRequest(type), cancellationToken);
         return presenter.Result!;
     }
 

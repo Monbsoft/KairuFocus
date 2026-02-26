@@ -35,7 +35,36 @@ public sealed class StartSessionInteractor : IStartSessionUseCase
         }
 
         var settings = await _settingsRepository.GetAsync(cancellationToken);
-        var session = PomodoroSession.Create(settings.SprintDurationMinutes);
+
+        // Determine session type and duration
+        PomodoroSessionType sessionType;
+        int duration;
+
+        if (request.SessionType is not null && Enum.TryParse<PomodoroSessionType>(request.SessionType, true, out var requestedType))
+        {
+            // User explicitly selected a type
+            sessionType = requestedType;
+        }
+        else
+        {
+            // Auto-suggest based on completed sprints today
+            var completedCount = await _sessionRepository.GetCompletedTodayCountAsync(cancellationToken);
+            var isLongBreakDue = completedCount > 0 && completedCount % PomodoroSettings.SprintsBeforeLongBreak == 0;
+
+            // If last session was a sprint (completed), suggest break
+            // Otherwise, suggest sprint (default)
+            sessionType = isLongBreakDue ? PomodoroSessionType.LongBreak : PomodoroSessionType.Sprint;
+        }
+
+        duration = sessionType switch
+        {
+            PomodoroSessionType.Sprint => settings.SprintDurationMinutes,
+            PomodoroSessionType.ShortBreak => settings.ShortBreakDurationMinutes,
+            PomodoroSessionType.LongBreak => settings.LongBreakDurationMinutes,
+            _ => settings.SprintDurationMinutes
+        };
+
+        var session = PomodoroSession.Create(sessionType, duration);
         session.Start(DateTime.UtcNow);
 
         await _sessionRepository.AddAsync(session, cancellationToken);

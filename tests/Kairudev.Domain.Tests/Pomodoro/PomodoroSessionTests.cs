@@ -9,11 +9,11 @@ public sealed class PomodoroSessionTests
     private static readonly DateTime Now = new(2026, 1, 1, 9, 0, 0, DateTimeKind.Utc);
 
     private static PomodoroSession CreatePlanned(int minutes = 25) =>
-        PomodoroSession.Create(minutes);
+        PomodoroSession.Create(PomodoroSessionType.Sprint, minutes);
 
     private static PomodoroSession CreateActive(int minutes = 25)
     {
-        var s = PomodoroSession.Create(minutes);
+        var s = PomodoroSession.Create(PomodoroSessionType.Sprint, minutes);
         s.Start(Now);
         return s;
     }

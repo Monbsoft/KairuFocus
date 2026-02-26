@@ -16,7 +16,7 @@ public sealed class SqlitePomodoroSessionRepositoryTests : InfrastructureTestBas
     [Fact]
     public async Task Should_PersistSession_When_Added()
     {
-        var session = PomodoroSession.Create(25);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
 
         await _repository.AddAsync(session);
 
@@ -38,7 +38,7 @@ public sealed class SqlitePomodoroSessionRepositoryTests : InfrastructureTestBas
     [Fact]
     public async Task Should_ReturnActiveSession_When_OneIsActive()
     {
-        var session = PomodoroSession.Create(25);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
         session.Start(DateTime.UtcNow);
         await _repository.AddAsync(session);
 
@@ -52,7 +52,7 @@ public sealed class SqlitePomodoroSessionRepositoryTests : InfrastructureTestBas
     [Fact]
     public async Task Should_ReturnNull_When_NoActiveSession()
     {
-        var session = PomodoroSession.Create(25);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
         await _repository.AddAsync(session);
 
         var active = await _repository.GetActiveAsync();
@@ -63,7 +63,7 @@ public sealed class SqlitePomodoroSessionRepositoryTests : InfrastructureTestBas
     [Fact]
     public async Task Should_PersistStatusChange_When_SessionUpdated()
     {
-        var session = PomodoroSession.Create(25);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
         session.Start(DateTime.UtcNow);
         await _repository.AddAsync(session);
 
@@ -79,7 +79,7 @@ public sealed class SqlitePomodoroSessionRepositoryTests : InfrastructureTestBas
     [Fact]
     public async Task Should_CountOnlyTodayCompleted_When_SessionsFromMultipleDays()
     {
-        var sessionToday = PomodoroSession.Create(25);
+        var sessionToday = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
         sessionToday.Start(DateTime.UtcNow);
         sessionToday.Complete(DateTime.UtcNow);
         await _repository.AddAsync(sessionToday);
@@ -100,7 +100,7 @@ public sealed class SqlitePomodoroSessionRepositoryTests : InfrastructureTestBas
     [Fact]
     public async Task Should_PersistLinkedTask_When_TaskLinked()
     {
-        var session = PomodoroSession.Create(25);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
         var taskId = TaskId.New();
         session.LinkTask(taskId);
         await _repository.AddAsync(session);

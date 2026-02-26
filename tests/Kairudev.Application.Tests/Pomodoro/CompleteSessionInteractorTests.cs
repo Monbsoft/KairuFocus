@@ -17,7 +17,7 @@ public sealed class CompleteSessionInteractorTests
 
     private PomodoroSession AddActiveSession()
     {
-        var session = PomodoroSession.Create(25);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
         session.Start(DateTime.UtcNow.AddMinutes(-25));
         _sessions.Sessions.Add(session);
         return session;
@@ -51,7 +51,7 @@ public sealed class CompleteSessionInteractorTests
         // Simulate 3 already completed sessions
         for (var i = 0; i < 3; i++)
         {
-            var s = PomodoroSession.Create(25);
+            var s = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
             s.Start(DateTime.UtcNow.AddHours(-i - 1));
             s.Complete(DateTime.UtcNow.AddMinutes(-i * 60));
             _sessions.Sessions.Add(s);

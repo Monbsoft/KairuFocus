@@ -16,7 +16,7 @@ public sealed class InterruptSessionInteractorTests
 
     private void AddActiveSession()
     {
-        var session = PomodoroSession.Create(25);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25);
         session.Start(DateTime.UtcNow.AddMinutes(-5));
         _sessions.Sessions.Add(session);
     }

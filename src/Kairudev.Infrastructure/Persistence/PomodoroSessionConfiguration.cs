@@ -18,6 +18,10 @@ internal sealed class PomodoroSessionConfiguration : IEntityTypeConfiguration<Po
                 value => PomodoroSessionId.From(value))
             .ValueGeneratedNever();
 
+        builder.Property(s => s.SessionType)
+            .HasConversion<string>()
+            .IsRequired();
+
         builder.Property(s => s.Status)
             .HasConversion<string>()
             .IsRequired();
