@@ -15,5 +15,6 @@ builder.Services.AddScoped(_ => new HttpClient
 
 builder.Services.AddScoped<TaskApiClient>();
 builder.Services.AddScoped<PomodoroApiClient>();
+builder.Services.AddScoped<JournalApiClient>();
 
 await builder.Build().RunAsync();

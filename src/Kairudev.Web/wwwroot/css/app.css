@@ -113,3 +113,23 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Journal Timeline */
+.timeline {
+    padding-left: 0;
+}
+
+.timeline-entry {
+    border-left: 2px solid #dee2e6;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.timeline-entry:last-child {
+    border-left-color: transparent;
+}
+
+.timeline-icon {
+    font-size: 1.5rem;
+    margin-top: -0.25rem;
+}

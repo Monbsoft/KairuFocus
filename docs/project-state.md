@@ -7,7 +7,7 @@
 
 ## Résumé état actuel
 
-**Dernière itération : #7 — Types de session Pomodoro (Sprint/Pause courte/Pause longue)** (2026-02-26)
+**Dernière itération : #8 — BC Journal (log d'activité quotidien)** (2026-02-26)
 
 **Bounded Contexts opérationnels :**
 - **Tasks** : 6 use cases (Add, List, Complete, Delete, Update, ChangeStatus) — **UI complète** ✅
@@ -17,7 +17,10 @@
   - Terminer/Interrompre sprint
   - Lier tâche, Créer tâche, Mettre à jour statut
   - **Suggestion intelligente du prochain type** ✅
-- **Journal** : 5 use cases (consultation, ajout/modification/suppression commentaires)
+- **Journal** : 5 use cases — **UI complète** ✅
+  - **Consultation du journal du jour** ✅
+  - **Ajout/modification/suppression de commentaires** ✅
+  - **Génération automatique d'entrées** (Pomodoro + Tasks) ✅
 
 **Tests :** 154 au total (71 Domain + 66 Application + 17 Infrastructure), tous au vert ✅
 
@@ -44,13 +47,68 @@
 | ~~#5e~~ | ~~UI Blazor — Description et modification de tâches~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | ~~#6~~ | ~~UC-05 (Pomodoro) — Configurer les durées (sprint, pause courte/longue)~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | ~~#7~~ | ~~Types de session Pomodoro (Sprint/Pause courte/Pause longue) — UI onglets~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
-| #8 | BC Journal — log d'activité quotidien alimenté par les sprints | 📋 Planifié | — |
+| ~~#8~~ | ~~BC Journal — log d'activité quotidien + génération automatique d'entrées~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | #9 | BC Tickets — intégration Jira / Linear / GitHub Issues | 📋 Planifié | — |
 | #10 | .NET MAUI — application desktop/mobile | 📋 Planifié | — |
 
 ---
 
 ## Dernière itération livrée
+
+**#8 — BC Journal (log d'activité quotidien)** — Livré le 2026-02-26
+
+### Ce qui a été livré
+
+#### Problème
+L'utilisateur n'avait aucun moyen de consulter son historique d'activité quotidien ni d'ajouter des notes personnelles sur les événements (sprints, tâches). Le journal était partiellement implémenté (Domain + Infrastructure + Application + API) mais manquait l'UI Blazor et l'intégration événementielle.
+
+#### Solution appliquée
+
+**UI Blazor** (nouveau) ✅
+- **`Journal.razor`** : page `/journal` avec timeline chronologique des événements
+  - Affichage des entrées du jour (sprints, tâches) avec icônes et horodatages
+  - Liste des commentaires par entrée
+  - Formulaire d'ajout de commentaire (inline)
+  - Modification/suppression de commentaires (inline)
+  - Icônes contextuelles : 🍅 Sprint démarré, ✅ Sprint complété, ⏸️ Sprint interrompu, 🚀 Tâche démarrée, 🎉 Tâche complétée
+- **`JournalApiClient`** : appels HTTP pour `GetTodayEntries`, `AddComment`, `UpdateComment`, `DeleteComment`
+- **`JournalDto`** : DTOs `JournalEntryDto`, `JournalCommentDto`, `AddCommentRequest`, `UpdateCommentRequest`
+- **`NavMenu.razor`** : ajout du lien 📖 Journal dans la navigation
+
+**Intégration événementielle** (UCS-1 — Génération automatique) ✅
+- **Pomodoro → Journal** :
+  - `StartSessionInteractor` → crée `SprintStarted` lors du démarrage
+  - `CompleteSessionInteractor` → crée `SprintCompleted` lors de la complétion
+  - `InterruptSessionInteractor` → crée `SprintInterrupted` lors de l'interruption
+- **Tasks → Journal** :
+  - `ChangeTaskStatusInteractor` → crée `TaskStarted` si statut = `InProgress`
+  - `ChangeTaskStatusInteractor` → crée `TaskCompleted` si statut = `Done`
+  - `CompleteTaskInteractor` → crée `TaskCompleted` lors de la complétion
+- Injection de `ICreateJournalEntryUseCase` dans tous les interactors concernés
+- `NoOpJournalEntryPresenter` utilisé pour les appels internes (pas de réponse HTTP nécessaire)
+
+**Infrastructure déjà en place** (itérations précédentes) ✅
+- **Domain** : `JournalEntry`, `JournalComment`, `JournalEventType`, `IJournalEntryRepository`
+- **Application** : 5 use cases (GetTodayJournal, AddComment, UpdateComment, RemoveComment, CreateEntry)
+- **API** : `JournalController` avec endpoints REST complets
+- **Tests** : 71 Domain + 66 Application + 17 Infrastructure = 154 tests, tous au vert ✅
+
+### Impact
+- L'utilisateur peut maintenant **consulter son activité quotidienne** sous forme de timeline
+- Les événements Pomodoro et Tasks sont **automatiquement tracés** dans le journal
+- L'utilisateur peut **ajouter des commentaires** personnels pour enrichir le contexte
+- **Rétrospective facilitée** : "qu'est-ce que j'ai fait aujourd'hui ?"
+- **Traçabilité complète** : chaque sprint et chaque tâche démarrée/complétée génère une entrée
+- **UC-13, UC-14, UC-15, UC-16, UCS-1** sont maintenant complètement implémentés de bout en bout
+
+### Captures d'écran (UI)
+- Page `/journal` : timeline chronologique avec icônes et horodatages
+- Affichage des commentaires : texte + boutons modifier/supprimer
+- Formulaire d'ajout : textarea + boutons Ajouter/Annuler
+
+---
+
+## Itération #7 (précédente)
 
 **#7 — Types de session Pomodoro (Sprint/Pause courte/Pause longue)** — Livré le 2026-02-26
 
