@@ -7,10 +7,10 @@
 
 ## Résumé état actuel
 
-**Dernière itération : #5d — Correctif migration EF Core** (2026-02-26)
+**Dernière itération : #5e — UI Blazor pour description et modification de tâches** (2026-02-26)
 
 **Bounded Contexts opérationnels :**
-- **Tasks** : 5 use cases (Add, List, Complete, Delete, Update, ChangeStatus)
+- **Tasks** : 6 use cases (Add, List, Complete, Delete, Update, ChangeStatus) — **UI complète** ✅
 - **Pomodoro** : 7 use cases (sprints complets avec lien aux tâches)
 - **Journal** : 5 use cases (consultation, ajout/modification/suppression commentaires)
 
@@ -36,6 +36,7 @@
 | ~~#5b~~ | ~~Bugfixes (NetworkError + CreatedAtAction) + sous-agents Claude + UC-12 ChangeTaskStatus~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | ~~#5c~~ | ~~UC-05 UpdateTask + Description optionnelle sur les tâches~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | ~~#5d~~ | ~~Correctif migration EF Core — AddTaskDescription~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
+| ~~#5e~~ | ~~UI Blazor — Description et modification de tâches~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | #6 | BC Journal — log d'activité quotidien alimenté par les sprints | 📋 Planifié | — |
 | #7 | BC Tickets — intégration Jira / Linear / GitHub Issues | 📋 Planifié | — |
 | #8 | .NET MAUI — application desktop/mobile | 📋 Planifié | — |
@@ -43,6 +44,40 @@
 ---
 
 ## Dernière itération livrée
+
+**#5e — UI Blazor pour description et modification de tâches** — Livré le 2026-02-26
+
+### Ce qui a été livré
+
+#### Problème rencontré
+L'utilisateur ne voyait pas de différence dans l'interface web Blazor après l'implémentation de UC-05 (UpdateTask). Il n'était pas possible de créer une description pour une tâche ou de modifier une tâche existante depuis l'UI.
+
+#### Solution appliquée
+- **`TaskDto`** : Ajout propriété `Description?`
+- **`TaskApiClient`** :
+  - `AddAsync(title, description)` — ajout paramètre optionnel `description`
+  - `UpdateAsync(id, title, description)` — nouvelle méthode pour modifier une tâche
+- **`Tasks.razor`** : Refonte complète de l'interface
+  - **Création** : Champ titre + textarea description (optionnelle)
+  - **Affichage** : Description affichée en petit texte grisé sous le titre
+  - **Modification** : Mode édition inline avec boutons Enregistrer/Annuler
+  - **Actions** : Bouton ✎ (modifier) ajouté pour les tâches non complétées
+  - **Layout** : Meilleur alignement avec flex-grow pour le contenu
+
+### Impact
+- L'utilisateur peut maintenant créer des tâches avec description
+- L'utilisateur peut modifier le titre et la description d'une tâche existante
+- L'interface affiche clairement les descriptions des tâches
+- UC-05 est maintenant complètement fonctionnel de bout en bout (Domain → Application → API → UI)
+
+### Captures d'écran (UI)
+- Formulaire de création : titre + description
+- Liste de tâches : titre en gras, description en petit en dessous
+- Mode édition : inline avec inputs et boutons d'action
+
+---
+
+## Itération #5d (précédente)
 
 **#5d — Correctif migration EF Core** — Livré le 2026-02-26
 
