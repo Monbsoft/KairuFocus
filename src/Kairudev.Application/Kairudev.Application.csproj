@@ -5,6 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Journal\RemoveJournalComment\" />
     <Folder Include="Tasks\ListTasks\" />
   </ItemGroup>
 

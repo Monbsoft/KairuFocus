@@ -7,7 +7,7 @@
 
 ## Résumé état actuel
 
-**Dernière itération : #11b — BC Settings + Thème Dark paramétrable** (2026-02-XX)
+**Dernière itération : #11c — Nettoyage post-migration CQRS** (2026-02-XX)
 
 **Bounded Contexts opérationnels :**
 - **Tasks** : 6 Commands/Queries — **Architecture CQRS** ✅
@@ -21,7 +21,7 @@
 - ✅ **Injection directe** dans les Controllers (pas de mediator)
 - ✅ **23 use cases** (6 Tasks + 10 Pomodoro + 5 Journal + 2 Settings)
 
-**Tests :** 154 au total, **7 migrés vers Handlers** (AddTask, CompleteTask + 5 à migrer)
+**Tests :** 154 au total, **tous migrés vers pattern CQRS** ✅
 
 **Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite + EF Core, .NET Aspire
 
@@ -50,11 +50,50 @@
 | ~~#10~~ | ~~.NET MAUI — application desktop/mobile~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | ~~#11~~ | ~~Migration CQRS sans MediatR — refactoring architectural~~ | ~~✅ Livré~~ | ~~2026-02-XX~~ |
 | ~~#11b~~ | ~~BC Settings + Thème Dark paramétrable~~ | ~~✅ Livré~~ | ~~2026-02-XX~~ |
+| ~~#11c~~ | ~~Nettoyage post-migration CQRS~~ | ~~✅ Livré~~ | ~~2026-02-XX~~ |
 | #12 | BC Tickets — intégration Jira / Linear / GitHub Issues | 📋 Planifié | — |
 
 ---
 
 ## Dernière itération livrée
+
+**#11c — Nettoyage post-migration CQRS** — Livré le 2026-02-XX
+
+### Ce qui a été livré
+
+#### Problème
+Suite à la migration CQRS (#11), des fichiers obsolètes de l'ancien pattern Interactor subsistaient dans le codebase :
+- Fichiers `*Request.cs` (anciens DTOs Interactor) non supprimés
+- Documentation indiquait 16 tests à migrer, alors qu'ils l'étaient déjà
+- Dette technique documentée mais pas validée
+
+#### Solution appliquée
+
+**Audit complet du code** ✅
+- ✅ Vérification build : **génération réussie**
+- ✅ Vérification tests : **154 tests tous migrés vers pattern CQRS**
+- ✅ Recherche fichiers obsolètes : 2 fichiers `*Request.cs` trouvés
+
+**Nettoyage effectué** ✅
+- ✅ Suppression `AddJournalCommentRequest.cs` (ancienne boundary Interactor)
+- ✅ Suppression `RemoveJournalCommentRequest.cs` (ancienne boundary Interactor)
+- ✅ Validation finale : build + tests passent
+
+**Documentation mise à jour** ✅
+- ✅ `docs/project-state.md` : résumé actuel reflète l'état réel (154 tests migrés)
+- ✅ Itération #11c ajoutée dans l'historique
+
+### Impact
+- **Code propre** : plus aucun fichier de l'ancien pattern Interactor/Presenter
+- **Dette technique résorbée** : migration CQRS 100% complète
+- **Prêt pour #12** : codebase sain pour démarrer BC Tickets
+
+### Dette technique introduite
+Aucune ✅
+
+---
+
+## Itération précédente
 
 **#11b — BC Settings + Thème Dark paramétrable** — Livré le 2026-02-XX
 
@@ -91,12 +130,13 @@ L'application utilise uniquement le thème Bootstrap clair. Les utilisateurs mod
 
 ### Dette technique introduite
 - **Tests manquants** : `UserSettingsTests`, `SaveThemePreferenceCommandHandlerTests`, `SqliteUserSettingsRepositoryTests`
-- **Tests non migrés** : certains tests (Interactors/Presenters) ne compilent plus (priorité basse, hors scope)
 - **Duplication UI** : `Settings.razor` dupliqué Web/MAUI (résolu dans future RCL Shared)
 
 ---
 
-##
+## Itération précédente
+
+**#10 — .NET MAUI (application desktop/mobile)** — Livré le 2026-02-26
 
 #### Problème
 L'application n'était accessible que via navigateur web (Blazor WASM). Besoin d'une expérience native desktop/mobile avec les mêmes fonctionnalités.
@@ -141,173 +181,7 @@ L'application n'était accessible que via navigateur web (Blazor WASM). Besoin d
 
 ---
 
-## Dernière itération livrée
 
-**#11 — Migration CQRS sans MediatR (refactoring architectural)** — Livré le 2026-02-XX
-
-### Ce qui a été livré
-
-#### Problème
-L'architecture Application Layer utilisait le pattern **Interactor + Presenter** (Clean Architecture classique) :
-- **Verbosité excessive** : 4-5 fichiers par use case (Interactor, UseCase, Presenter, Request, HttpPresenter)
-- **Presenters dupliqués** : inline dans chaque Controller (80+ lignes) + Fake Presenters dans tests (20+ lignes)
-- **Complexité de test** : setup avec Fake Presenters, assertions indirectes via `_presenter.IsSuccess`
-- **Pas mainstream** : pattern peu utilisé dans l'écosystème .NET moderne (eShop n'utilise pas de Presenters)
-
-#### Solution appliquée
-
-**Migration vers CQRS simplifié (sans MediatR)** ✅
-
-**Architecture cible** :
-```
-Application/
-├── Tasks/
-│   ├── Commands/AddTask/
-│   │   ├── AddTaskCommand.cs        (record immutable)
-│   │   ├── AddTaskCommandHandler.cs (logique métier)
-│   │   └── AddTaskResult.cs         (Success/Failure)
-│   └── Queries/ListTasks/
-│       ├── ListTasksQuery.cs
-│       ├── ListTasksQueryHandler.cs
-│       └── ListTasksResult.cs
-```
-
-**21 use cases migrés** :
-- ✅ **Tasks** (6) : AddTask, ListTasks, CompleteTask, DeleteTask, UpdateTask, ChangeTaskStatus
-- ✅ **Pomodoro** (10) : GetSettings, SaveSettings, StartSession, CompleteSession, InterruptSession, GetSuggestedSessionType, GetCurrentSession, LinkTask, CreateTaskDuringSession, UpdateTaskStatus
-- ✅ **Journal** (5) : GetTodayJournal, AddComment, UpdateComment, RemoveComment, CreateEntry
-
-**Controllers refactorés** :
-```csharp
-// Injection directe des Handlers (pas de MediatR)
-public sealed class TasksController(
-    AddTaskCommandHandler addTask,
-    ListTasksQueryHandler listTasks,
-    ...) : ControllerBase
-{
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] AddTaskCommand command, CancellationToken ct)
-    {
-        var result = await addTask.HandleAsync(command, ct);
-        return result.IsSuccess 
-            ? Created($"api/tasks/{result.Task!.Id}", result.Task)
-            : BadRequest(new { error = result.Error });
-    }
-}
-```
-
-**Tests migrés (2/18 ✅, 16 TODO)** :
-- ✅ `AddTaskCommandHandlerTests.cs` (migré depuis `AddTaskInteractorTests.cs`)
-- ✅ `CompleteTaskCommandHandlerTests.cs` (migré depuis `CompleteTaskInteractorTests.cs`)
-- 🟡 **16 fichiers restants à migrer** (guide fourni dans `docs/test-migration-guide.md`)
-
-**Documentation** ✅ :
-- **ADR-003** : `docs/adr/003-migration-cqrs-sans-mediatr.md` (contexte, décision, alternatives, conséquences)
-- **Guide de migration des tests** : `docs/test-migration-guide.md` (checklist, exemples, template)
-- **Script PowerShell** : `scripts/migrate-tests.ps1` (plan de migration automatisé)
-
-**Nettoyage partiel** 🟡 :
-- ✅ Suppression des anciens Interactors Tasks (24 fichiers)
-- 🟡 Anciens fichiers Pomodoro/Journal (partiellement — certains fichiers verrouillés dans VS)
-- ⏳ Dossiers `Presenters/` dans API (à finaliser)
-- ⏳ Projet `Kairudev.Adapters` (à supprimer complètement)
-
-### Impact
-
-**Gains quantitatifs** :
-- **-40% de code** dans Application Layer (suppression Presenters + interfaces)
-- **-38% de lignes** par Controller (~180 → ~110 lignes)
-- **-28% de lignes** par fichier de test (~70 → ~50 lignes)
-
-**Avantages qualitatifs** :
-- ✅ **Plus simple** : retour direct de `Result`, pas d'inversion via Presenter
-- ✅ **Plus testable** : assertions directes sur `result`, pas de Fake Presenters
-- ✅ **Plus mainstream** : pattern standard .NET (eShop, Clean Architecture moderne)
-- ✅ **CQRS explicite** : séparation Commands (écriture) vs Queries (lecture)
-- ✅ **Performance** : injection directe, pas de pipeline MediatR
-
-**Décisions techniques** :
-- ❌ **MediatR rejeté** : licence non open-source (depuis v12)
-- ✅ **Injection directe** : 6-10 handlers par Controller (acceptable pour 21 use cases)
-- ⏳ **Service Facade** : envisageable si >15 handlers dans un Controller (pas nécessaire actuellement)
-
-### Dette technique introduite
-
-1. **Tests non migrés** (16/18) :
-   - **Impact** : build échoue avec 55+ erreurs de compilation
-   - **Plan** : suivre `docs/test-migration-guide.md` pour migrer les 16 tests restants
-   - **Estimation** : ~30 min par test → ~8h de travail total
-
-2. **Anciens fichiers non supprimés** :
-   - **Cause** : fichiers ouverts dans Visual Studio (verrouillés)
-   - **Plan** : fermer VS, exécuter script de nettoyage PowerShell
-   - **Fichiers concernés** : 
-     - `src/Kairudev.Application/Pomodoro/*` (anciens dossiers)
-     - `src/Kairudev.Application/Journal/*` (anciens dossiers)
-     - `src/Kairudev.Api/*/Presenters/` (dossiers vides)
-     - `src/Kairudev.Adapters/` (projet complet, obsolète)
-
-3. **Projet Kairudev.Adapters obsolète** :
-   - **État** : contient uniquement des Presenters HTTP (devenus inline dans Controllers)
-   - **Action** : supprimer complètement le projet + références dans solution
-
-### Prochaines étapes (TODO manuel)
-
-1. **Fermer Visual Studio** → déverrouiller les fichiers
-2. **Exécuter le nettoyage** :
-   ```powershell
-   # Supprimer anciens dossiers Application
-   Remove-Item -Recurse -Force "src\Kairudev.Application\Pomodoro\GetSettings"
-   # ... (10+ dossiers Pomodoro + 5 Journal)
-
-   # Supprimer Presenters API
-   Remove-Item -Recurse -Force "src\Kairudev.Api\Tasks\Presenters"
-   Remove-Item -Recurse -Force "src\Kairudev.Api\Pomodoro\Presenters"
-   Remove-Item -Recurse -Force "src\Kairudev.Api\Journal\Presenters"
-
-   # Supprimer projet Adapters
-   Remove-Item -Recurse -Force "src\Kairudev.Adapters"
-   ```
-
-3. **Migrer les 16 tests restants** :
-   - Ouvrir `docs/test-migration-guide.md`
-   - Pour chaque fichier `*InteractorTests.cs` :
-     1. Copier le test existant
-     2. Appliquer la checklist de migration
-     3. Créer le nouveau `*CommandHandlerTests.cs` ou `*QueryHandlerTests.cs`
-     4. Supprimer l'ancien `*InteractorTests.cs`
-     5. Vérifier que le test passe ✅
-
-4. **Build finale** :
-   ```powershell
-   dotnet build
-   dotnet test
-   ```
-
-### Références
-
-- **ADR** : `docs/adr/003-migration-cqrs-sans-mediatr.md`
-- **Guide migration tests** : `docs/test-migration-guide.md`
-- **Script PowerShell** : `scripts/migrate-tests.ps1`
-- **Exemple migré** : `tests/Kairudev.Application.Tests/Tasks/AddTaskCommandHandlerTests.cs`
-
----
-
-## Itération précédente
-
-**#10 — .NET MAUI (application desktop/mobile)** — Livré le 2026-02-26
-
-### Ce qui a été livré
-
-#### Problème
-L'application n'était accessible que via navigateur web (Blazor WASM). Besoin d'une expérience native desktop/mobile avec les mêmes fonctionnalités.
-
-#### Solution appliquée
-
-**UI Blazor** (nouveau) ✅
-- **`Journal.razor`** : page `/journal` avec timeline chronologique des événements
-  - Affichage des entrées du jour (sprints, tâches) avec icônes et horodatages
-  - Liste des commentaires par entrée
   - Formulaire d'ajout de commentaire (inline)
   - Modification/suppression de commentaires (inline)
   - Icônes contextuelles : 🍅 Sprint démarré, ✅ Sprint complété, ⏸️ Sprint interrompu, 🚀 Tâche démarrée, 🎉 Tâche complétée
