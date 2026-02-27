@@ -1,17 +1,13 @@
-using Kairudev.Api.Pomodoro.Presenters;
-using Kairudev.Application.Journal.CreateJournalEntry;
-using Kairudev.Application.Pomodoro.CompleteSession;
-using Kairudev.Application.Pomodoro.CreateTaskDuringSession;
-using Kairudev.Application.Pomodoro.GetCurrentSession;
-using Kairudev.Application.Pomodoro.GetSettings;
-using Kairudev.Application.Pomodoro.GetSuggestedSessionType;
-using Kairudev.Application.Pomodoro.InterruptSession;
-using Kairudev.Application.Pomodoro.LinkTask;
-using Kairudev.Application.Pomodoro.SaveSettings;
-using Kairudev.Application.Pomodoro.StartSession;
-using Kairudev.Application.Pomodoro.UpdateTaskStatus;
-using Kairudev.Domain.Pomodoro;
-using Kairudev.Domain.Tasks;
+using Kairudev.Application.Pomodoro.Commands.CompleteSession;
+using Kairudev.Application.Pomodoro.Commands.CreateTaskDuringSession;
+using Kairudev.Application.Pomodoro.Commands.InterruptSession;
+using Kairudev.Application.Pomodoro.Commands.LinkTask;
+using Kairudev.Application.Pomodoro.Commands.SaveSettings;
+using Kairudev.Application.Pomodoro.Commands.StartSession;
+using Kairudev.Application.Pomodoro.Commands.UpdateTaskStatus;
+using Kairudev.Application.Pomodoro.Queries.GetCurrentSession;
+using Kairudev.Application.Pomodoro.Queries.GetSettings;
+using Kairudev.Application.Pomodoro.Queries.GetSuggestedSessionType;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kairudev.Api.Pomodoro;
@@ -20,128 +16,152 @@ namespace Kairudev.Api.Pomodoro;
 [Route("api/pomodoro")]
 public sealed class PomodoroController : ControllerBase
 {
-    private readonly IPomodoroSessionRepository _sessionRepository;
-    private readonly IPomodoroSettingsRepository _settingsRepository;
-    private readonly ITaskRepository _taskRepository;
-    private readonly ICreateJournalEntryUseCase _journalUseCase;
+    private readonly GetSettingsQueryHandler _getSettings;
+    private readonly SaveSettingsCommandHandler _saveSettings;
+    private readonly GetSuggestedSessionTypeQueryHandler _getSuggestedType;
+    private readonly GetCurrentSessionQueryHandler _getCurrentSession;
+    private readonly StartSessionCommandHandler _startSession;
+    private readonly CompleteSessionCommandHandler _completeSession;
+    private readonly InterruptSessionCommandHandler _interruptSession;
+    private readonly LinkTaskCommandHandler _linkTask;
+    private readonly CreateTaskDuringSessionCommandHandler _createTask;
+    private readonly UpdateTaskStatusCommandHandler _updateTaskStatus;
 
     public PomodoroController(
-        IPomodoroSessionRepository sessionRepository,
-        IPomodoroSettingsRepository settingsRepository,
-        ITaskRepository taskRepository,
-        ICreateJournalEntryUseCase journalUseCase)
+        GetSettingsQueryHandler getSettings,
+        SaveSettingsCommandHandler saveSettings,
+        GetSuggestedSessionTypeQueryHandler getSuggestedType,
+        GetCurrentSessionQueryHandler getCurrentSession,
+        StartSessionCommandHandler startSession,
+        CompleteSessionCommandHandler completeSession,
+        InterruptSessionCommandHandler interruptSession,
+        LinkTaskCommandHandler linkTask,
+        CreateTaskDuringSessionCommandHandler createTask,
+        UpdateTaskStatusCommandHandler updateTaskStatus)
     {
-        _sessionRepository = sessionRepository;
-        _settingsRepository = settingsRepository;
-        _taskRepository = taskRepository;
-        _journalUseCase = journalUseCase;
+        _getSettings = getSettings;
+        _saveSettings = saveSettings;
+        _getSuggestedType = getSuggestedType;
+        _getCurrentSession = getCurrentSession;
+        _startSession = startSession;
+        _completeSession = completeSession;
+        _interruptSession = interruptSession;
+        _linkTask = linkTask;
+        _createTask = createTask;
+        _updateTaskStatus = updateTaskStatus;
     }
 
     // ── Settings ───────────────────────────────────────────────────────────
 
     [HttpGet("settings")]
-    public async Task<IActionResult> GetSettings(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetSettings(CancellationToken ct)
     {
-        var presenter = new GetSettingsHttpPresenter();
-        await new GetSettingsInteractor(_settingsRepository, presenter)
-            .Execute(cancellationToken);
-        return presenter.Result!;
+        var result = await _getSettings.HandleAsync(new GetSettingsQuery(), ct);
+        return Ok(result.Settings);
     }
 
     [HttpPut("settings")]
-    public async Task<IActionResult> SaveSettings(
-        [FromBody] SaveSettingsRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> SaveSettings([FromBody] SaveSettingsCommand command, CancellationToken ct)
     {
-        var presenter = new SaveSettingsHttpPresenter();
-        await new SaveSettingsInteractor(_settingsRepository, presenter)
-            .Execute(request, cancellationToken);
-        return presenter.Result!;
+        var result = await _saveSettings.HandleAsync(command, ct);
+        return result.IsSuccess
+            ? NoContent()
+            : BadRequest(new { error = result.ValidationError });
     }
 
     // ── Session ────────────────────────────────────────────────────────────
 
     [HttpGet("session/suggested")]
-    public async Task<IActionResult> GetSuggestedSessionType(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetSuggestedSessionType(CancellationToken ct)
     {
-        var presenter = new GetSuggestedSessionTypeHttpPresenter();
-        await new GetSuggestedSessionTypeInteractor(_sessionRepository, _settingsRepository, presenter)
-            .Execute(cancellationToken);
-        return presenter.Result!;
+        var result = await _getSuggestedType.HandleAsync(new GetSuggestedSessionTypeQuery(), ct);
+        return Ok(new
+        {
+            SuggestedType = result.SuggestedType,
+            SprintDurationMinutes = result.SprintDurationMinutes,
+            ShortBreakDurationMinutes = result.ShortBreakDurationMinutes,
+            LongBreakDurationMinutes = result.LongBreakDurationMinutes
+        });
     }
 
     [HttpGet("session")]
-    public async Task<IActionResult> GetCurrentSession(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCurrentSession(CancellationToken ct)
     {
-        var presenter = new GetCurrentSessionHttpPresenter();
-        await new GetCurrentSessionInteractor(_sessionRepository, presenter)
-            .Execute(cancellationToken);
-        return presenter.Result!;
+        var result = await _getCurrentSession.HandleAsync(new GetCurrentSessionQuery(), ct);
+        return result.HasSession
+            ? Ok(result.Session)
+            : NoContent();
     }
 
     [HttpPost("session")]
-    public async Task<IActionResult> StartSession(
-        [FromQuery] string? type,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> StartSession([FromQuery] string? type, CancellationToken ct)
     {
-        var presenter = new StartSessionHttpPresenter();
-        await new StartSessionInteractor(_sessionRepository, _settingsRepository, presenter, _journalUseCase)
-            .Execute(new StartSessionRequest(type), cancellationToken);
-        return presenter.Result!;
+        var result = await _startSession.HandleAsync(new StartSessionCommand(type), ct);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetCurrentSession), null, result.Session)
+            : Conflict(new { error = result.Error });
     }
 
     [HttpPatch("session/complete")]
-    public async Task<IActionResult> CompleteSession(CancellationToken cancellationToken)
+    public async Task<IActionResult> CompleteSession(CancellationToken ct)
     {
-        var presenter = new CompleteSessionHttpPresenter();
-        await new CompleteSessionInteractor(_sessionRepository, _settingsRepository, presenter, _journalUseCase)
-            .Execute(new CompleteSessionRequest(), cancellationToken);
-        return presenter.Result!;
+        var result = await _completeSession.HandleAsync(new CompleteSessionCommand(), ct);
+        return result.IsSuccess
+            ? NoContent()
+            : BadRequest(new { error = result.Error });
     }
 
     [HttpPatch("session/interrupt")]
-    public async Task<IActionResult> InterruptSession(CancellationToken cancellationToken)
+    public async Task<IActionResult> InterruptSession(CancellationToken ct)
     {
-        var presenter = new InterruptSessionHttpPresenter();
-        await new InterruptSessionInteractor(_sessionRepository, presenter, _journalUseCase)
-            .Execute(new InterruptSessionRequest(), cancellationToken);
-        return presenter.Result!;
+        var result = await _interruptSession.HandleAsync(new InterruptSessionCommand(), ct);
+        return result.IsSuccess
+            ? NoContent()
+            : BadRequest(new { error = result.Error });
     }
 
     // ── Tasks within session ───────────────────────────────────────────────
 
     [HttpPost("session/tasks/{id:guid}")]
-    public async Task<IActionResult> LinkTask(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> LinkTask(Guid id, CancellationToken ct)
     {
-        var presenter = new LinkTaskHttpPresenter();
-        await new LinkTaskInteractor(_sessionRepository, _taskRepository, presenter)
-            .Execute(new LinkTaskRequest(id), cancellationToken);
-        return presenter.Result!;
+        var result = await _linkTask.HandleAsync(new LinkTaskCommand(id), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => NoContent(),
+            { IsNotFound: true } => NotFound(),
+            _ => BadRequest(new { error = result.Error })
+        };
     }
 
     [HttpPost("session/tasks")]
     public async Task<IActionResult> CreateTaskDuringSession(
-        [FromBody] CreateTaskDuringSessionRequest request,
-        CancellationToken cancellationToken)
+        [FromBody] CreateTaskDuringSessionCommand command,
+        CancellationToken ct)
     {
-        var presenter = new CreateTaskDuringSessionHttpPresenter();
-        await new CreateTaskDuringSessionInteractor(_sessionRepository, _taskRepository, presenter)
-            .Execute(request, cancellationToken);
-        return presenter.Result!;
+        var result = await _createTask.HandleAsync(command, ct);
+        return result.IsSuccess
+            ? Created($"api/tasks/{result.Task!.Id}", result.Task)
+            : BadRequest(new { error = result.Error });
     }
 
     [HttpPatch("session/tasks/{id:guid}/status")]
     public async Task<IActionResult> UpdateTaskStatus(
         Guid id,
         [FromBody] UpdateTaskStatusBody body,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var presenter = new UpdateTaskStatusHttpPresenter();
-        await new UpdateTaskStatusInteractor(_sessionRepository, _taskRepository, presenter)
-            .Execute(new UpdateTaskStatusRequest(id, body.TargetStatus), cancellationToken);
-        return presenter.Result!;
+        var result = await _updateTaskStatus.HandleAsync(
+            new UpdateTaskStatusCommand(id, body.TargetStatus), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Task),
+            { IsNotFound: true } => NotFound(),
+            _ => BadRequest(new { error = result.Error })
+        };
     }
 }
 
-/// <summary>Body DTO for PATCH /session/tasks/{id}/status</summary>
 public sealed record UpdateTaskStatusBody(string TargetStatus);

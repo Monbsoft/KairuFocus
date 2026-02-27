@@ -1,12 +1,9 @@
-using Kairudev.Api.Tasks.Presenters;
-using Kairudev.Application.Journal.CreateJournalEntry;
-using Kairudev.Application.Tasks.AddTask;
-using Kairudev.Application.Tasks.ChangeTaskStatus;
-using Kairudev.Application.Tasks.CompleteTask;
-using Kairudev.Application.Tasks.DeleteTask;
-using Kairudev.Application.Tasks.ListTasks;
-using Kairudev.Application.Tasks.UpdateTask;
-using Kairudev.Domain.Tasks;
+using Kairudev.Application.Tasks.Commands.AddTask;
+using Kairudev.Application.Tasks.Commands.ChangeTaskStatus;
+using Kairudev.Application.Tasks.Commands.CompleteTask;
+using Kairudev.Application.Tasks.Commands.DeleteTask;
+using Kairudev.Application.Tasks.Commands.UpdateTask;
+using Kairudev.Application.Tasks.Queries.ListTasks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kairudev.Api.Tasks;
@@ -15,78 +12,109 @@ namespace Kairudev.Api.Tasks;
 [Route("api/tasks")]
 public sealed class TasksController : ControllerBase
 {
-    private readonly ITaskRepository _repository;
-    private readonly ICreateJournalEntryUseCase _journalUseCase;
+    private readonly AddTaskCommandHandler _addTask;
+    private readonly ListTasksQueryHandler _listTasks;
+    private readonly CompleteTaskCommandHandler _completeTask;
+    private readonly DeleteTaskCommandHandler _deleteTask;
+    private readonly ChangeTaskStatusCommandHandler _changeStatus;
+    private readonly UpdateTaskCommandHandler _updateTask;
 
-    public TasksController(ITaskRepository repository, ICreateJournalEntryUseCase journalUseCase)
+    public TasksController(
+        AddTaskCommandHandler addTask,
+        ListTasksQueryHandler listTasks,
+        CompleteTaskCommandHandler completeTask,
+        DeleteTaskCommandHandler deleteTask,
+        ChangeTaskStatusCommandHandler changeStatus,
+        UpdateTaskCommandHandler updateTask)
     {
-        _repository = repository;
-        _journalUseCase = journalUseCase;
+        _addTask = addTask;
+        _listTasks = listTasks;
+        _completeTask = completeTask;
+        _deleteTask = deleteTask;
+        _changeStatus = changeStatus;
+        _updateTask = updateTask;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(CancellationToken ct)
     {
-        var presenter = new ListTasksHttpPresenter();
-        await new ListTasksInteractor(_repository, presenter)
-            .Execute(new ListTasksRequest(), cancellationToken);
-        return presenter.Result!;
+        var result = await _listTasks.HandleAsync(new ListTasksQuery(), ct);
+        return Ok(result.Tasks);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] AddTaskRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] AddTaskCommand command, CancellationToken ct)
     {
-        var presenter = new AddTaskHttpPresenter();
-        await new AddTaskInteractor(_repository, presenter)
-            .Execute(request, cancellationToken);
-        return presenter.Result!;
+        var result = await _addTask.HandleAsync(command, ct);
+
+        return result.IsSuccess
+            ? Created($"api/tasks/{result.Task!.Id}", result.Task)
+            : BadRequest(new { error = result.Error });
     }
 
     [HttpPut("{id:guid}/complete")]
-    public async Task<IActionResult> Complete(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Complete(Guid id, CancellationToken ct)
     {
-        var presenter = new CompleteTaskHttpPresenter();
-        await new CompleteTaskInteractor(_repository, presenter, _journalUseCase)
-            .Execute(new CompleteTaskRequest(id), cancellationToken);
-        return presenter.Result!;
+        var result = await _completeTask.HandleAsync(new CompleteTaskCommand(id), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => NoContent(),
+            { IsNotFound: true } => NotFound(),
+            _ => BadRequest(new { error = result.Error })
+        };
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
-        var presenter = new DeleteTaskHttpPresenter();
-        await new DeleteTaskInteractor(_repository, presenter)
-            .Execute(new DeleteTaskRequest(id), cancellationToken);
-        return presenter.Result!;
+        var result = await _deleteTask.HandleAsync(new DeleteTaskCommand(id), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => NoContent(),
+            { IsNotFound: true } => NotFound(),
+            _ => StatusCode(500, new { error = result.Error })
+        };
     }
 
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> ChangeStatus(
         Guid id,
         [FromBody] ChangeTaskStatusBody body,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var presenter = new ChangeTaskStatusHttpPresenter();
-        await new ChangeTaskStatusInteractor(_repository, presenter, _journalUseCase)
-            .Execute(new ChangeTaskStatusRequest(id, body.NewStatus), cancellationToken);
-        return presenter.Result!;
+        var result = await _changeStatus.HandleAsync(
+            new ChangeTaskStatusCommand(id, body.NewStatus), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Task),
+            { IsNotFound: true } => NotFound(),
+            { ValidationError: not null } => BadRequest(new { error = result.ValidationError }),
+            { ConflictError: not null } => Conflict(new { error = result.ConflictError }),
+            _ => StatusCode(500)
+        };
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateTaskBody body,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var presenter = new UpdateTaskHttpPresenter();
-        await new UpdateTaskInteractor(_repository, presenter)
-            .Execute(new UpdateTaskRequest(id, body.Title, body.Description), cancellationToken);
-        return presenter.Result!;
+        var result = await _updateTask.HandleAsync(
+            new UpdateTaskCommand(id, body.Title, body.Description), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Task),
+            { IsNotFound: true } => NotFound(),
+            { Error: not null } => BadRequest(new { error = result.Error }),
+            _ => StatusCode(500)
+        };
     }
 }
 
 public sealed record ChangeTaskStatusBody(string NewStatus);
-
 public sealed record UpdateTaskBody(string Title, string? Description);

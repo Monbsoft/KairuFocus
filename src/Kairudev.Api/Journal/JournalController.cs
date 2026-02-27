@@ -1,9 +1,7 @@
-using Kairudev.Api.Journal.Presenters;
-using Kairudev.Application.Journal.AddJournalComment;
-using Kairudev.Application.Journal.GetTodayJournal;
-using Kairudev.Application.Journal.RemoveJournalComment;
-using Kairudev.Application.Journal.UpdateJournalComment;
-using Kairudev.Domain.Journal;
+using Kairudev.Application.Journal.Commands.AddComment;
+using Kairudev.Application.Journal.Commands.RemoveComment;
+using Kairudev.Application.Journal.Commands.UpdateComment;
+using Kairudev.Application.Journal.Queries.GetTodayJournal;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kairudev.Api.Journal;
@@ -12,58 +10,81 @@ namespace Kairudev.Api.Journal;
 [Route("api/journal")]
 public sealed class JournalController : ControllerBase
 {
-    private readonly IJournalEntryRepository _repository;
+    private readonly GetTodayJournalQueryHandler _getTodayJournal;
+    private readonly AddCommentCommandHandler _addComment;
+    private readonly UpdateCommentCommandHandler _updateComment;
+    private readonly RemoveCommentCommandHandler _removeComment;
 
-    public JournalController(IJournalEntryRepository repository) => _repository = repository;
-
-    // GET api/journal/today
-    [HttpGet("today")]
-    public async Task<IActionResult> GetToday(CancellationToken cancellationToken)
+    public JournalController(
+        GetTodayJournalQueryHandler getTodayJournal,
+        AddCommentCommandHandler addComment,
+        UpdateCommentCommandHandler updateComment,
+        RemoveCommentCommandHandler removeComment)
     {
-        var presenter = new GetTodayJournalHttpPresenter();
-        await new GetTodayJournalInteractor(_repository, presenter)
-            .Execute(new GetTodayJournalRequest(), cancellationToken);
-        return presenter.Result!;
+        _getTodayJournal = getTodayJournal;
+        _addComment = addComment;
+        _updateComment = updateComment;
+        _removeComment = removeComment;
     }
 
-    // POST api/journal/{entryId}/comments
+    [HttpGet("today")]
+    public async Task<IActionResult> GetToday(CancellationToken ct)
+    {
+        var result = await _getTodayJournal.HandleAsync(new GetTodayJournalQuery(), ct);
+        return Ok(result.Entries);
+    }
+
     [HttpPost("{entryId:guid}/comments")]
     public async Task<IActionResult> AddComment(
         Guid entryId,
         [FromBody] AddCommentBody body,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var presenter = new AddJournalCommentHttpPresenter();
-        await new AddJournalCommentInteractor(_repository, presenter)
-            .Execute(new AddJournalCommentRequest(entryId, body.Text), cancellationToken);
-        return presenter.Result!;
+        var result = await _addComment.HandleAsync(new AddCommentCommand(entryId, body.Text), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Entry),
+            { IsNotFound: true } => NotFound(),
+            { ValidationError: not null } => BadRequest(new { error = result.ValidationError }),
+            _ => StatusCode(500)
+        };
     }
 
-    // PUT api/journal/{entryId}/comments/{commentId}
     [HttpPut("{entryId:guid}/comments/{commentId:guid}")]
     public async Task<IActionResult> UpdateComment(
         Guid entryId,
         Guid commentId,
         [FromBody] UpdateCommentBody body,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var presenter = new UpdateJournalCommentHttpPresenter();
-        await new UpdateJournalCommentInteractor(_repository, presenter)
-            .Execute(new UpdateJournalCommentRequest(entryId, commentId, body.Text), cancellationToken);
-        return presenter.Result!;
+        var result = await _updateComment.HandleAsync(
+            new UpdateCommentCommand(entryId, commentId, body.Text), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => Ok(result.Entry),
+            { IsNotFound: true } => NotFound(),
+            { ValidationError: not null } => BadRequest(new { error = result.ValidationError }),
+            _ => StatusCode(500)
+        };
     }
 
-    // DELETE api/journal/{entryId}/comments/{commentId}
     [HttpDelete("{entryId:guid}/comments/{commentId:guid}")]
     public async Task<IActionResult> RemoveComment(
         Guid entryId,
         Guid commentId,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var presenter = new RemoveJournalCommentHttpPresenter();
-        await new RemoveJournalCommentInteractor(_repository, presenter)
-            .Execute(new RemoveJournalCommentRequest(entryId, commentId), cancellationToken);
-        return presenter.Result!;
+        var result = await _removeComment.HandleAsync(
+            new RemoveCommentCommand(entryId, commentId), ct);
+
+        return result switch
+        {
+            { IsSuccess: true } => NoContent(),
+            { IsNotFound: true } => NotFound(),
+            _ => StatusCode(500)
+        };
     }
 }
 
