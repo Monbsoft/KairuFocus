@@ -19,5 +19,11 @@ internal sealed class UserSettingsConfiguration : IEntityTypeConfiguration<UserS
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
+
+        builder.Property(s => s.RingtonePreference)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired()
+            .HasDefaultValue(RingtonePreference.AlarmClock);
     }
 }

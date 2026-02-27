@@ -1,3 +1,3 @@
 namespace Kairudev.Application.Settings.Common;
 
-public sealed record UserSettingsViewModel(string ThemePreference);
+public sealed record UserSettingsViewModel(string ThemePreference, string RingtonePreference);

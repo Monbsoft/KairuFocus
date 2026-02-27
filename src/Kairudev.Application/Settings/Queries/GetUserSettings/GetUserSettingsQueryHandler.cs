@@ -17,7 +17,8 @@ public sealed class GetUserSettingsQueryHandler
         var settings = await _repository.GetAsync();
 
         var viewModel = new UserSettingsViewModel(
-            ThemePreference: settings.ThemePreference.ToString()
+            ThemePreference: settings.ThemePreference.ToString(),
+            RingtonePreference: settings.RingtonePreference.ToString()
         );
 
         return GetUserSettingsResult.Success(viewModel);

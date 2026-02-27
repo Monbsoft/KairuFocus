@@ -17,5 +17,6 @@ builder.Services.AddScoped<TaskApiClient>();
 builder.Services.AddScoped<PomodoroApiClient>();
 builder.Services.AddScoped<JournalApiClient>();
 builder.Services.AddScoped<SettingsApiClient>();
+builder.Services.AddScoped<ISoundService, SoundService>();
 
 await builder.Build().RunAsync();

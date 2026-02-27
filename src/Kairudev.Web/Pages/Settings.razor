@@ -3,6 +3,7 @@
 @inject PomodoroApiClient PomodoroApi
 @inject SettingsApiClient SettingsApi
 @inject IJSRuntime JSRuntime
+@inject ISoundService SoundService
 
 <h2>⚙ Paramètres</h2>
 
@@ -27,9 +28,27 @@ else
             </div>
         </div>
 
-        <hr class="my-4" />
+        <!-- Ringtone Section -->
+        <div class="mb-5">
+            <h4>🔔 Sonnerie Pomodoro</h4>
+            <div class="mb-3">
+                <label class="form-label">Son de fin de session</label>
+                <div class="d-flex gap-2 align-items-center">
+                    <select class="form-select" @bind="_selectedRingtone" @bind:after="OnRingtoneChanged">
+                        <option value="None">🔇 Aucun son</option>
+                        <option value="AlarmClock">⏰ Réveil</option>
+                        <option value="Bird">🐦 Oiseau</option>
+                    </select>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="PreviewRingtone"
+                            disabled="@(_selectedRingtone == "None")">
+                        ▶ Tester
+                    </button>
+                </div>
+                <div class="form-text">Joué automatiquement à la fin de chaque sprint ou pause.</div>
+            </div>
+        </div>
 
-        <!-- Pomodoro Section -->
+        <hr class="my-4" />
         <h4>🍅 Pomodoro</h4>
         <EditForm Model="_form" OnValidSubmit="SavePomodoroSettings">
             <DataAnnotationsValidator />
@@ -89,6 +108,7 @@ else
     private string? _errorMessage;
     private SettingsForm _form = new();
     private string _selectedTheme = "System";
+    private string _selectedRingtone = "AlarmClock";
 
     private sealed class SettingsForm
     {
@@ -113,6 +133,7 @@ else
         if (userSettings is not null)
         {
             _selectedTheme = userSettings.ThemePreference;
+            _selectedRingtone = userSettings.RingtonePreference;
             await ApplyTheme(_selectedTheme);
         }
 
@@ -123,6 +144,16 @@ else
     {
         await ApplyTheme(_selectedTheme);
         await SettingsApi.SaveThemePreferenceAsync(_selectedTheme);
+    }
+
+    private async Task OnRingtoneChanged()
+    {
+        await SettingsApi.SaveRingtonePreferenceAsync(_selectedRingtone);
+    }
+
+    private async Task PreviewRingtone()
+    {
+        await SoundService.PlayRingtoneAsync(_selectedRingtone);
     }
 
     private async Task ApplyTheme(string theme)

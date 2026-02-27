@@ -2,6 +2,8 @@
 @using Kairudev.Web.Services
 @inject PomodoroApiClient PomodoroApi
 @inject TaskApiClient TaskApi
+@inject SettingsApiClient SettingsApi
+@inject ISoundService SoundService
 @implements IAsyncDisposable
 
 <h2>Pomodoro</h2>
@@ -195,6 +197,7 @@ else
     private int _sprintDuration = 25;
     private int _shortBreakDuration = 5;
     private int _longBreakDuration = 15;
+    private string _ringtonePreference = "AlarmClock";
 
     // ── Timer ─────────────────────────────────────────────────────────────
     private int _remainingSeconds;
@@ -267,6 +270,12 @@ else
             _longBreakDuration = suggested.LongBreakDurationMinutes;
         }
 
+        var userSettings = await SettingsApi.GetSettingsAsync();
+        if (userSettings is not null)
+        {
+            _ringtonePreference = userSettings.RingtonePreference;
+        }
+
         if (_session?.Status == "Active")
         {
             InitTimer(_session);
@@ -329,6 +338,7 @@ else
 
     private async Task OnTimerCompleted()
     {
+        await SoundService.PlayRingtoneAsync(_ringtonePreference);
         var result = await PomodoroApi.CompleteSessionAsync();
         _completeResult = result;
         _session = await PomodoroApi.GetCurrentSessionAsync();

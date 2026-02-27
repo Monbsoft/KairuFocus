@@ -13,6 +13,7 @@ using Kairudev.Application.Pomodoro.Commands.UpdateTaskStatus;
 using Kairudev.Application.Pomodoro.Queries.GetCurrentSession;
 using Kairudev.Application.Pomodoro.Queries.GetSettings;
 using Kairudev.Application.Pomodoro.Queries.GetSuggestedSessionType;
+using Kairudev.Application.Settings.Commands.SaveRingtonePreference;
 using Kairudev.Application.Settings.Commands.SaveThemePreference;
 using Kairudev.Application.Settings.Queries.GetUserSettings;
 using Kairudev.Application.Tasks.Commands.AddTask;
@@ -64,6 +65,7 @@ builder.Services.AddScoped<CreateEntryCommandHandler>(); // Used internally by T
 // Settings — Command & Query Handlers
 builder.Services.AddScoped<GetUserSettingsQueryHandler>();
 builder.Services.AddScoped<SaveThemePreferenceCommandHandler>();
+builder.Services.AddScoped<SaveRingtonePreferenceCommandHandler>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
