@@ -57,11 +57,40 @@ Ce dossier contient les définitions des agents GitHub Copilot spécialisés pou
 ## Workflow type
 
 ```
-1. @product-manager     → Définir le besoin et le use case
-2. @architecte          → Modéliser le domaine et les boundaries
-3. @developpeur         → Implémenter + tester
-4. @architecte          → Créer l'ADR si décision majeure
-5. @product-manager     → Valider les critères d'acceptance
+1. @product-manager     → Démarrer itération (créer branche Git)
+2. @product-manager     → Définir le besoin et le use case
+3. @architecte          → Modéliser le domaine et les boundaries
+4. @developpeur         → Implémenter + tester (commits fréquents)
+5. @architecte          → Créer l'ADR si décision majeure
+6. @product-manager     → Finaliser itération (commit final + PR)
+```
+
+---
+
+## Workflow Git automatique
+
+### Début d'itération
+```
+@product-manager Démarrer l'itération #12
+→ Crée branche feature/12-bc-tickets
+→ Questionne pour définir le use case
+```
+
+### Pendant l'itération
+```
+@developpeur Implémente le use case UC-XX
+→ Commits fréquents après chaque étape
+→ Format : feat(scope): description
+→ Validation : dotnet build && dotnet test
+```
+
+### Fin d'itération
+```
+@product-manager Finaliser l'itération #12
+→ Vérifie docs/project-state.md
+→ Commit final
+→ Push vers GitHub
+→ Génère description PR
 ```
 
 ---

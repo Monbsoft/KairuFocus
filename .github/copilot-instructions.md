@@ -10,6 +10,58 @@
 
 ---
 
+## Workflow Git pour chaque itération
+
+### Au début d'une itération
+1. **Créer une branche** : `git checkout -b feature/{numero}-{nom-court}`
+   - Exemple : `git checkout -b feature/12-bc-tickets`
+2. **Vérifier la branche active** : `git branch`
+
+### Pendant l'itération
+- **Commits fréquents** avec messages clairs :
+  - Format : `feat({scope}): {description courte}`
+  - Exemple : `feat(tickets): ajout domain Ticket + value objects`
+- **Build et tests avant chaque commit** : `dotnet build && dotnet test`
+
+### À la fin d'une itération
+1. **Commit final** : tous les changements documentés
+2. **Build et tests finaux** : validation complète
+3. **Push de la branche** : `git push -u origin feature/{numero}-{nom-court}`
+4. **Créer une Pull Request** :
+   - Titre : `feat({numero}): {nom de l'itération}`
+   - Description : résumé technique + checklist (voir template ci-dessous)
+5. **Attendre validation** avant merge
+
+### Template Pull Request
+```markdown
+## Itération #{numero} — {Nom de l'itération}
+
+### 🎯 Objectif
+{Description courte du problème résolu}
+
+### ✅ Ce qui a été fait
+- {Changement 1}
+- {Changement 2}
+- Mise à jour `docs/project-state.md`
+
+### 📊 Impact
+- {Impact utilisateur/technique}
+
+### 🧪 Tests
+```
+dotnet build   # ✅ Génération réussie
+dotnet test    # ✅ {nombre} tests passent
+```
+
+### 📝 Checklist
+- [x] Build réussit
+- [x] Tests passent
+- [x] Documentation mise à jour
+- [x] Aucune régression
+```
+
+---
+
 ## Contexte produit
 
 Kairudev est une application de gestion d'activité quotidienne pour développeurs :

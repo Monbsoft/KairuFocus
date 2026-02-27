@@ -385,6 +385,64 @@ Si le modèle change en cours d'itération, les diagrammes concernés sont mis �
 
 ---
 
+## Workflow Git pour chaque itération
+
+### Au début d'une itération
+1. **Créer une branche** : `git checkout -b feature/{numero}-{nom-court}`
+   - Exemple : `git checkout -b feature/12-bc-tickets`
+2. **Vérifier la branche active** : `git branch`
+
+### Pendant l'itération
+- **Commits fréquents** avec messages clairs :
+  - Format : `feat({scope}): {description courte}`
+  - Exemple : `feat(tickets): ajout domain Ticket + value objects`
+- **Build et tests avant chaque commit** : `dotnet build && dotnet test`
+- **Commits suggérés** :
+  - Après implémentation Domain (entités + value objects + tests)
+  - Après implémentation Application (Use Cases + tests)
+  - Après implémentation Infrastructure (repositories + tests)
+  - Après implémentation API/UI
+
+### À la fin d'une itération
+1. **Commit final** : tous les changements documentés
+2. **Build et tests finaux** : validation complète
+3. **Mise à jour `docs/project-state.md`** : documenter l'itération
+4. **Push de la branche** : `git push -u origin feature/{numero}-{nom-court}`
+5. **Créer une Pull Request** :
+   - Titre : `feat({numero}): {nom de l'itération}`
+   - Description : résumé technique + checklist (voir template ci-dessous)
+6. **Attendre validation** avant merge
+
+### Template Pull Request
+```markdown
+## Itération #{numero} — {Nom de l'itération}
+
+### 🎯 Objectif
+{Description courte du problème résolu}
+
+### ✅ Ce qui a été fait
+- {Changement 1}
+- {Changement 2}
+- Mise à jour `docs/project-state.md`
+
+### 📊 Impact
+- {Impact utilisateur/technique}
+
+### 🧪 Tests
+```
+dotnet build   # ✅ Génération réussie
+dotnet test    # ✅ {nombre} tests passent
+```
+
+### 📝 Checklist
+- [x] Build réussit
+- [x] Tests passent
+- [x] Documentation mise à jour
+- [x] Aucune régression
+```
+
+---
+
 ## Première itération — lancement
 
 Joue tes rôles dans l'ordre, en t'arrêtant à chaque étape pour validation :
