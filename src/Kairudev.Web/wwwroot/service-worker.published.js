@@ -1,0 +1,34 @@
+// Published service worker — caches Blazor WASM assets for fast load
+// Auto-updated by Blazor publish pipeline via service-worker-assets.js
+
+const cacheName = 'kairudev-cache-v1';
+const offlineAssetsInclude = [/\.dll$/, /\.wasm$/, /\.html$/, /\.js$/, /\.json$/, /\.css$/, /\.png$/, /\.mp3$/];
+
+self.addEventListener('install', event => event.waitUntil(onInstall(event)));
+self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
+self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
+
+async function onInstall(event) {
+    self.skipWaiting();
+    const assetsRequests = self.assetsManifest.assets
+        .filter(a => offlineAssetsInclude.some(p => p.test(a.url)))
+        .map(a => new Request(a.url, { integrity: a.hash, cache: 'no-cache' }));
+    await caches.open(cacheName).then(c => c.addAll(assetsRequests));
+}
+
+async function onActivate(event) {
+    const cacheKeys = await caches.keys();
+    await Promise.all(cacheKeys
+        .filter(k => k !== cacheName)
+        .map(k => caches.delete(k)));
+}
+
+async function onFetch(event) {
+    if (event.request.method !== 'GET') return fetch(event.request);
+
+    // API calls: always network
+    if (event.request.url.includes('/api/')) return fetch(event.request);
+
+    const cachedResponse = await caches.match(event.request, { ignoreVary: true });
+    return cachedResponse ?? fetch(event.request);
+}
