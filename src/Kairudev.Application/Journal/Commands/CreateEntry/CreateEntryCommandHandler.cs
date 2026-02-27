@@ -15,7 +15,15 @@ public sealed class CreateEntryCommandHandler
         CreateEntryCommand command,
         CancellationToken cancellationToken = default)
     {
-        var entry = JournalEntry.Create(command.EventType, command.ResourceId, command.OccurredAt);
+        int? sequence = null;
+        if (command.EventType == JournalEventType.BreakCompleted)
+        {
+            var today = DateOnly.FromDateTime(command.OccurredAt);
+            var count = await _repository.GetTodayCountByTypeAsync(JournalEventType.BreakCompleted, today, cancellationToken);
+            sequence = count + 1;
+        }
+
+        var entry = JournalEntry.Create(command.EventType, command.ResourceId, command.OccurredAt, sequence);
         await _repository.AddAsync(entry, cancellationToken);
         return CreateEntryResult.Success();
     }

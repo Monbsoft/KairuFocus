@@ -61,6 +61,41 @@ public sealed class CompleteSessionCommandHandlerTests
     }
 
     [Fact]
+    public async Task Should_SetSequence1_When_FirstBreakOfTheDay()
+    {
+        AddActiveSession(PomodoroSessionType.ShortBreak);
+
+        await _sut.HandleAsync(new CompleteSessionCommand());
+
+        Assert.Equal(1, _journalRepository.Entries[0].Sequence);
+    }
+
+    [Fact]
+    public async Task Should_SetSequence2_When_SecondBreakOfTheDay()
+    {
+        // première pause déjà enregistrée
+        _journalRepository.Entries.Add(
+            JournalEntry.Create(JournalEventType.BreakCompleted, Guid.NewGuid(), DateTime.UtcNow.AddHours(-1), 1));
+
+        AddActiveSession(PomodoroSessionType.ShortBreak);
+
+        await _sut.HandleAsync(new CompleteSessionCommand());
+
+        var breakEntry = _journalRepository.Entries.Last();
+        Assert.Equal(2, breakEntry.Sequence);
+    }
+
+    [Fact]
+    public async Task Should_NotSetSequence_When_SprintCompleted()
+    {
+        AddActiveSession(PomodoroSessionType.Sprint);
+
+        await _sut.HandleAsync(new CompleteSessionCommand());
+
+        Assert.Null(_journalRepository.Entries[0].Sequence);
+    }
+
+    [Fact]
     public async Task Should_LogBreakCompleted_When_LongBreakSessionCompleted()
     {
         AddActiveSession(PomodoroSessionType.LongBreak);

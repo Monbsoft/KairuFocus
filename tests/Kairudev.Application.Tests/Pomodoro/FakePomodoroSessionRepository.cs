@@ -23,4 +23,7 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
 
     public Task<int> GetCompletedTodayCountAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult(Sessions.Count(s => s.Status == PomodoroSessionStatus.Completed));
+
+    public Task<int> GetCompletedSprintsTodayCountAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(Sessions.Count(s => s.SessionType == PomodoroSessionType.Sprint && s.Status == PomodoroSessionStatus.Completed));
 }
