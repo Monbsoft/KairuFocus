@@ -32,4 +32,10 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
 
     public Task<int> GetCompletedSprintsTodayCountAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult(Sessions.Count(s => s.SessionType == PomodoroSessionType.Sprint && s.Status == PomodoroSessionStatus.Completed));
+
+    public Task<PomodoroSession?> GetLatestCompletedTodayAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(Sessions
+            .Where(s => s.Status == PomodoroSessionStatus.Completed && s.EndedAt.HasValue && s.EndedAt.Value.Date == DateTime.UtcNow.Date)
+            .OrderByDescending(s => s.EndedAt)
+            .FirstOrDefault());
 }

@@ -20,13 +20,12 @@ public sealed class GetSuggestedSessionTypeQueryHandler
         CancellationToken cancellationToken = default)
     {
         var settings = await _settingsRepository.GetAsync(cancellationToken);
-        var allCompletedToday = await _sessionRepository.GetCompletedTodayCountAsync(cancellationToken);
-        var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(cancellationToken);
-        var breaksToday = allCompletedToday - sprintsToday;
+        var latestSession = await _sessionRepository.GetLatestCompletedTodayAsync(cancellationToken);
 
         PomodoroSessionType suggestedType;
-        if (sprintsToday > breaksToday)
+        if (latestSession?.SessionType == PomodoroSessionType.Sprint)
         {
+            var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(cancellationToken);
             // Dernier cycle était un sprint → suggérer une pause
             suggestedType = sprintsToday % PomodoroSettings.SprintsBeforeLongBreak == 0
                 ? PomodoroSessionType.LongBreak

@@ -9,4 +9,5 @@ public interface IPomodoroSessionRepository
     Task UpdateAsync(PomodoroSession session, CancellationToken cancellationToken = default);
     Task<int> GetCompletedTodayCountAsync(CancellationToken cancellationToken = default);
     Task<int> GetCompletedSprintsTodayCountAsync(CancellationToken cancellationToken = default);
+    Task<PomodoroSession?> GetLatestCompletedTodayAsync(CancellationToken cancellationToken = default);
 }

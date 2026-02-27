@@ -61,4 +61,15 @@ internal sealed class SqlitePomodoroSessionRepository : IPomodoroSessionReposito
                      && s.EndedAt.Value.Date == today,
                 cancellationToken);
     }
+
+    public async Task<PomodoroSession?> GetLatestCompletedTodayAsync(CancellationToken cancellationToken = default)
+    {
+        var today = DateTime.UtcNow.Date;
+        return await _context.PomodoroSessions
+            .Where(s => s.Status == PomodoroSessionStatus.Completed
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value.Date == today)
+            .OrderByDescending(s => s.EndedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }
