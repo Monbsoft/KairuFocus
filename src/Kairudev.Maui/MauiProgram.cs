@@ -33,6 +33,7 @@ public static class MauiProgram
 		builder.Services.AddScoped<TaskApiClient>();
 		builder.Services.AddScoped<PomodoroApiClient>();
 		builder.Services.AddScoped<JournalApiClient>();
+		builder.Services.AddScoped<SettingsApiClient>();
 
 		return builder.Build();
 	}

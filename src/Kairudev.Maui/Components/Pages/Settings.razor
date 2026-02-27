@@ -1,8 +1,10 @@
 @page "/settings"
 @using Kairudev.Maui.Services
 @inject PomodoroApiClient PomodoroApi
+@inject SettingsApiClient SettingsApi
+@inject IJSRuntime JSRuntime
 
-<h2>Paramètres Pomodoro</h2>
+<h2>⚙ Paramètres</h2>
 
 @if (!_loaded)
 {
@@ -10,8 +12,26 @@
 }
 else
 {
-    <div style="max-width: 500px">
-        <EditForm Model="_form" OnValidSubmit="SaveSettings">
+    <div style="max-width: 600px">
+        <!-- Theme Section -->
+        <div class="mb-5">
+            <h4>🎨 Thème</h4>
+            <div class="mb-3">
+                <label class="form-label">Préférence de thème</label>
+                <select class="form-select" @bind="_selectedTheme" @bind:after="OnThemeChanged">
+                    <option value="Light">☀️ Clair</option>
+                    <option value="Dark">🌙 Sombre</option>
+                    <option value="System">⚙️ Système</option>
+                </select>
+                <div class="form-text">Le thème sera appliqué immédiatement et sauvegardé.</div>
+            </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Pomodoro Section -->
+        <h4>🍅 Pomodoro</h4>
+        <EditForm Model="_form" OnValidSubmit="SavePomodoroSettings">
             <DataAnnotationsValidator />
 
             <div class="mb-3">
@@ -68,6 +88,7 @@ else
     private string? _successMessage;
     private string? _errorMessage;
     private SettingsForm _form = new();
+    private string _selectedTheme = "System";
 
     private sealed class SettingsForm
     {
@@ -78,17 +99,50 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var settings = await PomodoroApi.GetSettingsAsync();
-        if (settings is not null)
+        // Load Pomodoro settings
+        var pomodoroSettings = await PomodoroApi.GetSettingsAsync();
+        if (pomodoroSettings is not null)
         {
-            _form.SprintDuration = settings.SprintDurationMinutes;
-            _form.ShortBreakDuration = settings.ShortBreakDurationMinutes;
-            _form.LongBreakDuration = settings.LongBreakDurationMinutes;
+            _form.SprintDuration = pomodoroSettings.SprintDurationMinutes;
+            _form.ShortBreakDuration = pomodoroSettings.ShortBreakDurationMinutes;
+            _form.LongBreakDuration = pomodoroSettings.LongBreakDurationMinutes;
         }
+
+        // Load theme preference
+        var userSettings = await SettingsApi.GetSettingsAsync();
+        if (userSettings is not null)
+        {
+            _selectedTheme = userSettings.ThemePreference;
+            await ApplyTheme(_selectedTheme);
+        }
+
         _loaded = true;
     }
 
-    private async Task SaveSettings()
+    private async Task OnThemeChanged()
+    {
+        await ApplyTheme(_selectedTheme);
+        await SettingsApi.SaveThemePreferenceAsync(_selectedTheme);
+    }
+
+    private async Task ApplyTheme(string theme)
+    {
+        var effectiveTheme = theme;
+
+        if (theme == "System")
+        {
+            effectiveTheme = await JSRuntime.InvokeAsync<bool>("matchMedia", "(prefers-color-scheme: dark)") 
+                ? "Dark" 
+                : "Light";
+        }
+
+        await JSRuntime.InvokeVoidAsync("eval", 
+            effectiveTheme == "Dark" 
+                ? "document.documentElement.setAttribute('data-bs-theme', 'dark')" 
+                : "document.documentElement.setAttribute('data-bs-theme', 'light')");
+    }
+
+    private async Task SavePomodoroSettings()
     {
         _saving = true;
         _successMessage = null;
@@ -143,3 +197,4 @@ else
         _errorMessage = null;
     }
 }
+

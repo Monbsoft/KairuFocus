@@ -7,24 +7,25 @@
 
 ## Résumé état actuel
 
-**Dernière itération : #11 — Migration CQRS (refactoring architectural)** (2026-02-XX)
+**Dernière itération : #11b — BC Settings + Thème Dark paramétrable** (2026-02-XX)
 
 **Bounded Contexts opérationnels :**
 - **Tasks** : 6 Commands/Queries — **Architecture CQRS** ✅
 - **Pomodoro** : 10 Commands/Queries — **Architecture CQRS** ✅
 - **Journal** : 5 Commands/Queries — **Architecture CQRS** ✅
+- **Settings** : 2 Commands/Queries (🆕 thème paramétrable) — **Architecture CQRS** ✅
 
 **Architecture Application Layer :**
 - ✅ **CQRS sans MediatR** : Commands (écriture) + Queries (lecture)
 - ✅ **Handlers** retournent directement des `Result` (plus de Presenters)
 - ✅ **Injection directe** dans les Controllers (pas de mediator)
-- ✅ **21 use cases migrés** (6 Tasks + 10 Pomodoro + 5 Journal)
+- ✅ **23 use cases** (6 Tasks + 10 Pomodoro + 5 Journal + 2 Settings)
 
 **Tests :** 154 au total, **7 migrés vers Handlers** (AddTask, CompleteTask + 5 à migrer)
 
 **Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite + EF Core, .NET Aspire
 
-**Migrations :** 5 migrations (InitialCreate, AddPomodoro, AddJournalEntry, AddTaskDescription, AddSessionType)
+**Migrations :** 6 migrations (InitialCreate, AddPomodoro, AddJournalEntry, AddTaskDescription, AddSessionType, **AddUserSettings**)
 
 ---
 
@@ -48,15 +49,54 @@
 | ~~#8~~ | ~~BC Journal — log d'activité quotidien + génération automatique d'entrées~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | ~~#10~~ | ~~.NET MAUI — application desktop/mobile~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | ~~#11~~ | ~~Migration CQRS sans MediatR — refactoring architectural~~ | ~~✅ Livré~~ | ~~2026-02-XX~~ |
+| ~~#11b~~ | ~~BC Settings + Thème Dark paramétrable~~ | ~~✅ Livré~~ | ~~2026-02-XX~~ |
 | #12 | BC Tickets — intégration Jira / Linear / GitHub Issues | 📋 Planifié | — |
 
 ---
 
 ## Dernière itération livrée
 
-**#10 — .NET MAUI (application desktop/mobile)** — Livré le 2026-02-26
+**#11b — BC Settings + Thème Dark paramétrable** — Livré le 2026-02-XX
 
 ### Ce qui a été livré
+
+#### Problème
+L'application utilise uniquement le thème Bootstrap clair. Les utilisateurs modernes s'attendent à pouvoir choisir entre clair/sombre/système, avec persistence et synchronisation Web ↔ MAUI.
+
+#### Solution appliquée
+
+**Nouveau Bounded Context : Settings** ✅
+- **Domain** : `UserSettings` (aggregate root, singleton), `ThemePreference` (enum : Light/Dark/System)
+- **Application** : 2 use cases CQRS (GetUserSettings, SaveThemePreference)
+- **Infrastructure** : `SqliteUserSettingsRepository` + migration `AddUserSettings`
+- **API** : `SettingsController` (`GET /api/settings`, `PUT /api/settings/theme`)
+- **UI (Web + MAUI)** : `SettingsApiClient`, select thème dans `Settings.razor`
+
+**Fonctionnalités** ✅
+- **3 modes** : ☀️ Clair, 🌙 Sombre, ⚙️ Système (détection via `prefers-color-scheme`)
+- **Application immédiate** : thème change sans rechargement (JSInterop + `data-bs-theme`)
+- **Persistence SQLite** : synchronisation Web ↔ MAUI via API REST
+- **Defaults** : création automatique si premier accès (valeur par défaut : `System`)
+
+**Architecture** ✅
+- **Clean Architecture respectée** : dépendances pointent vers l'intérieur
+- **CQRS sans MediatR** : suit exactement le pattern Tasks/Pomodoro/Journal
+- **ADR-004** créé : documentation de la décision
+
+### Impact
+- **UX améliorée** : support natif du dark mode, confort visuel
+- **Synchronisation** : préférence partagée entre Web et MAUI
+- **Extensible** : BC Settings prêt pour d'autres préférences (langue, fuseau horaire, etc.)
+- **23 use cases** au total (6 Tasks + 10 Pomodoro + 5 Journal + 2 Settings)
+
+### Dette technique introduite
+- **Tests manquants** : `UserSettingsTests`, `SaveThemePreferenceCommandHandlerTests`, `SqliteUserSettingsRepositoryTests`
+- **Tests non migrés** : certains tests (Interactors/Presenters) ne compilent plus (priorité basse, hors scope)
+- **Duplication UI** : `Settings.razor` dupliqué Web/MAUI (résolu dans future RCL Shared)
+
+---
+
+##
 
 #### Problème
 L'application n'était accessible que via navigateur web (Blazor WASM). Besoin d'une expérience native desktop/mobile avec les mêmes fonctionnalités.

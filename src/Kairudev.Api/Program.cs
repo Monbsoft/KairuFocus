@@ -13,6 +13,8 @@ using Kairudev.Application.Pomodoro.Commands.UpdateTaskStatus;
 using Kairudev.Application.Pomodoro.Queries.GetCurrentSession;
 using Kairudev.Application.Pomodoro.Queries.GetSettings;
 using Kairudev.Application.Pomodoro.Queries.GetSuggestedSessionType;
+using Kairudev.Application.Settings.Commands.SaveThemePreference;
+using Kairudev.Application.Settings.Queries.GetUserSettings;
 using Kairudev.Application.Tasks.Commands.AddTask;
 using Kairudev.Application.Tasks.Commands.ChangeTaskStatus;
 using Kairudev.Application.Tasks.Commands.CompleteTask;
@@ -58,6 +60,10 @@ builder.Services.AddScoped<AddCommentCommandHandler>();
 builder.Services.AddScoped<UpdateCommentCommandHandler>();
 builder.Services.AddScoped<RemoveCommentCommandHandler>();
 builder.Services.AddScoped<CreateEntryCommandHandler>(); // Used internally by Tasks & Pomodoro
+
+// Settings — Command & Query Handlers
+builder.Services.AddScoped<GetUserSettingsQueryHandler>();
+builder.Services.AddScoped<SaveThemePreferenceCommandHandler>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

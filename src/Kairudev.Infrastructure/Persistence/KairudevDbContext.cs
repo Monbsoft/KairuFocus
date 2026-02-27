@@ -1,5 +1,6 @@
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Pomodoro;
+using Kairudev.Domain.Settings;
 using Kairudev.Domain.Tasks;
 using Kairudev.Infrastructure.Persistence.Configurations;
 using Kairudev.Infrastructure.Persistence.Internal;
@@ -16,6 +17,7 @@ public sealed class KairudevDbContext : DbContext
     internal DbSet<PomodoroSettingsRow> PomodoroSettings => Set<PomodoroSettingsRow>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalComment> JournalComments => Set<JournalComment>();
+    public DbSet<UserSettings> UserSettings => Set<UserSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,5 +26,6 @@ public sealed class KairudevDbContext : DbContext
         modelBuilder.ApplyConfiguration(new PomodoroSettingsConfiguration());
         modelBuilder.ApplyConfiguration(new JournalEntryConfiguration());
         modelBuilder.ApplyConfiguration(new JournalCommentConfiguration());
+        modelBuilder.ApplyConfiguration(new UserSettingsConfiguration());
     }
 }

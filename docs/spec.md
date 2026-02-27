@@ -49,6 +49,11 @@ flowchart LR
             UCS1(["Générer une entrée (Système)"])
         end
 
+        subgraph Settings["Bounded Context : Settings"]
+            UC17(["Sauvegarder préférence thème"])
+            UC18(["Consulter les paramètres"])
+        end
+
         subgraph Tickets["Bounded Context : Tickets (à venir)"]
             UC9(["Synchroniser les tickets"])
         end
@@ -71,10 +76,8 @@ flowchart LR
     Dev --> UC14
     Dev --> UC15
     Dev --> UC16
-    Système --> UCS1
-    Dev --> UC9
-```
-    Dev --> UC16
+    Dev --> UC17
+    Dev --> UC18
     Système --> UCS1
     Dev --> UC9
 ```
@@ -1005,3 +1008,54 @@ sequenceDiagram
   - **Avantage** : application native fonctionnelle immédiatement, réutilisation totale de l'UI Blazor.
   - **Dette technique** : duplication de code (pages + services). Solution future : extraire dans une Razor Class Library `Kairudev.Web.Shared` référencée par Web + MAUI.
   - **Clean Architecture respectée** : MAUI reste un pur adapter, le Domain ignore tout de l'UI.
+
+---
+
+## Bounded Context : Settings
+
+### UC-17 — Sauvegarder préférence de thème
+
+**Acteur principal :** Développeur  
+**Parties prenantes :** —  
+**Préconditions :** —  
+**Postconditions (succès) :** La préférence de thème est sauvegardée et le thème est appliqué.
+
+**Scénario nominal :**
+1. Le développeur accède aux paramètres.
+2. Le développeur sélectionne un thème (Clair / Sombre / Système).
+3. Le système valide la valeur (Light, Dark, System).
+4. Le système met à jour l'aggregate UserSettings.
+5. Le système persiste en base SQLite.
+6. Le système applique le thème immédiatement (via JSInterop).
+
+**Scénarios d'exception :**
+- **E1 :** Valeur invalide → erreur retournée à l'UI.
+
+**Critères d'acceptance :**
+- [x] La préférence est persistée en SQLite
+- [x] Le changement est appliqué immédiatement sans rechargement
+- [x] Synchronisation Web ↔ MAUI via API
+- [x] Détection de la préférence système (dark/light)
+
+---
+
+### UC-18 — Consulter les paramètres utilisateur
+
+**Acteur principal :** Développeur  
+**Parties prenantes :** —  
+**Préconditions :** —  
+**Postconditions (succès) :** Les paramètres sont affichés.
+
+**Scénario nominal :**
+1. Le développeur accède à /settings.
+2. Le système récupère les UserSettings depuis SQLite.
+3. Le système retourne le ThemePreference.
+4. L'UI affiche la valeur actuelle dans le select.
+
+**Scénarios alternatifs :**
+- **A1 :** Aucun paramètre n'existe → crée des settings par défaut (System).
+
+**Critères d'acceptance :**
+- [x] Chargement des settings au démarrage de la page
+- [x] Création automatique si premier accès
+

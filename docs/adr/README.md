@@ -7,6 +7,7 @@ Ce dossier contient les décisions architecturales importantes du projet Kairude
 | # | Titre | Statut | Date |
 |---|---|---|---|
 | [ADR-003](003-migration-cqrs-sans-mediatr.md) | Migration vers CQRS sans MediatR | ✅ Accepté | 2026-02-XX |
+| [ADR-004](004-theme-parametrable.md) | Thème paramétrable (Dark mode) | ✅ Accepté | 2026-02-XX |
 
 ## Format
 

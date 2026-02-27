@@ -1,5 +1,6 @@
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Pomodoro;
+using Kairudev.Domain.Settings;
 using Kairudev.Domain.Tasks;
 using Kairudev.Infrastructure.Persistence;
 using Kairudev.Infrastructure.Persistence.Repositories;
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IPomodoroSessionRepository, SqlitePomodoroSessionRepository>();
         services.AddScoped<IPomodoroSettingsRepository, SqlitePomodoroSettingsRepository>();
         services.AddScoped<IJournalEntryRepository, SqliteJournalEntryRepository>();
+        services.AddScoped<IUserSettingsRepository, SqliteUserSettingsRepository>();
 
         return services;
     }
