@@ -15,10 +15,10 @@ internal sealed class FakeJournalEntryRepository : IJournalEntryRepository
     public Task<JournalEntry?> GetByIdAsync(JournalEntryId id, CancellationToken cancellationToken = default) =>
         Task.FromResult(Entries.FirstOrDefault(e => e.Id == id));
 
-    public Task<IReadOnlyList<JournalEntry>> GetTodayEntriesAsync(DateOnly today, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<JournalEntry>> GetEntriesByDateAsync(DateOnly date, CancellationToken cancellationToken = default)
     {
-        var start = today.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var end   = today.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var start = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var end   = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
         IReadOnlyList<JournalEntry> result = Entries
             .Where(e => e.OccurredAt >= start && e.OccurredAt <= end)
             .OrderBy(e => e.OccurredAt)

@@ -20,10 +20,10 @@ public sealed class SqliteJournalEntryRepository : IJournalEntryRepository
             .Include(e => e.Comments)
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 
-    public async Task<IReadOnlyList<JournalEntry>> GetTodayEntriesAsync(DateOnly today, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<JournalEntry>> GetEntriesByDateAsync(DateOnly date, CancellationToken cancellationToken = default)
     {
-        var start = today.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var end   = today.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var start = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var end   = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
         return await _context.JournalEntries
             .Include(e => e.Comments)
             .Where(e => e.OccurredAt >= start && e.OccurredAt <= end)

@@ -112,7 +112,7 @@ public sealed class CompleteTaskCommandHandlerTests
         public Task<JournalEntry?> GetByIdAsync(JournalEntryId id, CancellationToken ct = default) =>
             Task.FromResult(_entries.FirstOrDefault(e => e.Id == id));
 
-        public Task<IReadOnlyList<JournalEntry>> GetTodayEntriesAsync(DateOnly today, CancellationToken ct = default) =>
+        public Task<IReadOnlyList<JournalEntry>> GetEntriesByDateAsync(DateOnly date, CancellationToken ct = default) =>
             Task.FromResult<IReadOnlyList<JournalEntry>>(_entries);
 
         public Task UpdateAsync(JournalEntry entry, CancellationToken ct = default) =>

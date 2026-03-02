@@ -3,15 +3,15 @@ using Kairudev.Domain.Journal;
 using Kairudev.Domain.Pomodoro;
 using Kairudev.Domain.Tasks;
 
-namespace Kairudev.Application.Journal.Queries.GetTodayJournal;
+namespace Kairudev.Application.Journal.Queries.GetJournalByDate;
 
-public sealed class GetTodayJournalQueryHandler
+public sealed class GetJournalByDateQueryHandler
 {
     private readonly IJournalEntryRepository _repository;
     private readonly IPomodoroSessionRepository _sessionRepository;
     private readonly ITaskRepository _taskRepository;
 
-    public GetTodayJournalQueryHandler(
+    public GetJournalByDateQueryHandler(
         IJournalEntryRepository repository,
         IPomodoroSessionRepository sessionRepository,
         ITaskRepository taskRepository)
@@ -21,11 +21,11 @@ public sealed class GetTodayJournalQueryHandler
         _taskRepository = taskRepository;
     }
 
-    public async Task<GetTodayJournalResult> HandleAsync(
-        GetTodayJournalQuery query,
+    public async Task<GetJournalByDateResult> HandleAsync(
+        GetJournalByDateQuery query,
         CancellationToken cancellationToken = default)
     {
-        var entries = await _repository.GetEntriesByDateAsync(DateOnly.FromDateTime(DateTime.UtcNow), cancellationToken);
+        var entries = await _repository.GetEntriesByDateAsync(query.Date, cancellationToken);
 
         var allTasks = await _taskRepository.GetAllAsync(cancellationToken);
         var taskLookup = allTasks.ToDictionary(t => t.Id.Value, t => t.Title.Value);
@@ -58,6 +58,6 @@ public sealed class GetTodayJournalQueryHandler
             viewModels.Add(JournalEntryViewModel.From(entry, taskTitles));
         }
 
-        return new GetTodayJournalResult(viewModels);
+        return new GetJournalByDateResult(viewModels);
     }
 }
