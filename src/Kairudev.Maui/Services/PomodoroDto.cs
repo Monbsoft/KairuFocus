@@ -15,10 +15,6 @@ public sealed record PomodoroSessionDto(
     DateTime? EndedAt,
     IReadOnlyList<Guid> LinkedTaskIds);
 
-public sealed record PomodoroCompleteResultDto(
-    string BreakType,
-    int BreakDurationMinutes);
-
 public sealed record SuggestedSessionTypeDto(
     string SuggestedType,
     int SprintDurationMinutes,

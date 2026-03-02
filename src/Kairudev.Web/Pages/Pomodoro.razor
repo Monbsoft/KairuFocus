@@ -96,7 +96,7 @@ else
         {
             var (icon, label, next) = _completedSessionType switch
             {
-                "Sprint"     => ("🍅", "Sprint terminé !",      $"Pause recommandée : {_selectedSessionType switch { "LongBreak" => "longue", _ => "courte" }}"),
+                "Sprint"     => ("🍅", "Sprint terminé !",      _suggestedNextSessionType switch { "LongBreak" => "Pause recommandée : longue", "ShortBreak" => "Pause recommandée : courte", _ => "" }),
                 "ShortBreak" => ("☕", "Pause courte terminée !", "Sprint recommandé !"),
                 "LongBreak"  => ("🌙", "Pause longue terminée !", "Sprint recommandé !"),
                 _            => ("✅", "Session terminée !",       "")
@@ -191,6 +191,7 @@ else
     private bool _loaded;
     private PomodoroSessionDto? _session;
     private string? _completedSessionType;
+    private string? _suggestedNextSessionType;
     private List<TaskDto> _allTasks = [];
     private List<TaskDto> _linkedTasks = [];
     private string? _errorMessage;
@@ -311,6 +312,7 @@ else
     {
         _errorMessage = null;
         _completedSessionType = null;
+        _suggestedNextSessionType = null;
 
         var started = await PomodoroApi.StartSessionAsync(_selectedSessionType);
         if (started is null)
@@ -347,8 +349,8 @@ else
         await SoundService.PlayRingtoneAsync(_ringtonePreference);
 
         var completedType = _session?.SessionType;
-        var result = await PomodoroApi.CompleteSessionAsync();
-        if (result is null)
+        var success = await PomodoroApi.CompleteSessionAsync();
+        if (!success)
         {
             _errorMessage = "Impossible de terminer la session.";
             StateHasChanged();
@@ -360,6 +362,7 @@ else
         _remainingSeconds = 0;
 
         var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
+        _suggestedNextSessionType = suggested?.SuggestedType;
         if (suggested is not null)
             _selectedSessionType = suggested.SuggestedType;
 
