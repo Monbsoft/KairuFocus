@@ -89,13 +89,18 @@ else
             }
         </div>
 
-        <!-- Résultat après un sprint terminé -->
-        @if (_completeResult is not null)
+        <!-- Résultat après fin de session -->
+        @if (_completedSessionType is not null)
         {
-            var breakLabel = _completeResult.BreakType == "long" ? "longue" : "courte";
+            var (icon, label, next) = _completedSessionType switch
+            {
+                "Sprint"     => ("🍅", "Sprint terminé !",      $"Pause recommandée : {_selectedSessionType switch { "LongBreak" => "longue", _ => "courte" }}"),
+                "ShortBreak" => ("☕", "Pause courte terminée !", "Sprint recommandé !"),
+                "LongBreak"  => ("🌙", "Pause longue terminée !", "Sprint recommandé !"),
+                _            => ("✅", "Session terminée !",       "")
+            };
             <div class="alert alert-success text-center" style="max-width:360px">
-                Sprint terminé ! Pause @breakLabel recommandée :
-                <strong>@_completeResult.BreakDurationMinutes min</strong>
+                @icon @label <strong>@next</strong>
             </div>
         }
 
@@ -183,7 +188,7 @@ else
     // ── État ──────────────────────────────────────────────────────────────
     private bool _loaded;
     private PomodoroSessionDto? _session;
-    private PomodoroCompleteResultDto? _completeResult;
+    private string? _completedSessionType;
     private List<TaskDto> _allTasks = [];
     private List<TaskDto> _linkedTasks = [];
     private string? _errorMessage;
@@ -296,7 +301,7 @@ else
     private async Task StartSession()
     {
         _errorMessage = null;
-        _completeResult = null;
+        _completedSessionType = null;
 
         var started = await PomodoroApi.StartSessionAsync(_selectedSessionType);
         if (started is null)
@@ -329,10 +334,23 @@ else
 
     private async Task OnTimerCompleted()
     {
-        var result = await PomodoroApi.CompleteSessionAsync();
-        _completeResult = result;
+        var completedType = _session?.SessionType;
+        var success = await PomodoroApi.CompleteSessionAsync();
+        if (!success)
+        {
+            _errorMessage = "Impossible de terminer la session.";
+            StateHasChanged();
+            return;
+        }
+
+        _completedSessionType = completedType;
         _session = await PomodoroApi.GetCurrentSessionAsync();
         _remainingSeconds = 0;
+
+        var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
+        if (suggested is not null)
+            _selectedSessionType = suggested.SuggestedType;
+
         RefreshLinkedTasks();
         StateHasChanged();
     }

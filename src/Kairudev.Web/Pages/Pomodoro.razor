@@ -347,8 +347,8 @@ else
         await SoundService.PlayRingtoneAsync(_ringtonePreference);
 
         var completedType = _session?.SessionType;
-        var result = await PomodoroApi.CompleteSessionAsync();
-        if (result is null)
+        var success = await PomodoroApi.CompleteSessionAsync();
+        if (!success)
         {
             _errorMessage = "Impossible de terminer la session.";
             StateHasChanged();

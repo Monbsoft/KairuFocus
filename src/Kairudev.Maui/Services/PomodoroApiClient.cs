@@ -56,11 +56,10 @@ public sealed class PomodoroApiClient
         return await response.Content.ReadFromJsonAsync<PomodoroSessionDto>();
     }
 
-    public async Task<PomodoroCompleteResultDto?> CompleteSessionAsync()
+    public async Task<bool> CompleteSessionAsync()
     {
         var response = await _http.PatchAsync("api/pomodoro/session/complete", null);
-        if (!response.IsSuccessStatusCode) return null;
-        return await response.Content.ReadFromJsonAsync<PomodoroCompleteResultDto>();
+        return response.IsSuccessStatusCode;
     }
 
     public async Task<bool> InterruptSessionAsync()
