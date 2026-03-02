@@ -38,7 +38,7 @@ public sealed class GetSuggestedSessionTypeQueryHandler
         }
 
         return new GetSuggestedSessionTypeResult(
-            suggestedType.ToString(),
+            suggestedType,
             settings.SprintDurationMinutes,
             settings.ShortBreakDurationMinutes,
             settings.LongBreakDurationMinutes);

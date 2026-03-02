@@ -30,7 +30,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     {
         var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
 
-        Assert.Equal("Sprint", result.SuggestedType);
+        Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
 
         var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
 
-        Assert.Equal("ShortBreak", result.SuggestedType);
+        Assert.Equal(PomodoroSessionType.ShortBreak, result.SuggestedType);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
 
         var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
 
-        Assert.Equal("LongBreak", result.SuggestedType);
+        Assert.Equal(PomodoroSessionType.LongBreak, result.SuggestedType);
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
 
         var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
 
-        Assert.Equal("Sprint", result.SuggestedType);
+        Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
 
         var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
 
-        Assert.Equal("ShortBreak", result.SuggestedType);
+        Assert.Equal(PomodoroSessionType.ShortBreak, result.SuggestedType);
     }
 
     [Fact]
@@ -91,6 +91,6 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
 
         var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
 
-        Assert.Equal("LongBreak", result.SuggestedType);
+        Assert.Equal(PomodoroSessionType.LongBreak, result.SuggestedType);
     }
 }
