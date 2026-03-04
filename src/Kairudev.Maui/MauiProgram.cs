@@ -1,4 +1,5 @@
-﻿using Kairudev.Maui.Services;
+using Kairudev.Maui.Auth;
+using Kairudev.Maui.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Kairudev.Maui;
@@ -22,12 +23,22 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		// Configure HttpClient with API base URL
 		var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7056";
-		builder.Services.AddScoped(_ => new HttpClient
+
+		// Auth services
+		builder.Services.AddScoped<MauiAuthService>();
+		builder.Services.AddScoped<AuthorizationMessageHandler>();
+
+		// HttpClient avec handler d'autorisation Bearer
+		builder.Services.AddHttpClient("KairudevApi", client =>
 		{
-			BaseAddress = new Uri(apiBaseUrl)
-		});
+			client.BaseAddress = new Uri(apiBaseUrl);
+		})
+		.AddHttpMessageHandler<AuthorizationMessageHandler>();
+
+		// Fournir HttpClient depuis la factory pour les ApiClients qui l'injectent directement
+		builder.Services.AddScoped(sp =>
+			sp.GetRequiredService<IHttpClientFactory>().CreateClient("KairudevApi"));
 
 		// Register API clients
 		builder.Services.AddScoped<TaskApiClient>();

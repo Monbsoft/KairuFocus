@@ -1,3 +1,8 @@
+@using Kairudev.Web.Auth
+@inject AuthService AuthService
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
 <div class="top-row navbar navbar-dark">
     <div class="container-fluid justify-content-center">
         <span class="navbar-brand-icon">K</span>
@@ -10,29 +15,32 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="nav flex-column align-items-center">
         <div class="nav-item">
-            <NavLink class="nav-link nav-icon" href="tasks" title="Tâches" Match="NavLinkMatch.Prefix">
-                <span aria-hidden="true">☑</span>
+            <NavLink class="nav-link nav-icon" href="tasks" title="Taches" Match="NavLinkMatch.Prefix">
+                <span aria-hidden="true">&#9745;</span>
             </NavLink>
         </div>
         <div class="nav-item">
             <NavLink class="nav-link nav-icon" href="pomodoro" title="Pomodoro" Match="NavLinkMatch.Prefix">
-                <span aria-hidden="true">🍅</span>
+                <span aria-hidden="true">&#127813;</span>
             </NavLink>
         </div>
         <div class="nav-item">
             <NavLink class="nav-link nav-icon" href="journal" title="Journal" Match="NavLinkMatch.Prefix">
-                <span aria-hidden="true">📖</span>
+                <span aria-hidden="true">&#128214;</span>
             </NavLink>
         </div>
         <div class="nav-item">
             <NavLink class="nav-link nav-icon" href="tickets" title="Tickets" Match="NavLinkMatch.Prefix">
-                <span aria-hidden="true">🎫</span>
+                <span aria-hidden="true">&#127915;</span>
             </NavLink>
         </div>
         <div class="nav-item nav-item-settings">
-            <NavLink class="nav-link nav-icon" href="settings" title="Paramètres" Match="NavLinkMatch.Prefix">
-                <span aria-hidden="true">⚙</span>
+            <NavLink class="nav-link nav-icon" href="settings" title="Parametres" Match="NavLinkMatch.Prefix">
+                <span aria-hidden="true">&#9881;</span>
             </NavLink>
+        </div>
+        <div class="nav-item nav-item-logout">
+            <button class="nav-icon" title="Deconnexion" @onclick="LogoutAsync">&#128682;</button>
         </div>
     </nav>
 </div>
@@ -45,5 +53,12 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.RemoveTokenAsync();
+        AuthStateProvider.NotifyAuthenticationStateChanged();
+        Nav.NavigateTo("/login", forceLoad: false);
     }
 }

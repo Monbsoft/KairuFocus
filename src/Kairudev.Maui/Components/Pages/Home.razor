@@ -1,9 +1,14 @@
-﻿@page "/"
+@page "/"
+@using Kairudev.Maui.Auth
 @inject NavigationManager Nav
+@inject MauiAuthService AuthService
 
 @code {
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        Nav.NavigateTo("/tasks", replace: true);
+        if (!await AuthService.IsAuthenticatedAsync())
+            Nav.NavigateTo("/login", replace: true);
+        else
+            Nav.NavigateTo("/tasks", replace: true);
     }
 }

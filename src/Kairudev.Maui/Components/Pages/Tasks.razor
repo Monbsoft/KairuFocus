@@ -1,7 +1,10 @@
 @page "/tasks"
 @using Kairudev.Maui.Services
+@using Kairudev.Maui.Auth
 @inject TaskApiClient Api
 @inject TicketApiClient TicketApi
+@inject MauiAuthService AuthService
+@inject NavigationManager Nav
 
 <h2>Tâches du jour</h2>
 
@@ -121,8 +124,15 @@ else
     private Guid? linkingTaskId;
     private string linkJiraKeyInput = string.Empty;
 
-    protected override async Task OnInitializedAsync() =>
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await AuthService.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/login", forceLoad: false);
+            return;
+        }
         tasks = await Api.GetAllAsync();
+    }
 
     private async Task AddTask()
     {

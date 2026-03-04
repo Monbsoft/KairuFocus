@@ -1,6 +1,9 @@
 @page "/tickets"
 @using Kairudev.Maui.Services
+@using Kairudev.Maui.Auth
 @inject TicketApiClient TicketClient
+@inject MauiAuthService AuthService
+@inject NavigationManager Nav
 
 <h3>Tickets Jira</h3>
 
@@ -49,6 +52,11 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        if (!await AuthService.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/login", forceLoad: false);
+            return;
+        }
         var (notConfigured, tickets) = await TicketClient.GetAssignedAsync();
         _notConfigured = notConfigured;
         _tickets = tickets;
