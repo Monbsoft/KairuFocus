@@ -1,4 +1,4 @@
-# Kairudev
+# 🚀 Kairudev
 
 > Application de gestion d'activité quotidienne pour développeurs.
 
@@ -6,20 +6,20 @@ Kairudev centralise en un seul endroit tout ce dont un développeur a besoin pou
 
 ---
 
-## Fonctionnalités
+## ✨ Fonctionnalités
 
 | Module | Description |
 |--------|-------------|
-| **Tasks** | Micro-tâches quotidiennes — ajout, modification, statut, lien Jira |
-| **Pomodoro** | Sessions de focus (sprint / pause courte / pause longue) avec chronomètre circulaire |
-| **Journal** | Timeline d'activité quotidienne générée automatiquement + commentaires personnels |
-| **Tickets** | Intégration Jira Cloud — liste des tickets assignés, liaison avec les tâches |
-| **Settings** | Thème clair/sombre/système, durées Pomodoro, credentials Jira |
-| **Auth** | Connexion via GitHub OAuth 2.0, JWT HS256, multi-utilisateurs |
+| ☑️ **Tasks** | Micro-tâches quotidiennes — ajout, modification, statut, lien Jira |
+| 🍅 **Pomodoro** | Sessions de focus (sprint / pause courte / pause longue) avec chronomètre circulaire |
+| 📖 **Journal** | Timeline d'activité quotidienne générée automatiquement + commentaires personnels |
+| 🎫 **Tickets** | Intégration Jira Cloud — liste des tickets assignés, liaison avec les tâches |
+| ⚙️ **Settings** | Thème clair/sombre/système, durées Pomodoro, credentials Jira |
+| 🔐 **Auth** | Connexion via GitHub OAuth 2.0, JWT HS256, multi-utilisateurs |
 
 ---
 
-## Stack technique
+## 🛠️ Stack technique
 
 - **Runtime** : .NET 10
 - **API** : ASP.NET Core Web API
@@ -32,7 +32,7 @@ Kairudev centralise en un seul endroit tout ce dont un développeur a besoin pou
 
 ---
 
-## Architecture
+## 🏛️ Architecture
 
 Clean Architecture (Uncle Bob) + DDD, avec CQRS sans MediatR.
 
@@ -44,37 +44,37 @@ Api             →  Controllers ASP.NET Core, Auth JWT
 Web / Maui      →  UI Blazor (WASM + Hybrid)
 ```
 
-**Règle fondamentale** : les dépendances ne pointent que vers l'intérieur. Le Domain ne connaît rien des couches externes.
+> 📐 **Règle fondamentale** : les dépendances ne pointent que vers l'intérieur. Le Domain ne connaît rien des couches externes.
 
 ```
 src/
-├── Kairudev.Domain/          # Bounded Contexts : Tasks, Pomodoro, Journal, Settings, Identity
-├── Kairudev.Application/     # 30 use cases CQRS
-├── Kairudev.Infrastructure/  # EF Core + migrations + repositories
-├── Kairudev.Api/             # REST API + GitHub OAuth + JWT
-├── Kairudev.Web/             # Blazor WASM
-├── Kairudev.Maui/            # .NET MAUI Blazor Hybrid
-├── Kairudev.AppHost/         # Aspire orchestration
-└── Kairudev.ServiceDefaults/ # OpenTelemetry, health checks
+├── Kairudev.Domain/          # 🧠 Bounded Contexts : Tasks, Pomodoro, Journal, Settings, Identity
+├── Kairudev.Application/     # ⚡ 30 use cases CQRS
+├── Kairudev.Infrastructure/  # 🗄️ EF Core + migrations + repositories
+├── Kairudev.Api/             # 🌐 REST API + GitHub OAuth + JWT
+├── Kairudev.Web/             # 💻 Blazor WASM
+├── Kairudev.Maui/            # 📱 .NET MAUI Blazor Hybrid
+├── Kairudev.AppHost/         # 🔭 Aspire orchestration
+└── Kairudev.ServiceDefaults/ # 📊 OpenTelemetry, health checks
 tests/
 ├── Kairudev.Domain.Tests/
 ├── Kairudev.Application.Tests/
 └── Kairudev.Infrastructure.Tests/
 docs/
-├── spec.md                   # Spécification complète + ADR
-└── project-state.md          # État de l'itération courante
+├── spec.md                   # 📋 Spécification complète + ADR
+└── project-state.md          # 📍 État de l'itération courante
 ```
 
 ---
 
-## Démarrage rapide
+## ⚡ Démarrage rapide
 
 ### Prérequis
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Une [GitHub OAuth App](https://github.com/settings/developers) (voir ci-dessous)
 
-### 1. Configurer GitHub OAuth
+### 1️⃣ Configurer GitHub OAuth
 
 Crée une OAuth App sur [github.com/settings/developers](https://github.com/settings/developers) :
 
@@ -101,7 +101,7 @@ Puis renseigne les credentials dans `src/Kairudev.Api/appsettings.Development.js
 
 > ⚠️ Ne jamais committer ce fichier avec de vraies valeurs.
 
-### 2. Lancer l'application
+### 2️⃣ Lancer l'application
 
 **Option A — Aspire (recommandé)** : démarre API + Web + dashboard observabilité
 
@@ -109,35 +109,37 @@ Puis renseigne les credentials dans `src/Kairudev.Api/appsettings.Development.js
 dotnet run --project src/Kairudev.AppHost/Kairudev.AppHost.csproj --launch-profile http
 ```
 
-Dashboard Aspire : `http://localhost:15100`
-Web app : `http://localhost:5010`
-API : `http://localhost:5205`
+| Service | URL |
+|---------|-----|
+| 🔭 Dashboard Aspire | `http://localhost:15100` |
+| 💻 Web app | `http://localhost:5010` |
+| 🌐 API | `http://localhost:5205` |
 
 **Option B — Séparé**
 
 ```bash
-# Terminal 1 — API
+# Terminal 1 — API 🌐
 dotnet run --project src/Kairudev.Api/Kairudev.Api.csproj --launch-profile http
 
-# Terminal 2 — Web
+# Terminal 2 — Web 💻
 dotnet run --project src/Kairudev.Web/Kairudev.Web.csproj --launch-profile http
 ```
 
-### 3. Lancer les tests
+### 3️⃣ Lancer les tests
 
 ```bash
 dotnet test
 ```
 
 ```
-Réussi! — 166 tests, 0 échec
+✅ Réussi! — 166 tests, 0 échec
 ```
 
 ---
 
-## Intégration Jira (optionnel)
+## 🎫 Intégration Jira (optionnel)
 
-Dans l'application → **Paramètres** → section Jira :
+Dans l'application → **⚙️ Paramètres** → section Jira :
 
 | Champ | Exemple |
 |-------|---------|
@@ -147,13 +149,13 @@ Dans l'application → **Paramètres** → section Jira :
 
 ---
 
-## Documentation
+## 📚 Documentation
 
-- [`docs/spec.md`](docs/spec.md) — Spécification complète, use cases, diagrammes, ADR
-- [`docs/project-state.md`](docs/project-state.md) — État de l'itération courante et historique
+- [`docs/spec.md`](docs/spec.md) — 📋 Spécification complète, use cases, diagrammes, ADR
+- [`docs/project-state.md`](docs/project-state.md) — 📍 État de l'itération courante et historique
 
 ---
 
-## Licence
+## 📄 Licence
 
 Usage privé — projet personnel.

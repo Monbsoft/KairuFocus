@@ -1231,6 +1231,26 @@ sequenceDiagram
   - **Contrainte** : requiert une connexion à Jira pour afficher les tickets ; la page Tickets est vide si Jira est inaccessible.
   - **JiraApiToken stocké en clair** dans SQLite — dette technique à adresser (chiffrement) dans une itération future.
 
+### ADR-010 — Cookie intermédiaire + JWT pour le flux OAuth GitHub
+- **Contexte :** ASP.NET Core `AddOAuth` (famille `RemoteAuthenticationHandler`) exige un scheme de sign-in pour stocker l'état pendant le callback. Le scheme final étant JWT Bearer (stateless), il n'y a pas de scheme de sign-in par défaut.
+- **Décision :** Ajouter `.AddCookie()` et configurer `DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme`. Le cookie n'est utilisé que le temps du round-trip OAuth ; après émission du JWT, le client ne l'utilise plus. Toutes les API restent protégées par `JwtBearer` uniquement.
+- **Conséquences :**
+  - **Avantage** : solution standard ASP.NET Core, aucun middleware custom.
+  - **Contrainte** : un cookie de session éphémère est émis pendant le callback (durée de vie très courte, non persisté côté client).
+  - **Sécurité** : le JWT est transmis via fragment URL (`#token=...`), jamais en query string (non loggé dans les serveurs proxy).
+
+### ADR-011 — Landing page `[AllowAnonymous]` + Dashboard `[Authorize]` + fragment URL pour JWT
+- **Contexte :** Blazor WASM utilise `AuthorizeRouteView` qui intercepte toutes les navigations. La page d'accueil (`/`) doit être publique pour présenter le produit aux utilisateurs non connectés. Le JWT émis par l'API doit parvenir à Blazor sans être exposé dans l'historique HTTP.
+- **Décision :**
+  - `/` → `Home.razor` avec `[AllowAnonymous]` : landing page visible par tous, redirige vers `/dashboard` si déjà authentifié.
+  - `/dashboard` → `Dashboard.razor` avec `[Authorize]` : page d'accueil post-login.
+  - `/login` → `Login.razor` avec `[AllowAnonymous]` : récepteur du JWT via `uri.Fragment`.
+  - Transport du JWT : l'API redirige vers `/login#token={jwt}`, Blazor lit `NavigationManager.Uri` pour extraire le fragment (les fragments ne sont pas envoyés aux serveurs HTTP).
+- **Conséquences :**
+  - **Avantage** : JWT jamais exposé dans les logs serveur ou proxy ; expérience utilisateur cohérente (landing → login → dashboard).
+  - **Contrainte** : le fragment est visible dans l'URL le temps d'un rendu Blazor ; `Login.razor` doit nettoyer la barre d'adresse après extraction.
+  - **Routing** : `AuthorizeRouteView` redirige vers `/login` (configurable via `<NotAuthorized>`) pour toutes les pages `[Authorize]`.
+
 ---
 
 ## Bounded Context : Settings
