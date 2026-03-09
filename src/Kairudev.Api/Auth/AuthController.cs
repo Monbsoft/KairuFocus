@@ -48,10 +48,12 @@ public sealed class AuthController : ControllerBase
         CancellationToken ct = default)
     {
         var result = await HttpContext.AuthenticateAsync("GitHub");
+        var webBase = _configuration["WebBaseUrl"] ?? "http://localhost:5010";
+
         if (!result.Succeeded)
         {
             _logger.LogWarning("GitHub authentication failed: {Error}", result.Failure?.Message);
-            return Redirect("/#auth-error=denied");
+            return Redirect($"{webBase}/login#auth-error=denied");
         }
 
         var githubId = result.Principal!.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -61,7 +63,7 @@ public sealed class AuthController : ControllerBase
         var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
 
         if (string.IsNullOrEmpty(githubId))
-            return Redirect("/#auth-error=no-id");
+            return Redirect($"{webBase}/login#auth-error=no-id");
 
         var command = new GetOrCreateUserCommand(githubId, login, displayName, email);
         var userResult = await _handler.Handle(command, ct);
@@ -69,7 +71,7 @@ public sealed class AuthController : ControllerBase
         if (userResult.IsFailure)
         {
             _logger.LogError("Failed to get or create user: {Error}", userResult.Error);
-            return Redirect("/#auth-error=server");
+            return Redirect($"{webBase}/login#auth-error=server");
         }
 
         var token = GenerateJwt(userResult.Value);
@@ -77,7 +79,7 @@ public sealed class AuthController : ControllerBase
         if (!string.IsNullOrEmpty(returnUrl) && returnUrl.StartsWith("kairudev://", StringComparison.OrdinalIgnoreCase))
             return Redirect($"{returnUrl}?token={Uri.EscapeDataString(token)}");
 
-        return Redirect($"/#token={Uri.EscapeDataString(token)}");
+        return Redirect($"{webBase}/login#token={Uri.EscapeDataString(token)}");
     }
 
     [HttpGet("me")]

@@ -3,6 +3,7 @@
 @inject NavigationManager Nav
 @inject AuthService AuthService
 @inject JwtAuthenticationStateProvider AuthStateProvider
+@inject IConfiguration Configuration
 
 <PageTitle>Connexion -- Kairudev</PageTitle>
 
@@ -17,7 +18,7 @@
             <div class="alert alert-danger">@_error</div>
         }
 
-        <a href="/api/auth/github" class="btn btn-github">
+        <a href="@_githubLoginUrl" class="btn btn-github">
             <span class="github-icon">&#11041;</span>
             Se connecter avec GitHub
         </a>
@@ -26,6 +27,13 @@
 
 @code {
     private string? _error;
+    private string _githubLoginUrl = "/api/auth/github";
+
+    protected override void OnInitialized()
+    {
+        var apiBase = Configuration["ApiBaseUrl"] ?? string.Empty;
+        _githubLoginUrl = $"{apiBase}/api/auth/github";
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -40,7 +48,7 @@
             var token = Uri.UnescapeDataString(fragment[7..]);
             await AuthService.SetTokenAsync(token);
             AuthStateProvider.NotifyAuthenticationStateChanged();
-            Nav.NavigateTo("/tasks", forceLoad: false);
+            Nav.NavigateTo("/dashboard", forceLoad: false);
             return;
         }
 
@@ -58,6 +66,6 @@
 
         // Si deja authentifie, rediriger
         if (await AuthService.IsAuthenticatedAsync())
-            Nav.NavigateTo("/tasks", forceLoad: false);
+            Nav.NavigateTo("/dashboard", forceLoad: false);
     }
 }

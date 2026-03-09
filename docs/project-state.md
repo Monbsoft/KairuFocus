@@ -7,10 +7,10 @@
 
 ## Résumé état actuel
 
-**Dernière itération : #15 — Auth GitHub + Multi-users** (2026-03-04)
+**Dernière itération : #15b — Auth client Web + UI (Landing + Dashboard)** (2026-03-09)
 
 **Bounded Contexts opérationnels :**
-- **Identity** : `User`, `UserId`, `IUserRepository`, `GetOrCreateUserCommandHandler` ✅ (🆕)
+- **Identity** : `User`, `UserId`, `IUserRepository`, `GetOrCreateUserCommandHandler` ✅
 - **Tasks** : 8 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
 - **Pomodoro** : 10 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
 - **Journal** : 6 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
@@ -24,12 +24,16 @@
 - ✅ **ICurrentUserService** : abstraction application-layer pour l'identité courante
 - ✅ **30 use cases** (8 Tasks + 10 Pomodoro + 6 Journal + 4 Settings + 1 Tickets + 1 Identity)
 
-**Authentification :**
+**Authentification (bout en bout) :**
 - ✅ GitHub OAuth 2.0 (`GET /api/auth/github` → callback → JWT HS256)
 - ✅ `AuthController` : `/github`, `/github/callback`, `/me`
-- ✅ JWT Bearer sur tous les controllers (TasksController, PomodoroController, JournalController, SettingsController, TicketsController)
+- ✅ JWT Bearer sur tous les controllers (Tasks, Pomodoro, Journal, Settings, Tickets)
 - ✅ `ClaimsCurrentUserService` : lit le claim `sub` depuis le JWT
 - ✅ `GetOrCreateUserCommandHandler` : crée l'utilisateur au premier login
+- ✅ **Blazor WASM** : `JwtAuthenticationStateProvider`, `AuthService`, `Login.razor` avec flux complet
+- ✅ **MAUI** : `MauiAuthService`, `SecureStorage`, `Login.razor` MAUI avec même flux
+- ✅ `AddCookie()` + `DefaultSignInScheme = Cookie` (requis par RemoteAuthenticationHandler)
+- ✅ `WebBaseUrl` dans `appsettings.Development.json` (redirection API → Web correcte)
 
 **Multi-users :**
 - ✅ `OwnerId` (UserId) ajouté à `DeveloperTask`, `PomodoroSession`, `JournalEntry`
@@ -38,7 +42,14 @@
 - ✅ Tous les repositories filtrent les données par `UserId`
 - ✅ Table `Users` créée en base (GitHubId unique, Login, DisplayName, Email?)
 
-**Tests :** 155 au total ✅ (90 Domain + 48 Application + 17 Infrastructure)
+**UI (Blazor WASM) :**
+- ✅ **Landing page** (`/`) : hero + 4 feature cards, bouton GitHub login, `[AllowAnonymous]`
+- ✅ **Dashboard** (`/dashboard`) : salutation, stats (tâches, Pomodoro, journal), accès rapides, `[Authorize]`
+- ✅ **NavMenu** : icône dashboard + bouton déconnexion SVG (logout → landing)
+- ✅ **Redirection intelligente** : `/` → `/dashboard` si authentifié, `/login` → `/dashboard` après login
+
+**Tests :** 166 au total ✅ (90 Domain + 59 Application + 17 Infrastructure)
+- 🆕 `UserIdTests` (4), `UserTests` (3), `GetOrCreateUserCommandHandlerTests` (4)
 
 **Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite + EF Core, .NET Aspire
 
@@ -73,10 +84,65 @@
 | ~~#13~~ | ~~BC Tickets — intégration Jira (liste, lien tâche, config)~~ | ~~✅ Livré~~ | ~~2026-03-03~~ |
 | ~~#14~~ | ~~Navigation sidebar — icônes seulement, style VS Code (Web + MAUI)~~ | ~~✅ Livré~~ | ~~2026-03-03~~ |
 | ~~#15~~ | ~~Auth GitHub + Multi-users — JWT, OwnerId sur toutes les entités, ICurrentUserService~~ | ~~✅ Livré~~ | ~~2026-03-04~~ |
+| ~~#15b~~ | ~~Auth client Web + MAUI — Login.razor, JwtAuthenticationStateProvider, Landing page, Dashboard~~ | ~~✅ Livré~~ | ~~2026-03-09~~ |
 
 ---
 
 ## Dernière itération livrée
+
+**#15b — Auth client Web + MAUI + UI Landing + Dashboard** — Livré le 2026-03-09
+
+### Ce qui a été livré
+
+**Build fixes** ✅
+- `_Imports.razor` : ajout `@using Microsoft.AspNetCore.Authorization` (manquant)
+- `Kairudev.Web.csproj` + `Kairudev.Maui.csproj` : ajout `Microsoft.Extensions.Http 10.*`
+
+**Blazor WASM — authentification bout en bout** ✅
+- `Login.razor` : bouton GitHub login pointant sur `{ApiBaseUrl}/api/auth/github` (via `IConfiguration`)
+- `Login.razor` : lecture `uri.Fragment` → extraction du JWT → stockage `localStorage` → `Nav.NavigateTo("/dashboard")`
+- `JwtAuthenticationStateProvider` + `AuthService` : état d'authentification Blazor basé sur JWT
+- `App.razor` : `CascadingAuthenticationState` + `AuthorizeRouteView` (redirect → `/login`)
+
+**MAUI — authentification bout en bout** ✅
+- `Login.razor` (MAUI) : même flux que Web, stockage via `SecureStorage`
+- `MauiAuthService` : équivalent de `AuthService` pour MAUI
+
+**API — correctifs OAuth** ✅
+- `Program.cs` : ajout `AddCookie()` + `DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme`
+  (requis pour `RemoteAuthenticationHandler` lors du callback GitHub)
+- `appsettings.Development.json` : ajout `WebBaseUrl: "http://localhost:5010"`
+- `AuthController` : toutes les redirections utilisent `{WebBaseUrl}/login#...` au lieu de `/#...`
+
+**UI Blazor — Landing + Dashboard** ✅
+- **`Home.razor`** (réécriture complète) : page d'accueil `[AllowAnonymous]`, hero gradient + bouton GitHub login, 4 feature cards (Tasks / Pomodoro / Journal / Tickets), redirige vers `/dashboard` si déjà authentifié
+- **`Dashboard.razor`** (nouveau) : page `[Authorize]`, salutation `"Bonjour, {login}"` + date, 4 stat-cards cliquables (tâches en cours, tâches terminées, session Pomodoro active, entrées journal aujourd'hui), 5 quicklinks
+- **`NavMenu.razor`** : icône SVG dashboard (premier lien), bouton déconnexion SVG (`.btn-logout`), logout → `/`
+- **`app.css`** : styles `btn-logout`, `landing`, `landing-hero`, `feature-card`, `dashboard-page`, `stat-card`, `stat-active`, `quicklink-card` (avec dark mode support)
+
+**Tests** ✅ (+11 tests, total 166)
+- `UserIdTests.cs` : 4 tests (Create, Equal, NotEqual, ToString)
+- `UserTests.cs` : 3 tests (Create, Id from GitHubId, null email)
+- `FakeUserRepository.cs` : stub en mémoire
+- `GetOrCreateUserCommandHandlerTests.cs` : 4 tests (CreateUser, ReturnExisting, CorrectDisplayName, NoDuplicate)
+
+**Outillage** ✅
+- `.claude/launch.json` : 3 configs serveur (AppHost Aspire port 15100, API port 5205, Web port 5010)
+- `README.md` (racine) : README professionnel (features, stack, architecture, quickstart, OAuth setup, Jira config)
+
+### Impact
+- **Flux complet** : l'utilisateur peut se connecter via GitHub depuis le Web ou MAUI, toutes les pages protégées fonctionnent
+- **UX** : landing page présente le produit, dashboard centralise les informations clés
+- **Développeur** : `.claude/launch.json` + `README.md` facilitent l'onboarding
+
+### Dette technique
+- `appsettings.Development.json` : `GitHub:ClientSecret` et `Jwt:SecretKey` à configurer manuellement
+- `JiraApiToken` toujours stocké en clair dans SQLite
+- Duplication pages Blazor Web ↔ MAUI (dette ADR-008, à résoudre via RCL)
+
+---
+
+## Itération précédente
 
 **#15 — Auth GitHub + Multi-users** — Livré le 2026-03-04
 
@@ -110,9 +176,6 @@
 **Infrastructure** ✅
 - `UserConfiguration` + `SqliteUserRepository` : persistence table `Users`
 - Toutes les configurations EF Core mises à jour pour mapper `OwnerId`
-- Comparaisons EF Core : `t.OwnerId == userId` (conversion value object → string automatique)
-- `Entity<TId>` : constructeur protégé sans paramètre ajouté pour EF Core materialization
-- `UserSettings` : constructeur privé sans paramètre pour EF Core materialization
 - Migration `InitialMultiUser` : table Users + OwnerId sur Tasks/PomodoroSessions/JournalEntries + refonte PK UserSettings et PomodoroSettings
 
 **Auth API** ✅
@@ -120,23 +183,11 @@
 - `ClaimsCurrentUserService` : lit le claim `sub` depuis le JWT Bearer
 - GitHub OAuth 2.0 + JWT HS256 (configurable via `appsettings.Development.json`)
 - `[Authorize]` sur TasksController, PomodoroController, JournalController, SettingsController, TicketsController
-- `Microsoft.AspNetCore.Authentication.JwtBearer` 10.0.3 ajouté
-- `Program.cs` : `AddAuthentication`, `AddAuthorization`, `UseAuthentication`, `UseAuthorization`
 
 **Tests** ✅ (155 tests, 0 échec)
 - `FakeCurrentUserService` : stub pour les tests Application
 - Tous les fake repositories mis à jour (signatures UserId)
 - Tous les tests Domain/Application/Infrastructure mis à jour (UserId dans Create())
-
-### Impact
-- **Sécurité** : chaque utilisateur ne peut accéder qu'à ses propres données
-- **Multi-users** : N utilisateurs peuvent utiliser la même instance de Kairudev
-- **GitHub SSO** : connexion en un clic via GitHub OAuth
-
-### Dette technique introduite
-- `appsettings.Development.json` : `GitHub:ClientSecret` et `Jwt:SecretKey` à configurer manuellement (ne pas committer les vraies valeurs)
-- Blazor Web et MAUI : pas encore intégrés avec l'authentification (pas de flux login UI)
-- `JiraApiToken` toujours stocké en clair (dette précédente)
 
 ---
 
@@ -663,9 +714,9 @@ Add a new migration before updating the database.
 - .NET 10 GA (SDK 10.0.200-preview = SDK .NET 10.1 preview, runtime 10 GA)
 - SQLite + EF Core 10.0.3 (fichier local `kairudev.db`, hors git)
 - ASP.NET Core Web API (`Kairudev.Api`)
-- Blazor WebAssembly (`Kairudev.Web`)
+- Blazor WebAssembly (`Kairudev.Web`) — auth GitHub ✅
+- .NET MAUI Blazor Hybrid (`Kairudev.Maui`) — auth GitHub ✅
 - .NET Aspire 13.1.1 (`Kairudev.AppHost` + `Kairudev.ServiceDefaults`)
-- .NET MAUI — itération future
 - xUnit pour les tests
 - Solution : `Kairudev.slnx`
 
@@ -673,21 +724,31 @@ Add a new migration before updating the database.
 ```
 src/
 ├── Kairudev.Domain/
+│   ├── Common/
 │   ├── Tasks/
-│   └── Pomodoro/
+│   ├── Pomodoro/
+│   ├── Journal/
+│   ├── Settings/
+│   ├── Tickets/
+│   └── Identity/              ← UserId, User, IUserRepository
 ├── Kairudev.Application/
 │   ├── Tasks/
-│   └── Pomodoro/
+│   ├── Pomodoro/
+│   ├── Journal/
+│   ├── Settings/
+│   ├── Tickets/
+│   └── Identity/              ← GetOrCreateUserCommand, ICurrentUserService
 ├── Kairudev.Adapters/          ← à supprimer (ADR-007)
 ├── Kairudev.Infrastructure/    ← migrations dans Persistence/Migrations/
-├── Kairudev.Api/               ← Tasks/ + Pomodoro/
+├── Kairudev.Api/               ← Controllers + Auth/
 ├── Kairudev.AppHost/           ← orchestration Aspire
 ├── Kairudev.ServiceDefaults/   ← OTEL, health checks, service discovery
-└── Kairudev.Web/               ← Services/ + Pages/ + wwwroot/appsettings.json
+├── Kairudev.Web/               ← Pages/ (Home, Login, Dashboard, ...) + Auth/ + Services/
+└── Kairudev.Maui/              ← Pages/ + Auth/ + Services/ (Blazor Hybrid)
 tests/
-├── Kairudev.Domain.Tests/      ← Tasks/ + Pomodoro/
-├── Kairudev.Application.Tests/ ← Tasks/ + Pomodoro/
-└── Kairudev.Infrastructure.Tests/  ← Tasks/ + Pomodoro/ (17 tests intégration SQLite)
+├── Kairudev.Domain.Tests/
+├── Kairudev.Application.Tests/
+└── Kairudev.Infrastructure.Tests/  ← 17 tests intégration SQLite
 docs/
 ├── spec.md
 └── project-state.md

@@ -36,6 +36,7 @@ using Kairudev.Api.Auth;
 using Kairudev.Infrastructure;
 using Kairudev.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -108,7 +109,9 @@ builder.Services
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = "GitHub";
+        options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     })
+    .AddCookie()
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
