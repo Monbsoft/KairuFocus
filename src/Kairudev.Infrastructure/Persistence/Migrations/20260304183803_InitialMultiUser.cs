@@ -81,6 +81,25 @@ namespace Kairudev.Infrastructure.Persistence.Migrations
                 table: "Users",
                 column: "GitHubId",
                 unique: true);
+
+            // Backfill: assign pre-existing rows (OwnerId IS NULL) to a deterministic legacy user,
+            // so they remain visible after the multi-user upgrade instead of disappearing.
+            // The legacy user is only inserted when there are actually rows to backfill,
+            // keeping fresh installs clean.
+            // NOTE: 'legacy_user' is a hardcoded literal; migrationBuilder.Sql() does not support
+            // parameterised queries, and this value never originates from user input.
+            migrationBuilder.Sql(
+                """
+                INSERT INTO Users (Id, GitHubId, Login, DisplayName)
+                SELECT 'legacy_user', 'legacy_user', 'legacy', 'Legacy User'
+                WHERE EXISTS (SELECT 1 FROM Tasks            WHERE OwnerId IS NULL)
+                   OR EXISTS (SELECT 1 FROM PomodoroSessions WHERE OwnerId IS NULL)
+                   OR EXISTS (SELECT 1 FROM JournalEntries   WHERE OwnerId IS NULL);
+                """);
+
+            migrationBuilder.Sql("UPDATE Tasks             SET OwnerId = 'legacy_user' WHERE OwnerId IS NULL;");
+            migrationBuilder.Sql("UPDATE PomodoroSessions  SET OwnerId = 'legacy_user' WHERE OwnerId IS NULL;");
+            migrationBuilder.Sql("UPDATE JournalEntries    SET OwnerId = 'legacy_user' WHERE OwnerId IS NULL;");
         }
 
         /// <inheritdoc />
