@@ -11,7 +11,8 @@ todo list de micro-tâches, journal de bord, intégration tickets, sessions Pomo
 
 | Acteur | Description |
 |---|---|
-| **Développeur** | Utilisateur unique de l'application |
+| **Développeur** | Utilisateur authentifié via GitHub OAuth, peut être plusieurs sur la même instance |
+| **Système** | Actions automatiques déclenchées par l'application (génération entrées journal, etc.) |
 
 ---
 
@@ -60,6 +61,12 @@ flowchart LR
             UCT3(["Délier un ticket Jira d'une tâche"])
             UCT4(["Configurer les credentials Jira"])
         end
+
+        subgraph Identity["Bounded Context : Identity"]
+            UCA1(["Se connecter via GitHub"])
+            UCA2(["Se déconnecter"])
+            UCA3(["Accéder à une page protégée"])
+        end
     end
 
     Dev --> UC1
@@ -83,6 +90,9 @@ flowchart LR
     Dev --> UC18
     Système --> UCS1
     Dev --> UC9
+    Dev --> UCA1
+    Dev --> UCA2
+    Dev --> UCA3
 ```
 
 ---
@@ -1033,6 +1043,141 @@ sequenceDiagram
 
 ---
 
+---
+
+## Bounded Context : Identity ✅ (itérations #15 + #15b)
+
+**Concept clé :** authentification via GitHub OAuth 2.0. L'identité d'un utilisateur est son compte GitHub. Un JWT HS256 est émis après le callback OAuth et stocké côté client (localStorage Web / SecureStorage MAUI).
+
+### Modèle du domaine
+
+```mermaid
+classDiagram
+    class User {
+        +UserId Id
+        +string GitHubId
+        +string Login
+        +string DisplayName
+        +string? Email
+        +Create(githubId, login, displayName, email?) User
+    }
+
+    class UserId {
+        +string Value
+        +From(string) UserId
+    }
+
+    class IUserRepository {
+        <<interface>>
+        +GetByGitHubIdAsync(string githubId)
+        +AddAsync(User user)
+    }
+
+    User --> UserId : identifié par
+    IUserRepository ..> User : gère
+```
+
+---
+
+### UC-A01 — Se connecter via GitHub OAuth
+
+**Acteur principal :** Développeur
+**Parties prenantes :** —
+**Préconditions :** GitHub OAuth App configurée (ClientId, ClientSecret, CallbackUrl)
+**Postconditions (succès) :** JWT retourné, utilisateur créé en base si premier login, client redirigé vers `/dashboard`
+
+**Scénario nominal :**
+1. Le développeur clique sur "Se connecter avec GitHub" (landing page ou login page)
+2. Le client navigue vers `GET /api/auth/github`
+3. L'API redirige vers GitHub OAuth (`authorize`)
+4. L'utilisateur s'authentifie sur GitHub et autorise l'application
+5. GitHub redirige vers `GET /api/auth/github/callback?code=...`
+6. L'API échange le code contre un access token GitHub
+7. L'API récupère le profil GitHub (`login`, `id`, `name`, `email`)
+8. L'API appelle `GetOrCreateUserCommandHandler` (crée l'utilisateur si nécessaire)
+9. L'API génère un JWT HS256 (claims : `sub=UserId`, `name`, `login`)
+10. L'API redirige vers `{WebBaseUrl}/login#token={jwt}`
+11. La page `Login.razor` extrait le token du fragment, le stocke, met à jour l'état auth
+12. L'utilisateur est redirigé vers `/dashboard`
+
+**Scénarios d'exception :**
+- E1 : GitHub OAuth refusé → `{WebBaseUrl}/login#auth-error=denied`
+- E2 : GitHub ID non reçu → `{WebBaseUrl}/login#auth-error=no-id`
+- E3 : Erreur serveur → `{WebBaseUrl}/login#auth-error=server`
+
+**Critères d'acceptance :**
+- [x] Redirection GitHub → callback → JWT en un seul flux
+- [x] Utilisateur créé au premier login, retrouvé aux suivants
+- [x] JWT valide 24h (configurable)
+- [x] Cookie session intermédiaire (non persisté, pour OAuth callback uniquement)
+- [x] `WebBaseUrl` configurable sans redéploiement
+
+```mermaid
+sequenceDiagram
+    actor U as Utilisateur
+    participant C as Blazor (Home/Login)
+    participant API as AuthController
+    participant GH as GitHub OAuth
+    participant H as GetOrCreateUserHandler
+
+    U->>C: Clic "Se connecter avec GitHub"
+    C->>API: GET /api/auth/github
+    API->>GH: Redirect /authorize
+    GH-->>U: Page de consentement GitHub
+    U->>GH: Autorisation accordée
+    GH->>API: GET /callback?code=...
+    API->>GH: POST /access_token
+    GH-->>API: access_token
+    API->>GH: GET /user
+    GH-->>API: {id, login, name, email}
+    API->>H: GetOrCreateUserCommand
+    H-->>API: User (créé ou retrouvé)
+    API->>API: Génère JWT HS256
+    API-->>C: Redirect /login#token=...
+    C->>C: Stocke JWT, setState
+    C->>C: NavigateTo("/dashboard")
+```
+
+---
+
+### UC-A02 — Se déconnecter
+
+**Acteur principal :** Développeur
+**Préconditions :** Utilisateur authentifié
+**Postconditions :** JWT supprimé du stockage client, état auth réinitialisé, retour landing page
+
+**Scénario nominal :**
+1. Le développeur clique sur le bouton de déconnexion (icône SVG dans NavMenu)
+2. Le client supprime le JWT du localStorage (Web) ou SecureStorage (MAUI)
+3. L'état d'authentification Blazor est réinitialisé (utilisateur anonyme)
+4. L'utilisateur est redirigé vers `/` (landing page)
+
+**Critères d'acceptance :**
+- [x] JWT supprimé du stockage local
+- [x] Toutes les pages `[Authorize]` redirigent vers `/login` après déconnexion
+- [x] Aucun appel serveur nécessaire (JWT stateless)
+
+---
+
+### UC-A03 — Accéder à une page protégée
+
+**Acteur principal :** Développeur
+**Préconditions :** Page marquée `[Authorize]`
+**Postconditions :** Page affichée si authentifié ; redirection `/login` sinon
+
+**Scénario nominal :**
+1. Le développeur navigue vers une page protégée (ex. `/dashboard`, `/tasks`)
+2. `AuthorizeRouteView` vérifie l'état d'authentification via `JwtAuthenticationStateProvider`
+3. Si JWT valide en localStorage → page affichée
+4. Si absent ou expiré → redirection vers `/login`
+
+**Critères d'acceptance :**
+- [x] `[Authorize]` sur Dashboard, Tasks, Pomodoro, Journal, Settings, Tickets
+- [x] `[AllowAnonymous]` sur Home (landing) et Login
+- [x] Redirection automatique `/dashboard` si déjà authentifié sur Home et Login
+
+---
+
 ## ADR (Architecture Decision Records)
 
 ### ADR-001 — Clean Architecture + boundary pattern
@@ -1085,6 +1230,26 @@ sequenceDiagram
   - **Avantage** : toujours à jour, pas de migration ni de job de synchro, implémentation minimale.
   - **Contrainte** : requiert une connexion à Jira pour afficher les tickets ; la page Tickets est vide si Jira est inaccessible.
   - **JiraApiToken stocké en clair** dans SQLite — dette technique à adresser (chiffrement) dans une itération future.
+
+### ADR-010 — Cookie intermédiaire + JWT pour le flux OAuth GitHub
+- **Contexte :** ASP.NET Core `AddOAuth` (famille `RemoteAuthenticationHandler`) exige un scheme de sign-in pour stocker l'état pendant le callback. Le scheme final étant JWT Bearer (stateless), il n'y a pas de scheme de sign-in par défaut.
+- **Décision :** Ajouter `.AddCookie()` et configurer `DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme`. Le cookie n'est utilisé que le temps du round-trip OAuth ; après émission du JWT, le client ne l'utilise plus. Toutes les API restent protégées par `JwtBearer` uniquement.
+- **Conséquences :**
+  - **Avantage** : solution standard ASP.NET Core, aucun middleware custom.
+  - **Contrainte** : un cookie de session éphémère est émis pendant le callback (durée de vie très courte, non persisté côté client).
+  - **Sécurité** : le JWT est transmis via fragment URL (`#token=...`), jamais en query string (non loggé dans les serveurs proxy).
+
+### ADR-011 — Landing page `[AllowAnonymous]` + Dashboard `[Authorize]` + fragment URL pour JWT
+- **Contexte :** Blazor WASM utilise `AuthorizeRouteView` qui intercepte toutes les navigations. La page d'accueil (`/`) doit être publique pour présenter le produit aux utilisateurs non connectés. Le JWT émis par l'API doit parvenir à Blazor sans être exposé dans l'historique HTTP.
+- **Décision :**
+  - `/` → `Home.razor` avec `[AllowAnonymous]` : landing page visible par tous, redirige vers `/dashboard` si déjà authentifié.
+  - `/dashboard` → `Dashboard.razor` avec `[Authorize]` : page d'accueil post-login.
+  - `/login` → `Login.razor` avec `[AllowAnonymous]` : récepteur du JWT via `uri.Fragment`.
+  - Transport du JWT : l'API redirige vers `/login#token={jwt}`, Blazor lit `NavigationManager.Uri` pour extraire le fragment (les fragments ne sont pas envoyés aux serveurs HTTP).
+- **Conséquences :**
+  - **Avantage** : JWT jamais exposé dans les logs serveur ou proxy ; expérience utilisateur cohérente (landing → login → dashboard).
+  - **Contrainte** : le fragment est visible dans l'URL le temps d'un rendu Blazor ; `Login.razor` doit nettoyer la barre d'adresse après extraction.
+  - **Routing** : `AuthorizeRouteView` redirige vers `/login` (configurable via `<NotAuthorized>`) pour toutes les pages `[Authorize]`.
 
 ---
 

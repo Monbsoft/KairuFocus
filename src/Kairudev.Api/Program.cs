@@ -1,3 +1,8 @@
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+using Kairudev.Application.Common;
+using Kairudev.Application.Identity.Commands.GetOrCreateUser;
 using Kairudev.Application.Journal.Commands.AddComment;
 using Kairudev.Application.Journal.Commands.CreateEntry;
 using Kairudev.Application.Journal.Commands.RemoveComment;
@@ -27,9 +32,14 @@ using Kairudev.Application.Tasks.Commands.UnlinkJiraTicket;
 using Kairudev.Application.Tasks.Commands.UpdateTask;
 using Kairudev.Application.Tasks.Queries.ListTasks;
 using Kairudev.Application.Tickets.Queries.GetAssignedJiraTickets;
+using Kairudev.Api.Auth;
 using Kairudev.Infrastructure;
 using Kairudev.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,6 +91,84 @@ builder.Services.AddScoped<GetAssignedJiraTicketsQueryHandler>();
 builder.Services.AddScoped<LinkJiraTicketCommandHandler>();
 builder.Services.AddScoped<UnlinkJiraTicketCommandHandler>();
 
+// Identity
+builder.Services.AddScoped<GetOrCreateUserCommandHandler>();
+
+// HTTP Context
+builder.Services.AddHttpContextAccessor();
+
+// Current user service
+builder.Services.AddScoped<ICurrentUserService, ClaimsCurrentUserService>();
+
+// Authentication — JWT Bearer + GitHub OAuth
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
+    ?? throw new InvalidOperationException("Jwt:SecretKey must be configured in appsettings or user secrets.");
+
+var gitHubClientId = builder.Configuration["GitHub:ClientId"] ?? string.Empty;
+var gitHubClientSecret = builder.Configuration["GitHub:ClientSecret"] ?? string.Empty;
+
+if (!builder.Environment.IsDevelopment())
+{
+    if (string.IsNullOrEmpty(gitHubClientId))
+        throw new InvalidOperationException("GitHub:ClientId must be configured in appsettings or user secrets.");
+    if (string.IsNullOrEmpty(gitHubClientSecret))
+        throw new InvalidOperationException("GitHub:ClientSecret must be configured in appsettings or user secrets.");
+}
+else if (string.IsNullOrEmpty(gitHubClientId) || string.IsNullOrEmpty(gitHubClientSecret))
+{
+    Console.Error.WriteLine("WARNING: GitHub:ClientId or GitHub:ClientSecret is not configured. GitHub OAuth login will not function.");
+}
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddCookie()
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ClockSkew = TimeSpan.Zero
+        };
+    })
+    .AddOAuth("GitHub", options =>
+    {
+        options.ClientId = gitHubClientId;
+        options.ClientSecret = gitHubClientSecret;
+        options.AuthorizationEndpoint = "https://github.com/login/oauth/authorize";
+        options.TokenEndpoint = "https://github.com/login/oauth/access_token";
+        options.UserInformationEndpoint = "https://api.github.com/user";
+        options.CallbackPath = "/signin-github";
+        options.Scope.Add("user:email");
+        options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "id");
+        options.ClaimActions.MapJsonKey(ClaimTypes.Name, "name");
+        options.ClaimActions.MapJsonKey("urn:github:login", "login");
+        options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+        options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
+        {
+            OnCreatingTicket = async context =>
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.AccessToken);
+                request.Headers.UserAgent.ParseAdd("Kairudev/1.0");
+                using var response = await context.Backchannel.SendAsync(request, context.HttpContext.RequestAborted);
+                response.EnsureSuccessStatusCode();
+                var userJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                context.RunClaimActions(userJson.RootElement);
+            }
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -105,6 +193,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.MapDefaultEndpoints();
 

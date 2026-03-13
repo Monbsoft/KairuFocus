@@ -1,9 +1,12 @@
 @page "/settings"
 @using Kairudev.Maui.Services
+@using Kairudev.Maui.Auth
 @inject PomodoroApiClient PomodoroApi
 @inject SettingsApiClient SettingsApi
 @inject TicketApiClient TicketApi
 @inject IJSRuntime JSRuntime
+@inject MauiAuthService AuthService
+@inject NavigationManager Nav
 
 <h2>⚙ Paramètres</h2>
 
@@ -143,6 +146,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        if (!await AuthService.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/login", forceLoad: false);
+            return;
+        }
+
         // Load Pomodoro settings
         var pomodoroSettings = await PomodoroApi.GetSettingsAsync();
         if (pomodoroSettings is not null)

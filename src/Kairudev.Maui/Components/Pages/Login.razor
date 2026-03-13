@@ -1,0 +1,159 @@
+@page "/login"
+@using Kairudev.Maui.Auth
+@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Logging
+@inject MauiAuthService AuthService
+@inject NavigationManager Nav
+@inject IConfiguration Configuration
+@inject ILogger<Login> Logger
+
+<PageTitle>Connexion -- Kairudev</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-logo">K</div>
+        <h1 class="login-title">Kairudev</h1>
+        <p class="login-subtitle">Gestion d'activite pour developpeurs</p>
+
+        @if (_isLoading)
+        {
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Connexion...</span>
+            </div>
+        }
+        else if (_error is not null)
+        {
+            <div class="alert alert-danger">@_error</div>
+            <button class="btn btn-github" @onclick="LoginAsync">Reessayer</button>
+        }
+        else
+        {
+            <button class="btn btn-github" @onclick="LoginAsync">
+                <span>&#11041;</span>
+                Se connecter avec GitHub
+            </button>
+        }
+    </div>
+</div>
+
+<style>
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: var(--bs-body-bg, #1a1a2e);
+    }
+
+    .login-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 2.5rem 2rem;
+        background: var(--bs-body-bg, #16213e);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        max-width: 380px;
+        width: 100%;
+    }
+
+    .login-logo {
+        width: 64px;
+        height: 64px;
+        background: #0d6efd;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .login-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .login-subtitle {
+        color: var(--bs-secondary, #6c757d);
+        text-align: center;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .btn-github {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.5rem;
+        background: #24292e;
+        color: white;
+        border-radius: 6px;
+        border: none;
+        font-weight: 500;
+        margin-top: 0.5rem;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .btn-github:hover {
+        background: #1a1e22;
+        color: white;
+    }
+</style>
+
+@code {
+    private bool _isLoading;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await AuthService.IsAuthenticatedAsync())
+            Nav.NavigateTo("/tasks", forceLoad: false);
+    }
+
+    private async Task LoginAsync()
+    {
+        _isLoading = true;
+        _error = null;
+        StateHasChanged();
+
+        try
+        {
+            var apiBase = Configuration["ApiBaseUrl"] ?? "https://localhost:7056";
+            var callbackUrl = "kairudev://auth";
+            var authUrl = $"{apiBase}/api/auth/github?returnUrl={Uri.EscapeDataString(callbackUrl)}";
+
+            var result = await WebAuthenticator.Default.AuthenticateAsync(
+                new Uri(authUrl),
+                new Uri(callbackUrl));
+
+            if (result.Properties.TryGetValue("token", out var token) && !string.IsNullOrEmpty(token))
+            {
+                await AuthService.SetTokenAsync(token);
+                Nav.NavigateTo("/tasks", forceLoad: false);
+            }
+            else
+            {
+                _error = "Token non recu. Reessayez.";
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            _error = "Connexion annulee.";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erreur inattendue lors de la connexion GitHub.");
+            _error = "Une erreur inattendue s'est produite. Veuillez réessayer.";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

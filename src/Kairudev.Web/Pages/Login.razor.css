@@ -1,0 +1,65 @@
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--bs-body-bg);
+}
+
+.login-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2.5rem 2rem;
+    background: var(--bs-body-bg);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    max-width: 380px;
+    width: 100%;
+}
+
+.login-logo {
+    width: 64px;
+    height: 64px;
+    background: #0d6efd;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+}
+
+.login-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.login-subtitle {
+    color: var(--bs-secondary);
+    text-align: center;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.btn-github {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.5rem;
+    background: #24292e;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    transition: background 0.15s;
+}
+
+.btn-github:hover {
+    background: #1a1e22;
+    color: white;
+}

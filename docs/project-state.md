@@ -7,33 +7,53 @@
 
 ## Résumé état actuel
 
-**Dernière itération : #14 — Navigation sidebar icônes seulement** (2026-03-03)
+**Dernière itération : #15b — Auth client Web + UI (Landing + Dashboard)** (2026-03-09)
 
 **Bounded Contexts opérationnels :**
-- **Tasks** : 8 Commands/Queries — **Architecture CQRS** ✅ (🆕 LinkJiraTicket, UnlinkJiraTicket)
-- **Pomodoro** : 10 Commands/Queries — **Architecture CQRS** ✅
-- **Journal** : 6 Commands/Queries — **Architecture CQRS** ✅
-- **Settings** : 4 Commands/Queries — **Architecture CQRS** ✅ (🆕 SaveJiraSettings)
-- **Tickets** : 1 Query — **Architecture CQRS** ✅ (🆕 GetAssignedJiraTickets)
+- **Identity** : `User`, `UserId`, `IUserRepository`, `GetOrCreateUserCommandHandler` ✅
+- **Tasks** : 8 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
+- **Pomodoro** : 10 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
+- **Journal** : 6 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
+- **Settings** : 4 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
+- **Tickets** : 1 Query — **Architecture CQRS** ✅
 
 **Architecture Application Layer :**
 - ✅ **CQRS sans MediatR** : Commands (écriture) + Queries (lecture)
 - ✅ **Handlers** retournent directement des `Result` (plus de Presenters)
 - ✅ **Injection directe** dans les Controllers (pas de mediator)
-- ✅ **29 use cases** (8 Tasks + 10 Pomodoro + 6 Journal + 4 Settings + 1 Tickets)
+- ✅ **ICurrentUserService** : abstraction application-layer pour l'identité courante
+- ✅ **30 use cases** (8 Tasks + 10 Pomodoro + 6 Journal + 4 Settings + 1 Tickets + 1 Identity)
 
-**Fonctionnalités Tickets (Jira) :**
-- ✅ Page Tickets : liste les tickets Jira assignés à l'utilisateur (Web + MAUI)
-- ✅ Lier un ticket Jira à une tâche Kairudev (clé `PROJ-123`, format validé)
-- ✅ Délier un ticket Jira d'une tâche
-- ✅ Configuration Jira dans les Paramètres (BaseUrl + Email + ApiToken)
-- ✅ Gestion du cas "Jira non configuré" (message explicite + lien vers Paramètres)
+**Authentification (bout en bout) :**
+- ✅ GitHub OAuth 2.0 (`GET /api/auth/github` → callback → JWT HS256)
+- ✅ `AuthController` : `/github`, `/github/callback`, `/me`
+- ✅ JWT Bearer sur tous les controllers (Tasks, Pomodoro, Journal, Settings, Tickets)
+- ✅ `ClaimsCurrentUserService` : lit le claim `sub` depuis le JWT
+- ✅ `GetOrCreateUserCommandHandler` : crée l'utilisateur au premier login
+- ✅ **Blazor WASM** : `JwtAuthenticationStateProvider`, `AuthService`, `Login.razor` avec flux complet
+- ✅ **MAUI** : `MauiAuthService`, `SecureStorage`, `Login.razor` MAUI avec même flux
+- ✅ `AddCookie()` + `DefaultSignInScheme = Cookie` (requis par RemoteAuthenticationHandler)
+- ✅ `WebBaseUrl` dans `appsettings.Development.json` (redirection API → Web correcte)
 
-**Tests :** 155 au total ✅ (90 Domain + 48 Application + 17 Infrastructure)
+**Multi-users :**
+- ✅ `OwnerId` (UserId) ajouté à `DeveloperTask`, `PomodoroSession`, `JournalEntry`
+- ✅ `UserSettings` migré de singleton (int PK=1) à per-user (UserId PK)
+- ✅ `PomodoroSettings` migré de singleton (Id=1) à per-user (UserId string PK)
+- ✅ Tous les repositories filtrent les données par `UserId`
+- ✅ Table `Users` créée en base (GitHubId unique, Login, DisplayName, Email?)
+
+**UI (Blazor WASM) :**
+- ✅ **Landing page** (`/`) : hero + 4 feature cards, bouton GitHub login, `[AllowAnonymous]`
+- ✅ **Dashboard** (`/dashboard`) : salutation, stats (tâches, Pomodoro, journal), accès rapides, `[Authorize]`
+- ✅ **NavMenu** : icône dashboard + bouton déconnexion SVG (logout → landing)
+- ✅ **Redirection intelligente** : `/` → `/dashboard` si authentifié, `/login` → `/dashboard` après login
+
+**Tests :** 166 au total ✅ (90 Domain + 59 Application + 17 Infrastructure)
+- 🆕 `UserIdTests` (4), `UserTests` (3), `GetOrCreateUserCommandHandlerTests` (4)
 
 **Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite + EF Core, .NET Aspire
 
-**Migrations :** 8 migrations (InitialCreate, AddPomodoro, AddJournalEntry, AddTaskDescription, AddSessionType, AddUserSettings, AddJiraTicketKeyToTasks, AddJiraSettingsToUserSettings)
+**Migrations :** 9 migrations (+ InitialMultiUser : table Users, OwnerId sur toutes les entités, refonte PK UserSettings et PomodoroSettings)
 
 ---
 
@@ -63,32 +83,111 @@
 | ~~#12~~ | ~~Journal : navigation historique + numérotation sprints~~ | ~~✅ Livré~~ | ~~2026-03-02~~ |
 | ~~#13~~ | ~~BC Tickets — intégration Jira (liste, lien tâche, config)~~ | ~~✅ Livré~~ | ~~2026-03-03~~ |
 | ~~#14~~ | ~~Navigation sidebar — icônes seulement, style VS Code (Web + MAUI)~~ | ~~✅ Livré~~ | ~~2026-03-03~~ |
+| ~~#15~~ | ~~Auth GitHub + Multi-users — JWT, OwnerId sur toutes les entités, ICurrentUserService~~ | ~~✅ Livré~~ | ~~2026-03-04~~ |
+| ~~#15b~~ | ~~Auth client Web + MAUI — Login.razor, JwtAuthenticationStateProvider, Landing page, Dashboard~~ | ~~✅ Livré~~ | ~~2026-03-09~~ |
 
 ---
 
 ## Dernière itération livrée
 
-**#14 — Navigation sidebar icônes seulement** — Livré le 2026-03-03
+**#15b — Auth client Web + MAUI + UI Landing + Dashboard** — Livré le 2026-03-09
 
 ### Ce qui a été livré
 
-**UI Web (Blazor WASM)** ✅
-- `NavMenu.razor` : suppression des labels texte, ajout `title="..."` sur chaque `NavLink`, classe `nav-icon`
-- `NavMenu.razor.css` : icônes centrées (3rem×3rem), tooltip CSS pur via `content: attr(title)` + `::after`, `font-size: 1.4rem`
-- `MainLayout.razor.css` : sidebar réduite de 250px → **64px**
-- En-tête sidebar : "Kairudev" → lettre "K" (`.navbar-brand-icon`)
+**Build fixes** ✅
+- `_Imports.razor` : ajout `@using Microsoft.AspNetCore.Authorization` (manquant)
+- `Kairudev.Web.csproj` + `Kairudev.Maui.csproj` : ajout `Microsoft.Extensions.Http 10.*`
 
-**UI MAUI (Blazor Hybrid)** ✅
-- Mêmes changements que Web : `NavMenu.razor`, `NavMenu.razor.css`, `MainLayout.razor.css`
+**Blazor WASM — authentification bout en bout** ✅
+- `Login.razor` : bouton GitHub login pointant sur `{ApiBaseUrl}/api/auth/github` (via `IConfiguration`)
+- `Login.razor` : lecture `uri.Fragment` → extraction du JWT → stockage `localStorage` → `Nav.NavigateTo("/dashboard")`
+- `JwtAuthenticationStateProvider` + `AuthService` : état d'authentification Blazor basé sur JWT
+- `App.razor` : `CascadingAuthenticationState` + `AuthorizeRouteView` (redirect → `/login`)
+
+**MAUI — authentification bout en bout** ✅
+- `Login.razor` (MAUI) : même flux que Web, stockage via `SecureStorage`
+- `MauiAuthService` : équivalent de `AuthService` pour MAUI
+
+**API — correctifs OAuth** ✅
+- `Program.cs` : ajout `AddCookie()` + `DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme`
+  (requis pour `RemoteAuthenticationHandler` lors du callback GitHub)
+- `appsettings.Development.json` : ajout `WebBaseUrl: "http://localhost:5010"`
+- `AuthController` : toutes les redirections utilisent `{WebBaseUrl}/login#...` au lieu de `/#...`
+
+**UI Blazor — Landing + Dashboard** ✅
+- **`Home.razor`** (réécriture complète) : page d'accueil `[AllowAnonymous]`, hero gradient + bouton GitHub login, 4 feature cards (Tasks / Pomodoro / Journal / Tickets), redirige vers `/dashboard` si déjà authentifié
+- **`Dashboard.razor`** (nouveau) : page `[Authorize]`, salutation `"Bonjour, {login}"` + date, 4 stat-cards cliquables (tâches en cours, tâches terminées, session Pomodoro active, entrées journal aujourd'hui), 5 quicklinks
+- **`NavMenu.razor`** : icône SVG dashboard (premier lien), bouton déconnexion SVG (`.btn-logout`), logout → `/`
+- **`app.css`** : styles `btn-logout`, `landing`, `landing-hero`, `feature-card`, `dashboard-page`, `stat-card`, `stat-active`, `quicklink-card` (avec dark mode support)
+
+**Tests** ✅ (+11 tests, total 166)
+- `UserIdTests.cs` : 4 tests (Create, Equal, NotEqual, ToString)
+- `UserTests.cs` : 3 tests (Create, Id from GitHubId, null email)
+- `FakeUserRepository.cs` : stub en mémoire
+- `GetOrCreateUserCommandHandlerTests.cs` : 4 tests (CreateUser, ReturnExisting, CorrectDisplayName, NoDuplicate)
+
+**Outillage** ✅
+- `.claude/launch.json` : 3 configs serveur (AppHost Aspire port 15100, API port 5205, Web port 5010)
+- `README.md` (racine) : README professionnel (features, stack, architecture, quickstart, OAuth setup, Jira config)
 
 ### Impact
-- Navigation compacte : gain de 186px de largeur pour le contenu principal
-- Tooltips CSS pur (sans JS) : apparaissent au hover à droite de chaque icône
-- Style VS Code : icônes emoji centrées, hover/active avec fond semi-transparent
-- Cohérence Web ↔ MAUI
+- **Flux complet** : l'utilisateur peut se connecter via GitHub depuis le Web ou MAUI, toutes les pages protégées fonctionnent
+- **UX** : landing page présente le produit, dashboard centralise les informations clés
+- **Développeur** : `.claude/launch.json` + `README.md` facilitent l'onboarding
 
-### Dette technique introduite
-Aucune ✅
+### Dette technique
+- `appsettings.Development.json` : `GitHub:ClientSecret` et `Jwt:SecretKey` à configurer manuellement
+- `JiraApiToken` toujours stocké en clair dans SQLite
+- Duplication pages Blazor Web ↔ MAUI (dette ADR-008, à résoudre via RCL)
+
+---
+
+## Itération précédente
+
+**#15 — Auth GitHub + Multi-users** — Livré le 2026-03-04
+
+### Ce qui a été livré
+
+**BC Identity (Domain)** ✅
+- `UserId` : value record wrappant un GitHub ID string (`UserId.From(string)`)
+- `User` : entity (`Entity<UserId>`) avec `GitHubId`, `Login`, `DisplayName`, `Email?`
+- `IUserRepository` : `GetByGitHubIdAsync` + `AddAsync`
+
+**Multi-user : OwnerId sur toutes les entités** ✅
+- `DeveloperTask.OwnerId` + `Create()` accepte `UserId`
+- `PomodoroSession.OwnerId` + `Create()` accepte `UserId`
+- `JournalEntry.OwnerId` + `Create()` accepte `UserId`
+- `UserSettings` : migré de `AggregateRoot<int>` (singleton Id=1) à `AggregateRoot<UserId>` (per-user)
+- `PomodoroSettingsRow` : migré de `int Id=1` à `string UserId` comme PK
+
+**Interfaces repository mises à jour** ✅
+- `ITaskRepository.GetByIdAsync(TaskId, UserId)`, `GetAllAsync(UserId)`, `DeleteAsync(TaskId, UserId)`
+- `IPomodoroSessionRepository` : toutes les méthodes user-specific acceptent `UserId`
+- `IPomodoroSettingsRepository` : `GetByUserIdAsync(UserId)`, `SaveAsync(PomodoroSettings, UserId)`
+- `IJournalEntryRepository` : `GetEntriesByDateAsync(DateOnly, UserId)`, `GetTodayCountByTypeAsync(..., UserId)`
+- `IUserSettingsRepository` : `GetByUserIdAsync(UserId)` remplace `GetAsync()`
+
+**Application Layer** ✅
+- `ICurrentUserService` : interface abstraction identité courante (`CurrentUserId` property)
+- `GetOrCreateUserCommand/Handler/Result` : crée l'utilisateur au premier login GitHub
+- Tous les handlers (Tasks, Pomodoro, Journal, Settings) injectent `ICurrentUserService`
+- `CreateEntryCommand` inclut maintenant `OwnerId`
+
+**Infrastructure** ✅
+- `UserConfiguration` + `SqliteUserRepository` : persistence table `Users`
+- Toutes les configurations EF Core mises à jour pour mapper `OwnerId`
+- Migration `InitialMultiUser` : table Users + OwnerId sur Tasks/PomodoroSessions/JournalEntries + refonte PK UserSettings et PomodoroSettings
+
+**Auth API** ✅
+- `AuthController` : `GET /api/auth/github`, `GET /api/auth/github/callback`, `GET /api/auth/me`
+- `ClaimsCurrentUserService` : lit le claim `sub` depuis le JWT Bearer
+- GitHub OAuth 2.0 + JWT HS256 (configurable via `appsettings.Development.json`)
+- `[Authorize]` sur TasksController, PomodoroController, JournalController, SettingsController, TicketsController
+
+**Tests** ✅ (155 tests, 0 échec)
+- `FakeCurrentUserService` : stub pour les tests Application
+- Tous les fake repositories mis à jour (signatures UserId)
+- Tous les tests Domain/Application/Infrastructure mis à jour (UserId dans Create())
 
 ---
 
@@ -615,9 +714,9 @@ Add a new migration before updating the database.
 - .NET 10 GA (SDK 10.0.200-preview = SDK .NET 10.1 preview, runtime 10 GA)
 - SQLite + EF Core 10.0.3 (fichier local `kairudev.db`, hors git)
 - ASP.NET Core Web API (`Kairudev.Api`)
-- Blazor WebAssembly (`Kairudev.Web`)
+- Blazor WebAssembly (`Kairudev.Web`) — auth GitHub ✅
+- .NET MAUI Blazor Hybrid (`Kairudev.Maui`) — auth GitHub ✅
 - .NET Aspire 13.1.1 (`Kairudev.AppHost` + `Kairudev.ServiceDefaults`)
-- .NET MAUI — itération future
 - xUnit pour les tests
 - Solution : `Kairudev.slnx`
 
@@ -625,21 +724,31 @@ Add a new migration before updating the database.
 ```
 src/
 ├── Kairudev.Domain/
+│   ├── Common/
 │   ├── Tasks/
-│   └── Pomodoro/
+│   ├── Pomodoro/
+│   ├── Journal/
+│   ├── Settings/
+│   ├── Tickets/
+│   └── Identity/              ← UserId, User, IUserRepository
 ├── Kairudev.Application/
 │   ├── Tasks/
-│   └── Pomodoro/
+│   ├── Pomodoro/
+│   ├── Journal/
+│   ├── Settings/
+│   ├── Tickets/
+│   └── Identity/              ← GetOrCreateUserCommand, ICurrentUserService
 ├── Kairudev.Adapters/          ← à supprimer (ADR-007)
 ├── Kairudev.Infrastructure/    ← migrations dans Persistence/Migrations/
-├── Kairudev.Api/               ← Tasks/ + Pomodoro/
+├── Kairudev.Api/               ← Controllers + Auth/
 ├── Kairudev.AppHost/           ← orchestration Aspire
 ├── Kairudev.ServiceDefaults/   ← OTEL, health checks, service discovery
-└── Kairudev.Web/               ← Services/ + Pages/ + wwwroot/appsettings.json
+├── Kairudev.Web/               ← Pages/ (Home, Login, Dashboard, ...) + Auth/ + Services/
+└── Kairudev.Maui/              ← Pages/ + Auth/ + Services/ (Blazor Hybrid)
 tests/
-├── Kairudev.Domain.Tests/      ← Tasks/ + Pomodoro/
-├── Kairudev.Application.Tests/ ← Tasks/ + Pomodoro/
-└── Kairudev.Infrastructure.Tests/  ← Tasks/ + Pomodoro/ (17 tests intégration SQLite)
+├── Kairudev.Domain.Tests/
+├── Kairudev.Application.Tests/
+└── Kairudev.Infrastructure.Tests/  ← 17 tests intégration SQLite
 docs/
 ├── spec.md
 └── project-state.md

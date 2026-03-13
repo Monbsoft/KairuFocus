@@ -1,6 +1,9 @@
 @page "/journal"
 @using Kairudev.Maui.Services
+@using Kairudev.Maui.Auth
 @inject JournalApiClient Api
+@inject MauiAuthService AuthService
+@inject NavigationManager Nav
 
 <div class="d-flex align-items-center justify-content-between mb-3">
     <button class="btn btn-outline-secondary btn-sm" @onclick="PreviousDay" title="Jour précédent" aria-label="Jour précédent">←</button>
@@ -117,8 +120,15 @@ else
     private DateOnly _displayDate = DateOnly.FromDateTime(DateTime.Today);
     private bool IsToday => _displayDate == DateOnly.FromDateTime(DateTime.Today);
 
-    protected override async Task OnInitializedAsync() =>
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await AuthService.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/login", forceLoad: false);
+            return;
+        }
         await LoadEntries();
+    }
 
     private string GetJournalTitle()
     {

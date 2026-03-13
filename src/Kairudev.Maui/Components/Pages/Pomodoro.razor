@@ -1,7 +1,10 @@
 @page "/pomodoro"
 @using Kairudev.Maui.Services
+@using Kairudev.Maui.Auth
 @inject PomodoroApiClient PomodoroApi
 @inject TaskApiClient TaskApi
+@inject MauiAuthService AuthService
+@inject NavigationManager Nav
 @implements IAsyncDisposable
 
 <h2>Pomodoro</h2>
@@ -260,6 +263,11 @@ else
     // ── Lifecycle ─────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
+        if (!await AuthService.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/login", forceLoad: false);
+            return;
+        }
         _allTasks = await TaskApi.GetAllAsync();
         _session  = await PomodoroApi.GetCurrentSessionAsync();
 
