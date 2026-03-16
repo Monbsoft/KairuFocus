@@ -26,14 +26,13 @@ public class TaskSteps
     public void WhenCreateTask(string title, string description)
     {
         var userId = UserId.From("test-user");
-        var taskId = TaskId.NewId();
 
         var task = DeveloperTask.Create(
-            taskId,
-            userId,
             TaskTitle.Create(title).Value,
-            TaskDescription.Create(description).Value
-        ).Value;
+            TaskDescription.Create(description).Value,
+            DateTime.UtcNow,
+            userId
+        );
 
         DbContext.DbContext.Tasks.Add(task);
         DbContext.DbContext.SaveChanges();
@@ -67,14 +66,13 @@ public class TaskSteps
     public void GivenTaskWithStatus(string title, string status)
     {
         var userId = UserId.From("test-user");
-        var taskId = TaskId.NewId();
 
         var task = DeveloperTask.Create(
-            taskId,
-            userId,
             TaskTitle.Create(title).Value,
-            null
-        ).Value;
+            null,
+            DateTime.UtcNow,
+            userId
+        );
 
         DbContext.DbContext.Tasks.Add(task);
         DbContext.DbContext.SaveChanges();
@@ -114,9 +112,7 @@ public class TaskSteps
     public void WhenLinkToJira(string jiraKey)
     {
         var task = (DeveloperTask)_scenarioContext["CurrentTask"];
-        var result = task.LinkToJira(JiraTicketKey.Create(jiraKey).Value);
-
-        Assert.True(result.IsSuccess);
+        task.LinkJiraTicket(JiraTicketKey.Create(jiraKey).Value);
 
         DbContext.DbContext.Tasks.Update(task);
         DbContext.DbContext.SaveChanges();
@@ -136,14 +132,13 @@ public class TaskSteps
     public void GivenTask(string title)
     {
         var userId = UserId.From("test-user");
-        var taskId = TaskId.NewId();
 
         var task = DeveloperTask.Create(
-            taskId,
-            userId,
             TaskTitle.Create(title).Value,
-            null
-        ).Value;
+            null,
+            DateTime.UtcNow,
+            userId
+        );
 
         DbContext.DbContext.Tasks.Add(task);
         DbContext.DbContext.SaveChanges();
@@ -163,11 +158,11 @@ public class TaskSteps
             var status = row["Status"];
 
             var task = DeveloperTask.Create(
-                TaskId.NewId(),
-                userId,
                 TaskTitle.Create(title).Value,
-                null
-            ).Value;
+                null,
+                DateTime.UtcNow,
+                userId
+            );
 
             tasks.Add(task);
         }

@@ -21,14 +21,12 @@ public class PomodoroSteps
     public void WhenStartSession(int minutes)
     {
         var userId = UserId.From("test-user");
-        var sessionId = PomodoroSessionId.NewId();
 
         var session = PomodoroSession.Create(
-            sessionId,
-            userId,
             PomodoroSessionType.Sprint,
-            minutes
-        ).Value;
+            minutes,
+            userId
+        );
 
         DbContext.DbContext.PomodoroSessions.Add(session);
         DbContext.DbContext.SaveChanges();
@@ -62,14 +60,12 @@ public class PomodoroSteps
     public void GivenRunningSession()
     {
         var userId = UserId.From("test-user");
-        var sessionId = PomodoroSessionId.NewId();
 
         var session = PomodoroSession.Create(
-            sessionId,
-            userId,
             PomodoroSessionType.Sprint,
-            25
-        ).Value;
+            25,
+            userId
+        );
 
         DbContext.DbContext.PomodoroSessions.Add(session);
         DbContext.DbContext.SaveChanges();
@@ -81,7 +77,7 @@ public class PomodoroSteps
     public void WhenCompleteSession()
     {
         var session = (PomodoroSession)_scenarioContext["CurrentSession"];
-        var result = session.Complete();
+        var result = session.Complete(DateTime.UtcNow);
 
         Assert.True(result.IsSuccess);
 
@@ -102,14 +98,12 @@ public class PomodoroSteps
     public void GivenPomodoroSession()
     {
         var userId = UserId.From("test-user");
-        var sessionId = PomodoroSessionId.NewId();
 
         var session = PomodoroSession.Create(
-            sessionId,
-            userId,
             PomodoroSessionType.Sprint,
-            25
-        ).Value;
+            25,
+            userId
+        );
 
         DbContext.DbContext.PomodoroSessions.Add(session);
         DbContext.DbContext.SaveChanges();
@@ -145,21 +139,9 @@ public class PomodoroSteps
     [Given("I have Pomodoro settings configured with:")]
     public void GivenPomodoroSettings(DataTable table)
     {
-        var userId = UserId.From("test-user");
         var row = table.Rows[0];
-
         var sprintDuration = int.Parse(row["Value"]); // This is a simplified version
-        var settings = PomodoroSettings.Create(userId, sprintDuration, 5, 15).Value;
-
-        DbContext.DbContext.PomodoroSettings.Add(new Kairudev.Infrastructure.Persistence.Internal.PomodoroSettingsRow
-        {
-            UserId = userId.Value,
-            SprintDurationMinutes = settings.SprintDurationMinutes,
-            ShortBreakDurationMinutes = settings.ShortBreakDurationMinutes,
-            LongBreakDurationMinutes = settings.LongBreakDurationMinutes
-        });
-
-        DbContext.DbContext.SaveChanges();
+        var settings = PomodoroSettings.Create(sprintDuration, 5, 15).Value;
 
         _scenarioContext["CurrentSettings"] = settings;
     }
@@ -167,9 +149,7 @@ public class PomodoroSteps
     [When("I retrieve the settings")]
     public void WhenRetrieveSettings()
     {
-        var userId = UserId.From("test-user");
-        var settings = DbContext.DbContext.PomodoroSettings.FirstOrDefault(s => s.UserId == userId.Value);
-
+        var settings = (PomodoroSettings)_scenarioContext["CurrentSettings"];
         _scenarioContext["RetrievedSettings"] = settings;
     }
 

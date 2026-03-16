@@ -20,14 +20,13 @@ public class JournalSteps
     public void WhenCreateJournalEntry(string eventType, string resourceId)
     {
         var userId = UserId.From("test-user");
-        var entryId = JournalEntryId.NewId();
 
         var entry = JournalEntry.Create(
-            entryId,
-            userId,
             Enum.Parse<JournalEventType>(eventType),
-            Guid.Parse(resourceId)
-        ).Value;
+            Guid.Parse(resourceId),
+            DateTime.UtcNow,
+            userId
+        );
 
         DbContext.DbContext.JournalEntries.Add(entry);
         DbContext.DbContext.SaveChanges();
@@ -61,14 +60,13 @@ public class JournalSteps
     public void GivenJournalEntry()
     {
         var userId = UserId.From("test-user");
-        var entryId = JournalEntryId.NewId();
 
         var entry = JournalEntry.Create(
-            entryId,
-            userId,
             JournalEventType.TaskCompleted,
-            Guid.NewGuid()
-        ).Value;
+            Guid.NewGuid(),
+            DateTime.UtcNow,
+            userId
+        );
 
         DbContext.DbContext.JournalEntries.Add(entry);
         DbContext.DbContext.SaveChanges();
@@ -80,14 +78,9 @@ public class JournalSteps
     public void WhenAddComment(string text)
     {
         var entry = (JournalEntry)_scenarioContext["CurrentEntry"];
-        var commentId = JournalCommentId.NewId();
 
-        var comment = JournalComment.Create(
-            commentId,
-            text
-        ).Value;
-
-        entry.AddComment(comment);
+        var result = entry.AddComment(text);
+        Assert.True(result.IsSuccess);
 
         DbContext.DbContext.JournalEntries.Update(entry);
         DbContext.DbContext.SaveChanges();
@@ -123,11 +116,11 @@ public class JournalSteps
             for (int i = 0; i < count; i++)
             {
                 var entry = JournalEntry.Create(
-                    JournalEntryId.NewId(),
-                    userId,
                     eventType,
-                    Guid.NewGuid()
-                ).Value;
+                    Guid.NewGuid(),
+                    DateTime.UtcNow,
+                    userId
+                );
 
                 entries.Add(entry);
             }

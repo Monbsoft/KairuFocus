@@ -19,14 +19,12 @@ public class UserSteps
     [When("I create a user with GitHub ID \"([^\"]*)\" and login \"([^\"]*)\"")]
     public void WhenCreateUser(string githubId, string login)
     {
-        var userId = UserId.From(githubId);
-
         var user = User.Create(
-            userId,
             githubId,
             login,
-            login
-        ).Value;
+            login,
+            null
+        );
 
         DbContext.DbContext.Users.Add(user);
         DbContext.DbContext.SaveChanges();
@@ -52,14 +50,12 @@ public class UserSteps
     [Given("I have a user")]
     public void GivenUser()
     {
-        var userId = UserId.From("test-user");
-
         var user = User.Create(
-            userId,
             "github-123",
             "test-user",
-            "Test User"
-        ).Value;
+            "Test User",
+            null
+        );
 
         DbContext.DbContext.Users.Add(user);
         DbContext.DbContext.SaveChanges();
@@ -73,11 +69,9 @@ public class UserSteps
         var user = (User)_scenarioContext["CurrentUser"];
         var userId = user.Id;
 
-        var settings = UserSettings.Create(
-            userId,
-            theme == "dark" ? ThemePreference.Dark : ThemePreference.Light,
-            ringtone == "chime" ? RingtonePreference.Chime : RingtonePreference.AlarmClock
-        ).Value;
+        var settings = UserSettings.CreateDefault(userId);
+        settings.UpdateThemePreference(theme == "dark" ? ThemePreference.Dark : ThemePreference.Light);
+        settings.UpdateRingtonePreference(ringtone == "chime" ? RingtonePreference.Bird : RingtonePreference.AlarmClock);
 
         DbContext.DbContext.UserSettings.Add(settings);
         DbContext.DbContext.SaveChanges();
@@ -105,7 +99,7 @@ public class UserSteps
     public void ThenRingtoneIs(string ringtone)
     {
         var settings = (UserSettings)_scenarioContext["CurrentSettings"];
-        var expectedRingtone = ringtone == "chime" ? RingtonePreference.Chime : RingtonePreference.AlarmClock;
+        var expectedRingtone = ringtone == "chime" ? RingtonePreference.Bird : RingtonePreference.AlarmClock;
         Assert.Equal(expectedRingtone, settings.RingtonePreference);
     }
 
@@ -114,7 +108,7 @@ public class UserSteps
     {
         var settings = (UserSettings)_scenarioContext["CurrentSettings"];
 
-        settings.ConfigureJira(
+        settings.UpdateJiraSettings(
             "https://jira.example.com",
             "user@example.com",
             "api-token-123"
