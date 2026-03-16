@@ -1,5 +1,6 @@
 using Kairudev.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Kairudev.IntegrationTests.Support;
 
@@ -11,11 +12,19 @@ public class DatabaseContext : IDisposable
     public DatabaseContext()
     {
         // Use in-memory SQLite for testing
-        _options = new DbContextOptionsBuilder<KairudevDbContext>()
-            .UseSqlite("Data Source=:memory:")
-            .Options;
+        var builder = new DbContextOptionsBuilder<KairudevDbContext>()
+            .UseSqlite("Data Source=:memory:");
+
+        _options = builder.Options;
 
         DbContext = new KairudevDbContext(_options);
+        // Don't use migrations, create tables directly from model
+        EnsureTablesCreated();
+    }
+
+    private void EnsureTablesCreated()
+    {
+        DbContext.Database.EnsureDeleted();
         DbContext.Database.EnsureCreated();
     }
 
@@ -28,6 +37,6 @@ public class DatabaseContext : IDisposable
     {
         DbContext?.Dispose();
         DbContext = new KairudevDbContext(_options);
-        DbContext.Database.EnsureCreated();
+        EnsureTablesCreated();
     }
 }

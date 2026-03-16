@@ -51,7 +51,9 @@ public class TaskSteps
     [Then("the task status should be \"([^\"]*)\"")]
     public void ThenTaskStatus(string status)
     {
-        var task = (DeveloperTask)_scenarioContext["CreatedTask"];
+        var task = _scenarioContext.ContainsKey("CreatedTask") 
+            ? (DeveloperTask)_scenarioContext["CreatedTask"]
+            : (DeveloperTask)_scenarioContext["CurrentTask"];
         Assert.Equal(status, task.Status.ToString());
     }
 
@@ -92,13 +94,6 @@ public class TaskSteps
         DbContext.DbContext.SaveChanges();
 
         _scenarioContext["CurrentTask"] = task;
-    }
-
-    [Then("the task status should be \"([^\"]*)\"")]
-    public void ThenCurrentTaskStatus(string status)
-    {
-        var task = (DeveloperTask)_scenarioContext["CurrentTask"];
-        Assert.Equal(status, task.Status.ToString());
     }
 
     [Then("the task should have a completion date")]
