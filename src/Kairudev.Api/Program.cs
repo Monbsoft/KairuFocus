@@ -187,13 +187,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<KairudevDbContext>();
-    // SQLite (local dev): apply incremental migrations
-    // SQL Server (Azure): EnsureCreated because existing migrations carry SQLite-specific types
-    if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase)
-        && !connectionString.Contains(';'))
-        db.Database.Migrate();
-    else
-        db.Database.EnsureCreated();
+    // Appliquer les migrations (SQLite en dev, SQL Server en prod)
+    db.Database.Migrate();
 }
 
 if (app.Environment.IsDevelopment())

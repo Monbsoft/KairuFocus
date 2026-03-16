@@ -7,7 +7,7 @@
 
 ## Résumé état actuel
 
-**Dernière itération : #16 — Déploiement Azure (Bicep)** (2026-03-13)
+**Dernière itération : #16 — Déploiement Azure (Bicep + CLI)** (2026-03-14) ✅ COMPLÉTÉE
 
 **Bounded Contexts opérationnels :**
 - **Identity** : `User`, `UserId`, `IUserRepository`, `GetOrCreateUserCommandHandler` ✅
@@ -49,17 +49,23 @@
 - ✅ **Redirection intelligente** : `/` → `/dashboard` si authentifié, `/login` → `/dashboard` après login
 
 **Déploiement Azure :**
-- ✅ **Infrastructure as Code (Bicep)** : `infra/main.bicep` — App Service Plan, Web App, Azure SQL, Key Vault, Application Insights
-- ✅ **Paramètres par environnement** : `main.bicepparam` (dev), `main.prod.bicepparam` (prod)
-- ✅ **Script PowerShell** : `infra/deploy.ps1` — déploiement automatisé avec gestion secrets
-- ✅ **GitHub Actions CI/CD** : `.github/workflows/azure-deploy.yml` — build + tests + déploiement automatique
-- ✅ **Documentation complète** : `docs/deploy.md` — guide déploiement, migration SQLite→SQL, troubleshooting, coûts
+- ✅ **Infrastructure as Code (Bicep)** : `infra/main.bicep` + `infra/resources.bicep` (App Service Plan F1, Web App, Azure SQL S0, firewalls)
+- ✅ **Paramètres par environnement** : `infra/main.dev.bicepparam`, `infra/main.prod.bicepparam` (region: northeurope)
+- ✅ **Déploiement manuel via CLI** : `az deployment sub create` + `az webapp deploy` (zip deploy)
+- ✅ **Configuration DbContextFactory** : `SQL_CONNECTION_STRING` env var pour SQL Server (migrations script en Azure)
+- ✅ **Intégration Blazor WASM + API** : wwwroot copié dans l'API, serveur depuis une seule Web App
+- ✅ **Documentation** : `infra/README.md` (étapes complètes : secrets → Bicep → migrations SQL → API → Blazor)
+- ✅ **Production en direct** : https://kairudev-prod.azurewebsites.net (Blazor + API + SQL)
 
-**Tests :** 171 au total ✅ (90 Domain + 59 Application + 17 Infrastructure + 5 ajoutés)
+**Tests :** 171 au total ✅ (90 Domain + 59 Application + 17 Infrastructure)
 
-**Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite + EF Core, .NET Aspire, **Azure (Bicep)**
+**Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite (local), **Azure (App Service F1 + Azure SQL S0 + northeurope)**
 
-**Migrations :** 9 migrations (+ InitialMultiUser : table Users, OwnerId sur toutes les entités, refonte PK UserSettings et PomodoroSettings)
+**Déploiement prod :**
+- Resource Group : `rg-kairudev-prod`
+- Web App : `kairudev-prod.azurewebsites.net` (F1)
+- SQL Server : `sql-kairudev-prod.database.windows.net` (S0, Standard tier)
+- Migrations : script SQL généré depuis EF Core, exécuté via Query Editor
 
 ---
 

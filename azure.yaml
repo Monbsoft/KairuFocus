@@ -1,6 +1,0 @@
-name: kairudev
-services:
-  app:
-    language: dotnet
-    project: src/Kairudev.AppHost/Kairudev.AppHost.csproj
-    host: containerapp
