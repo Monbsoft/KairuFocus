@@ -14,6 +14,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.Id)
             .HasConversion(v => v.Value, v => UserId.From(v))
+            .HasColumnType("nvarchar(50)")
             .HasMaxLength(50);
 
         builder.Property(u => u.GitHubId).HasMaxLength(50).IsRequired();

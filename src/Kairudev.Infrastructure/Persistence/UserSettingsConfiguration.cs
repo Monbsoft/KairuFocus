@@ -15,6 +15,7 @@ internal sealed class UserSettingsConfiguration : IEntityTypeConfiguration<UserS
 
         builder.Property(s => s.Id)
             .HasConversion(v => v.Value, v => UserId.From(v))
+            .HasColumnType("nvarchar(50)")
             .HasMaxLength(50)
             .ValueGeneratedNever();
 

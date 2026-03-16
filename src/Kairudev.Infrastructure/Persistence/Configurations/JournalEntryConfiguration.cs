@@ -12,20 +12,21 @@ public sealed class JournalEntryConfiguration : IEntityTypeConfiguration<Journal
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.Id)
-            .HasConversion(id => id.Value, value => JournalEntryId.From(value));
+            .HasConversion(id => id.Value, value => JournalEntryId.From(value))
+            .HasColumnType("nvarchar(36)");
 
         builder.Property(e => e.OwnerId)
             .HasConversion(v => v.Value, v => UserId.From(v))
             .HasMaxLength(50)
             .IsRequired(false); // nullable for migration compatibility
 
-        builder.Property(e => e.OccurredAt).IsRequired();
+        builder.Property(e => e.OccurredAt).HasColumnType("datetime2").IsRequired();
 
         builder.Property(e => e.EventType)
             .HasConversion<string>()
             .IsRequired();
 
-        builder.Property(e => e.ResourceId).IsRequired();
+        builder.Property(e => e.ResourceId).HasColumnType("nvarchar(36)").IsRequired();
 
         builder.Property(e => e.Sequence).IsRequired(false);
 

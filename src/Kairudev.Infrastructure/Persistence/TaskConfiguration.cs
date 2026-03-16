@@ -17,6 +17,7 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<DeveloperTask
             .HasConversion(
                 id => id.Value,
                 value => TaskId.From(value))
+            .HasColumnType("nvarchar(36)")
             .ValueGeneratedNever();
 
         builder.Property(t => t.OwnerId)
@@ -41,8 +42,8 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<DeveloperTask
             .HasConversion<string>()
             .IsRequired();
 
-        builder.Property(t => t.CreatedAt).IsRequired();
-        builder.Property(t => t.CompletedAt);
+        builder.Property(t => t.CreatedAt).HasColumnType("datetime2").IsRequired();
+        builder.Property(t => t.CompletedAt).HasColumnType("datetime2");
 
         builder.Property(t => t.JiraTicketKey)
             .HasConversion(

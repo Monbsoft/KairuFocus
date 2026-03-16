@@ -17,6 +17,7 @@ internal sealed class PomodoroSessionConfiguration : IEntityTypeConfiguration<Po
             .HasConversion(
                 id => id.Value,
                 value => PomodoroSessionId.From(value))
+            .HasColumnType("nvarchar(36)")
             .ValueGeneratedNever();
 
         builder.Property(s => s.OwnerId)
@@ -33,8 +34,8 @@ internal sealed class PomodoroSessionConfiguration : IEntityTypeConfiguration<Po
             .IsRequired();
 
         builder.Property(s => s.PlannedDurationMinutes).IsRequired();
-        builder.Property(s => s.StartedAt);
-        builder.Property(s => s.EndedAt);
+        builder.Property(s => s.StartedAt).HasColumnType("datetime2");
+        builder.Property(s => s.EndedAt).HasColumnType("datetime2");
 
         // Ignore the domain-facing property (TaskId is not an EF entity)
         builder.Ignore(s => s.LinkedTaskIds);

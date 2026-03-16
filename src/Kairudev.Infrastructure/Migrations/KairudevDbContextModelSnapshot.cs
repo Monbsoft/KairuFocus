@@ -3,30 +3,60 @@ using System;
 using Kairudev.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Kairudev.Infrastructure.Persistence.Migrations
+namespace Kairudev.Infrastructure.Migrations
 {
     [DbContext(typeof(KairudevDbContext))]
-    [Migration("20260226180050_AddTaskDescription")]
-    partial class AddTaskDescription
+    partial class KairudevDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
 
+            modelBuilder.Entity("Kairudev.Domain.Identity.User", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GitHubId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GitHubId")
+                        .IsUnique();
+
+                    b.ToTable("Users", (string)null);
+                });
+
             modelBuilder.Entity("Kairudev.Domain.Journal.JournalComment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<Guid?>("EntryId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -43,17 +73,24 @@ namespace Kairudev.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Kairudev.Domain.Journal.JournalEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<string>("EventType")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OwnerId")
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("ResourceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(36)");
+
+                    b.Property<int?>("Sequence")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -63,21 +100,29 @@ namespace Kairudev.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Kairudev.Domain.Pomodoro.PomodoroSession", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<DateTime?>("EndedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.PrimitiveCollection<string>("LinkedTaskIdValues")
                         .IsRequired()
                         .HasColumnType("TEXT")
                         .HasColumnName("LinkedTaskIds");
 
+                    b.Property<string>("OwnerId")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("PlannedDurationMinutes")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("StartedAt")
+                    b.Property<string>("SessionType")
+                        .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -88,19 +133,62 @@ namespace Kairudev.Infrastructure.Persistence.Migrations
                     b.ToTable("PomodoroSessions", (string)null);
                 });
 
+            modelBuilder.Entity("Kairudev.Domain.Settings.UserSettings", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("JiraApiToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("JiraBaseUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("JiraEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RingtonePreference")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("AlarmClock");
+
+                    b.Property<string>("ThemePreference")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserSettings", (string)null);
+                });
+
             modelBuilder.Entity("Kairudev.Domain.Tasks.DeveloperTask", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(36)");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("JiraTicketKey")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OwnerId")
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -119,8 +207,9 @@ namespace Kairudev.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Kairudev.Infrastructure.Persistence.Internal.PomodoroSettingsRow", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("UserId")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("LongBreakDurationMinutes")
                         .HasColumnType("INTEGER");
@@ -131,7 +220,7 @@ namespace Kairudev.Infrastructure.Persistence.Migrations
                     b.Property<int>("SprintDurationMinutes")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("PomodoroSettings", (string)null);
                 });

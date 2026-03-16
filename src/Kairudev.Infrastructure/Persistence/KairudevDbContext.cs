@@ -23,6 +23,20 @@ public sealed class KairudevDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Configure SQL Server-specific column types
+        foreach (var property in modelBuilder.Model.GetEntityTypes()
+            .SelectMany(e => e.GetProperties()))
+        {
+            if (property.ClrType == typeof(Guid) && property.GetMaxLength() == null)
+            {
+                property.SetColumnType("nvarchar(36)");
+            }
+            else if (property.ClrType == typeof(DateTime) && property.GetMaxLength() == null)
+            {
+                property.SetColumnType("datetime2");
+            }
+        }
+
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new TaskConfiguration());
         modelBuilder.ApplyConfiguration(new PomodoroSessionConfiguration());
