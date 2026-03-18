@@ -10,7 +10,8 @@
 <div class="d-flex align-items-center justify-content-between mb-1">
     <h2 class="mb-0">Pomodoro</h2>
     <div style="position:relative">
-        <button class="btn-more" @onclick="ToggleMoreMenu" title="Plus d'options">&#xB7;&#xB7;&#xB7;</button>
+        <button class="btn-more" @onclick="ToggleMoreMenu" title="Plus d'options"
+                aria-label="Plus d'options" aria-haspopup="true" aria-expanded="@_moreMenuOpen">&#xB7;&#xB7;&#xB7;</button>
         @if (_moreMenuOpen)
         {
             <div class="dropdown-menu-simple">
