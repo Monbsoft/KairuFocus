@@ -164,7 +164,7 @@ else
     {
         _errorMessage = null;
         _lastRecorded = null;
-        _startedAt = DateTimeOffset.Now;
+        _startedAt = DateTimeOffset.UtcNow;
         _elapsedSeconds = 0;
         _running = true;
         await StartTimerLoop();
@@ -173,14 +173,14 @@ else
     private async Task FinishSprint()
     {
         await StopTimer();
-        var endedAt = DateTimeOffset.Now;
+        var endedAt = DateTimeOffset.UtcNow;
         await RecordSprint(endedAt, "Completed");
     }
 
     private async Task InterruptSprint()
     {
         await StopTimer();
-        var endedAt = DateTimeOffset.Now;
+        var endedAt = DateTimeOffset.UtcNow;
         await RecordSprint(endedAt, "Interrupted");
     }
 
