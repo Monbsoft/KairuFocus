@@ -381,6 +381,7 @@ Créé à la première session, mis à jour à chaque fin d'itération :
 6. TESTER         → tests unitaires Use Cases avec presenters bouchonnés
 7. LIVRER         → résumé + dette technique éventuelle
 8. DOCUMENTER     → mise à jour de docs/spec.md (use cases + diagrammes) ET docs/project-state.md
+9. COMMITTER      → commit final + push de la branche
 ```
 
 On ne passe jamais à l'étape suivante sans validation explicite.
