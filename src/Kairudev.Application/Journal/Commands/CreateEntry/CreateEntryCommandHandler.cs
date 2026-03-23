@@ -1,18 +1,24 @@
 using Kairudev.Domain.Journal;
+using Microsoft.Extensions.Logging;
+using Monbsoft.BrilliantMediator.Abstractions.Commands;
 
 namespace Kairudev.Application.Journal.Commands.CreateEntry;
 
-public sealed class CreateEntryCommandHandler
+public sealed class CreateEntryCommandHandler : ICommandHandler<CreateEntryCommand, CreateEntryResult>
 {
     private readonly IJournalEntryRepository _repository;
+    private readonly ILogger<CreateEntryCommandHandler> _logger;
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    public CreateEntryCommandHandler(IJournalEntryRepository repository)
+    public CreateEntryCommandHandler(
+        IJournalEntryRepository repository,
+        ILogger<CreateEntryCommandHandler> logger)
     {
         _repository = repository;
+        _logger = logger;
     }
 
-    public async Task<CreateEntryResult> HandleAsync(
+    public async Task<CreateEntryResult> Handle(
         CreateEntryCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -42,6 +48,7 @@ public sealed class CreateEntryCommandHandler
 
             var entry = JournalEntry.Create(command.EventType, command.ResourceId, command.OccurredAt, command.OwnerId, sequence);
             await _repository.AddAsync(entry, cancellationToken);
+            _logger.LogInformation("Journal entry {EventType} created for resource {ResourceId} by user {OwnerId}", command.EventType, command.ResourceId, command.OwnerId);
             return CreateEntryResult.Success();
         }
         finally

@@ -177,7 +177,7 @@ classDiagram
 
     class TaskDescription {
         +string Value
-        +MaxLength = 5000
+        +MaxLength = 4000
         +Create(value) Result~TaskDescription?~
     }
 
@@ -510,7 +510,7 @@ sequenceDiagram
 - [x] La description peut être ajoutée, modifiée ou supprimée (null)
 - [x] Titre vide → `400 Bad Request`
 - [x] Titre > 200 caractères → `400 Bad Request`
-- [x] Description > 5000 caractères → `400 Bad Request` *(limite portée de 1000 → 5000, itération #18)*
+- [x] Description > 4000 caractères → `400 Bad Request` *(limite portée de 1000 → 4000, itération #18)*
 - [x] Tâche inexistante → `404 Not Found`
 - [x] Modification persistée et reflétée dans `ListTasks`
 

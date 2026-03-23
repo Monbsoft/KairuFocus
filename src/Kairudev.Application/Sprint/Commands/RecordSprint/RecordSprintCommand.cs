@@ -1,3 +1,5 @@
+using Monbsoft.BrilliantMediator.Abstractions.Commands;
+
 namespace Kairudev.Application.Sprint.Commands.RecordSprint;
 
 public sealed record RecordSprintCommand(
@@ -6,4 +8,4 @@ public sealed record RecordSprintCommand(
     DateTimeOffset EndedAt,
     string Outcome,
     Guid? LinkedTaskId,
-    int SprintNumber);
+    int SprintNumber) : ICommand<RecordSprintResult>;

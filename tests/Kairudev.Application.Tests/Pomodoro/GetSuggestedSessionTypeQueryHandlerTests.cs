@@ -2,6 +2,7 @@ using Kairudev.Application.Pomodoro.Queries.GetSuggestedSessionType;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Domain.Identity;
 using Kairudev.Domain.Pomodoro;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Pomodoro;
 
@@ -16,7 +17,8 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
         _sut = new GetSuggestedSessionTypeQueryHandler(
             _sessionRepository,
             _settingsRepository,
-            new FakeCurrentUserService());
+            new FakeCurrentUserService(),
+            NullLogger<GetSuggestedSessionTypeQueryHandler>.Instance);
     }
 
     private void AddCompleted(PomodoroSessionType type, int count = 1)
@@ -33,7 +35,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     [Fact]
     public async Task Should_SuggestSprint_When_NoSessionsToday()
     {
-        var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
+        var result = await _sut.Handle(new GetSuggestedSessionTypeQuery());
 
         Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
     }
@@ -43,7 +45,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     {
         AddCompleted(PomodoroSessionType.Sprint, 1);
 
-        var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
+        var result = await _sut.Handle(new GetSuggestedSessionTypeQuery());
 
         Assert.Equal(PomodoroSessionType.ShortBreak, result.SuggestedType);
     }
@@ -53,7 +55,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     {
         AddCompleted(PomodoroSessionType.Sprint, 4);
 
-        var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
+        var result = await _sut.Handle(new GetSuggestedSessionTypeQuery());
 
         Assert.Equal(PomodoroSessionType.LongBreak, result.SuggestedType);
     }
@@ -64,7 +66,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
         AddCompleted(PomodoroSessionType.Sprint, 1);
         AddCompleted(PomodoroSessionType.ShortBreak, 1);
 
-        var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
+        var result = await _sut.Handle(new GetSuggestedSessionTypeQuery());
 
         Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
     }
@@ -78,7 +80,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
         AddCompleted(PomodoroSessionType.ShortBreak, 1);
         AddCompleted(PomodoroSessionType.Sprint, 1);
 
-        var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
+        var result = await _sut.Handle(new GetSuggestedSessionTypeQuery());
 
         Assert.Equal(PomodoroSessionType.ShortBreak, result.SuggestedType);
     }
@@ -94,7 +96,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
         AddCompleted(PomodoroSessionType.ShortBreak, 1);
         AddCompleted(PomodoroSessionType.Sprint, 1);
 
-        var result = await _sut.HandleAsync(new GetSuggestedSessionTypeQuery());
+        var result = await _sut.Handle(new GetSuggestedSessionTypeQuery());
 
         Assert.Equal(PomodoroSessionType.LongBreak, result.SuggestedType);
     }

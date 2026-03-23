@@ -1,10 +1,10 @@
-using Kairudev.Application.Journal.Commands.CreateEntry;
 using Kairudev.Application.Pomodoro.Commands.InterruptSession;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Application.Tests.Journal;
 using Kairudev.Domain.Identity;
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Pomodoro;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Pomodoro;
 
@@ -16,11 +16,12 @@ public sealed class InterruptSessionCommandHandlerTests
 
     public InterruptSessionCommandHandlerTests()
     {
-        var journalHandler = new CreateEntryCommandHandler(_journalRepository);
+        var fakeMediator = new FakeMediator(_journalRepository);
         _sut = new InterruptSessionCommandHandler(
             _sessionRepository,
-            journalHandler,
-            new FakeCurrentUserService());
+            fakeMediator,
+            new FakeCurrentUserService(),
+            NullLogger<InterruptSessionCommandHandler>.Instance);
     }
 
     private PomodoroSession AddActiveSession(PomodoroSessionType type)
@@ -34,7 +35,7 @@ public sealed class InterruptSessionCommandHandlerTests
     [Fact]
     public async Task Should_ReturnFailure_When_NoActiveSession()
     {
-        var result = await _sut.HandleAsync(new InterruptSessionCommand());
+        var result = await _sut.Handle(new InterruptSessionCommand());
 
         Assert.False(result.IsSuccess);
         Assert.Equal("No active session", result.Error);
@@ -45,7 +46,7 @@ public sealed class InterruptSessionCommandHandlerTests
     {
         AddActiveSession(PomodoroSessionType.Sprint);
 
-        var result = await _sut.HandleAsync(new InterruptSessionCommand());
+        var result = await _sut.Handle(new InterruptSessionCommand());
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);
@@ -57,7 +58,7 @@ public sealed class InterruptSessionCommandHandlerTests
     {
         AddActiveSession(PomodoroSessionType.ShortBreak);
 
-        var result = await _sut.HandleAsync(new InterruptSessionCommand());
+        var result = await _sut.Handle(new InterruptSessionCommand());
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);
@@ -69,7 +70,7 @@ public sealed class InterruptSessionCommandHandlerTests
     {
         AddActiveSession(PomodoroSessionType.LongBreak);
 
-        var result = await _sut.HandleAsync(new InterruptSessionCommand());
+        var result = await _sut.Handle(new InterruptSessionCommand());
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);

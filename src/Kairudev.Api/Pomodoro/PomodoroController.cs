@@ -10,6 +10,7 @@ using Kairudev.Application.Pomodoro.Queries.GetSettings;
 using Kairudev.Application.Pomodoro.Queries.GetSuggestedSessionType;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Monbsoft.BrilliantMediator.Abstractions;
 
 namespace Kairudev.Api.Pomodoro;
 
@@ -18,39 +19,11 @@ namespace Kairudev.Api.Pomodoro;
 [Authorize]
 public sealed class PomodoroController : ControllerBase
 {
-    private readonly GetSettingsQueryHandler _getSettings;
-    private readonly SaveSettingsCommandHandler _saveSettings;
-    private readonly GetSuggestedSessionTypeQueryHandler _getSuggestedType;
-    private readonly GetCurrentSessionQueryHandler _getCurrentSession;
-    private readonly StartSessionCommandHandler _startSession;
-    private readonly CompleteSessionCommandHandler _completeSession;
-    private readonly InterruptSessionCommandHandler _interruptSession;
-    private readonly LinkTaskCommandHandler _linkTask;
-    private readonly CreateTaskDuringSessionCommandHandler _createTask;
-    private readonly UpdateTaskStatusCommandHandler _updateTaskStatus;
+    private readonly IMediator _mediator;
 
-    public PomodoroController(
-        GetSettingsQueryHandler getSettings,
-        SaveSettingsCommandHandler saveSettings,
-        GetSuggestedSessionTypeQueryHandler getSuggestedType,
-        GetCurrentSessionQueryHandler getCurrentSession,
-        StartSessionCommandHandler startSession,
-        CompleteSessionCommandHandler completeSession,
-        InterruptSessionCommandHandler interruptSession,
-        LinkTaskCommandHandler linkTask,
-        CreateTaskDuringSessionCommandHandler createTask,
-        UpdateTaskStatusCommandHandler updateTaskStatus)
+    public PomodoroController(IMediator mediator)
     {
-        _getSettings = getSettings;
-        _saveSettings = saveSettings;
-        _getSuggestedType = getSuggestedType;
-        _getCurrentSession = getCurrentSession;
-        _startSession = startSession;
-        _completeSession = completeSession;
-        _interruptSession = interruptSession;
-        _linkTask = linkTask;
-        _createTask = createTask;
-        _updateTaskStatus = updateTaskStatus;
+        _mediator = mediator;
     }
 
     // ── Settings ───────────────────────────────────────────────────────────
@@ -58,14 +31,14 @@ public sealed class PomodoroController : ControllerBase
     [HttpGet("settings")]
     public async Task<IActionResult> GetSettings(CancellationToken ct)
     {
-        var result = await _getSettings.HandleAsync(new GetSettingsQuery(), ct);
+        var result = await _mediator.SendAsync<GetSettingsQuery, GetSettingsResult>(new GetSettingsQuery(), ct);
         return Ok(result.Settings);
     }
 
     [HttpPut("settings")]
     public async Task<IActionResult> SaveSettings([FromBody] SaveSettingsCommand command, CancellationToken ct)
     {
-        var result = await _saveSettings.HandleAsync(command, ct);
+        var result = await _mediator.DispatchAsync<SaveSettingsCommand, SaveSettingsResult>(command, ct);
         return result.IsSuccess
             ? NoContent()
             : BadRequest(new { error = result.ValidationError });
@@ -76,7 +49,7 @@ public sealed class PomodoroController : ControllerBase
     [HttpGet("session/suggested")]
     public async Task<IActionResult> GetSuggestedSessionType(CancellationToken ct)
     {
-        var result = await _getSuggestedType.HandleAsync(new GetSuggestedSessionTypeQuery(), ct);
+        var result = await _mediator.SendAsync<GetSuggestedSessionTypeQuery, GetSuggestedSessionTypeResult>(new GetSuggestedSessionTypeQuery(), ct);
         return Ok(new
         {
             SuggestedType = result.SuggestedType.ToString(),
@@ -89,7 +62,7 @@ public sealed class PomodoroController : ControllerBase
     [HttpGet("session")]
     public async Task<IActionResult> GetCurrentSession(CancellationToken ct)
     {
-        var result = await _getCurrentSession.HandleAsync(new GetCurrentSessionQuery(), ct);
+        var result = await _mediator.SendAsync<GetCurrentSessionQuery, GetCurrentSessionResult>(new GetCurrentSessionQuery(), ct);
         return result.HasSession
             ? Ok(result.Session)
             : NoContent();
@@ -98,7 +71,7 @@ public sealed class PomodoroController : ControllerBase
     [HttpPost("session")]
     public async Task<IActionResult> StartSession([FromQuery] string? type, CancellationToken ct)
     {
-        var result = await _startSession.HandleAsync(new StartSessionCommand(type), ct);
+        var result = await _mediator.DispatchAsync<StartSessionCommand, StartSessionResult>(new StartSessionCommand(type), ct);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetCurrentSession), null, result.Session)
             : Conflict(new { error = result.Error });
@@ -107,7 +80,7 @@ public sealed class PomodoroController : ControllerBase
     [HttpPatch("session/complete")]
     public async Task<IActionResult> CompleteSession(CancellationToken ct)
     {
-        var result = await _completeSession.HandleAsync(new CompleteSessionCommand(), ct);
+        var result = await _mediator.DispatchAsync<CompleteSessionCommand, CompleteSessionResult>(new CompleteSessionCommand(), ct);
         return result.IsSuccess
             ? NoContent()
             : BadRequest(new { error = result.Error });
@@ -116,7 +89,7 @@ public sealed class PomodoroController : ControllerBase
     [HttpPatch("session/interrupt")]
     public async Task<IActionResult> InterruptSession(CancellationToken ct)
     {
-        var result = await _interruptSession.HandleAsync(new InterruptSessionCommand(), ct);
+        var result = await _mediator.DispatchAsync<InterruptSessionCommand, InterruptSessionResult>(new InterruptSessionCommand(), ct);
         return result.IsSuccess
             ? NoContent()
             : BadRequest(new { error = result.Error });
@@ -127,7 +100,7 @@ public sealed class PomodoroController : ControllerBase
     [HttpPost("session/tasks/{id:guid}")]
     public async Task<IActionResult> LinkTask(Guid id, CancellationToken ct)
     {
-        var result = await _linkTask.HandleAsync(new LinkTaskCommand(id), ct);
+        var result = await _mediator.DispatchAsync<LinkTaskCommand, LinkTaskResult>(new LinkTaskCommand(id), ct);
 
         return result switch
         {
@@ -142,7 +115,7 @@ public sealed class PomodoroController : ControllerBase
         [FromBody] CreateTaskDuringSessionCommand command,
         CancellationToken ct)
     {
-        var result = await _createTask.HandleAsync(command, ct);
+        var result = await _mediator.DispatchAsync<CreateTaskDuringSessionCommand, CreateTaskDuringSessionResult>(command, ct);
         return result.IsSuccess
             ? Created($"api/tasks/{result.Task!.Id}", result.Task)
             : BadRequest(new { error = result.Error });
@@ -154,7 +127,7 @@ public sealed class PomodoroController : ControllerBase
         [FromBody] UpdateTaskStatusBody body,
         CancellationToken ct)
     {
-        var result = await _updateTaskStatus.HandleAsync(
+        var result = await _mediator.DispatchAsync<UpdateTaskStatusCommand, UpdateTaskStatusResult>(
             new UpdateTaskStatusCommand(id, body.TargetStatus), ct);
 
         return result switch

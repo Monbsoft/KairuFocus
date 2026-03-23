@@ -1,6 +1,7 @@
 using Kairudev.Application.Tasks.Queries.GetTaskById;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Domain.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Tasks;
 
@@ -10,7 +11,7 @@ public sealed class GetTaskByIdQueryHandlerTests
     private readonly GetTaskByIdQueryHandler _sut;
 
     public GetTaskByIdQueryHandlerTests() =>
-        _sut = new GetTaskByIdQueryHandler(_repository, new FakeCurrentUserService());
+        _sut = new GetTaskByIdQueryHandler(_repository, new FakeCurrentUserService(), NullLogger<GetTaskByIdQueryHandler>.Instance);
 
     [Fact]
     public async Task Should_ReturnTask_When_TaskExistsForCurrentUser()
@@ -21,7 +22,7 @@ public sealed class GetTaskByIdQueryHandlerTests
         _repository.Tasks.Add(task);
 
         // Act
-        var result = await _sut.HandleAsync(new GetTaskByIdQuery(task.Id.Value));
+        var result = await _sut.Handle(new GetTaskByIdQuery(task.Id.Value));
 
         // Assert
         Assert.NotNull(result.Task);
@@ -36,7 +37,7 @@ public sealed class GetTaskByIdQueryHandlerTests
         var unknownId = Guid.NewGuid();
 
         // Act
-        var result = await _sut.HandleAsync(new GetTaskByIdQuery(unknownId));
+        var result = await _sut.Handle(new GetTaskByIdQuery(unknownId));
 
         // Assert
         Assert.Null(result.Task);
@@ -52,7 +53,7 @@ public sealed class GetTaskByIdQueryHandlerTests
         _repository.Tasks.Add(task);
 
         // Act
-        var result = await _sut.HandleAsync(new GetTaskByIdQuery(task.Id.Value));
+        var result = await _sut.Handle(new GetTaskByIdQuery(task.Id.Value));
 
         // Assert
         Assert.Null(result.Task);

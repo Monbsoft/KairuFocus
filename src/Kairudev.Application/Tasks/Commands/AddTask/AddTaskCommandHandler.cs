@@ -1,28 +1,37 @@
 using Kairudev.Application.Common;
 using Kairudev.Application.Tasks.Common;
 using Kairudev.Domain.Tasks;
+using Microsoft.Extensions.Logging;
+using Monbsoft.BrilliantMediator.Abstractions.Commands;
 
 namespace Kairudev.Application.Tasks.Commands.AddTask;
 
 /// <summary>
 /// Handles the AddTask command.
 /// </summary>
-public sealed class AddTaskCommandHandler
+public sealed class AddTaskCommandHandler : ICommandHandler<AddTaskCommand, AddTaskResult>
 {
     private readonly ITaskRepository _repository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<AddTaskCommandHandler> _logger;
 
-    public AddTaskCommandHandler(ITaskRepository repository, ICurrentUserService currentUserService)
+    public AddTaskCommandHandler(
+        ITaskRepository repository,
+        ICurrentUserService currentUserService,
+        ILogger<AddTaskCommandHandler> logger)
     {
         _repository = repository;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
-    public async Task<AddTaskResult> HandleAsync(
+    public async Task<AddTaskResult> Handle(
         AddTaskCommand command,
         CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.CurrentUserId;
+
+        _logger.LogDebug("Creating task for user {UserId} with title '{Title}'", userId, command.Title);
 
         // Validate title
         var titleResult = TaskTitle.Create(command.Title);
@@ -43,6 +52,8 @@ public sealed class AddTaskCommandHandler
 
         // Persist
         await _repository.AddAsync(task, cancellationToken);
+
+        _logger.LogInformation("Task {TaskId} '{Title}' created for user {UserId}", task.Id.Value, task.Title.Value, userId);
 
         // Return result
         return AddTaskResult.Success(TaskViewModel.From(task));

@@ -4,7 +4,7 @@ namespace Kairudev.Domain.Tasks;
 
 public sealed record TaskDescription
 {
-    public const int MaxLength = 5000;
+    public const int MaxLength = 4000;
 
     public string Value { get; }
 

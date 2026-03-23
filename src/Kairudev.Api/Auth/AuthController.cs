@@ -3,12 +3,14 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Kairudev.Application.Identity.Commands.GetOrCreateUser;
+using Kairudev.Domain.Common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Monbsoft.BrilliantMediator.Abstractions;
 
 namespace Kairudev.Api.Auth;
 
@@ -16,17 +18,17 @@ namespace Kairudev.Api.Auth;
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
 {
-    private readonly GetOrCreateUserCommandHandler _handler;
+    private readonly IMediator _mediator;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
     private readonly IReadOnlySet<string> _allowedCallbackUrls;
 
     public AuthController(
-        GetOrCreateUserCommandHandler handler,
+        IMediator mediator,
         IConfiguration configuration,
         ILogger<AuthController> logger)
     {
-        _handler = handler;
+        _mediator = mediator;
         _configuration = configuration;
         _logger = logger;
         _allowedCallbackUrls = new HashSet<string>(
@@ -71,7 +73,7 @@ public sealed class AuthController : ControllerBase
             return Redirect($"{webBase}/login#auth-error=no-id");
 
         var command = new GetOrCreateUserCommand(githubId, login, displayName, email);
-        var userResult = await _handler.Handle(command, ct);
+        var userResult = await _mediator.DispatchAsync<GetOrCreateUserCommand, Result<GetOrCreateUserResult>>(command, ct);
 
         if (userResult.IsFailure)
         {

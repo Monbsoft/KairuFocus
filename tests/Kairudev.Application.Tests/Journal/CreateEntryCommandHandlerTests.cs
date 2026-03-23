@@ -1,6 +1,7 @@
 using Kairudev.Application.Journal.Commands.CreateEntry;
 using Kairudev.Domain.Identity;
 using Kairudev.Domain.Journal;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Journal;
 
@@ -12,7 +13,7 @@ public sealed class CreateEntryCommandHandlerTests
     private readonly CreateEntryCommandHandler _sut;
 
     public CreateEntryCommandHandlerTests() =>
-        _sut = new CreateEntryCommandHandler(_repository);
+        _sut = new CreateEntryCommandHandler(_repository, NullLogger<CreateEntryCommandHandler>.Instance);
 
     // ── SprintStarted ─────────────────────────────────────────────────────
 
@@ -21,7 +22,7 @@ public sealed class CreateEntryCommandHandlerTests
     {
         var command = new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), DateTime.UtcNow, OwnerId);
 
-        await _sut.HandleAsync(command);
+        await _sut.Handle(command);
 
         Assert.Equal(1, _repository.Entries[0].Sequence);
     }
@@ -31,8 +32,8 @@ public sealed class CreateEntryCommandHandlerTests
     {
         var today = DateTime.UtcNow;
 
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
 
         Assert.Equal(1, _repository.Entries[0].Sequence);
         Assert.Equal(2, _repository.Entries[1].Sequence);
@@ -46,9 +47,9 @@ public sealed class CreateEntryCommandHandlerTests
         var today = DateTime.UtcNow;
 
         // Sprint #1 démarre
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
         // Sprint #1 se complète
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintCompleted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintCompleted, Guid.NewGuid(), today, OwnerId));
 
         // count(SprintStarted today) = 1 → Sequence = 1
         Assert.Equal(1, _repository.Entries[1].Sequence);
@@ -59,9 +60,9 @@ public sealed class CreateEntryCommandHandlerTests
     {
         var today = DateTime.UtcNow;
 
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintCompleted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintCompleted, Guid.NewGuid(), today, OwnerId));
 
         // count(SprintStarted today) = 2 → Sequence = 2
         Assert.Equal(2, _repository.Entries[2].Sequence);
@@ -74,8 +75,8 @@ public sealed class CreateEntryCommandHandlerTests
     {
         var today = DateTime.UtcNow;
 
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.SprintInterrupted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.SprintInterrupted, Guid.NewGuid(), today, OwnerId));
 
         // count(SprintStarted today) = 1 → Sequence = 1
         Assert.Equal(1, _repository.Entries[1].Sequence);
@@ -88,8 +89,8 @@ public sealed class CreateEntryCommandHandlerTests
     {
         var today = DateTime.UtcNow;
 
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.BreakCompleted, Guid.NewGuid(), today, OwnerId));
-        await _sut.HandleAsync(new CreateEntryCommand(JournalEventType.BreakCompleted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.BreakCompleted, Guid.NewGuid(), today, OwnerId));
+        await _sut.Handle(new CreateEntryCommand(JournalEventType.BreakCompleted, Guid.NewGuid(), today, OwnerId));
 
         Assert.Equal(1, _repository.Entries[0].Sequence);
         Assert.Equal(2, _repository.Entries[1].Sequence);
@@ -102,7 +103,7 @@ public sealed class CreateEntryCommandHandlerTests
     {
         var command = new CreateEntryCommand(JournalEventType.TaskCompleted, Guid.NewGuid(), DateTime.UtcNow, OwnerId);
 
-        await _sut.HandleAsync(command);
+        await _sut.Handle(command);
 
         Assert.Null(_repository.Entries[0].Sequence);
     }
@@ -112,7 +113,7 @@ public sealed class CreateEntryCommandHandlerTests
     {
         var command = new CreateEntryCommand(JournalEventType.SprintStarted, Guid.NewGuid(), DateTime.UtcNow, OwnerId);
 
-        var result = await _sut.HandleAsync(command);
+        var result = await _sut.Handle(command);
 
         Assert.True(result.IsSuccess);
     }

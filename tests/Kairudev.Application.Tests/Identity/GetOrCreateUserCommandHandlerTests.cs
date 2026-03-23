@@ -1,5 +1,6 @@
 using Kairudev.Application.Identity.Commands.GetOrCreateUser;
 using Kairudev.Domain.Identity;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Identity;
 
@@ -9,7 +10,7 @@ public sealed class GetOrCreateUserCommandHandlerTests
     private readonly GetOrCreateUserCommandHandler _sut;
 
     public GetOrCreateUserCommandHandlerTests()
-        => _sut = new GetOrCreateUserCommandHandler(_repository);
+        => _sut = new GetOrCreateUserCommandHandler(_repository, NullLogger<GetOrCreateUserCommandHandler>.Instance);
 
     [Fact]
     public async Task Should_CreateUser_When_UserDoesNotExist()

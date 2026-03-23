@@ -6,6 +6,7 @@ using Kairudev.Application.Journal.Queries.GetJournalByDate;
 using Kairudev.Application.Journal.Queries.GetTodayJournal;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Monbsoft.BrilliantMediator.Abstractions;
 
 namespace Kairudev.Api.Journal;
 
@@ -14,30 +15,17 @@ namespace Kairudev.Api.Journal;
 [Authorize]
 public sealed class JournalController : ControllerBase
 {
-    private readonly GetTodayJournalQueryHandler _getTodayJournal;
-    private readonly GetJournalByDateQueryHandler _getJournalByDate;
-    private readonly AddCommentCommandHandler _addComment;
-    private readonly UpdateCommentCommandHandler _updateComment;
-    private readonly RemoveCommentCommandHandler _removeComment;
+    private readonly IMediator _mediator;
 
-    public JournalController(
-        GetTodayJournalQueryHandler getTodayJournal,
-        GetJournalByDateQueryHandler getJournalByDate,
-        AddCommentCommandHandler addComment,
-        UpdateCommentCommandHandler updateComment,
-        RemoveCommentCommandHandler removeComment)
+    public JournalController(IMediator mediator)
     {
-        _getTodayJournal = getTodayJournal;
-        _getJournalByDate = getJournalByDate;
-        _addComment = addComment;
-        _updateComment = updateComment;
-        _removeComment = removeComment;
+        _mediator = mediator;
     }
 
     [HttpGet("today")]
     public async Task<IActionResult> GetToday(CancellationToken ct)
     {
-        var result = await _getTodayJournal.HandleAsync(new GetTodayJournalQuery(), ct);
+        var result = await _mediator.SendAsync<GetTodayJournalQuery, GetTodayJournalResult>(new GetTodayJournalQuery(), ct);
         return Ok(result.Entries);
     }
 
@@ -47,7 +35,7 @@ public sealed class JournalController : ControllerBase
         if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
             return BadRequest("Format de date invalide. Utiliser yyyy-MM-dd.");
 
-        var result = await _getJournalByDate.HandleAsync(new GetJournalByDateQuery(parsedDate), ct);
+        var result = await _mediator.SendAsync<GetJournalByDateQuery, GetJournalByDateResult>(new GetJournalByDateQuery(parsedDate), ct);
         return Ok(result.Entries);
     }
 
@@ -57,7 +45,7 @@ public sealed class JournalController : ControllerBase
         [FromBody] AddCommentBody body,
         CancellationToken ct)
     {
-        var result = await _addComment.HandleAsync(new AddCommentCommand(entryId, body.Text), ct);
+        var result = await _mediator.DispatchAsync<AddCommentCommand, AddCommentResult>(new AddCommentCommand(entryId, body.Text), ct);
 
         return result switch
         {
@@ -75,7 +63,7 @@ public sealed class JournalController : ControllerBase
         [FromBody] UpdateCommentBody body,
         CancellationToken ct)
     {
-        var result = await _updateComment.HandleAsync(
+        var result = await _mediator.DispatchAsync<UpdateCommentCommand, UpdateCommentResult>(
             new UpdateCommentCommand(entryId, commentId, body.Text), ct);
 
         return result switch
@@ -93,7 +81,7 @@ public sealed class JournalController : ControllerBase
         Guid commentId,
         CancellationToken ct)
     {
-        var result = await _removeComment.HandleAsync(
+        var result = await _mediator.DispatchAsync<RemoveCommentCommand, RemoveCommentResult>(
             new RemoveCommentCommand(entryId, commentId), ct);
 
         return result switch

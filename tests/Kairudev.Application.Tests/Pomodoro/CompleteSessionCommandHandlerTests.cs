@@ -1,10 +1,10 @@
-using Kairudev.Application.Journal.Commands.CreateEntry;
 using Kairudev.Application.Pomodoro.Commands.CompleteSession;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Application.Tests.Journal;
 using Kairudev.Domain.Identity;
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Pomodoro;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Pomodoro;
 
@@ -17,12 +17,13 @@ public sealed class CompleteSessionCommandHandlerTests
 
     public CompleteSessionCommandHandlerTests()
     {
-        var journalHandler = new CreateEntryCommandHandler(_journalRepository);
+        var fakeMediator = new FakeMediator(_journalRepository);
         _sut = new CompleteSessionCommandHandler(
             _sessionRepository,
             _settingsRepository,
-            journalHandler,
-            new FakeCurrentUserService());
+            fakeMediator,
+            new FakeCurrentUserService(),
+            NullLogger<CompleteSessionCommandHandler>.Instance);
     }
 
     private PomodoroSession AddActiveSession(PomodoroSessionType type)
@@ -36,7 +37,7 @@ public sealed class CompleteSessionCommandHandlerTests
     [Fact]
     public async Task Should_ReturnFailure_When_NoActiveSession()
     {
-        var result = await _sut.HandleAsync(new CompleteSessionCommand());
+        var result = await _sut.Handle(new CompleteSessionCommand());
 
         Assert.False(result.IsSuccess);
         Assert.Equal("No active session", result.Error);
@@ -47,7 +48,7 @@ public sealed class CompleteSessionCommandHandlerTests
     {
         AddActiveSession(PomodoroSessionType.Sprint);
 
-        var result = await _sut.HandleAsync(new CompleteSessionCommand());
+        var result = await _sut.Handle(new CompleteSessionCommand());
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);
@@ -59,7 +60,7 @@ public sealed class CompleteSessionCommandHandlerTests
     {
         AddActiveSession(PomodoroSessionType.ShortBreak);
 
-        var result = await _sut.HandleAsync(new CompleteSessionCommand());
+        var result = await _sut.Handle(new CompleteSessionCommand());
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);
@@ -71,7 +72,7 @@ public sealed class CompleteSessionCommandHandlerTests
     {
         AddActiveSession(PomodoroSessionType.ShortBreak);
 
-        await _sut.HandleAsync(new CompleteSessionCommand());
+        await _sut.Handle(new CompleteSessionCommand());
 
         Assert.Equal(1, _journalRepository.Entries[0].Sequence);
     }
@@ -90,7 +91,7 @@ public sealed class CompleteSessionCommandHandlerTests
 
         AddActiveSession(PomodoroSessionType.ShortBreak);
 
-        await _sut.HandleAsync(new CompleteSessionCommand());
+        await _sut.Handle(new CompleteSessionCommand());
 
         var breakEntry = _journalRepository.Entries.Last();
         Assert.Equal(2, breakEntry.Sequence);
@@ -101,7 +102,7 @@ public sealed class CompleteSessionCommandHandlerTests
     {
         AddActiveSession(PomodoroSessionType.Sprint);
 
-        await _sut.HandleAsync(new CompleteSessionCommand());
+        await _sut.Handle(new CompleteSessionCommand());
 
         Assert.Null(_journalRepository.Entries[0].Sequence);
     }
@@ -111,7 +112,7 @@ public sealed class CompleteSessionCommandHandlerTests
     {
         AddActiveSession(PomodoroSessionType.LongBreak);
 
-        var result = await _sut.HandleAsync(new CompleteSessionCommand());
+        var result = await _sut.Handle(new CompleteSessionCommand());
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);

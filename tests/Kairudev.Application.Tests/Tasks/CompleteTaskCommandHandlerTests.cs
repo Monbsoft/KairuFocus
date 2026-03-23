@@ -1,10 +1,10 @@
-using Kairudev.Application.Journal.Commands.CreateEntry;
 using Kairudev.Application.Tasks.Commands.CompleteTask;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Application.Tests.Journal;
 using Kairudev.Domain.Identity;
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using DomainTaskStatus = Kairudev.Domain.Tasks.TaskStatus;
 
 namespace Kairudev.Application.Tests.Tasks;
@@ -17,8 +17,8 @@ public sealed class CompleteTaskCommandHandlerTests
 
     public CompleteTaskCommandHandlerTests()
     {
-        var journalHandler = new CreateEntryCommandHandler(_journalRepository);
-        _sut = new CompleteTaskCommandHandler(_repository, journalHandler, new FakeCurrentUserService());
+        var fakeMediator = new FakeMediator(_journalRepository);
+        _sut = new CompleteTaskCommandHandler(_repository, fakeMediator, new FakeCurrentUserService(), NullLogger<CompleteTaskCommandHandler>.Instance);
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class CompleteTaskCommandHandlerTests
         var command = new CompleteTaskCommand(task.Id.Value);
 
         // Act
-        var result = await _sut.HandleAsync(command);
+        var result = await _sut.Handle(command);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -43,7 +43,7 @@ public sealed class CompleteTaskCommandHandlerTests
         var command = new CompleteTaskCommand(Guid.NewGuid());
 
         // Act
-        var result = await _sut.HandleAsync(command);
+        var result = await _sut.Handle(command);
 
         // Assert
         Assert.True(result.IsNotFound);
@@ -59,7 +59,7 @@ public sealed class CompleteTaskCommandHandlerTests
         var command = new CompleteTaskCommand(task.Id.Value);
 
         // Act
-        var result = await _sut.HandleAsync(command);
+        var result = await _sut.Handle(command);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -74,7 +74,7 @@ public sealed class CompleteTaskCommandHandlerTests
         var command = new CompleteTaskCommand(task.Id.Value);
 
         // Act
-        var result = await _sut.HandleAsync(command);
+        var result = await _sut.Handle(command);
 
         // Assert
         Assert.True(result.IsSuccess);

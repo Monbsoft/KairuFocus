@@ -5,7 +5,7 @@
 namespace Kairudev.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class ExpandTaskDescriptionLimit : Migration
+    public partial class AlignTaskDescriptionMaxLength : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,8 +17,8 @@ namespace Kairudev.Infrastructure.Persistence.Migrations
                 maxLength: 4000,
                 nullable: true,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(1000)",
-                oldMaxLength: 1000,
+                oldType: "nvarchar(5000)",
+                oldMaxLength: 5000,
                 oldNullable: true);
         }
 
@@ -28,8 +28,8 @@ namespace Kairudev.Infrastructure.Persistence.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "Description",
                 table: "Tasks",
-                type: "nvarchar(1000)",
-                maxLength: 1000,
+                type: "nvarchar(5000)",
+                maxLength: 5000,
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(4000)",

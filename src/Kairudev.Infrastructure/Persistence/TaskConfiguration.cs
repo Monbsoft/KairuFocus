@@ -38,7 +38,7 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<DeveloperTask
             .HasConversion(
                 desc => desc != null ? desc.Value : null,
                 value => TaskDescription.Create(value).Value)
-            .HasColumnType("nvarchar(5000)")
+            .HasColumnType("nvarchar(4000)")
             .HasMaxLength(TaskDescription.MaxLength);
 
         builder.Property(t => t.Status)

@@ -4,6 +4,7 @@ using Kairudev.Application.Settings.Commands.SaveThemePreference;
 using Kairudev.Application.Settings.Queries.GetUserSettings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Monbsoft.BrilliantMediator.Abstractions;
 
 namespace Kairudev.Api.Settings;
 
@@ -12,36 +13,25 @@ namespace Kairudev.Api.Settings;
 [Authorize]
 public sealed class SettingsController : ControllerBase
 {
-    private readonly GetUserSettingsQueryHandler _getUserSettings;
-    private readonly SaveThemePreferenceCommandHandler _saveThemePreference;
-    private readonly SaveRingtonePreferenceCommandHandler _saveRingtonePreference;
-    private readonly SaveJiraSettingsCommandHandler _saveJiraSettings;
+    private readonly IMediator _mediator;
 
-    public SettingsController(
-        GetUserSettingsQueryHandler getUserSettings,
-        SaveThemePreferenceCommandHandler saveThemePreference,
-        SaveRingtonePreferenceCommandHandler saveRingtonePreference,
-        SaveJiraSettingsCommandHandler saveJiraSettings)
+    public SettingsController(IMediator mediator)
     {
-        _getUserSettings = getUserSettings;
-        _saveThemePreference = saveThemePreference;
-        _saveRingtonePreference = saveRingtonePreference;
-        _saveJiraSettings = saveJiraSettings;
+        _mediator = mediator;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> Get(CancellationToken ct)
     {
-        var query = new GetUserSettingsQuery();
-        var result = await _getUserSettings.Handle(query);
+        var result = await _mediator.SendAsync<GetUserSettingsQuery, GetUserSettingsResult>(new GetUserSettingsQuery(), ct);
         return Ok(result.Settings);
     }
 
     [HttpPut("theme")]
-    public async Task<IActionResult> SaveThemePreference([FromBody] SaveThemePreferenceRequest request)
+    public async Task<IActionResult> SaveThemePreference([FromBody] SaveThemePreferenceRequest request, CancellationToken ct)
     {
         var command = new SaveThemePreferenceCommand(request.ThemePreference);
-        var result = await _saveThemePreference.Handle(command);
+        var result = await _mediator.DispatchAsync<SaveThemePreferenceCommand, SaveThemePreferenceResult>(command, ct);
 
         if (!result.IsSuccess)
         {
@@ -52,10 +42,10 @@ public sealed class SettingsController : ControllerBase
     }
 
     [HttpPut("ringtone")]
-    public async Task<IActionResult> SaveRingtonePreference([FromBody] SaveRingtonePreferenceRequest request)
+    public async Task<IActionResult> SaveRingtonePreference([FromBody] SaveRingtonePreferenceRequest request, CancellationToken ct)
     {
         var command = new SaveRingtonePreferenceCommand(request.RingtonePreference);
-        var result = await _saveRingtonePreference.Handle(command);
+        var result = await _mediator.DispatchAsync<SaveRingtonePreferenceCommand, SaveRingtonePreferenceResult>(command, ct);
 
         if (!result.IsSuccess)
         {
@@ -66,10 +56,10 @@ public sealed class SettingsController : ControllerBase
     }
 
     [HttpPut("jira")]
-    public async Task<IActionResult> SaveJiraSettings([FromBody] SaveJiraSettingsRequest request)
+    public async Task<IActionResult> SaveJiraSettings([FromBody] SaveJiraSettingsRequest request, CancellationToken ct)
     {
         var command = new SaveJiraSettingsCommand(request.JiraBaseUrl, request.JiraEmail, request.JiraApiToken);
-        var result = await _saveJiraSettings.Handle(command);
+        var result = await _mediator.DispatchAsync<SaveJiraSettingsCommand, SaveJiraSettingsResult>(command, ct);
         return result.IsSuccess ? NoContent() : BadRequest(new { error = result.Error });
     }
 }

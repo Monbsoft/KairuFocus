@@ -1,6 +1,7 @@
 using Kairudev.Application.Tickets.Queries.GetAssignedJiraTickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Monbsoft.BrilliantMediator.Abstractions;
 
 namespace Kairudev.Api.Tickets;
 
@@ -9,17 +10,17 @@ namespace Kairudev.Api.Tickets;
 [Authorize]
 public sealed class TicketsController : ControllerBase
 {
-    private readonly GetAssignedJiraTicketsQueryHandler _getAssignedTickets;
+    private readonly IMediator _mediator;
 
-    public TicketsController(GetAssignedJiraTicketsQueryHandler getAssignedTickets)
+    public TicketsController(IMediator mediator)
     {
-        _getAssignedTickets = getAssignedTickets;
+        _mediator = mediator;
     }
 
     [HttpGet("assigned")]
     public async Task<IActionResult> GetAssigned(CancellationToken ct)
     {
-        var result = await _getAssignedTickets.HandleAsync(new GetAssignedJiraTicketsQuery(), ct);
+        var result = await _mediator.SendAsync<GetAssignedJiraTicketsQuery, GetAssignedJiraTicketsResult>(new GetAssignedJiraTicketsQuery(), ct);
 
         return result switch
         {

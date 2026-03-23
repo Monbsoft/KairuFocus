@@ -1,23 +1,31 @@
 using Kairudev.Application.Common;
 using Kairudev.Application.Settings.Common;
 using Kairudev.Domain.Settings;
+using Microsoft.Extensions.Logging;
+using Monbsoft.BrilliantMediator.Abstractions.Queries;
 
 namespace Kairudev.Application.Settings.Queries.GetUserSettings;
 
-public sealed class GetUserSettingsQueryHandler
+public sealed class GetUserSettingsQueryHandler : IQueryHandler<GetUserSettingsQuery, GetUserSettingsResult>
 {
     private readonly IUserSettingsRepository _repository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<GetUserSettingsQueryHandler> _logger;
 
-    public GetUserSettingsQueryHandler(IUserSettingsRepository repository, ICurrentUserService currentUserService)
+    public GetUserSettingsQueryHandler(
+        IUserSettingsRepository repository,
+        ICurrentUserService currentUserService,
+        ILogger<GetUserSettingsQueryHandler> logger)
     {
         _repository = repository;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
-    public async Task<GetUserSettingsResult> Handle(GetUserSettingsQuery query)
+    public async Task<GetUserSettingsResult> Handle(GetUserSettingsQuery query, CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.CurrentUserId;
+        _logger.LogDebug("Fetching user settings for user {UserId}", userId);
         var settings = await _repository.GetByUserIdAsync(userId);
 
         var jiraConfigured = !string.IsNullOrWhiteSpace(settings.JiraBaseUrl)

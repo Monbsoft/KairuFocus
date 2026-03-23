@@ -2,6 +2,7 @@ using Kairudev.Application.Tasks.Commands.LinkJiraTicket;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Domain.Identity;
 using Kairudev.Domain.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Tasks;
 
@@ -12,7 +13,7 @@ public sealed class LinkJiraTicketCommandHandlerTests
 
     public LinkJiraTicketCommandHandlerTests()
     {
-        _handler = new LinkJiraTicketCommandHandler(_repository, new FakeCurrentUserService());
+        _handler = new LinkJiraTicketCommandHandler(_repository, new FakeCurrentUserService(), NullLogger<LinkJiraTicketCommandHandler>.Instance);
     }
 
     private static DeveloperTask CreateTask()
@@ -27,7 +28,7 @@ public sealed class LinkJiraTicketCommandHandlerTests
         var task = CreateTask();
         _repository.Tasks.Add(task);
 
-        var result = await _handler.HandleAsync(
+        var result = await _handler.Handle(
             new LinkJiraTicketCommand(task.Id.Value, "PROJ-123"));
 
         Assert.True(result.IsSuccess);
@@ -37,7 +38,7 @@ public sealed class LinkJiraTicketCommandHandlerTests
     [Fact]
     public async Task Should_ReturnNotFound_When_TaskDoesNotExist()
     {
-        var result = await _handler.HandleAsync(
+        var result = await _handler.Handle(
             new LinkJiraTicketCommand(Guid.NewGuid(), "PROJ-123"));
 
         Assert.True(result.IsNotFound);
@@ -52,7 +53,7 @@ public sealed class LinkJiraTicketCommandHandlerTests
         var task = CreateTask();
         _repository.Tasks.Add(task);
 
-        var result = await _handler.HandleAsync(
+        var result = await _handler.Handle(
             new LinkJiraTicketCommand(task.Id.Value, invalidKey));
 
         Assert.False(result.IsSuccess);

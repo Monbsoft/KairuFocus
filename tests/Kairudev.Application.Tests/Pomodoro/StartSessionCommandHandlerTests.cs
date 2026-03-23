@@ -1,10 +1,10 @@
-using Kairudev.Application.Journal.Commands.CreateEntry;
 using Kairudev.Application.Pomodoro.Commands.StartSession;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Application.Tests.Journal;
 using Kairudev.Domain.Identity;
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Pomodoro;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Pomodoro;
 
@@ -17,12 +17,13 @@ public sealed class StartSessionCommandHandlerTests
 
     public StartSessionCommandHandlerTests()
     {
-        var journalHandler = new CreateEntryCommandHandler(_journalRepository);
+        var fakeMediator = new FakeMediator(_journalRepository);
         _sut = new StartSessionCommandHandler(
             _sessionRepository,
             _settingsRepository,
-            journalHandler,
-            new FakeCurrentUserService());
+            fakeMediator,
+            new FakeCurrentUserService(),
+            NullLogger<StartSessionCommandHandler>.Instance);
     }
 
     [Fact]
@@ -32,7 +33,7 @@ public sealed class StartSessionCommandHandlerTests
         existing.Start(DateTime.UtcNow);
         _sessionRepository.Sessions.Add(existing);
 
-        var result = await _sut.HandleAsync(new StartSessionCommand(null));
+        var result = await _sut.Handle(new StartSessionCommand(null));
 
         Assert.False(result.IsSuccess);
         Assert.Equal("A session is already active", result.Error);
@@ -41,7 +42,7 @@ public sealed class StartSessionCommandHandlerTests
     [Fact]
     public async Task Should_LogSprintStarted_When_SprintSessionStarted()
     {
-        var result = await _sut.HandleAsync(new StartSessionCommand("Sprint"));
+        var result = await _sut.Handle(new StartSessionCommand("Sprint"));
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);
@@ -51,7 +52,7 @@ public sealed class StartSessionCommandHandlerTests
     [Fact]
     public async Task Should_LogBreakStarted_When_ShortBreakSessionStarted()
     {
-        var result = await _sut.HandleAsync(new StartSessionCommand("ShortBreak"));
+        var result = await _sut.Handle(new StartSessionCommand("ShortBreak"));
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);
@@ -61,7 +62,7 @@ public sealed class StartSessionCommandHandlerTests
     [Fact]
     public async Task Should_LogBreakStarted_When_LongBreakSessionStarted()
     {
-        var result = await _sut.HandleAsync(new StartSessionCommand("LongBreak"));
+        var result = await _sut.Handle(new StartSessionCommand("LongBreak"));
 
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);

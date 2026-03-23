@@ -1,10 +1,10 @@
-using Kairudev.Application.Journal.Commands.CreateEntry;
 using Kairudev.Application.Sprint.Commands.RecordSprint;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Application.Tests.Journal;
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Sprint;
 using Kairudev.Domain.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Kairudev.Application.Tests.Sprint;
@@ -19,9 +19,9 @@ public sealed class RecordSprintCommandHandlerTests
     {
         var sprintRepo = new FakeSprintSessionRepository();
         var journalRepo = new FakeJournalEntryRepository();
-        var journalHandler = new CreateEntryCommandHandler(journalRepo);
+        var fakeMediator = new FakeMediator(journalRepo);
         var currentUser = new FakeCurrentUserService();
-        var handler = new RecordSprintCommandHandler(sprintRepo, journalHandler, currentUser);
+        var handler = new RecordSprintCommandHandler(sprintRepo, fakeMediator, currentUser, NullLogger<RecordSprintCommandHandler>.Instance);
         return (handler, sprintRepo, journalRepo);
     }
 
@@ -31,7 +31,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, sprintRepo, _) = BuildHandler();
         var command = new RecordSprintCommand("Focus", StartedAt, EndedAt, "Completed", null, 1);
 
-        var result = await handler.HandleAsync(command);
+        var result = await handler.Handle(command);
 
         Assert.True(result.IsSuccess);
         Assert.Single(sprintRepo.Sessions);
@@ -44,7 +44,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, sprintRepo, _) = BuildHandler();
         var command = new RecordSprintCommand("", StartedAt, EndedAt, "Completed", null, 3);
 
-        var result = await handler.HandleAsync(command);
+        var result = await handler.Handle(command);
 
         Assert.True(result.IsSuccess);
         Assert.Equal("Sprint #3", sprintRepo.Sessions[0].Name.Value);
@@ -57,7 +57,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, _, _) = BuildHandler();
         var command = new RecordSprintCommand("Focus", StartedAt, EndedAt, "Completed", null, 1);
 
-        var result = await handler.HandleAsync(command);
+        var result = await handler.Handle(command);
 
         Assert.True(result.IsSuccess);
         var session = result.Session!;
@@ -76,7 +76,7 @@ public sealed class RecordSprintCommandHandlerTests
         var taskId = Guid.NewGuid();
         var command = new RecordSprintCommand("Focus", StartedAt, EndedAt, "Completed", taskId, 1);
 
-        var result = await handler.HandleAsync(command);
+        var result = await handler.Handle(command);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(taskId, sprintRepo.Sessions[0].LinkedTaskId!.Value);
@@ -89,7 +89,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, sprintRepo, _) = BuildHandler();
         var command = new RecordSprintCommand("Focus", StartedAt, EndedAt, "Interrupted", null, 1);
 
-        var result = await handler.HandleAsync(command);
+        var result = await handler.Handle(command);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(SprintOutcome.Interrupted, sprintRepo.Sessions[0].Outcome);
@@ -102,7 +102,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, _, journalRepo) = BuildHandler();
         var command = new RecordSprintCommand("Focus", StartedAt, EndedAt, "Completed", null, 1);
 
-        await handler.HandleAsync(command);
+        await handler.Handle(command);
 
         Assert.Equal(2, journalRepo.Entries.Count);
         Assert.Contains(journalRepo.Entries, e => e.EventType == JournalEventType.SprintStarted);
@@ -115,7 +115,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, _, journalRepo) = BuildHandler();
         var command = new RecordSprintCommand("Focus", StartedAt, EndedAt, "Interrupted", null, 1);
 
-        await handler.HandleAsync(command);
+        await handler.Handle(command);
 
         Assert.Equal(2, journalRepo.Entries.Count);
         Assert.Contains(journalRepo.Entries, e => e.EventType == JournalEventType.SprintStarted);
@@ -128,7 +128,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, _, journalRepo) = BuildHandler();
         var command = new RecordSprintCommand("Focus", StartedAt, EndedAt, "Completed", null, 1);
 
-        await handler.HandleAsync(command);
+        await handler.Handle(command);
 
         var startEntry = journalRepo.Entries.Single(e => e.EventType == JournalEventType.SprintStarted);
         var endEntry   = journalRepo.Entries.Single(e => e.EventType == JournalEventType.SprintCompleted);
@@ -143,7 +143,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, _, _) = BuildHandler();
         var command = new RecordSprintCommand("Focus", EndedAt, StartedAt, "Completed", null, 1);
 
-        var result = await handler.HandleAsync(command);
+        var result = await handler.Handle(command);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(SprintDomainErrors.Sprint.EndedAtBeforeStartedAt, result.Error);
@@ -155,7 +155,7 @@ public sealed class RecordSprintCommandHandlerTests
         var (handler, _, _) = BuildHandler();
         var command = new RecordSprintCommand("Focus", StartedAt, EndedAt, "Unknown", null, 1);
 
-        var result = await handler.HandleAsync(command);
+        var result = await handler.Handle(command);
 
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
@@ -168,7 +168,7 @@ public sealed class RecordSprintCommandHandlerTests
         var longName = new string('x', 201);
         var command = new RecordSprintCommand(longName, StartedAt, EndedAt, "Completed", null, 1);
 
-        var result = await handler.HandleAsync(command);
+        var result = await handler.Handle(command);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(SprintDomainErrors.Sprint.NameTooLong, result.Error);

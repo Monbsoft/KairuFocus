@@ -2,6 +2,7 @@ using Kairudev.Application.Sprint.Commands.RecordSprint;
 using Kairudev.Application.Sprint.Queries.GetTodaySprints;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Monbsoft.BrilliantMediator.Abstractions;
 
 namespace Kairudev.Api.Sprint;
 
@@ -10,15 +11,11 @@ namespace Kairudev.Api.Sprint;
 [Authorize]
 public sealed class SprintsController : ControllerBase
 {
-    private readonly RecordSprintCommandHandler _recordSprint;
-    private readonly GetTodaySprintsQueryHandler _getTodaySprints;
+    private readonly IMediator _mediator;
 
-    public SprintsController(
-        RecordSprintCommandHandler recordSprint,
-        GetTodaySprintsQueryHandler getTodaySprints)
+    public SprintsController(IMediator mediator)
     {
-        _recordSprint = recordSprint;
-        _getTodaySprints = getTodaySprints;
+        _mediator = mediator;
     }
 
     /// <summary>Records a completed or interrupted sprint session.</summary>
@@ -35,7 +32,7 @@ public sealed class SprintsController : ControllerBase
             body.LinkedTaskId,
             body.SprintNumber);
 
-        var result = await _recordSprint.HandleAsync(command, ct);
+        var result = await _mediator.DispatchAsync<RecordSprintCommand, RecordSprintResult>(command, ct);
 
         return result.IsSuccess
             ? Created($"api/sprints", result.Session)
@@ -46,7 +43,7 @@ public sealed class SprintsController : ControllerBase
     [HttpGet("today")]
     public async Task<IActionResult> GetTodaySprints(CancellationToken ct)
     {
-        var result = await _getTodaySprints.HandleAsync(new GetTodaySprintsQuery(), ct);
+        var result = await _mediator.SendAsync<GetTodaySprintsQuery, GetTodaySprintsResult>(new GetTodaySprintsQuery(), ct);
         return Ok(result.Sessions);
     }
 }

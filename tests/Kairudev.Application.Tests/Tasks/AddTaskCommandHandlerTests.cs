@@ -2,6 +2,7 @@ using Kairudev.Application.Tasks.Commands.AddTask;
 using Kairudev.Application.Tasks.Common;
 using Kairudev.Application.Tests.Common;
 using Kairudev.Domain.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Kairudev.Application.Tests.Tasks;
 
@@ -11,7 +12,7 @@ public sealed class AddTaskCommandHandlerTests
     private readonly AddTaskCommandHandler _sut;
 
     public AddTaskCommandHandlerTests() =>
-        _sut = new AddTaskCommandHandler(_repository, new FakeCurrentUserService());
+        _sut = new AddTaskCommandHandler(_repository, new FakeCurrentUserService(), NullLogger<AddTaskCommandHandler>.Instance);
 
     [Fact]
     public async Task Should_ReturnSuccess_When_TitleIsValid()
@@ -20,7 +21,7 @@ public sealed class AddTaskCommandHandlerTests
         var command = new AddTaskCommand("Write documentation", null);
 
         // Act
-        var result = await _sut.HandleAsync(command);
+        var result = await _sut.Handle(command);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -36,7 +37,7 @@ public sealed class AddTaskCommandHandlerTests
         var command = new AddTaskCommand("Write documentation", null);
 
         // Act
-        await _sut.HandleAsync(command);
+        await _sut.Handle(command);
 
         // Assert
         Assert.Single(_repository.Tasks);
@@ -51,7 +52,7 @@ public sealed class AddTaskCommandHandlerTests
         var command = new AddTaskCommand(title, null);
 
         // Act
-        var result = await _sut.HandleAsync(command);
+        var result = await _sut.Handle(command);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -67,7 +68,7 @@ public sealed class AddTaskCommandHandlerTests
         var command = new AddTaskCommand(longTitle, null);
 
         // Act
-        var result = await _sut.HandleAsync(command);
+        var result = await _sut.Handle(command);
 
         // Assert
         Assert.False(result.IsSuccess);

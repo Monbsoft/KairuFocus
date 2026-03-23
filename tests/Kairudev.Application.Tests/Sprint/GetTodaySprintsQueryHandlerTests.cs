@@ -3,6 +3,7 @@ using Kairudev.Application.Tests.Common;
 using Kairudev.Domain.Identity;
 using Kairudev.Domain.Sprint;
 using Kairudev.Domain.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Kairudev.Application.Tests.Sprint;
@@ -13,7 +14,7 @@ public sealed class GetTodaySprintsQueryHandlerTests
     private static readonly UserId OtherOwnerId   = UserId.From(new Guid("00000000-0000-0000-0000-000000000002"));
 
     private static GetTodaySprintsQueryHandler BuildHandler(FakeSprintSessionRepository repo) =>
-        new(repo, new FakeCurrentUserService());
+        new(repo, new FakeCurrentUserService(), NullLogger<GetTodaySprintsQueryHandler>.Instance);
 
     private static SprintSession BuildSession(
         UserId ownerId,
@@ -31,7 +32,7 @@ public sealed class GetTodaySprintsQueryHandlerTests
         var repo = new FakeSprintSessionRepository();
         var handler = BuildHandler(repo);
 
-        var result = await handler.HandleAsync(new GetTodaySprintsQuery());
+        var result = await handler.Handle(new GetTodaySprintsQuery());
 
         Assert.Empty(result.Sessions);
     }
@@ -45,7 +46,7 @@ public sealed class GetTodaySprintsQueryHandlerTests
         repo.Sessions.Add(session);
 
         var handler = BuildHandler(repo);
-        var result = await handler.HandleAsync(new GetTodaySprintsQuery());
+        var result = await handler.Handle(new GetTodaySprintsQuery());
 
         Assert.Single(result.Sessions);
     }
@@ -59,7 +60,7 @@ public sealed class GetTodaySprintsQueryHandlerTests
         repo.Sessions.Add(BuildSession(OtherOwnerId, now.AddMinutes(-60), now.AddMinutes(-30)));
 
         var handler = BuildHandler(repo);
-        var result = await handler.HandleAsync(new GetTodaySprintsQuery());
+        var result = await handler.Handle(new GetTodaySprintsQuery());
 
         Assert.Single(result.Sessions);
     }
@@ -75,7 +76,7 @@ public sealed class GetTodaySprintsQueryHandlerTests
         repo.Sessions.Add(earlierSession);
 
         var handler = BuildHandler(repo);
-        var result = await handler.HandleAsync(new GetTodaySprintsQuery());
+        var result = await handler.Handle(new GetTodaySprintsQuery());
 
         Assert.Equal(2, result.Sessions.Count);
         Assert.True(result.Sessions[0].StartedAt < result.Sessions[1].StartedAt);
@@ -92,7 +93,7 @@ public sealed class GetTodaySprintsQueryHandlerTests
         repo.Sessions.Add(session);
 
         var handler = BuildHandler(repo);
-        var result = await handler.HandleAsync(new GetTodaySprintsQuery());
+        var result = await handler.Handle(new GetTodaySprintsQuery());
 
         var vm = result.Sessions[0];
         Assert.Equal("Work session", vm.Name);

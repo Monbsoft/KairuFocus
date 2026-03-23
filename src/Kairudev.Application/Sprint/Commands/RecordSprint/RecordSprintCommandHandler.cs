@@ -4,30 +4,38 @@ using Kairudev.Application.Sprint.Common;
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Sprint;
 using Kairudev.Domain.Tasks;
+using Microsoft.Extensions.Logging;
+using Monbsoft.BrilliantMediator.Abstractions;
+using Monbsoft.BrilliantMediator.Abstractions.Commands;
 
 namespace Kairudev.Application.Sprint.Commands.RecordSprint;
 
-public sealed class RecordSprintCommandHandler
+public sealed class RecordSprintCommandHandler : ICommandHandler<RecordSprintCommand, RecordSprintResult>
 {
     private readonly ISprintSessionRepository _sprintRepository;
-    private readonly CreateEntryCommandHandler _journalHandler;
+    private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<RecordSprintCommandHandler> _logger;
 
     public RecordSprintCommandHandler(
         ISprintSessionRepository sprintRepository,
-        CreateEntryCommandHandler journalHandler,
-        ICurrentUserService currentUserService)
+        IMediator mediator,
+        ICurrentUserService currentUserService,
+        ILogger<RecordSprintCommandHandler> logger)
     {
         _sprintRepository = sprintRepository;
-        _journalHandler = journalHandler;
+        _mediator = mediator;
         _currentUserService = currentUserService;
+        _logger = logger;
     }
 
-    public async Task<RecordSprintResult> HandleAsync(
+    public async Task<RecordSprintResult> Handle(
         RecordSprintCommand command,
         CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.CurrentUserId;
+
+        _logger.LogDebug("Recording sprint {SprintNumber} for user {UserId}", command.SprintNumber, userId);
 
         var nameResult = SprintName.Create(command.Name, command.SprintNumber);
         if (nameResult.IsFailure)
@@ -53,9 +61,10 @@ public sealed class RecordSprintCommandHandler
 
         var session = sessionResult.Value;
         await _sprintRepository.AddAsync(session, cancellationToken);
+        _logger.LogInformation("Sprint {SprintId} ({Outcome}) recorded for user {UserId}", session.Id.Value, outcome, userId);
 
         // Create retro-active journal entries
-        await _journalHandler.HandleAsync(
+        await _mediator.DispatchAsync<CreateEntryCommand, CreateEntryResult>(
             new CreateEntryCommand(
                 JournalEventType.SprintStarted,
                 session.Id.Value,
@@ -67,7 +76,7 @@ public sealed class RecordSprintCommandHandler
             ? JournalEventType.SprintCompleted
             : JournalEventType.SprintInterrupted;
 
-        await _journalHandler.HandleAsync(
+        await _mediator.DispatchAsync<CreateEntryCommand, CreateEntryResult>(
             new CreateEntryCommand(
                 completionEventType,
                 session.Id.Value,
