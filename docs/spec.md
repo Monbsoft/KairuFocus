@@ -586,6 +586,132 @@ sequenceDiagram
 
 ---
 
+### Itération #20 — Filtrage et tri des tâches
+
+**Objectif :** Améliorer la page des tâches avec un tri par défaut (tâches ouvertes, les plus récentes en premier) et des filtres serveur (recherche par titre, filtre par statut).
+
+**Périmètre :**
+- Domain : évolution de `ITaskRepository.GetAllAsync` avec paramètres de filtrage
+- Application : mise à jour de `ListTasksQuery` + `ListTasksQueryHandler` + ajout de `TaskStatusFilter`
+- Infrastructure : mise à jour `EfCoreTaskRepository` (WHERE + ORDER BY côté DB)
+- API : mise à jour `GET /api/tasks` avec query params `search` et `status`
+- UI Web (Blazor WASM) : mise à jour `Tasks.razor` — champ recherche + dropdown statut
+- UI MAUI (Blazor Hybrid) : même mise à jour
+
+**Hors périmètre :**
+- Tri personnalisé par l'utilisateur
+- Pagination
+- Migration EF Core (pas de nouveau champ en base)
+
+#### UC-02 — Lister les tâches (révisé)
+
+**Acteur principal :** Développeur
+**Parties prenantes :** —
+**Préconditions :** —
+**Postconditions (succès) :** la liste des tâches est retournée selon les filtres actifs, triée par `CreatedAt` décroissant.
+
+**Comportement par défaut (sans filtre) :**
+- Affiche uniquement les tâches `Pending` et `InProgress` (statut ≠ `Done`)
+- Triées par `CreatedAt` **décroissant** (les plus récentes en premier)
+
+**Nouveaux paramètres de filtre :**
+
+| Paramètre | Type | Valeur par défaut | Description |
+|---|---|---|---|
+| `SearchTerm` | `string?` | `null` | Recherche insensible à la casse dans le titre |
+| `StatusFilter` | `TaskStatusFilter` | `OpenOnly` | Filtre de statut |
+
+**`TaskStatusFilter` (enum Application layer) :**
+
+| Valeur | Tâches retournées |
+|---|---|
+| `OpenOnly` | `Pending` + `InProgress` (défaut) |
+| `All` | Tous les statuts |
+| `Pending` | Uniquement `Pending` |
+| `InProgress` | Uniquement `InProgress` |
+| `Done` | Uniquement `Done` |
+
+**Règles de combinaison :**
+- `SearchTerm` et `StatusFilter` sont **indépendants** et **cumulatifs** (AND logique)
+- Exemple : `SearchTerm="auth"` + `StatusFilter=Done` → tâches `Done` dont le titre contient "auth"
+
+```mermaid
+sequenceDiagram
+    participant UI as Tasks.razor
+    participant API as GET /api/tasks
+    participant H as ListTasksQueryHandler
+    participant R as ITaskRepository
+    participant DB as SQLite / Azure SQL
+
+    UI->>API: GET /api/tasks?search=auth&status=OpenOnly
+    API->>H: ListTasksQuery(SearchTerm="auth", StatusFilter=OpenOnly)
+    H->>H: OpenOnly → [Pending, InProgress]
+    H->>R: GetAllAsync(userId, [Pending, InProgress], "auth")
+    R->>DB: SELECT … WHERE Status IN (0,1) AND Title LIKE '%auth%' ORDER BY CreatedAt DESC
+    DB-->>R: rows
+    R-->>H: IReadOnlyList~DeveloperTask~
+    H-->>API: ListTasksResult
+    API-->>UI: TaskViewModel[]
+```
+
+**Scénarios alternatifs :**
+- A1 : `StatusFilter=All` → toutes les tâches, quelque soit le statut
+- A2 : `SearchTerm` vide ou null → aucun filtre texte appliqué
+- A3 : aucune tâche ne correspond aux filtres → liste vide (pas une erreur), message contextuel
+
+**Scénarios d'exception :** —
+
+**Changements architecturaux :**
+
+*Domain — `ITaskRepository` :*
+```
+GetAllAsync(UserId, TaskStatus[]? statuses = null, string? searchTerm = null, CancellationToken)
+```
+- `statuses = null` → aucun filtre statut (retourne tout)
+- `searchTerm = null` → aucun filtre texte
+- Tri : `CreatedAt DESC` systématique
+
+*Application — `ListTasksQueryHandler` :*
+- Traduit `TaskStatusFilter` → `TaskStatus[]` avant appel repository
+  - `OpenOnly` → `[TaskStatus.Pending, TaskStatus.InProgress]`
+  - `All` → `null` (pas de filtre)
+  - Autres → `[TaskStatus.{valeur}]`
+
+*Infrastructure — `EfCoreTaskRepository` :*
+- Applique les filtres et le tri côté EF Core (SQL WHERE + ORDER BY)
+
+*API — `GET /api/tasks` :*
+- Query params : `?search=xxx&status=OpenOnly|All|Pending|InProgress|Done`
+- Valeurs par défaut : `status=OpenOnly`, `search` absent
+
+*UI — `Tasks.razor` (Web + MAUI) :*
+- Champ de recherche : `<input>` avec rechargement déclenché à chaque modification (debounce 300 ms)
+- Dropdown statut : "Ouvertes" / "Toutes" / "En attente" / "En cours" / "Terminées"
+- Message contextuel quand la liste est vide selon le filtre actif
+
+**Critères d'acceptance :**
+- [ ] Par défaut, seules les tâches `Pending` et `InProgress` sont affichées
+- [ ] Par défaut, les tâches sont triées `CreatedAt` décroissant (plus récente en premier)
+- [ ] Filtre `Done` → affiche uniquement les tâches terminées
+- [ ] Filtre `All` → affiche toutes les tâches (tous statuts)
+- [ ] Recherche par titre partielle, insensible à la casse
+- [ ] Recherche + filtre statut sont cumulatifs (AND logique)
+- [ ] Liste vide après filtre → message contextuel, pas une erreur
+- [ ] Filtres disponibles sur Web et MAUI
+- [ ] Le filtrage et le tri sont effectués côté serveur (SQL)
+- [ ] Aucune régression sur UC-01, UC-03, UC-04, UC-05, UC-12
+
+**Tests à écrire (`ListTasksQueryHandlerTests`) :**
+- `Should_ReturnOpenTasksOnly_When_NoFilterProvided`
+- `Should_ReturnAllTasks_When_StatusFilterIsAll`
+- `Should_ReturnOnlyDoneTasks_When_StatusFilterIsDone`
+- `Should_ReturnMatchingTasks_When_SearchTermProvided`
+- `Should_ReturnEmpty_When_NoTaskMatchesSearchTerm`
+- `Should_CombineSearchAndStatusFilter`
+- `Should_ReturnTasksOrderedByCreatedAtDescending`
+
+---
+
 ## Bounded Context : Pomodoro
 
 ### Modèle du domaine

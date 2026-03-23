@@ -26,9 +26,13 @@ public sealed class TasksController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] string? search = null,
+        [FromQuery] TaskStatusFilter status = TaskStatusFilter.OpenOnly,
+        CancellationToken ct = default)
     {
-        var result = await _mediator.SendAsync<ListTasksQuery, ListTasksResult>(new ListTasksQuery(), ct);
+        var result = await _mediator.SendAsync<ListTasksQuery, ListTasksResult>(
+            new ListTasksQuery(search, status), ct);
         return Ok(result.Tasks);
     }
 

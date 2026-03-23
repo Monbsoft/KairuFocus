@@ -24,7 +24,7 @@ internal static class JournalEntryMapper
         UserId userId,
         CancellationToken cancellationToken)
     {
-        var allTasks = await taskRepository.GetAllAsync(userId, cancellationToken);
+        var allTasks = await taskRepository.GetAllAsync(userId, cancellationToken: cancellationToken);
         var taskLookup = allTasks.ToDictionary(t => t.Id.Value, t => t.Title.Value);
 
         var sessionIds = entries

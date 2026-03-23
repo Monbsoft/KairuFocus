@@ -15,7 +15,28 @@
       "Bash(taskkill /PID 33816 /F)",
       "Bash(cmd.exe /C \"taskkill /PID 33816 /F\")",
       "Bash(cmd.exe /C \"taskkill /IM Kairudev.Api.exe /F 2>&1\")",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(git stash:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(gh pr:*)",
+      "Bash(Remove-Item \"C:\\\\Users\\\\oliver254\\\\dev\\\\Kairudev\\\\.git\\\\index.lock\" -Force)",
+      "Bash(find /c/Users/oliver254/.nuget/packages/markdig -name *.dll)",
+      "Bash(find C:Usersoliver254devKairudev -name *.razor -type f)",
+      "Bash(find C:Usersoliver254devKairudevsrc -path */Components/* -name *.razor -not -path */bin/* -not -path */obj/*)",
+      "Bash(find C:Usersoliver254devKairudevsrc -name *TaskApiClient* -o -name *TaskDto*)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(find ~/.nuget/packages/brilliantmediator -name *.xml -o -name BrilliantMediator.dll)",
+      "Bash(curl -s \"https://api.nuget.org/v3/registration5-gz-semver2/brilliantmediator/index.json\")",
+      "Bash(curl -s \"https://api.nuget.org/v3-flatcontainer/brilliantmediator/index.json\")",
+      "Bash(find /c/Users/oliver254/dev/Kairudev/src/Kairudev.Api/obj -path */GeneratedFiles/* -name *.cs)",
+      "Bash(find /c/Users/oliver254/dev/Kairudev/src/Kairudev.Api/obj -name *.cs)",
+      "Bash(find /c/Users/oliver254/dev/Kairudev/src/Kairudev.Api/obj -path *GeneratedFiles*)",
+      "Bash(find /c/Users/oliver254/dev/Kairudev/src/Kairudev.Api -name *.g.cs)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/oliver254/dev/Kairudev/**)"
     ]
   }
 }

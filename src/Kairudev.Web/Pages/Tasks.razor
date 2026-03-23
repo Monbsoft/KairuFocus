@@ -1,11 +1,12 @@
 @page "/tasks"
 @attribute [Authorize]
+@implements IDisposable
 @using Kairudev.Web.Services
 @inject TaskApiClient Api
 @inject NavigationManager Nav
 @inject MarkdownService MarkdownSvc
 
-<h2>Tâches du jour</h2>
+<h2>Tâches</h2>
 
 <div class="mb-3">
     <input class="form-control mb-2"
@@ -23,6 +24,20 @@
     </button>
 </div>
 
+<div class="d-flex gap-2 mb-3">
+    <input class="form-control"
+           placeholder="Rechercher par titre…"
+           value="@searchTerm"
+           @oninput="OnSearchInput" />
+    <select class="form-select" style="max-width: 180px;" value="@statusFilter" @onchange="OnStatusChanged">
+        <option value="OpenOnly">Ouvertes</option>
+        <option value="All">Toutes</option>
+        <option value="Pending">En attente</option>
+        <option value="InProgress">En cours</option>
+        <option value="Done">Terminées</option>
+    </select>
+</div>
+
 @if (errorMessage is not null)
 {
     <div class="alert alert-danger">@errorMessage</div>
@@ -34,7 +49,7 @@
 }
 else if (tasks.Count == 0)
 {
-    <p class="text-muted">Aucune tâche pour l'instant.</p>
+    <p class="text-muted">Aucune tâche ne correspond aux filtres.</p>
 }
 else
 {
@@ -72,11 +87,16 @@ else
     private string newTitle = string.Empty;
     private string newDescription = string.Empty;
     private string? errorMessage;
+    private string searchTerm = string.Empty;
+    private string statusFilter = "OpenOnly";
+    private CancellationTokenSource? _debounceToken;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadTasksAsync();
+
+    private async Task LoadTasksAsync()
     {
-        var all = await Api.GetAllAsync();
-        tasks = [.. all.OrderByDescending(t => t.CreatedAt)];
+        var search = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm.Trim();
+        tasks = await Api.GetAllAsync(search, statusFilter);
     }
 
     private void NavigateToDetail(Guid id) => Nav.NavigateTo($"/tasks/{id}");
@@ -90,10 +110,9 @@ else
         var added = await Api.AddAsync(newTitle.Trim(), description);
         if (added is not null)
         {
-            tasks ??= [];
-            tasks.Add(added);
             newTitle = string.Empty;
             newDescription = string.Empty;
+            await LoadTasksAsync();
         }
         else
         {
@@ -105,10 +124,7 @@ else
     {
         errorMessage = null;
         if (await Api.CompleteAsync(id))
-        {
-            var all = await Api.GetAllAsync();
-            tasks = [.. all.OrderByDescending(t => t.CreatedAt)];
-        }
+            await LoadTasksAsync();
         else
             errorMessage = "Erreur lors de la complétion.";
     }
@@ -117,9 +133,28 @@ else
     {
         errorMessage = null;
         if (await Api.DeleteAsync(id))
-            tasks!.RemoveAll(t => t.Id == id);
+            await LoadTasksAsync();
         else
             errorMessage = "Erreur lors de la suppression.";
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        _debounceToken?.Cancel();
+        _debounceToken = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(300, _debounceToken.Token);
+            await LoadTasksAsync();
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task OnStatusChanged(ChangeEventArgs e)
+    {
+        statusFilter = e.Value?.ToString() ?? "OpenOnly";
+        await LoadTasksAsync();
     }
 
     private async Task OnKeyDown(KeyboardEventArgs e)
@@ -128,4 +163,5 @@ else
             await AddTask();
     }
 
+    public void Dispose() => _debounceToken?.Dispose();
 }

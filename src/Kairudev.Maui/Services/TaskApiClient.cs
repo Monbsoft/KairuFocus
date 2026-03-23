@@ -8,8 +8,13 @@ public sealed class TaskApiClient
 
     public TaskApiClient(HttpClient http) => _http = http;
 
-    public async Task<List<TaskDto>> GetAllAsync() =>
-        await _http.GetFromJsonAsync<List<TaskDto>>("api/tasks") ?? [];
+    public async Task<List<TaskDto>> GetAllAsync(string? search = null, string statusFilter = "OpenOnly")
+    {
+        var url = $"api/tasks?status={statusFilter}";
+        if (!string.IsNullOrWhiteSpace(search))
+            url += $"&search={Uri.EscapeDataString(search)}";
+        return await _http.GetFromJsonAsync<List<TaskDto>>(url) ?? [];
+    }
 
     public async Task<TaskDto?> GetByIdAsync(Guid id)
     {

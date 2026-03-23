@@ -7,7 +7,9 @@
 
 ## Résumé état actuel
 
-**Dernière itération complétée : #19 — Retrait Jira (pages + configuration UI)** ✅ COMPLÉTÉE (2026-03-23)
+**Dernière itération complétée : #20 — Filtrage et tri des tâches** ✅ COMPLÉTÉE (2026-03-24)
+
+**Itération précédente : #19 — Retrait Jira (pages + configuration UI)** ✅ COMPLÉTÉE (2026-03-23)
 
 **Itération précédente : #18 — Éditeur Markdown + navigation pages dédiées** ✅ COMPLÉTÉE (2026-03-20)
 
@@ -58,7 +60,7 @@
 - ✅ Application en production : https://kairudev-prod.azurewebsites.net
 - ✅ Redéploiement : `powershell -ExecutionPolicy Bypass -File .\infra\deploy-linux.ps1 -Environment prod`
 
-**Tests :** 179 au total ✅ (111 Domain + 68 Application)
+**Tests :** 186 au total ✅ (111 Domain + 75 Application)
 ⚠️ **Dette technique** : `Kairudev.Infrastructure.Tests` supprimé de la solution (résidu bin/obj uniquement). `Kairudev.IntegrationTests` non maintenu — step definitions obsolètes vs domain refactorisé
 
 **Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite (local) + **Azure SQL (prod)**
@@ -97,10 +99,54 @@
 | ~~#17~~ | ~~BC Sprint libre — chronomètre count-up, durée variable, lien tâche, journal auto~~ | ~~✅ Livré~~ | ~~2026-03-18~~ |
 | ~~#18~~ | ~~Éditeur Markdown + navigation pages dédiées — Markdig, onglets Éditer/Prévisualiser, pages TaskDetail/TaskEdit, suppression modale~~ | ~~✅ Livré~~ | ~~2026-03-20~~ |
 | ~~#19~~ | ~~Retrait Jira (pages + configuration UI) — suppression pages Tickets Web/MAUI, retrait menu, retrait config Jira dans Settings, retrait endpoint API `/api/settings/jira`~~ | ~~✅ Livré~~ | ~~2026-03-23~~ |
+| **#20** | **Filtrage et tri des tâches — défaut ouvertes + récentes, recherche titre, filtre statut, côté serveur** | **✅ Livré** | **2026-03-24** |
 
 ---
 
 ## Dernière itération livrée
+
+**#20 — Filtrage et tri des tâches** — Livré le 2026-03-24
+
+### Ce qui a été livré
+
+**Domain** ✅
+- `ITaskRepository.GetAllAsync` : 2 nouveaux paramètres optionnels `TaskStatus[]? statuses` et `string? searchTerm`
+
+**Application (CQRS)** ✅
+- `TaskStatusFilter` (enum) : `OpenOnly` | `All` | `Pending` | `InProgress` | `Done`
+- `ListTasksQuery` : enrichi avec `SearchTerm?` et `StatusFilter` (défaut `OpenOnly`)
+- `ListTasksQueryHandler` : traduit `TaskStatusFilter` → `TaskStatus[]`, passe les filtres au repository
+- `JournalEntryMapper` : appel `GetAllAsync` mis à jour (paramètre nommé `cancellationToken:`)
+
+**Infrastructure** ✅
+- `EfCoreTaskRepository.GetAllAsync` : filtre `WHERE Status IN (...)`, `WHERE Title LIKE '%...%'`, `ORDER BY CreatedAt DESC` côté SQL
+
+**API** ✅
+- `GET /api/tasks?search=xxx&status=OpenOnly` — query params `search` et `status`
+
+**UI Web (Blazor WASM)** ✅
+- Champ de recherche avec debounce 300ms
+- Dropdown statut (Ouvertes / Toutes / En attente / En cours / Terminées)
+- `LoadTasksAsync()` centralisé (utilisé par init, add, complete, delete, filtres)
+- Tri serveur (suppression du `.OrderByDescending` client-side)
+
+**UI MAUI (Blazor Hybrid)** ✅
+- Même mise à jour que Web
+
+**Tests** ✅ (+7 tests, total 186)
+- `ListTasksQueryHandlerTests` : 7 tests couvrant tous les scénarios de filtrage
+
+### Impact
+- Par défaut, seules les tâches ouvertes (Pending + InProgress) sont affichées, les plus récentes en premier
+- L'utilisateur peut rechercher par titre et filtrer par statut en temps réel
+- Filtrage 100% serveur (SQL)
+
+### Dette technique introduite
+- Aucune
+
+---
+
+## Itération précédente
 
 **#19 — Retrait Jira (pages + configuration UI)** — Livré le 2026-03-23
 

@@ -2,6 +2,8 @@ using Kairudev.Domain.Identity;
 using Kairudev.Domain.Tasks;
 using Microsoft.EntityFrameworkCore;
 
+using DomainTaskStatus = Kairudev.Domain.Tasks.TaskStatus;
+
 namespace Kairudev.Infrastructure.Persistence;
 
 internal sealed class EfCoreTaskRepository : ITaskRepository
@@ -20,11 +22,21 @@ internal sealed class EfCoreTaskRepository : ITaskRepository
         await _context.Tasks.FirstOrDefaultAsync(
             t => t.Id == id && t.OwnerId == userId, cancellationToken);
 
-    public async Task<IReadOnlyList<DeveloperTask>> GetAllAsync(UserId userId, CancellationToken cancellationToken = default) =>
-        await _context.Tasks
-            .Where(t => t.OwnerId == userId)
-            .OrderBy(t => t.CreatedAt)
-            .ToListAsync(cancellationToken);
+    public async Task<IReadOnlyList<DeveloperTask>> GetAllAsync(UserId userId, DomainTaskStatus[]? statuses = null, string? searchTerm = null, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Tasks.Where(t => t.OwnerId == userId);
+
+        if (statuses is { Length: > 0 })
+        {
+            var statusList = statuses.ToList();
+            query = query.Where(t => statusList.Contains(t.Status));
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            query = query.Where(t => EF.Functions.Like(t.Title.Value, $"%{searchTerm}%"));
+
+        return await query.OrderByDescending(t => t.CreatedAt).ToListAsync(cancellationToken);
+    }
 
     public async Task UpdateAsync(DeveloperTask task, CancellationToken cancellationToken = default)
     {
