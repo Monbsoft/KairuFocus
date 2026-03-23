@@ -55,5 +55,14 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<DeveloperTask
                 value => value != null ? JiraTicketKey.Create(value).Value : null)
             .HasColumnType("nvarchar(50)")
             .HasMaxLength(JiraTicketKey.MaxLength);
+
+        // Ignore the domain-facing property (TaskTag is not an EF entity)
+        builder.Ignore(t => t.Tags);
+
+        // Stores tags as a JSON array of strings (EF Core 8+ primitive collection)
+        builder.PrimitiveCollection(t => t.TagValues)
+            .HasColumnName("Tags")
+            .HasColumnType("nvarchar(max)");
     }
 }
+

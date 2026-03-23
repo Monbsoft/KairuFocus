@@ -33,29 +33,35 @@ public sealed class AddTaskCommandHandler : ICommandHandler<AddTaskCommand, AddT
 
         _logger.LogDebug("Creating task for user {UserId} with title '{Title}'", userId, command.Title);
 
-        // Validate title
         var titleResult = TaskTitle.Create(command.Title);
         if (titleResult.IsFailure)
             return AddTaskResult.Failure(titleResult.Error);
 
-        // Validate description
         var descriptionResult = TaskDescription.Create(command.Description);
         if (descriptionResult.IsFailure)
             return AddTaskResult.Failure(descriptionResult.Error);
 
-        // Create domain entity
+        var tags = new List<TaskTag>();
+        foreach (var raw in command.Tags ?? [])
+        {
+            var tagResult = TaskTag.Create(raw);
+            if (tagResult.IsFailure)
+                return AddTaskResult.Failure(tagResult.Error);
+            tags.Add(tagResult.Value);
+        }
+
         var task = DeveloperTask.Create(
             titleResult.Value,
             descriptionResult.Value,
             DateTime.UtcNow,
-            userId);
+            userId,
+            tags);
 
-        // Persist
         await _repository.AddAsync(task, cancellationToken);
 
         _logger.LogInformation("Task {TaskId} '{Title}' created for user {UserId}", task.Id.Value, task.Title.Value, userId);
 
-        // Return result
         return AddTaskResult.Success(TaskViewModel.From(task));
     }
 }
+

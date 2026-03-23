@@ -9,7 +9,8 @@ public sealed record TaskViewModel(
     string Status,
     DateTime CreatedAt,
     DateTime? CompletedAt,
-    string? JiraTicketKey)
+    string? JiraTicketKey,
+    List<string> Tags)
 {
     public static TaskViewModel From(DeveloperTask task) =>
         new(
@@ -19,5 +20,7 @@ public sealed record TaskViewModel(
             task.Status.ToString(),
             task.CreatedAt,
             task.CompletedAt,
-            task.JiraTicketKey?.Value);
+            task.JiraTicketKey?.Value,
+            task.Tags.Select(t => t.Value).ToList());
 }
+

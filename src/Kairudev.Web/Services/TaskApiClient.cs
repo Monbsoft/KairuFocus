@@ -23,16 +23,16 @@ public sealed class TaskApiClient
         return await response.Content.ReadFromJsonAsync<TaskDto>();
     }
 
-    public async Task<TaskDto?> AddAsync(string title, string? description = null)
+    public async Task<TaskDto?> AddAsync(string title, string? description = null, List<string>? tags = null)
     {
-        var response = await _http.PostAsJsonAsync("api/tasks", new { Title = title, Description = description });
+        var response = await _http.PostAsJsonAsync("api/tasks", new { Title = title, Description = description, Tags = tags ?? [] });
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadFromJsonAsync<TaskDto>();
     }
 
-    public async Task<TaskDto?> UpdateAsync(Guid id, string title, string? description = null)
+    public async Task<TaskDto?> UpdateAsync(Guid id, string title, string? description = null, List<string>? tags = null)
     {
-        var response = await _http.PutAsJsonAsync($"api/tasks/{id}", new { Title = title, Description = description });
+        var response = await _http.PutAsJsonAsync($"api/tasks/{id}", new { Title = title, Description = description, Tags = tags ?? [] });
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadFromJsonAsync<TaskDto>();
     }

@@ -5,6 +5,10 @@ namespace Kairudev.Domain.Tasks;
 
 public sealed class DeveloperTask : AggregateRoot<TaskId>
 {
+    public const int MaxTags = 5;
+
+    private readonly List<string> _tagValues = [];
+
     private DeveloperTask(TaskId id, UserId ownerId, TaskTitle title, TaskDescription? description, DateTime createdAt)
         : base(id)
     {
@@ -23,8 +27,23 @@ public sealed class DeveloperTask : AggregateRoot<TaskId>
     public DateTime? CompletedAt { get; private set; }
     public JiraTicketKey? JiraTicketKey { get; private set; }
 
-    public static DeveloperTask Create(TaskTitle title, TaskDescription? description, DateTime createdAt, UserId ownerId) =>
-        new(TaskId.New(), ownerId, title, description, createdAt);
+    public IReadOnlyList<TaskTag> Tags =>
+        _tagValues.ConvertAll(v => TaskTag.Create(v).Value).AsReadOnly();
+
+    // Public for EF Core materialization — domain consumers use Tags
+    public List<string> TagValues
+    {
+        get => _tagValues;
+        init => _tagValues = value;
+    }
+
+    public static DeveloperTask Create(TaskTitle title, TaskDescription? description, DateTime createdAt, UserId ownerId, IEnumerable<TaskTag>? tags = null)
+    {
+        var task = new DeveloperTask(TaskId.New(), ownerId, title, description, createdAt);
+        if (tags is not null)
+            task._tagValues.AddRange(tags.Select(t => t.Value));
+        return task;
+    }
 
     public Result Complete()
     {
@@ -65,7 +84,26 @@ public sealed class DeveloperTask : AggregateRoot<TaskId>
         Description = description;
     }
 
+    public Result SetTags(IReadOnlyList<TaskTag> tags)
+    {
+        if (tags.Count > MaxTags)
+            return Result.Failure(DomainErrors.Tasks.TooManyTags);
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var tag in tags)
+        {
+            if (!seen.Add(tag.Value))
+                return Result.Failure(DomainErrors.Tasks.DuplicateTag);
+        }
+
+        _tagValues.Clear();
+        _tagValues.AddRange(tags.Select(t => t.Value));
+        return Result.Success();
+    }
+
     public void LinkJiraTicket(JiraTicketKey key) => JiraTicketKey = key;
 
     public void UnlinkJiraTicket() => JiraTicketKey = null;
 }
+
+

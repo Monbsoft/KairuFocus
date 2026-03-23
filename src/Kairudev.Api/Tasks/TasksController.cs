@@ -105,7 +105,7 @@ public sealed class TasksController : ControllerBase
         CancellationToken ct)
     {
         var result = await _mediator.DispatchAsync<UpdateTaskCommand, UpdateTaskResult>(
-            new UpdateTaskCommand(id, body.Title, body.Description), ct);
+            new UpdateTaskCommand(id, body.Title, body.Description, body.Tags), ct);
 
         return result switch
         {
@@ -149,5 +149,5 @@ public sealed class TasksController : ControllerBase
 }
 
 public sealed record ChangeTaskStatusBody(string NewStatus);
-public sealed record UpdateTaskBody(string Title, string? Description);
+public sealed record UpdateTaskBody(string Title, string? Description, List<string>? Tags = null);
 public sealed record LinkJiraTicketBody(string JiraTicketKey);

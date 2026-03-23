@@ -7,9 +7,11 @@
 
 ## Résumé état actuel
 
-**Dernière itération complétée : #20 — Filtrage et tri des tâches** ✅ COMPLÉTÉE (2026-03-24)
+**Dernière itération complétée : #21 — Tags sur les tâches** ✅ COMPLÉTÉE (2026-03-25)
 
-**Itération précédente : #19 — Retrait Jira (pages + configuration UI)** ✅ COMPLÉTÉE (2026-03-23)
+**Prochaine itération prévue : #22 — à définir**
+
+**Itération précédente : #20 — Filtrage et tri des tâches** ✅ COMPLÉTÉE (2026-03-24)
 
 **Itération précédente : #18 — Éditeur Markdown + navigation pages dédiées** ✅ COMPLÉTÉE (2026-03-20)
 
@@ -60,7 +62,7 @@
 - ✅ Application en production : https://kairudev-prod.azurewebsites.net
 - ✅ Redéploiement : `powershell -ExecutionPolicy Bypass -File .\infra\deploy-linux.ps1 -Environment prod`
 
-**Tests :** 186 au total ✅ (111 Domain + 75 Application)
+**Tests :** 213 au total ✅ (126 Domain + 87 Application)
 ⚠️ **Dette technique** : `Kairudev.Infrastructure.Tests` supprimé de la solution (résidu bin/obj uniquement). `Kairudev.IntegrationTests` non maintenu — step definitions obsolètes vs domain refactorisé
 
 **Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite (local) + **Azure SQL (prod)**
@@ -99,47 +101,60 @@
 | ~~#17~~ | ~~BC Sprint libre — chronomètre count-up, durée variable, lien tâche, journal auto~~ | ~~✅ Livré~~ | ~~2026-03-18~~ |
 | ~~#18~~ | ~~Éditeur Markdown + navigation pages dédiées — Markdig, onglets Éditer/Prévisualiser, pages TaskDetail/TaskEdit, suppression modale~~ | ~~✅ Livré~~ | ~~2026-03-20~~ |
 | ~~#19~~ | ~~Retrait Jira (pages + configuration UI) — suppression pages Tickets Web/MAUI, retrait menu, retrait config Jira dans Settings, retrait endpoint API `/api/settings/jira`~~ | ~~✅ Livré~~ | ~~2026-03-23~~ |
-| **#20** | **Filtrage et tri des tâches — défaut ouvertes + récentes, recherche titre, filtre statut, côté serveur** | **✅ Livré** | **2026-03-24** |
+| ~~#20~~ | ~~Filtrage et tri des tâches — défaut ouvertes + récentes, recherche titre, filtre statut, côté serveur~~ | ~~✅ Livré~~ | ~~2026-03-24~~ |
+| **#21** | **Tags sur les tâches — Value Object `TaskTag`, saisie chips/badges (création + édition), affichage couleurs automatiques, max 5, JSON en base** | **✅ Livré** | **2026-03-25** |
 
 ---
 
 ## Dernière itération livrée
 
-**#20 — Filtrage et tri des tâches** — Livré le 2026-03-24
+**#21 — Tags sur les tâches** — Livré le 2026-03-25
 
 ### Ce qui a été livré
 
 **Domain** ✅
-- `ITaskRepository.GetAllAsync` : 2 nouveaux paramètres optionnels `TaskStatus[]? statuses` et `string? searchTerm`
+- `TaskTag` : Value Object — `MaxLength = 30`, `Create()` retourne `Result<TaskTag>`, `Equals` case-insensitive
+- `DeveloperTask.TagValues` : `List<string>` (public `init`) — persistance EF Core via `PrimitiveCollection`
+- `DeveloperTask.Tags` : `IReadOnlyList<TaskTag>` — propriété domaine calculée depuis `TagValues`
+- `DeveloperTask.SetTags()` : retourne `Result`, vérifie max 5 et doublons case-insensitive
+- `DeveloperTask.Create()` : accepte `IEnumerable<TaskTag>? tags` optionnel
+- `DomainErrors.Tasks` : +4 constantes (`TagEmpty`, `TagTooLong`, `TooManyTags`, `DuplicateTag`)
 
 **Application (CQRS)** ✅
-- `TaskStatusFilter` (enum) : `OpenOnly` | `All` | `Pending` | `InProgress` | `Done`
-- `ListTasksQuery` : enrichi avec `SearchTerm?` et `StatusFilter` (défaut `OpenOnly`)
-- `ListTasksQueryHandler` : traduit `TaskStatusFilter` → `TaskStatus[]`, passe les filtres au repository
-- `JournalEntryMapper` : appel `GetAllAsync` mis à jour (paramètre nommé `cancellationToken:`)
+- `TaskViewModel` : +`List<string> Tags`
+- `AddTaskCommand` : +`List<string>? Tags`
+- `AddTaskCommandHandler` : validation tags → `TaskTag.Create()` → passage à `DeveloperTask.Create()`
+- `UpdateTaskCommand` : +`List<string>? Tags`
+- `UpdateTaskCommandHandler` : validation tags → `TaskTag.Create()` → `task.SetTags()`
 
 **Infrastructure** ✅
-- `EfCoreTaskRepository.GetAllAsync` : filtre `WHERE Status IN (...)`, `WHERE Title LIKE '%...%'`, `ORDER BY CreatedAt DESC` côté SQL
+- `TaskConfiguration` : `Ignore(t => t.Tags)` + `PrimitiveCollection(t => t.TagValues).HasColumnName("Tags").HasColumnType("nvarchar(max)")`
+- Migration `AddTaskTags` : colonne `Tags nvarchar(max) NOT NULL DEFAULT '[]'`
 
 **API** ✅
-- `GET /api/tasks?search=xxx&status=OpenOnly` — query params `search` et `status`
+- `UpdateTaskBody` : +`List<string>? Tags`
 
 **UI Web (Blazor WASM)** ✅
-- Champ de recherche avec debounce 300ms
-- Dropdown statut (Ouvertes / Toutes / En attente / En cours / Terminées)
-- `LoadTasksAsync()` centralisé (utilisé par init, add, complete, delete, filtres)
-- Tri serveur (suppression du `.OrderByDescending` client-side)
+- `TaskDto` : +`List<string>? Tags`
+- `TaskApiClient` : `AddAsync` + `UpdateAsync` avec `tags`
+- `Tasks.razor` : saisie chips (champ texte + Entrée, badge ✕, disabled si 5 max), badges colorés dans la liste
+- `TaskEdit.razor` : section Tags avec chips (pré-remplie, même logique)
+- `TagColorClass()` : hash case-insensitive → palette 10 couleurs Bootstrap
 
 **UI MAUI (Blazor Hybrid)** ✅
 - Même mise à jour que Web
 
-**Tests** ✅ (+7 tests, total 186)
-- `ListTasksQueryHandlerTests` : 7 tests couvrant tous les scénarios de filtrage
+**Tests** ✅ (+27 tests, total 213)
+- `TaskTagTests` (Domain) : 6 tests Value Object
+- `DeveloperTaskTagTests` (Domain) : 7 tests `SetTags` + `Create` avec tags
+- `AddTaskWithTagsCommandHandlerTests` (Application) : 4 tests
+- `UpdateTaskCommandHandlerTests` (Application) : 5 tests
 
 ### Impact
-- Par défaut, seules les tâches ouvertes (Pending + InProgress) sont affichées, les plus récentes en premier
-- L'utilisateur peut rechercher par titre et filtrer par statut en temps réel
-- Filtrage 100% serveur (SQL)
+- Les tâches peuvent avoir jusqu'à 5 tags (texte plain ≤ 30 chars)
+- Saisie intuitive via chips (Entrée pour ajouter, ✕ pour supprimer)
+- Badges colorés automatiquement affichés sur la page liste des tâches
+- Tags persistés en JSON dans la colonne `Tags` (Azure SQL + SQLite local)
 
 ### Dette technique introduite
 - Aucune
@@ -148,7 +163,7 @@
 
 ## Itération précédente
 
-**#19 — Retrait Jira (pages + configuration UI)** — Livré le 2026-03-23
+**#20 — Filtrage et tri des tâches** — Livré le 2026-03-24
 
 ### Ce qui a été livré
 

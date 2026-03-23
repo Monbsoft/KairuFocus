@@ -14,5 +14,9 @@ public static class DomainErrors
         public const string JiraTicketKeyTooLong = "Jira ticket key cannot exceed 50 characters.";
         public const string InvalidJiraTicketKeyFormat = "Jira ticket key must follow the format PROJECT-123.";
         public const string JiraNotConfigured = "Jira is not configured. Please set your Jira credentials in Settings.";
+        public const string TagEmpty = "Tag cannot be empty.";
+        public const string TagTooLong = "Tag cannot exceed 30 characters.";
+        public const string TooManyTags = "A task cannot have more than 5 tags.";
+        public const string DuplicateTag = "Tag already exists on this task.";
     }
 }

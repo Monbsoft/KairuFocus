@@ -42,10 +42,24 @@ public sealed class UpdateTaskCommandHandler : ICommandHandler<UpdateTaskCommand
         if (descriptionResult.IsFailure)
             return UpdateTaskResult.Failure(descriptionResult.Error);
 
+        var tags = new List<TaskTag>();
+        foreach (var raw in command.Tags ?? [])
+        {
+            var tagResult = TaskTag.Create(raw);
+            if (tagResult.IsFailure)
+                return UpdateTaskResult.Failure(tagResult.Error);
+            tags.Add(tagResult.Value);
+        }
+
         task.UpdateDetails(titleResult.Value, descriptionResult.Value);
+
+        var setTagsResult = task.SetTags(tags);
+        if (setTagsResult.IsFailure)
+            return UpdateTaskResult.Failure(setTagsResult.Error);
 
         await _repository.UpdateAsync(task, cancellationToken);
         _logger.LogInformation("Task {TaskId} updated by user {UserId}", command.TaskId, userId);
         return UpdateTaskResult.Success(TaskViewModel.From(task));
     }
 }
+

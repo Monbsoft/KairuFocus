@@ -169,13 +169,15 @@ classDiagram
         +TaskTitle Title
         +TaskDescription? Description
         +TaskStatus Status
+        +IReadOnlyList~TaskTag~ Tags
         +DateTime CreatedAt
         +DateTime? CompletedAt
-        +Create(title, description, createdAt) DeveloperTask
+        +Create(title, description, createdAt, tags?) DeveloperTask
         +Complete() Result
         +StartProgress() Result
         +ChangeStatus(newStatus, now) Result
         +UpdateDetails(title, description) void
+        +SetTags(tags) Result
     }
 
     class TaskId {
@@ -203,6 +205,12 @@ classDiagram
         Done
     }
 
+    class TaskTag {
+        +string Value
+        +MaxLength = 30
+        +Create(value) Result~TaskTag~
+    }
+
     class ITaskRepository {
         <<interface>>
         +AddAsync(task)
@@ -216,6 +224,7 @@ classDiagram
     DeveloperTask --> TaskTitle : possède
     DeveloperTask --> TaskDescription : possède (optionnel)
     DeveloperTask --> TaskStatus : a le statut
+    DeveloperTask --> "0..5" TaskTag : possède
     ITaskRepository ..> DeveloperTask : gère
 ```
 
@@ -709,6 +718,220 @@ GetAllAsync(UserId, TaskStatus[]? statuses = null, string? searchTerm = null, Ca
 - `Should_ReturnEmpty_When_NoTaskMatchesSearchTerm`
 - `Should_CombineSearchAndStatusFilter`
 - `Should_ReturnTasksOrderedByCreatedAtDescending`
+
+---
+
+### Itération #21 — Tags sur les tâches
+
+**Objectif :** Permettre d'ajouter des tags (étiquettes texte libre) aux tâches pour les catégoriser visuellement.
+
+**Périmètre :**
+- Domain : Value Object `TaskTag`, ajout de `Tags` sur `DeveloperTask`, méthode `SetTags()`
+- Application : mise à jour de `AddTaskCommand`, `UpdateTaskCommand`, `TaskViewModel` avec `List<string> Tags`
+- Infrastructure : colonne `Tags` (JSON), migration EF Core
+- API : mise à jour des endpoints `POST /api/tasks` et `PUT /api/tasks/{id}` pour accepter les tags
+- UI Web (Blazor WASM) : saisie chips/badges sur `Tasks.razor` (création) et `TaskEdit.razor` (édition), affichage tags colorés dans la liste
+- UI MAUI (Blazor Hybrid) : même mise à jour
+
+**Hors périmètre :**
+- Filtrage des tâches par tags
+- Tags partagés / globaux (chaque tâche a sa propre liste de tags texte)
+- Gestion centralisée des tags
+- Pagination
+
+---
+
+#### UC-21 — Gérer les tags d'une tâche
+
+**Acteur principal :** Développeur
+**Parties prenantes :** —
+**Préconditions :** —
+**Postconditions (succès) :** les tags sont persistés avec la tâche ; ils sont affichés dans la liste avec des couleurs automatiques.
+
+**Scénario nominal (ajout à la création) :**
+1. Le développeur saisit un titre et (optionnellement) une description pour la nouvelle tâche.
+2. Le développeur tape un tag dans le champ dédié et appuie sur **Entrée**.
+3. Le système affiche le tag sous forme de badge/chip avec un bouton de suppression ✕.
+4. Le développeur peut répéter l'étape 2 pour ajouter d'autres tags (max 5).
+5. Le développeur clique sur **Ajouter**.
+6. Le système crée la tâche avec les tags et la persiste.
+
+**Scénario nominal (modification sur la page d'édition) :**
+1. Le développeur ouvre la page d'édition d'une tâche (`/tasks/{id}/edit`).
+2. Le système affiche les tags existants sous forme de badges/chips.
+3. Le développeur peut :
+   - **Ajouter** un tag : saisir dans le champ texte + Entrée
+   - **Supprimer** un tag : cliquer sur le ✕ du badge
+   - **Renommer** un tag : supprimer l'ancien + ajouter le nouveau
+4. Le développeur clique sur **Enregistrer**.
+5. Le système valide les tags et persiste la modification.
+
+**Scénario nominal (affichage dans la liste) :**
+1. Le développeur consulte la page des tâches (`/tasks`).
+2. Chaque tâche affiche ses tags sous forme de badges colorés.
+3. La couleur de chaque badge est déterminée automatiquement à partir du nom du tag (hash → palette de couleurs prédéfinies).
+
+**Scénarios alternatifs :**
+- A1 : aucun tag saisi → la tâche est créée/modifiée sans tags (liste vide).
+- A2 : le développeur tente d'ajouter un 6ᵉ tag → le champ de saisie est désactivé, message "Maximum 5 tags".
+- A3 : le développeur saisit un tag déjà présent (insensible à la casse) → le tag n'est pas ajouté en double, notification discrète.
+
+**Scénarios d'exception :**
+- E1 : tag vide ou composé uniquement d'espaces → ignoré, aucun tag ajouté.
+- E2 : tag supérieur à 30 caractères → erreur de validation, tag non ajouté.
+
+```mermaid
+sequenceDiagram
+    participant UI as Tasks.razor / TaskEdit.razor
+    participant API as POST|PUT /api/tasks
+    participant H as AddTask|UpdateTask Handler
+    participant T as DeveloperTask
+    participant R as ITaskRepository
+    participant DB as SQLite / Azure SQL
+
+    UI->>API: { title, description, tags: ["bug", "urgent"] }
+    API->>H: Command(title, description, tags)
+    H->>H: TaskTag.Create("bug"), TaskTag.Create("urgent")
+    alt tag invalide
+        H-->>API: Result.Failure(error)
+        API-->>UI: 400 Bad Request
+    else tags valides
+        H->>T: Create(...) ou SetTags(tags)
+        alt trop de tags (> 5)
+            T-->>H: Result.Failure(TooManyTags)
+            H-->>API: Result.Failure
+            API-->>UI: 400 Bad Request
+        else OK
+            T-->>H: Result.Success
+            H->>R: AddAsync|UpdateAsync(task)
+            R->>DB: INSERT|UPDATE ... Tags = '["bug","urgent"]'
+            DB-->>R: OK
+            R-->>H: OK
+            H-->>API: TaskViewModel (avec tags)
+            API-->>UI: 200|201 { ...tags: ["bug", "urgent"] }
+        end
+    end
+```
+
+**Contraintes techniques :**
+
+| Élément | Décision |
+|---|---|
+| Value Object | `TaskTag` : `string Value`, max 30 caractères, trimé, non vide |
+| Limite par tâche | **5 tags maximum** |
+| Stockage | Colonne `Tags` en JSON (`nvarchar(max)`) sur la table `Tasks` |
+| Unicité | Insensible à la casse au sein d'une même tâche (pas de doublons) |
+| Couleurs | Palette de ~10 couleurs prédéfinies, attribution par hash du nom du tag |
+| Renommage | Pas de renommage atomique : supprimer l'ancien + ajouter le nouveau |
+
+**Palette de couleurs automatiques :**
+
+| Index | Couleur (CSS class) | Exemple visuel |
+|---|---|---|
+| 0 | `bg-primary` | bleu |
+| 1 | `bg-success` | vert |
+| 2 | `bg-danger` | rouge |
+| 3 | `bg-warning text-dark` | jaune |
+| 4 | `bg-info text-dark` | cyan |
+| 5 | `bg-secondary` | gris |
+| 6 | `bg-purple` (custom) | violet |
+| 7 | `bg-orange` (custom) | orange |
+| 8 | `bg-teal` (custom) | sarcelle |
+| 9 | `bg-pink` (custom) | rose |
+
+Attribution : `hash(tag.ToLowerInvariant()) % 10 → index palette`
+
+**Changements architecturaux :**
+
+*Domain — `TaskTag` (nouveau Value Object) :*
+```
+TaskTag { string Value, MaxLength = 30, Create(string) → Result<TaskTag> }
+```
+
+*Domain — `DeveloperTask` (évolution) :*
+```
++IReadOnlyList<TaskTag> Tags
++SetTags(IReadOnlyList<TaskTag> tags) → Result   // max 5, pas de doublons
++Create(title, description, createdAt, ownerId, tags?) → DeveloperTask
+```
+
+*Domain — `DomainErrors.Tasks` (évolution) :*
+```
++TagEmpty, +TagTooLong, +TooManyTags, +DuplicateTag
+```
+
+*Application — `AddTaskCommand` (évolution) :*
+```
+AddTaskCommand(string Title, string? Description, List<string>? Tags)
+```
+
+*Application — `UpdateTaskCommand` (évolution) :*
+```
+UpdateTaskCommand(Guid TaskId, string Title, string? Description, List<string>? Tags)
+```
+
+*Application — `TaskViewModel` (évolution) :*
+```
++List<string> Tags
+```
+
+*Infrastructure — `TaskConfiguration` (évolution) :*
+- Colonne `Tags` : `nvarchar(max)`, JSON sérialisé, valeur par défaut `"[]"`
+- Value converter : `IReadOnlyList<TaskTag>` ↔ JSON string
+
+*API — endpoints (évolution) :*
+- `POST /api/tasks` : body accepte `tags: ["bug", "urgent"]`
+- `PUT /api/tasks/{id}` : body accepte `tags: ["bug", "urgent"]`
+- Réponses : `TaskViewModel` inclut `tags`
+
+*UI — `Tasks.razor` (Web + MAUI) :*
+- Zone de saisie chips : `<input>` + Entrée → badge avec ✕
+- Affichage dans la liste : badges colorés après le titre
+- Champ désactivé si 5 tags atteints
+
+*UI — `TaskEdit.razor` (Web + MAUI) :*
+- Même composant chips que Tasks.razor
+- Pré-rempli avec les tags existants
+
+**Critères d'acceptance :**
+- [ ] Un tag est un texte libre de 1 à 30 caractères, trimé
+- [ ] Maximum 5 tags par tâche
+- [ ] Pas de doublons (comparaison insensible à la casse)
+- [ ] Les tags sont ajoutés via champ texte + Entrée (style chips/badges)
+- [ ] Les tags sont visibles sur la page Tasks avec des couleurs automatiques
+- [ ] Les couleurs sont déterminées par hash du nom du tag
+- [ ] Les tags peuvent être ajoutés à la création ET à l'édition
+- [ ] Les tags peuvent être supprimés (✕ sur le badge)
+- [ ] Le renommage se fait par suppression + ajout
+- [ ] Les tags sont persistés en JSON dans la base de données
+- [ ] Les tags sont présents dans les réponses API (`TaskViewModel`)
+- [ ] Disponible sur Web et MAUI
+- [ ] Aucune régression sur UC-01, UC-02, UC-03, UC-04, UC-05, UC-12
+
+**Tests à écrire :**
+
+*Domain (`DeveloperTaskTests`) :*
+- `Should_CreateTaskWithTags_When_TagsProvided`
+- `Should_CreateTaskWithoutTags_When_NoTagsProvided`
+- `Should_SetTags_When_ValidTags`
+- `Should_FailSetTags_When_TooManyTags`
+- `Should_FailSetTags_When_DuplicateTag`
+
+*Domain (`TaskTagTests`) :*
+- `Should_CreateTag_When_ValidValue`
+- `Should_FailCreate_When_EmptyValue`
+- `Should_FailCreate_When_TooLongValue`
+- `Should_TrimTag_When_Created`
+
+*Application (`AddTaskCommandHandlerTests`) :*
+- `Should_CreateTaskWithTags_When_TagsProvided`
+- `Should_CreateTaskWithoutTags_When_NoTagsProvided`
+- `Should_Fail_When_TagInvalid`
+
+*Application (`UpdateTaskCommandHandlerTests`) :*
+- `Should_UpdateTags_When_TagsProvided`
+- `Should_ClearTags_When_EmptyTagsList`
+- `Should_Fail_When_TooManyTags`
 
 ---
 

@@ -20,6 +20,28 @@
               @bind="newDescription"
               @bind:event="oninput"
               rows="2"></textarea>
+
+    <div class="mb-2">
+        <div class="d-flex flex-wrap gap-1 mb-1">
+            @foreach (var tag in newTags)
+            {
+                <span class="badge @TagColorClass(tag)">
+                    @tag
+                    <button type="button" class="btn-close btn-close-white ms-1" style="font-size:0.6em;"
+                            @onclick="() => RemoveNewTag(tag)" aria-label="Retirer"></button>
+                </span>
+            }
+        </div>
+        <div class="input-group" style="max-width: 320px;">
+            <input class="form-control form-control-sm"
+                   placeholder="@(newTags.Count >= MaxTags ? "Maximum 5 tags" : "Ajouter un tag… (Entrée)")"
+                   disabled="@(newTags.Count >= MaxTags)"
+                   @bind="newTagInput"
+                   @bind:event="oninput"
+                   @onkeydown="OnNewTagKeyDown" />
+        </div>
+    </div>
+
     <button class="btn btn-primary" @onclick="AddTask" disabled="@string.IsNullOrWhiteSpace(newTitle)">
         Ajouter
     </button>
@@ -63,6 +85,15 @@ else
                         <div class="@(task.Status == "Done" ? "text-decoration-line-through text-muted" : "")">
                             <button class="btn btn-link p-0 text-start fw-bold" @onclick="() => NavigateToDetail(task.Id)">@task.Title</button>
                         </div>
+                        @if (task.Tags is { Count: > 0 })
+                        {
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                @foreach (var tag in task.Tags)
+                                {
+                                    <span class="badge @TagColorClass(tag)">@tag</span>
+                                }
+                            </div>
+                        }
                         @if (!string.IsNullOrWhiteSpace(task.Description))
                         {
                             <div class="text-muted small mt-1">@((MarkupString)MarkdownSvc.Render(task.Description))</div>
@@ -84,9 +115,33 @@ else
 }
 
 @code {
+    private const int MaxTags = 5;
+
+    private static readonly string[] TagPalette =
+    [
+        "bg-primary",
+        "bg-success",
+        "bg-danger",
+        "bg-warning text-dark",
+        "bg-info text-dark",
+        "bg-secondary",
+        "text-bg-purple",
+        "text-bg-orange",
+        "text-bg-teal",
+        "text-bg-pink"
+    ];
+
+    private static string TagColorClass(string tag)
+    {
+        var hash = Math.Abs(tag.ToLowerInvariant().GetHashCode());
+        return TagPalette[hash % TagPalette.Length];
+    }
+
     private List<TaskDto>? tasks;
     private string newTitle = string.Empty;
     private string newDescription = string.Empty;
+    private string newTagInput = string.Empty;
+    private List<string> newTags = [];
     private string? errorMessage;
     private string searchTerm = string.Empty;
     private string statusFilter = "OpenOnly";
@@ -116,17 +171,36 @@ else
     {
         errorMessage = null;
         var description = string.IsNullOrWhiteSpace(newDescription) ? null : newDescription.Trim();
-        var added = await Api.AddAsync(newTitle.Trim(), description);
+        var added = await Api.AddAsync(newTitle.Trim(), description, newTags.Count > 0 ? newTags : null);
         if (added is not null)
         {
             newTitle = string.Empty;
             newDescription = string.Empty;
+            newTags = [];
+            newTagInput = string.Empty;
             await LoadTasksAsync();
         }
         else
         {
             errorMessage = "Erreur lors de l'ajout de la tâche.";
         }
+    }
+
+    private void AddNewTagFromInput()
+    {
+        var trimmed = newTagInput.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed) || newTags.Count >= MaxTags) return;
+        if (newTags.Any(t => string.Equals(t, trimmed, StringComparison.OrdinalIgnoreCase))) return;
+        if (trimmed.Length > 30) return;
+        newTags.Add(trimmed);
+        newTagInput = string.Empty;
+    }
+
+    private void RemoveNewTag(string tag) => newTags.Remove(tag);
+
+    private void OnNewTagKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") AddNewTagFromInput();
     }
 
     private async Task CompleteTask(Guid id)
@@ -174,3 +248,4 @@ else
 
     public void Dispose() => _debounceToken?.Dispose();
 }
+
