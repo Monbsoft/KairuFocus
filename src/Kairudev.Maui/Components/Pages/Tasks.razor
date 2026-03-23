@@ -2,6 +2,7 @@
 @implements IDisposable
 @using Kairudev.Maui.Services
 @using Kairudev.Maui.Auth
+@using Kairudev.Maui.Helpers
 @inject TaskApiClient Api
 @inject MauiAuthService AuthService
 @inject NavigationManager Nav
@@ -117,25 +118,7 @@ else
 @code {
     private const int MaxTags = 5;
 
-    private static readonly string[] TagPalette =
-    [
-        "bg-primary",
-        "bg-success",
-        "bg-danger",
-        "bg-warning text-dark",
-        "bg-info text-dark",
-        "bg-secondary",
-        "text-bg-purple",
-        "text-bg-orange",
-        "text-bg-teal",
-        "text-bg-pink"
-    ];
-
-    private static string TagColorClass(string tag)
-    {
-        var hash = Math.Abs(tag.ToLowerInvariant().GetHashCode());
-        return TagPalette[hash % TagPalette.Length];
-    }
+    private static string TagColorClass(string tag) => TagColors.GetClass(tag);
 
     private List<TaskDto>? tasks;
     private string newTitle = string.Empty;

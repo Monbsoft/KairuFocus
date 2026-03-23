@@ -1,6 +1,7 @@
 @page "/journal"
 @attribute [Authorize]
 @using Kairudev.Web.Services
+@using Kairudev.Web.Helpers
 @inject JournalApiClient Api
 
 <div class="notebook">
@@ -540,22 +541,7 @@
         _                   => entry.EventType
     };
 
-    private static readonly string[] TagPalette =
-    [
-        "bg-primary",
-        "bg-success",
-        "bg-danger",
-        "bg-warning text-dark",
-        "bg-info text-dark",
-        "bg-secondary",
-        "text-bg-purple",
-        "text-bg-orange",
-        "text-bg-teal",
-        "text-bg-pink"
-    ];
-
-    private static string TagColorClass(string tag) =>
-        TagPalette[Math.Abs(tag.ToLowerInvariant().GetHashCode()) % TagPalette.Length];
+    private static string TagColorClass(string tag) => TagColors.GetClass(tag);
 
     // ── Actions commentaires ──────────────────────────────
 

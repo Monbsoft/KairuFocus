@@ -1,6 +1,7 @@
 @page "/journal"
 @using Kairudev.Maui.Services
 @using Kairudev.Maui.Auth
+@using Kairudev.Maui.Helpers
 @inject JournalApiClient Api
 @inject MauiAuthService AuthService
 @inject NavigationManager Nav
@@ -277,20 +278,5 @@ else
         _                   => entry.EventType
     };
 
-    private static readonly string[] TagPalette =
-    [
-        "bg-primary",
-        "bg-success",
-        "bg-danger",
-        "bg-warning text-dark",
-        "bg-info text-dark",
-        "bg-secondary",
-        "text-bg-purple",
-        "text-bg-orange",
-        "text-bg-teal",
-        "text-bg-pink"
-    ];
-
-    private static string TagColorClass(string tag) =>
-        TagPalette[Math.Abs(tag.ToLowerInvariant().GetHashCode()) % TagPalette.Length];
+    private static string TagColorClass(string tag) => TagColors.GetClass(tag);
 }
