@@ -7,9 +7,11 @@
 
 ## Résumé état actuel
 
-**Dernière itération complétée : #22 — Note sur le sprint libre** ✅ COMPLÉTÉE (2026-03-25)
+**Dernière itération complétée : #23 — Fusion SprintSession / PomodoroSession (ADR-005)** ✅ COMPLÉTÉE (2026-03-26)
 
-**Prochaine itération prévue : #23 — Fusion SprintSession / PomodoroSession (ADR-005)**
+**Prochaine itération prévue : à définir**
+
+**Itération précédente : #22 — Note sur le sprint libre** ✅ COMPLÉTÉE (2026-03-25)
 
 **Itération précédente : #21 — Tags sur les tâches** ✅ COMPLÉTÉE (2026-03-25)
 
@@ -20,18 +22,17 @@
 **Bounded Contexts opérationnels :**
 - **Identity** : `User`, `UserId`, `IUserRepository`, `GetOrCreateUserCommandHandler` ✅
 - **Tasks** : 8 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
-- **Pomodoro** : 10 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
+- **Pomodoro** : 10 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`) — sessions standard + sessions libres (`PlannedDurationMinutes = 0`) + `GetTodaySprintSessionsAsync`
 - **Journal** : 6 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
 - **Settings** : 4 Commands/Queries — **Architecture CQRS** ✅ (filtrés par `UserId`)
 - **Tickets** : 1 Query — **Architecture CQRS** ✅ (**désactivé côté UI depuis #19**)
-- **Sprint** : 2 Commands/Queries — **Architecture CQRS** ✅ (timer client-side, journal automatique, note comme commentaire journal)
 
 **Architecture Application Layer :**
 - ✅ **CQRS sans MediatR** : Commands (écriture) + Queries (lecture)
 - ✅ **Handlers** retournent directement des `Result` (plus de Presenters)
 - ✅ **Injection directe** dans les Controllers (pas de mediator)
 - ✅ **ICurrentUserService** : abstraction application-layer pour l'identité courante
-- ✅ **32 use cases** (8 Tasks + 10 Pomodoro + 6 Journal + 4 Settings + 1 Tickets + 1 Identity + 2 Sprint)
+- ✅ **30 use cases** (8 Tasks + 10 Pomodoro + 6 Journal + 4 Settings + 1 Tickets + 1 Identity)
 
 **Authentification (bout en bout) :**
 - ✅ GitHub OAuth 2.0 (`GET /api/auth/github` → callback → JWT HS256)
@@ -62,8 +63,8 @@
 - ✅ Application en production : https://kairudev-prod.azurewebsites.net
 - ✅ Redéploiement : `powershell -ExecutionPolicy Bypass -File .\infra\deploy-linux.ps1 -Environment prod`
 
-**Tests :** 221 au total ✅ (126 Domain + 95 Application)
-⚠️ **Dette technique** : `Kairudev.Infrastructure.Tests` supprimé de la solution (résidu bin/obj uniquement). `Kairudev.IntegrationTests` non maintenu — step definitions obsolètes vs domain refactorisé. **ADR-005** : `SprintSession` à fusionner avec `PomodoroSession` en itération #23.
+**Tests :** 192 au total ✅ (113 Domain + 79 Application)
+⚠️ **Dette technique** : `Kairudev.Infrastructure.Tests` supprimé de la solution (résidu bin/obj uniquement). `Kairudev.IntegrationTests` non maintenu — step definitions obsolètes vs domain refactorisé.
 
 **Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite (local) + **Azure SQL (prod)**
 
@@ -102,12 +103,59 @@
 | ~~#18~~ | ~~Éditeur Markdown + navigation pages dédiées — Markdig, onglets Éditer/Prévisualiser, pages TaskDetail/TaskEdit, suppression modale~~ | ~~✅ Livré~~ | ~~2026-03-20~~ |
 | ~~#19~~ | ~~Retrait Jira (pages + configuration UI) — suppression pages Tickets Web/MAUI, retrait menu, retrait config Jira dans Settings, retrait endpoint API `/api/settings/jira`~~ | ~~✅ Livré~~ | ~~2026-03-23~~ |
 | ~~#20~~ | ~~Filtrage et tri des tâches — défaut ouvertes + récentes, recherche titre, filtre statut, côté serveur~~ | ~~✅ Livré~~ | ~~2026-03-24~~ |
-| **#22** | **Note sur le sprint libre — champ Note remplace Nom, persistée comme JournalComment, éditable dans le journal** | **✅ Livré** | **2026-03-25** |
+| **#23** | **Fusion SprintSession / PomodoroSession (ADR-005) — `SprintSession` supprimé, sessions libres portées par `PomodoroSession` (`PlannedDurationMinutes = 0`)** | **✅ Livré** | **2026-03-26** |
+| ~~#22~~ | ~~Note sur le sprint libre — champ Note remplace Nom, persistée comme JournalComment, éditable dans le journal~~ | ~~✅ Livré~~ | ~~2026-03-25~~ |
 | ~~#21~~ | ~~Tags sur les tâches — Value Object `TaskTag`, saisie chips/badges (création + édition), affichage couleurs automatiques, max 5, JSON en base~~ | ~~✅ Livré~~ | ~~2026-03-25~~ |
 
 ---
 
 ## Dernière itération livrée
+
+**#23 — Fusion SprintSession / PomodoroSession (ADR-005)** — Livré le 2026-03-26
+
+### Ce qui a été livré
+
+**Domain** ✅
+- `SprintSession`, `SprintSessionId`, `SprintName`, `SprintOutcome`, `SprintDomainErrors`, `ISprintSessionRepository` : supprimés
+- `PomodoroSession` : support des sessions libres via `PlannedDurationMinutes = 0`
+- `IPomodoroRepository` : +`GetTodaySprintSessionsAsync(UserId, DateOnly)`
+
+**Application (CQRS)** ✅
+- Use cases Sprint (`RecordSprintCommand`, `GetTodaySprintSessions`) migrés vers le BC Pomodoro
+- `RecordSprintCommandHandler` : crée désormais une `PomodoroSession` avec `PlannedDurationMinutes = 0`
+
+**Infrastructure** ✅
+- `SprintSessionConfiguration` supprimée
+- `PomodoroSessionRepository` : implémentation de `GetTodaySprintSessionsAsync`
+- Migration EF Core : suppression de la table `SprintSessions`
+
+**API** ✅
+- `SprintController` supprimé ; endpoints Sprint portés par `PomodoroController`
+
+**UI Web (Blazor WASM)** ✅
+- `SprintLibre.razor` : appelle désormais l'API Pomodoro
+
+**UI MAUI (Blazor Hybrid)** ✅
+- Idem Web
+
+**Tests** ✅ (192 au total : 113 Domain + 79 Application)
+- Tests Sprint migrés / supprimés selon leur pertinence post-fusion
+
+**Documentation** ✅
+- ADR-005 : marqué appliqué
+- `spec.md` : BC Sprint supprimé, BC Pomodoro mis à jour
+- `project-state.md` : mis à jour
+
+### Impact
+- Le bounded context `Sprint` n'existe plus ; les sessions libres sont des `PomodoroSession` standard avec `PlannedDurationMinutes = 0`
+- Réduction de la dette technique (suppression du doublon `SprintSession` / `PomodoroSession`)
+
+### Dette technique introduite
+- Aucune
+
+---
+
+## Itération précédente
 
 **#22 — Note sur le sprint libre** — Livré le 2026-03-25
 
@@ -129,24 +177,21 @@
 **UI MAUI (Blazor Hybrid)** ✅
 - Identique Web
 
-**Tests** ✅ (+8 tests, total 221)
-- `RecordSprintCommandHandlerTests` : mise à jour (suppression `Should_Fail_When_NameExceedsMaxLength`, `Should_UseDefaultName_When_NameIsEmpty` → `Should_AlwaysUseAutoName_When_SprintIsRecorded`) + 4 nouveaux tests note
+**Tests** ✅ (+8 tests, total 221 avant fusion #23)
+- `RecordSprintCommandHandlerTests` : mise à jour + 4 nouveaux tests note
 - `CreateEntryCommandHandlerTests` : +4 nouveaux tests `InitialComment`
 
 **Documentation** ✅
 - `ADR-005` : Sprint libre = Pomodoro à durée inconnue, fusion prévue #23
-- `spec.md` : UC-SP-01 mis à jour (critères, scénario nominal)
+- `spec.md` : UC-SP-01 mis à jour
 - `project-state.md` : mis à jour
 
 ### Impact
 - Sur `/pomodoro/libre`, le nom du sprint est toujours auto-généré "Sprint #N"
-- Une note optionnelle peut être saisie avant le démarrage
-- Si non vide, elle apparaît dans le journal du jour comme commentaire sur l'entrée de fin
-- La note est modifiable depuis le journal (comportement natif existant)
+- Une note optionnelle peut être saisie avant le démarrage et apparaît dans le journal
 
 ### Dette technique introduite
-- ADR-005 : `SprintSession` à fusionner avec `PomodoroSession` en itération #23
-- Bug latent connu : `JournalEntryMapper` ne résout pas les tâches liées aux sprints libres (lookup `PomodoroSessionId` → échec silencieux)
+- ADR-005 appliqué en itération #23
 
 ---
 
