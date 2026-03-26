@@ -3,6 +3,7 @@ using Kairudev.Domain.Journal;
 using Kairudev.Domain.Pomodoro;
 using Kairudev.Domain.Settings;
 using Kairudev.Domain.Tasks;
+using Kairudev.Infrastructure.Persistence.Configurations;
 using Kairudev.Infrastructure.Persistence.Internal;
 using Microsoft.EntityFrameworkCore;
 

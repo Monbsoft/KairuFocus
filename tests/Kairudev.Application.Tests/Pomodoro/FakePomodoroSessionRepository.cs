@@ -39,4 +39,9 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
             .Where(s => s.OwnerId == userId && s.Status == PomodoroSessionStatus.Completed && s.EndedAt.HasValue && s.EndedAt.Value.Date == DateTime.UtcNow.Date)
             .OrderByDescending(s => s.EndedAt)
             .FirstOrDefault());
+
+    public Task<IReadOnlyList<PomodoroSession>> GetTodaySprintSessionsAsync(UserId userId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<PomodoroSession>>(Sessions
+            .Where(s => s.OwnerId == userId && s.SessionType == PomodoroSessionType.Sprint && s.StartedAt.HasValue && s.StartedAt.Value.Date == DateTime.UtcNow.Date)
+            .ToList());
 }

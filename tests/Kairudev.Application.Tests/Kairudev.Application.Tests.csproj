@@ -39,8 +39,5 @@
     <Compile Remove="Journal\UpdateJournalCommentInteractorTests.cs" />
     <Compile Remove="Journal\RemoveJournalCommentInteractorTests.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Sprint\" />
-  </ItemGroup>
 
 </Project>

@@ -29,8 +29,5 @@
     <ProjectReference Include="..\Kairudev.ServiceDefaults\Kairudev.ServiceDefaults.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Sprint\" />
-  </ItemGroup>
 
 </Project>
