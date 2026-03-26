@@ -85,6 +85,7 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
         return await _context.PomodoroSessions
             .Where(s => s.OwnerId == userId
                         && s.SessionType == PomodoroSessionType.Sprint
+                        && s.PlannedDurationMinutes == 0
                         && s.StartedAt.HasValue
                         && s.StartedAt.Value.Date == today
                         && (s.Status == PomodoroSessionStatus.Completed
