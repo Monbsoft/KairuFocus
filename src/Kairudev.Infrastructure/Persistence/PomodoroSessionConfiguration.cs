@@ -40,6 +40,11 @@ internal sealed class PomodoroSessionConfiguration : IEntityTypeConfiguration<Po
         builder.Property(s => s.StartedAt).HasColumnType("datetime2");
         builder.Property(s => s.EndedAt).HasColumnType("datetime2");
 
+        builder.Property(s => s.JournalComment)
+            .HasColumnType("nvarchar(500)")
+            .HasMaxLength(500)
+            .IsRequired(false);
+
         // Ignore the domain-facing property (TaskId is not an EF entity)
         builder.Ignore(s => s.LinkedTaskIds);
 

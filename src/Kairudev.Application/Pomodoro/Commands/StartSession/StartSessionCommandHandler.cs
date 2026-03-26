@@ -48,22 +48,27 @@ public sealed class StartSessionCommandHandler : ICommandHandler<StartSessionCom
 
         var settings = await _settingsRepository.GetByUserIdAsync(userId, cancellationToken);
 
-        // Parse session type
-        var sessionType = string.IsNullOrWhiteSpace(command.SessionType) ||
-                          !Enum.TryParse<PomodoroSessionType>(command.SessionType, true, out var parsedType)
+        // Parse session type — sprint libre forces Sprint type
+        var sessionType = command.IsFreeSession
             ? PomodoroSessionType.Sprint
-            : parsedType;
+            : string.IsNullOrWhiteSpace(command.SessionType) ||
+              !Enum.TryParse<PomodoroSessionType>(command.SessionType, true, out var parsedType)
+                ? PomodoroSessionType.Sprint
+                : parsedType;
 
-        // Determine duration based on type (in minutes)
-        var durationMinutes = sessionType switch
-        {
-            PomodoroSessionType.Sprint => settings.SprintDurationMinutes,
-            PomodoroSessionType.ShortBreak => settings.ShortBreakDurationMinutes,
-            PomodoroSessionType.LongBreak => settings.LongBreakDurationMinutes,
-            _ => settings.SprintDurationMinutes
-        };
+        // Sprint libre: duration = 0 (free end). Regular: read from settings.
+        var durationMinutes = command.IsFreeSession
+            ? 0
+            : sessionType switch
+            {
+                PomodoroSessionType.Sprint => settings.SprintDurationMinutes,
+                PomodoroSessionType.ShortBreak => settings.ShortBreakDurationMinutes,
+                PomodoroSessionType.LongBreak => settings.LongBreakDurationMinutes,
+                _ => settings.SprintDurationMinutes
+            };
 
-        var session = PomodoroSession.Create(sessionType, durationMinutes, userId);
+        var journalComment = command.IsFreeSession ? command.JournalComment : null;
+        var session = PomodoroSession.Create(sessionType, durationMinutes, userId, journalComment);
         var startResult = session.Start(DateTime.UtcNow);
         if (startResult.IsFailure)
             return StartSessionResult.Failure(startResult.Error);

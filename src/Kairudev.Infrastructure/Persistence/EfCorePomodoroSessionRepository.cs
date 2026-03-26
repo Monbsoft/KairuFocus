@@ -78,4 +78,19 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
             .OrderByDescending(s => s.EndedAt)
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<PomodoroSession>> GetTodaySprintSessionsAsync(UserId userId, CancellationToken cancellationToken = default)
+    {
+        var today = DateTime.UtcNow.Date;
+        return await _context.PomodoroSessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.PlannedDurationMinutes == 0
+                        && s.StartedAt.HasValue
+                        && s.StartedAt.Value.Date == today
+                        && (s.Status == PomodoroSessionStatus.Completed
+                            || s.Status == PomodoroSessionStatus.Interrupted))
+            .OrderBy(s => s.StartedAt)
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -62,7 +62,8 @@ public sealed class CompleteSessionCommandHandler : ICommandHandler<CompleteSess
                 eventType,
                 session.Id.Value,
                 DateTime.UtcNow,
-                userId),
+                userId,
+                session.JournalComment),
             cancellationToken);
 
         return CompleteSessionResult.Success();

@@ -59,7 +59,8 @@ public sealed class InterruptSessionCommandHandler : ICommandHandler<InterruptSe
                 eventType,
                 session.Id.Value,
                 DateTime.UtcNow,
-                userId),
+                userId,
+                session.JournalComment),
             cancellationToken);
 
         return InterruptSessionResult.Success();

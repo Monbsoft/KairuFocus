@@ -13,7 +13,8 @@ public sealed record PomodoroSessionDto(
     int PlannedDurationMinutes,
     DateTime? StartedAt,
     DateTime? EndedAt,
-    IReadOnlyList<Guid> LinkedTaskIds);
+    IReadOnlyList<Guid> LinkedTaskIds,
+    double? DurationSeconds);
 
 public sealed record SuggestedSessionTypeDto(
     string SuggestedType,

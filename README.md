@@ -28,7 +28,7 @@ Kairudev centralise en un seul endroit tout ce dont un développeur a besoin pou
 - **Orchestration** : .NET Aspire 13.1
 - **Base de données** : SQLite + EF Core 10
 - **Auth** : GitHub OAuth 2.0 + JWT HS256
-- **Tests** : xUnit — 166 tests (Domain + Application + Infrastructure)
+- **Tests** : xUnit — 192 tests (Domain + Application)
 
 ---
 
@@ -132,7 +132,7 @@ dotnet test
 ```
 
 ```
-✅ Réussi! — 166 tests, 0 échec
+✅ Réussi! — 192 tests, 0 échec
 ```
 
 ---

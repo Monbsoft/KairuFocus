@@ -3,7 +3,6 @@ using Kairudev.Domain.Identity;
 using Kairudev.Domain.Journal;
 using Kairudev.Domain.Pomodoro;
 using Kairudev.Domain.Settings;
-using Kairudev.Domain.Sprint;
 using Kairudev.Domain.Tasks;
 using Kairudev.Infrastructure.Identity;
 using Kairudev.Infrastructure.Jira;
@@ -30,7 +29,6 @@ public static class DependencyInjection
         services.AddScoped<IPomodoroSettingsRepository, EfCorePomodoroSettingsRepository>();
         services.AddScoped<IJournalEntryRepository, EfCoreJournalEntryRepository>();
         services.AddScoped<IUserSettingsRepository, EfCoreUserSettingsRepository>();
-        services.AddScoped<ISprintSessionRepository, EfCoreSprintSessionRepository>();
 
         services.AddHttpClient<IJiraTicketService, JiraApiClient>();
 

@@ -8,6 +8,7 @@ using Kairudev.Application.Pomodoro.Commands.UpdateTaskStatus;
 using Kairudev.Application.Pomodoro.Queries.GetCurrentSession;
 using Kairudev.Application.Pomodoro.Queries.GetSettings;
 using Kairudev.Application.Pomodoro.Queries.GetSuggestedSessionType;
+using Kairudev.Application.Pomodoro.Queries.GetTodaySprintSessions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Monbsoft.BrilliantMediator.Abstractions;
@@ -77,6 +78,24 @@ public sealed class PomodoroController : ControllerBase
             : Conflict(new { error = result.Error });
     }
 
+    [HttpPost("session/free-sprint")]
+    public async Task<IActionResult> StartFreeSprint([FromBody] StartFreeSprintBody body, CancellationToken ct)
+    {
+        var command = new StartSessionCommand("Sprint", IsFreeSession: true, JournalComment: body.JournalComment);
+        var result = await _mediator.DispatchAsync<StartSessionCommand, StartSessionResult>(command, ct);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetCurrentSession), null, result.Session)
+            : Conflict(new { error = result.Error });
+    }
+
+    [HttpGet("sessions/today-sprints")]
+    public async Task<IActionResult> GetTodaySprintSessions(CancellationToken ct)
+    {
+        var result = await _mediator.SendAsync<GetTodaySprintSessionsQuery, GetTodaySprintSessionsResult>(
+            new GetTodaySprintSessionsQuery(), ct);
+        return Ok(result.Sessions);
+    }
+
     [HttpPatch("session/complete")]
     public async Task<IActionResult> CompleteSession(CancellationToken ct)
     {
@@ -139,4 +158,5 @@ public sealed class PomodoroController : ControllerBase
     }
 }
 
+public sealed record StartFreeSprintBody(string? JournalComment);
 public sealed record UpdateTaskStatusBody(string TargetStatus);

@@ -48,12 +48,27 @@ public sealed class PomodoroApiClient
 
     public async Task<PomodoroSessionDto?> StartSessionAsync(string? sessionType = null)
     {
-        var url = string.IsNullOrEmpty(sessionType) 
-            ? "api/pomodoro/session" 
+        var url = string.IsNullOrEmpty(sessionType)
+            ? "api/pomodoro/session"
             : $"api/pomodoro/session?type={sessionType}";
         var response = await _http.PostAsync(url, null);
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadFromJsonAsync<PomodoroSessionDto>();
+    }
+
+    public async Task<PomodoroSessionDto?> StartFreeSprintAsync(string? journalComment)
+    {
+        var response = await _http.PostAsJsonAsync("api/pomodoro/session/free-sprint",
+            new { JournalComment = journalComment });
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<PomodoroSessionDto>();
+    }
+
+    public async Task<List<PomodoroSessionDto>> GetTodaySprintSessionsAsync()
+    {
+        var response = await _http.GetAsync("api/pomodoro/sessions/today-sprints");
+        if (!response.IsSuccessStatusCode) return [];
+        return await response.Content.ReadFromJsonAsync<List<PomodoroSessionDto>>() ?? [];
     }
 
     public async Task<bool> CompleteSessionAsync()

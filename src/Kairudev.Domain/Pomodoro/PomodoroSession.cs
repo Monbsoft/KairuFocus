@@ -8,19 +8,26 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
 {
     private readonly List<Guid> _linkedTaskIdValues = [];
 
-    private PomodoroSession(PomodoroSessionId id, UserId ownerId, PomodoroSessionType sessionType, int plannedDurationMinutes)
+    private PomodoroSession(
+        PomodoroSessionId id,
+        UserId ownerId,
+        PomodoroSessionType sessionType,
+        int plannedDurationMinutes,
+        string? journalComment)
         : base(id)
     {
         OwnerId = ownerId;
         SessionType = sessionType;
         PlannedDurationMinutes = plannedDurationMinutes;
         Status = PomodoroSessionStatus.Planned;
+        JournalComment = journalComment;
     }
 
     public UserId OwnerId { get; private set; } = default!;
     public PomodoroSessionType SessionType { get; }
     public PomodoroSessionStatus Status { get; private set; }
     public int PlannedDurationMinutes { get; }
+    public string? JournalComment { get; private set; }
     public DateTime? StartedAt { get; private set; }
     public DateTime? EndedAt { get; private set; }
 
@@ -34,8 +41,12 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
         init => _linkedTaskIdValues = value;
     }
 
-    public static PomodoroSession Create(PomodoroSessionType sessionType, int plannedDurationMinutes, UserId ownerId) =>
-        new(PomodoroSessionId.New(), ownerId, sessionType, plannedDurationMinutes);
+    public static PomodoroSession Create(
+        PomodoroSessionType sessionType,
+        int plannedDurationMinutes,
+        UserId ownerId,
+        string? journalComment = null) =>
+        new(PomodoroSessionId.New(), ownerId, sessionType, plannedDurationMinutes, journalComment);
 
     public Result Start(DateTime now)
     {
