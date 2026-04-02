@@ -1,0 +1,63 @@
+@page "/tasks/{Id:guid}"
+@attribute [Authorize]
+@using Kairu.Web.Services
+@inject TaskApiClient Api
+@inject NavigationManager Nav
+@inject MarkdownService MarkdownSvc
+
+@if (notFound)
+{
+    <div class="alert alert-warning">Tâche introuvable.</div>
+    <button class="btn btn-secondary" @onclick="GoBack">Retour</button>
+}
+else if (task is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <h2 class="mb-0">@task.Title</h2>
+        <span class="badge @MarkdownService.StatusBadgeClass(task.Status)">@task.Status</span>
+        @if (!string.IsNullOrWhiteSpace(task.JiraTicketKey))
+        {
+            <span class="badge bg-primary">@task.JiraTicketKey</span>
+        }
+    </div>
+
+    <div class="border rounded p-3 bg-body-tertiary mb-3" style="min-height: 100px;">
+        @if (string.IsNullOrWhiteSpace(task.Description))
+        {
+            <p class="text-muted fst-italic">Aucune description.</p>
+        }
+        else
+        {
+            @((MarkupString)MarkdownSvc.Render(task.Description))
+        }
+    </div>
+
+    <div class="d-flex gap-2">
+        @if (task.Status != "Done")
+        {
+            <button class="btn btn-primary" @onclick="GoToEdit">Modifier</button>
+        }
+        <button class="btn btn-secondary" @onclick="GoBack">Retour</button>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private TaskDto? task;
+    private bool notFound;
+
+    protected override async Task OnInitializedAsync()
+    {
+        task = await Api.GetByIdAsync(Id);
+        notFound = task is null;
+    }
+
+    private void GoToEdit() => Nav.NavigateTo($"/tasks/{Id}/edit");
+
+    private void GoBack() => Nav.NavigateTo("/tasks");
+}

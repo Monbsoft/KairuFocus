@@ -1,0 +1,71 @@
+@page "/login"
+@using Kairu.Web.Auth
+@inject NavigationManager Nav
+@inject AuthService AuthService
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject IConfiguration Configuration
+
+<PageTitle>Connexion -- Kairu</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-logo">K</div>
+        <h1 class="login-title">Kairu</h1>
+        <p class="login-subtitle">Gestion d'activite pour developpeurs</p>
+
+        @if (_error is not null)
+        {
+            <div class="alert alert-danger">@_error</div>
+        }
+
+        <a href="@_githubLoginUrl" class="btn btn-github">
+            <span class="github-icon">&#11041;</span>
+            Se connecter avec GitHub
+        </a>
+    </div>
+</div>
+
+@code {
+    private string? _error;
+    private string _githubLoginUrl = "/api/auth/github";
+
+    protected override void OnInitialized()
+    {
+        var apiBase = Configuration["ApiBaseUrl"] ?? string.Empty;
+        _githubLoginUrl = $"{apiBase}/api/auth/github";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Lire le token depuis le fragment URL (ex: /#token=xxx)
+        var uri = new Uri(Nav.Uri);
+        var fragment = uri.Fragment;
+
+        if (fragment.StartsWith("#token=", StringComparison.OrdinalIgnoreCase))
+        {
+            var token = Uri.UnescapeDataString(fragment[7..]);
+            await AuthService.SetTokenAsync(token);
+            AuthStateProvider.NotifyAuthenticationStateChanged();
+            Nav.NavigateTo("/dashboard", replace: true);
+            return;
+        }
+
+        if (fragment.StartsWith("#auth-error=", StringComparison.OrdinalIgnoreCase))
+        {
+            _error = fragment[12..] switch
+            {
+                "denied" => "Connexion GitHub refusee.",
+                "no-id" => "Impossible de recuperer l'identifiant GitHub.",
+                _ => "Une erreur est survenue lors de la connexion."
+            };
+            StateHasChanged();
+            return;
+        }
+
+        // Si deja authentifie, rediriger
+        if (await AuthService.IsAuthenticatedAsync())
+            Nav.NavigateTo("/dashboard", replace: true);
+    }
+}

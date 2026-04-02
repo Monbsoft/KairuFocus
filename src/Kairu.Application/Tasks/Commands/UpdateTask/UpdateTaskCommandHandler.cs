@@ -1,0 +1,65 @@
+using Kairu.Application.Common;
+using Kairu.Application.Tasks.Common;
+using Kairu.Domain.Tasks;
+using Microsoft.Extensions.Logging;
+using Monbsoft.BrilliantMediator.Abstractions.Commands;
+
+namespace Kairu.Application.Tasks.Commands.UpdateTask;
+
+public sealed class UpdateTaskCommandHandler : ICommandHandler<UpdateTaskCommand, UpdateTaskResult>
+{
+    private readonly ITaskRepository _repository;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly ILogger<UpdateTaskCommandHandler> _logger;
+
+    public UpdateTaskCommandHandler(
+        ITaskRepository repository,
+        ICurrentUserService currentUserService,
+        ILogger<UpdateTaskCommandHandler> logger)
+    {
+        _repository = repository;
+        _currentUserService = currentUserService;
+        _logger = logger;
+    }
+
+    public async Task<UpdateTaskResult> Handle(
+        UpdateTaskCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.CurrentUserId;
+
+        _logger.LogDebug("Updating task {TaskId} for user {UserId}", command.TaskId, userId);
+
+        var task = await _repository.GetByIdAsync(TaskId.From(command.TaskId), userId, cancellationToken);
+        if (task is null)
+            return UpdateTaskResult.NotFound();
+
+        var titleResult = TaskTitle.Create(command.Title);
+        if (titleResult.IsFailure)
+            return UpdateTaskResult.Failure(titleResult.Error);
+
+        var descriptionResult = TaskDescription.Create(command.Description);
+        if (descriptionResult.IsFailure)
+            return UpdateTaskResult.Failure(descriptionResult.Error);
+
+        var tags = new List<TaskTag>();
+        foreach (var raw in command.Tags ?? [])
+        {
+            var tagResult = TaskTag.Create(raw);
+            if (tagResult.IsFailure)
+                return UpdateTaskResult.Failure(tagResult.Error);
+            tags.Add(tagResult.Value);
+        }
+
+        task.UpdateDetails(titleResult.Value, descriptionResult.Value);
+
+        var setTagsResult = task.SetTags(tags);
+        if (setTagsResult.IsFailure)
+            return UpdateTaskResult.Failure(setTagsResult.Error);
+
+        await _repository.UpdateAsync(task, cancellationToken);
+        _logger.LogInformation("Task {TaskId} updated by user {UserId}", command.TaskId, userId);
+        return UpdateTaskResult.Success(TaskViewModel.From(task));
+    }
+}
+

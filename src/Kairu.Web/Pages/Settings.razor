@@ -1,0 +1,230 @@
+@page "/settings"
+@attribute [Authorize]
+@using Kairu.Web.Services
+@inject PomodoroApiClient PomodoroApi
+@inject SettingsApiClient SettingsApi
+@inject IJSRuntime JSRuntime
+@inject ISoundService SoundService
+
+<h2>⚙ Paramètres</h2>
+
+@if (!_loaded)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <div style="max-width: 600px">
+        <!-- Theme Section -->
+        <div class="mb-5">
+            <h4>🎨 Thème</h4>
+            <div class="mb-3">
+                <label class="form-label">Préférence de thème</label>
+                <select class="form-select" @bind="_selectedTheme" @bind:after="OnThemeChanged">
+                    <option value="Light">☀️ Clair</option>
+                    <option value="Dark">🌙 Sombre</option>
+                    <option value="System">⚙️ Système</option>
+                </select>
+                <div class="form-text">Le thème sera appliqué immédiatement et sauvegardé.</div>
+            </div>
+        </div>
+
+        <!-- Ringtone Section -->
+        <div class="mb-5">
+            <h4>🔔 Sonnerie Pomodoro</h4>
+            <div class="mb-3">
+                <label class="form-label">Son de fin de session</label>
+                <div class="d-flex gap-2 align-items-center">
+                    <select class="form-select" @bind="_selectedRingtone" @bind:after="OnRingtoneChanged">
+                        <option value="None">🔇 Aucun son</option>
+                        <option value="AlarmClock">⏰ Réveil</option>
+                        <option value="Bird">🐦 Oiseau</option>
+                    </select>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="PreviewRingtone"
+                            disabled="@(_selectedRingtone == "None")">
+                        ▶ Tester
+                    </button>
+                </div>
+                <div class="form-text">Joué automatiquement à la fin de chaque sprint ou pause.</div>
+            </div>
+        </div>
+
+        <hr class="my-4" />
+        <h4>Pomodoro</h4>
+        <EditForm Model="_form" OnValidSubmit="SavePomodoroSettings">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Durée du sprint (minutes)</label>
+                <input type="number" class="form-control" @bind="_form.SprintDuration" min="1" max="120" />
+                <div class="form-text">Entre 1 et 120 minutes. Valeur par défaut : 25 minutes.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Durée de la pause courte (minutes)</label>
+                <input type="number" class="form-control" @bind="_form.ShortBreakDuration" min="1" max="120" />
+                <div class="form-text">Entre 1 et 120 minutes. Valeur par défaut : 5 minutes.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Durée de la pause longue (minutes)</label>
+                <input type="number" class="form-control" @bind="_form.LongBreakDuration" min="1" max="120" />
+                <div class="form-text">Entre 1 et 120 minutes. Valeur par défaut : 15 minutes.</div>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>ℹ️ Rappel :</strong> Une pause longue est recommandée tous les 4 sprints.
+            </div>
+
+            @if (_successMessage is not null)
+            {
+                <div class="alert alert-success">
+                    ✓ @_successMessage
+                </div>
+            }
+
+            @if (_errorMessage is not null)
+            {
+                <div class="alert alert-danger">
+                    ⚠ @_errorMessage
+                </div>
+            }
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" disabled="@_saving">
+                    @(_saving ? "Enregistrement…" : "Enregistrer")
+                </button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="ResetToDefaults" disabled="@_saving">
+                    Réinitialiser
+                </button>
+            </div>
+        </EditForm>
+    </div>
+}
+
+@code {
+    private bool _loaded;
+    private bool _saving;
+    private string? _successMessage;
+    private string? _errorMessage;
+    private SettingsForm _form = new();
+    private string _selectedTheme = "System";
+    private string _selectedRingtone = "AlarmClock";
+
+    private sealed class SettingsForm
+    {
+        public int SprintDuration { get; set; } = 25;
+        public int ShortBreakDuration { get; set; } = 5;
+        public int LongBreakDuration { get; set; } = 15;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load Pomodoro settings
+        var pomodoroSettings = await PomodoroApi.GetSettingsAsync();
+        if (pomodoroSettings is not null)
+        {
+            _form.SprintDuration = pomodoroSettings.SprintDurationMinutes;
+            _form.ShortBreakDuration = pomodoroSettings.ShortBreakDurationMinutes;
+            _form.LongBreakDuration = pomodoroSettings.LongBreakDurationMinutes;
+        }
+
+        // Load theme preference
+        var userSettings = await SettingsApi.GetSettingsAsync();
+        if (userSettings is not null)
+        {
+            _selectedTheme = userSettings.ThemePreference;
+            _selectedRingtone = userSettings.RingtonePreference;
+            await ApplyTheme(_selectedTheme);
+        }
+
+        _loaded = true;
+    }
+
+    private async Task OnThemeChanged()
+    {
+        await ApplyTheme(_selectedTheme);
+        await SettingsApi.SaveThemePreferenceAsync(_selectedTheme);
+    }
+
+    private async Task OnRingtoneChanged()
+    {
+        await SettingsApi.SaveRingtonePreferenceAsync(_selectedRingtone);
+    }
+
+    private async Task PreviewRingtone()
+    {
+        await SoundService.PlayRingtoneAsync(_selectedRingtone);
+    }
+
+    private async Task ApplyTheme(string theme)
+    {
+        var effectiveTheme = theme;
+
+        if (theme == "System")
+        {
+            var isDark = await JSRuntime.InvokeAsync<bool>("eval", "window.matchMedia('(prefers-color-scheme: dark)').matches");
+            effectiveTheme = isDark ? "Dark" : "Light";
+        }
+
+        await JSRuntime.InvokeVoidAsync("eval", 
+            effectiveTheme == "Dark" 
+                ? "document.documentElement.setAttribute('data-bs-theme', 'dark')" 
+                : "document.documentElement.setAttribute('data-bs-theme', 'light')");
+    }
+
+    private async Task SavePomodoroSettings()
+    {
+        _saving = true;
+        _successMessage = null;
+        _errorMessage = null;
+
+        try
+        {
+            if (_form.SprintDuration < 1 || _form.SprintDuration > 120)
+            {
+                _errorMessage = "La durée du sprint doit être entre 1 et 120 minutes.";
+                return;
+            }
+
+            if (_form.ShortBreakDuration < 1 || _form.ShortBreakDuration > 120)
+            {
+                _errorMessage = "La durée de la pause courte doit être entre 1 et 120 minutes.";
+                return;
+            }
+
+            if (_form.LongBreakDuration < 1 || _form.LongBreakDuration > 120)
+            {
+                _errorMessage = "La durée de la pause longue doit être entre 1 et 120 minutes.";
+                return;
+            }
+
+            var success = await PomodoroApi.SaveSettingsAsync(
+                _form.SprintDuration,
+                _form.ShortBreakDuration,
+                _form.LongBreakDuration);
+
+            if (success)
+            {
+                _successMessage = "Paramètres enregistrés avec succès !";
+            }
+            else
+            {
+                _errorMessage = "Impossible d'enregistrer les paramètres. Vérifiez les valeurs saisies.";
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void ResetToDefaults()
+    {
+        _form.SprintDuration = 25;
+        _form.ShortBreakDuration = 5;
+        _form.LongBreakDuration = 15;
+        _successMessage = null;
+        _errorMessage = null;
+    }
+}

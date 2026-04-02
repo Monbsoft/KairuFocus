@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kairu.Api/Kairu.Api.csproj" />
+    <Project Path="src/Kairu.AppHost/Kairu.AppHost.csproj" />
+    <Project Path="src/Kairu.Application/Kairu.Application.csproj" />
+    <Project Path="src/Kairu.Domain/Kairu.Domain.csproj" />
+    <Project Path="src/Kairu.Infrastructure/Kairu.Infrastructure.csproj" />
+    <Project Path="src/Kairu.Maui/Kairu.Maui.csproj">
+      <Build Solution="Release|*" Project="false" />
+      <Deploy Solution="Release|*" />
+    </Project>
+    <Project Path="src/Kairu.ServiceDefaults/Kairu.ServiceDefaults.csproj" />
+    <Project Path="src/Kairu.Web/Kairu.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kairu.Application.Tests/Kairu.Application.Tests.csproj" />
+    <Project Path="tests/Kairu.Domain.Tests/Kairu.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
