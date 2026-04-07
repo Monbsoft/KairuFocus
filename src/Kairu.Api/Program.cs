@@ -105,9 +105,35 @@ builder.Services
                 context.RunClaimActions(userJson.RootElement);
             }
         };
+    })
+    .AddMcp(options =>
+    {
+        // Resource metadata returned in 401 challenges on /mcp
+        // AuthorizationServers will be set dynamically per-request
+        options.Events = new ModelContextProtocol.AspNetCore.Authentication.McpAuthenticationEvents
+        {
+            OnResourceMetadataRequest = context =>
+            {
+                var baseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+                context.ResourceMetadata = new ModelContextProtocol.Authentication.ProtectedResourceMetadata
+                {
+                    Resource = $"{baseUrl}/mcp",
+                    AuthorizationServers = [baseUrl],
+                    BearerMethodsSupported = ["header"],
+                };
+                return Task.CompletedTask;
+            }
+        };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("McpOAuth", policy =>
+        policy.AddAuthenticationSchemes(
+            JwtBearerDefaults.AuthenticationScheme,
+            ModelContextProtocol.AspNetCore.Authentication.McpAuthenticationDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser());
+});
 
 builder.Services.AddControllers();
 builder.Services.AddMcpServer()
@@ -161,7 +187,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapMcp("/mcp").RequireAuthorization();
+app.MapMcp("/mcp").RequireAuthorization("McpOAuth");
 app.MapDefaultEndpoints();
 app.MapFallbackToFile("index.html");
 
