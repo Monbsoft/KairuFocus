@@ -1,21 +1,42 @@
+using Kairu.Domain.Common;
 using Kairu.Domain.Identity;
 
 namespace Kairu.Domain.Settings;
 
-public sealed class UserApiKey
+/// <summary>
+/// Entity representing a hashed API key for a user. One key per user (upsert semantics).
+/// </summary>
+public sealed class UserApiKey : Entity<UserId>
 {
-    public UserId OwnerId { get; private set; }
     public string KeyHash { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    private UserApiKey() { OwnerId = null!; KeyHash = null!; }
+    /// <summary>Convenience alias for the entity identity.</summary>
+    public UserId OwnerId => Id;
 
+    // Parameterless constructor required by EF Core for materialization
+    private UserApiKey() : base(null!) { KeyHash = null!; }
+
+    private UserApiKey(UserId ownerId, string keyHash, DateTime createdAt) : base(ownerId)
+    {
+        KeyHash = keyHash;
+        CreatedAt = createdAt;
+    }
+
+    /// <summary>Creates a new API key entry for a user.</summary>
     public static UserApiKey Create(UserId ownerId, string keyHash, DateTime createdAt)
-        => new() { OwnerId = ownerId, KeyHash = keyHash, CreatedAt = createdAt };
+    {
+        ArgumentNullException.ThrowIfNull(ownerId);
+        if (string.IsNullOrWhiteSpace(keyHash))
+            throw new ArgumentException("KeyHash cannot be empty.", nameof(keyHash));
+        return new UserApiKey(ownerId, keyHash, createdAt);
+    }
 
-    /// <summary>Remplace la clé existante (upsert).</summary>
+    /// <summary>Replaces the stored key hash (used for key rotation/regeneration).</summary>
     public void Regenerate(string keyHash, DateTime createdAt)
     {
+        if (string.IsNullOrWhiteSpace(keyHash))
+            throw new ArgumentException("KeyHash cannot be empty.", nameof(keyHash));
         KeyHash = keyHash;
         CreatedAt = createdAt;
     }
