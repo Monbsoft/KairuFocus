@@ -7,7 +7,7 @@
 
 ## Résumé état actuel
 
-**Dernière itération complétée : #23 — Fusion SprintSession / PomodoroSession (ADR-005)** ✅ COMPLÉTÉE (2026-03-26)
+**Dernière itération complétée : #24 — Renommage Kairudev → Kairu** ✅ COMPLÉTÉE (2026-04-07)
 
 **Prochaine itération prévue : à définir**
 
@@ -103,13 +103,28 @@
 | ~~#18~~ | ~~Éditeur Markdown + navigation pages dédiées — Markdig, onglets Éditer/Prévisualiser, pages TaskDetail/TaskEdit, suppression modale~~ | ~~✅ Livré~~ | ~~2026-03-20~~ |
 | ~~#19~~ | ~~Retrait Jira (pages + configuration UI) — suppression pages Tickets Web/MAUI, retrait menu, retrait config Jira dans Settings, retrait endpoint API `/api/settings/jira`~~ | ~~✅ Livré~~ | ~~2026-03-23~~ |
 | ~~#20~~ | ~~Filtrage et tri des tâches — défaut ouvertes + récentes, recherche titre, filtre statut, côté serveur~~ | ~~✅ Livré~~ | ~~2026-03-24~~ |
-| **#23** | **Fusion SprintSession / PomodoroSession (ADR-005) — `SprintSession` supprimé, sessions libres portées par `PomodoroSession` (`PlannedDurationMinutes = 0`)** | **✅ Livré** | **2026-03-26** |
+| ~~#23~~ | ~~Fusion SprintSession / PomodoroSession (ADR-005) — `SprintSession` supprimé, sessions libres portées par `PomodoroSession` (`PlannedDurationMinutes = 0`)~~ | ~~✅ Livré~~ | ~~2026-03-26~~ |
+| **#24** | **Renommage Kairudev → Kairu — namespaces C#, projets, solution, `manifest.json`, fichier `.http`, correction CSS menu/bouton GitHub** | **✅ Livré** | **2026-04-07** |
 | ~~#22~~ | ~~Note sur le sprint libre — champ Note remplace Nom, persistée comme JournalComment, éditable dans le journal~~ | ~~✅ Livré~~ | ~~2026-03-25~~ |
 | ~~#21~~ | ~~Tags sur les tâches — Value Object `TaskTag`, saisie chips/badges (création + édition), affichage couleurs automatiques, max 5, JSON en base~~ | ~~✅ Livré~~ | ~~2026-03-25~~ |
 
 ---
 
 ## Dernière itération livrée
+
+**#24 — Renommage Kairudev → Kairu** — Livré le 2026-04-07
+
+### Ce qui a été livré
+
+- Renommage complet `Kairudev` → `Kairu` : namespaces C#, projets `.csproj`, solution `.slnx`, migrations EF Core, agents, répertoires `src/`
+- `manifest.json` : `name` et `short_name` mis à jour (`"Kairu"`)
+- `Kairudev.Api.http` renommé en `Kairu.Api.http`, variable `@Kairu.Api_HostAddress`
+- Correction CSS : `.btn-github` déplacé de `Login.razor.css` (scoped) vers `app.css` (global)
+- Menu de navigation et bouton GitHub à nouveau visibles
+
+⚠️ **Dette technique** : `appsettings.Production.json` pointe encore vers `kairudev-prod.azurewebsites.net` (URL Azure App Service indépendante du nom — à mettre à jour si redéploiement sous nouveau nom de resource).
+
+---
 
 **#23 — Fusion SprintSession / PomodoroSession (ADR-005)** — Livré le 2026-03-26
 
