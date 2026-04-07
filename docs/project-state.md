@@ -1,4 +1,4 @@
-# Kairudev — État du projet
+# Kairu — État du projet
 
 > Ce fichier est mis à jour après chaque itération.
 > Il est lu par Claude au démarrage de chaque session.
@@ -64,7 +64,7 @@
 - ✅ Redéploiement : `powershell -ExecutionPolicy Bypass -File .\infra\deploy-linux.ps1 -Environment prod`
 
 **Tests :** 192 au total ✅ (113 Domain + 79 Application)
-⚠️ **Dette technique** : `Kairudev.Infrastructure.Tests` supprimé de la solution (résidu bin/obj uniquement). `Kairudev.IntegrationTests` non maintenu — step definitions obsolètes vs domain refactorisé.
+⚠️ **Dette technique** : `Kairu.Infrastructure.Tests` supprimé de la solution (résidu bin/obj uniquement). `Kairu.IntegrationTests` non maintenu — step definitions obsolètes vs domain refactorisé.
 
 **Infrastructure :** API REST, Blazor WASM, .NET MAUI, SQLite (local) + **Azure SQL (prod)**
 
@@ -79,7 +79,7 @@
 | ~~#2b~~ | ~~Réécriture spec.md (use cases + diagrammes Mermaid) + prompts agents~~ | ~~✅ Livré~~ | ~~2026-02-24~~ |
 | ~~#3~~ | ~~BC Pomodoro — sessions de focus, chrono circulaire, lien avec Tasks~~ | ~~✅ Livré~~ | ~~2026-02-25~~ |
 | ~~#3b~~ | ~~.NET Aspire 13.1.1 — AppHost + ServiceDefaults~~ | ~~✅ Livré~~ | ~~2026-02-25~~ |
-| ~~#4~~ | ~~Tests d'intégration SQLite (`Kairudev.Infrastructure.Tests`)~~ | ~~✅ Livré~~ | ~~2026-02-25~~ |
+| ~~#4~~ | ~~Tests d'intégration SQLite (`Kairu.Infrastructure.Tests`)~~ | ~~✅ Livré~~ | ~~2026-02-25~~ |
 | ~~#5~~ | ~~Configuration externalisée — URL API via `appsettings.json`~~ | ~~✅ Livré~~ | ~~2026-02-25~~ |
 | ~~#5b~~ | ~~Bugfixes (NetworkError + CreatedAtAction) + sous-agents Claude + UC-12 ChangeTaskStatus~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
 | ~~#5c~~ | ~~UC-05 UpdateTask + Description optionnelle sur les tâches~~ | ~~✅ Livré~~ | ~~2026-02-26~~ |
@@ -440,10 +440,10 @@
   - Références Microsoft Learn
 
 **Correction bug build** ✅
-- `src/Kairudev.Api/Program.cs` : suppression du second paramètre dans `AddInfrastructure()` (méthode n'accepte qu'un seul paramètre `connectionString`)
+- `src/Kairu.Api/Program.cs` : suppression du second paramètre dans `AddInfrastructure()` (méthode n'accepte qu'un seul paramètre `connectionString`)
 
 ### Impact
-- **Production-ready** : Kairudev peut être déployé sur Azure en quelques minutes (`.\infra\deploy.ps1`)
+- **Production-ready** : Kairu peut être déployé sur Azure en quelques minutes (`.\infra\deploy.ps1`)
 - **Sécurité** : secrets gérés dans Key Vault (jamais en clair dans code/config), identité managée, HTTPS forcé, TLS 1.2
 - **CI/CD** : GitHub Actions automatise build + tests + déploiement (push sur `main` → prod automatique)
 - **Scalabilité** : App Service peut scale automatiquement (P1v3+), Azure SQL en haute disponibilité
@@ -612,7 +612,7 @@
 - Application : `LinkJiraTicketCommandHandlerTests` (3 tests) + `UnlinkJiraTicketCommandHandlerTests` (3 tests)
 
 ### Impact
-- L'utilisateur voit ses tickets Jira assignés depuis Kairudev
+- L'utilisateur voit ses tickets Jira assignés depuis Kairu
 - Chaque tâche peut être liée à un ticket Jira (persisté en base)
 - Les credentials Jira sont configurables depuis l'UI sans redémarrage
 
@@ -776,23 +776,23 @@ L'application n'était accessible que via navigateur web (Blazor WASM). Besoin d
 #### Solution appliquée
 
 **Projet .NET MAUI avec Blazor Hybrid** ✅
-- **`Kairudev.Maui`** : nouveau projet .NET 10 MAUI avec `Microsoft.AspNetCore.Components.WebView.Maui`
+- **`Kairu.Maui`** : nouveau projet .NET 10 MAUI avec `Microsoft.AspNetCore.Components.WebView.Maui`
 - **Multi-plateforme** : cible Windows, Android, iOS, macOS via `TargetFrameworks`
-- **Réutilisation des pages Blazor** : tous les composants copiés depuis `Kairudev.Web`
+- **Réutilisation des pages Blazor** : tous les composants copiés depuis `Kairu.Web`
   - `Tasks.razor`, `Pomodoro.razor`, `Journal.razor`, `Settings.razor`
   - `NavMenu.razor` adapté avec émojis pour la navigation
   - Layout `MainLayout` réutilisé
 
 **Services API clients** ✅
 - **`Services/`** : `TaskApiClient`, `PomodoroApiClient`, `JournalApiClient`
-- **DTOs** : `TaskDto`, `PomodoroDto`, `JournalDto` copiés dans le namespace `Kairudev.Maui.Services`
+- **DTOs** : `TaskDto`, `PomodoroDto`, `JournalDto` copiés dans le namespace `Kairu.Maui.Services`
 - **Configuration** : `appsettings.json` avec `ApiBaseUrl` (défaut : `https://localhost:7056`)
 - **Injection de dépendances** : `MauiProgram.cs` configure `HttpClient` + les 3 clients API
 
 **UI et UX** ✅
 - **Page d'accueil** : redirection automatique vers `/tasks`
 - **Navigation** : menu latéral avec icônes (☑ Tâches, 🍅 Pomodoro, 📖 Journal, ⚙ Paramètres)
-- **CSS** : Bootstrap + styles personnalisés copiés depuis `Kairudev.Web`
+- **CSS** : Bootstrap + styles personnalisés copiés depuis `Kairu.Web`
 - **Safe area** : support des zones sécurisées iOS (notch)
 
 **Architecture** ✅
@@ -807,8 +807,8 @@ L'application n'était accessible que via navigateur web (Blazor WASM). Besoin d
 - **Prêt pour distribution** : Windows unpackaged, Android/iOS via stores
 
 ### Dette technique introduite
-- **Duplication de code** : les pages Blazor et services API sont copiés dans `Kairudev.Maui`
-- **Solution future** : extraire dans `Kairudev.Web.Shared` (Razor Class Library) référencée par Web + MAUI
+- **Duplication de code** : les pages Blazor et services API sont copiés dans `Kairu.Maui`
+- **Solution future** : extraire dans `Kairu.Web.Shared` (Razor Class Library) référencée par Web + MAUI
 - **Priorité** : basse (fonctionne tel quel, refactoring optionnel)
 
 ---
@@ -998,7 +998,7 @@ L'utilisateur ne voyait pas de différence dans l'interface web Blazor après l'
 #### Problème rencontré
 L'application ne démarrait plus avec l'erreur :
 ```
-System.InvalidOperationException: The model for context 'KairudevDbContext' has pending changes. 
+System.InvalidOperationException: The model for context 'KairuDbContext' has pending changes. 
 Add a new migration before updating the database.
 ```
 
@@ -1075,24 +1075,24 @@ Add a new migration before updating the database.
 - `TaskStatus` : alias `DomainTaskStatus` nécessaire dans les tests (conflit namespace)
 - `DomainErrors` : alias `PomodoroErrors` nécessaire quand Tasks et Pomodoro sont tous deux importés
 - `DeveloperTask.StartProgress()` redondant avec `ChangeStatus(InProgress, now)` — à supprimer dans un refactoring futur
-- `Kairudev.Adapters` : projet toujours présent dans la solution mais vide de sens (suppression à planifier)
+- `Kairu.Adapters` : projet toujours présent dans la solution mais vide de sens (suppression à planifier)
 
 ---
 
 ## Stack technique
 - .NET 10 GA (SDK 10.0.200-preview = SDK .NET 10.1 preview, runtime 10 GA)
 - SQLite + EF Core 10.0.3 (fichier local `kairudev.db`, hors git)
-- ASP.NET Core Web API (`Kairudev.Api`)
-- Blazor WebAssembly (`Kairudev.Web`) — auth GitHub ✅
-- .NET MAUI Blazor Hybrid (`Kairudev.Maui`) — auth GitHub ✅
-- .NET Aspire 13.1.1 (`Kairudev.AppHost` + `Kairudev.ServiceDefaults`)
+- ASP.NET Core Web API (`Kairu.Api`)
+- Blazor WebAssembly (`Kairu.Web`) — auth GitHub ✅
+- .NET MAUI Blazor Hybrid (`Kairu.Maui`) — auth GitHub ✅
+- .NET Aspire 13.1.1 (`Kairu.AppHost` + `Kairu.ServiceDefaults`)
 - xUnit pour les tests
-- Solution : `Kairudev.slnx`
+- Solution : `Kairu.slnx`
 
 ## Structure du projet
 ```
 src/
-├── Kairudev.Domain/
+├── Kairu.Domain/
 │   ├── Common/
 │   ├── Tasks/
 │   ├── Pomodoro/
@@ -1100,24 +1100,24 @@ src/
 │   ├── Settings/
 │   ├── Tickets/
 │   └── Identity/              ← UserId, User, IUserRepository
-├── Kairudev.Application/
+├── Kairu.Application/
 │   ├── Tasks/
 │   ├── Pomodoro/
 │   ├── Journal/
 │   ├── Settings/
 │   ├── Tickets/
 │   └── Identity/              ← GetOrCreateUserCommand, ICurrentUserService
-├── Kairudev.Adapters/          ← à supprimer (ADR-007)
-├── Kairudev.Infrastructure/    ← migrations dans Persistence/Migrations/
-├── Kairudev.Api/               ← Controllers + Auth/
-├── Kairudev.AppHost/           ← orchestration Aspire
-├── Kairudev.ServiceDefaults/   ← OTEL, health checks, service discovery
-├── Kairudev.Web/               ← Pages/ (Home, Login, Dashboard, ...) + Auth/ + Services/
-└── Kairudev.Maui/              ← Pages/ + Auth/ + Services/ (Blazor Hybrid)
+├── Kairu.Adapters/          ← à supprimer (ADR-007)
+├── Kairu.Infrastructure/    ← migrations dans Persistence/Migrations/
+├── Kairu.Api/               ← Controllers + Auth/
+├── Kairu.AppHost/           ← orchestration Aspire
+├── Kairu.ServiceDefaults/   ← OTEL, health checks, service discovery
+├── Kairu.Web/               ← Pages/ (Home, Login, Dashboard, ...) + Auth/ + Services/
+└── Kairu.Maui/              ← Pages/ + Auth/ + Services/ (Blazor Hybrid)
 tests/
-├── Kairudev.Domain.Tests/
-├── Kairudev.Application.Tests/
-└── Kairudev.Infrastructure.Tests/  ← 17 tests intégration SQLite
+├── Kairu.Domain.Tests/
+├── Kairu.Application.Tests/
+└── Kairu.Infrastructure.Tests/  ← 17 tests intégration SQLite
 docs/
 ├── spec.md
 └── project-state.md

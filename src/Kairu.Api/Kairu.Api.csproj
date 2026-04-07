@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>27be0ff7-3e08-4ba3-9b70-8dbd7058903d</UserSecretsId>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BrilliantMediator" Version="3.0.0" />
+    <PackageReference Include="BrilliantMediator.SourceGenerator" Version="3.0.0">
+      <OutputItemType>Analyzer</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </PackageReference>
+    <Analyzer Include="$(NuGetPackageRoot)brilliantmediator.sourcegenerator\3.0.0\lib\netstandard2.0\BrilliantMediator.SourceGenerator.dll" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kairu.Application\Kairu.Application.csproj" />
+    <ProjectReference Include="..\Kairu.Infrastructure\Kairu.Infrastructure.csproj" />
+    <ProjectReference Include="..\Kairu.ServiceDefaults\Kairu.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+
+</Project>

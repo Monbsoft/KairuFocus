@@ -1,7 +1,7 @@
-# Kairudev — Prompt de démarrage projet
+# Kairu — Prompt de démarrage projet
 
 ## Contexte produit
-Kairudev est une application destinée aux développeurs pour gérer leur activité
+Kairu est une application destinée aux développeurs pour gérer leur activité
 quotidienne. Elle regroupe :
 - Une **todo list de micro-tâches** (niveau journée)
 - Un **journal de bord** quotidien
@@ -279,7 +279,7 @@ public sealed class AddTaskCliPresenter : IAddTaskPresenter
 ### Structure de projet
 ```
 src/
-├── Kairudev.Domain/
+├── Kairu.Domain/
 │   ├── Common/
 │   │   ├── Result.cs              # Result<T> — pas d'exceptions pour le flux normal
 │   │   ├── Entity.cs              # Base entity avec Id
@@ -292,7 +292,7 @@ src/
 │       ├── ITaskRepository.cs     # Interface (implémentée en Infrastructure)
 │       └── DomainErrors.cs
 │
-├── Kairudev.Application/
+├── Kairu.Application/
 │   └── Tasks/
 │       ├── AddTask/
 │       │   ├── AddTaskRequest.cs
@@ -303,20 +303,20 @@ src/
 │       ├── CompleteTask/
 │       └── DeleteTask/
 │
-├── Kairudev.Adapters/
+├── Kairu.Adapters/
 │   └── Tasks/
 │       ├── AddTaskCliPresenter.cs
 │       └── TaskViewModel.cs
 │
-└── Kairudev.Infrastructure/
+└── Kairu.Infrastructure/
     ├── Persistence/
     │   └── JsonTaskRepository.cs      # ou SQLite
     └── DependencyInjection.cs
 
 tests/
-├── Kairudev.Domain.Tests/
-├── Kairudev.Application.Tests/        # Use Cases testés avec presenters mock
-└── Kairudev.Infrastructure.Tests/
+├── Kairu.Domain.Tests/
+├── Kairu.Application.Tests/        # Use Cases testés avec presenters mock
+└── Kairu.Infrastructure.Tests/
 
 docs/
 └── spec.md

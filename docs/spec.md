@@ -1,4 +1,4 @@
-# Kairudev — Spécification fonctionnelle et architecturale
+# Kairu — Spécification fonctionnelle et architecturale
 
 ## Vision produit
 Application de gestion d'activité quotidienne pour développeurs.
@@ -50,7 +50,7 @@ todo list de micro-tâches, journal de bord, sessions Pomodoro.
 flowchart LR
     Dev(["👤 Développeur"])
 
-    subgraph Kairudev["Kairudev"]
+    subgraph Kairu["Kairu"]
         subgraph Tasks["Bounded Context : Tasks"]
             UC1(["Ajouter une tâche"])
             UC2(["Lister les tâches"])
@@ -141,21 +141,21 @@ flowchart LR
 ```mermaid
 flowchart TB
     subgraph Ext["Frameworks & Drivers"]
-        Web["Kairudev.Web\n(Blazor WASM)"]
-        API["Kairudev.Api\n(ASP.NET Core)"]
-        Infra["Kairudev.Infrastructure\n(EF Core / SQLite)"]
+        Web["Kairu.Web\n(Blazor WASM)"]
+        API["Kairu.Api\n(ASP.NET Core)"]
+        Infra["Kairu.Infrastructure\n(EF Core / SQLite)"]
     end
 
     subgraph Adp["Interface Adapters"]
-        A["Kairudev.Adapters\n(Presenters)"]
+        A["Kairu.Adapters\n(Presenters)"]
     end
 
     subgraph App["Application"]
-        UC["Kairudev.Application\n(Use Cases / Boundaries)"]
+        UC["Kairu.Application\n(Use Cases / Boundaries)"]
     end
 
     subgraph Dom["Domain"]
-        D["Kairudev.Domain\n(Entités / Value Objects)"]
+        D["Kairu.Domain\n(Entités / Value Objects)"]
     end
 
     Web -->|HTTP| API
@@ -1416,7 +1416,7 @@ sequenceDiagram
 
 ## Bounded Context : Tickets — Intégration Jira ✅ (itération #13)
 
-**Concept clé :** intégration en lecture avec Jira Cloud. Les tickets sont récupérés en direct depuis l'API Jira (pas de stockage local). Seul le lien `JiraTicketKey` (ex. `PROJ-123`) est persisté sur une tâche Kairudev.
+**Concept clé :** intégration en lecture avec Jira Cloud. Les tickets sont récupérés en direct depuis l'API Jira (pas de stockage local). Seul le lien `JiraTicketKey` (ex. `PROJ-123`) est persisté sur une tâche Kairu.
 
 ### UC-T01 — Lister les tickets Jira assignés à l'utilisateur
 
@@ -1434,7 +1434,7 @@ sequenceDiagram
 - E1 : Credentials non configurés → message "Configurer dans les paramètres"
 - E2 : Erreur réseau ou API → message d'erreur HTTP
 
-### UC-T02 — Lier un ticket Jira à une tâche Kairudev
+### UC-T02 — Lier un ticket Jira à une tâche Kairu
 
 **Acteur principal :** Développeur
 **Préconditions :** La tâche existe
@@ -1652,16 +1652,16 @@ sequenceDiagram
 - **Conséquences :** Architecture simple, sans WebSocket ni SignalR. Si l'onglet est fermé pendant un sprint, la session reste `Active` — acceptable pour v1.
 
 ### ADR-007 — Fusion Adapters dans Application
-- **Contexte :** Le projet `Kairudev.Adapters` ne contient que des presenters génériques peu utilisés ; les presenters HTTP vivent déjà dans `Kairudev.Api`.
-- **Décision :** À partir du BC Pomodoro, `Kairudev.Adapters` est supprimé. Les ViewModels et les presenters non-HTTP vivent dans `Kairudev.Application`. Les presenters HTTP restent dans `Kairudev.Api`.
+- **Contexte :** Le projet `Kairu.Adapters` ne contient que des presenters génériques peu utilisés ; les presenters HTTP vivent déjà dans `Kairu.Api`.
+- **Décision :** À partir du BC Pomodoro, `Kairu.Adapters` est supprimé. Les ViewModels et les presenters non-HTTP vivent dans `Kairu.Application`. Les presenters HTTP restent dans `Kairu.Api`.
 - **Conséquences :** Solution simplifiée (un projet de moins). Le BC Tasks sera refactorisé en dette technique.
 
 ### ADR-008 — .NET MAUI avec Blazor Hybrid et duplication temporaire
 - **Contexte :** Besoin d'une application native desktop/mobile sans refactoring majeur du code Blazor existant.
-- **Décision :** Créer `Kairudev.Maui` avec `Microsoft.AspNetCore.Components.WebView.Maui`. Copier les pages Blazor (Tasks, Pomodoro, Journal, Settings) et les services API clients dans le projet MAUI. Communication uniquement via API REST (même URL que Blazor WASM). Aucune référence aux projets Domain/Application/Infrastructure.
+- **Décision :** Créer `Kairu.Maui` avec `Microsoft.AspNetCore.Components.WebView.Maui`. Copier les pages Blazor (Tasks, Pomodoro, Journal, Settings) et les services API clients dans le projet MAUI. Communication uniquement via API REST (même URL que Blazor WASM). Aucune référence aux projets Domain/Application/Infrastructure.
 - **Conséquences :**
   - **Avantage** : application native fonctionnelle immédiatement, réutilisation totale de l'UI Blazor.
-  - **Dette technique** : duplication de code (pages + services). Solution future : extraire dans une Razor Class Library `Kairudev.Web.Shared` référencée par Web + MAUI.
+  - **Dette technique** : duplication de code (pages + services). Solution future : extraire dans une Razor Class Library `Kairu.Web.Shared` référencée par Web + MAUI.
   - **Clean Architecture respectée** : MAUI reste un pur adapter, le Domain ignore tout de l'UI.
 
 ### ADR-009 — Intégration Jira en lecture directe (pas de stockage local des tickets)
