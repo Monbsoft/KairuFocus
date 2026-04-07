@@ -1,0 +1,58 @@
+using Kairu.Application.Settings.Queries.GetApiKey;
+using Kairu.Application.Tests.Common;
+using Kairu.Domain.Identity;
+using Kairu.Domain.Settings;
+using Microsoft.Extensions.Logging.Abstractions;
+
+namespace Kairu.Application.Tests.Settings;
+
+public sealed class GetApiKeyQueryHandlerTests
+{
+    private readonly FakeApiKeyRepository _repository = new();
+    private readonly GetApiKeyQueryHandler _sut;
+
+    public GetApiKeyQueryHandlerTests() =>
+        _sut = new GetApiKeyQueryHandler(
+            _repository,
+            new FakeCurrentUserService(),
+            NullLogger<GetApiKeyQueryHandler>.Instance);
+
+    [Fact]
+    public async Task Should_ReturnExistsFalse_When_NoKeyForUser()
+    {
+        var result = await _sut.Handle(new GetApiKeyQuery());
+
+        Assert.False(result.Exists);
+        Assert.Null(result.CreatedAt);
+    }
+
+    [Fact]
+    public async Task Should_ReturnExistsTrue_When_KeyExists()
+    {
+        var createdAt = new DateTime(2026, 4, 7, 12, 0, 0, DateTimeKind.Utc);
+        var apiKey = UserApiKey.Create(
+            FakeCurrentUserService.TestUserId, "somehash", createdAt);
+        await _repository.UpsertAsync(apiKey);
+
+        var result = await _sut.Handle(new GetApiKeyQuery());
+
+        Assert.True(result.Exists);
+        Assert.Equal(createdAt, result.CreatedAt);
+    }
+
+    [Fact]
+    public async Task Should_NotExposeHash_When_KeyExists()
+    {
+        var apiKey = UserApiKey.Create(FakeCurrentUserService.TestUserId, "secrethash", DateTime.UtcNow);
+        await _repository.UpsertAsync(apiKey);
+
+        var result = await _sut.Handle(new GetApiKeyQuery());
+
+        // GetApiKeyResult ne contient pas de hash — vérification structurelle
+        Assert.DoesNotContain(
+            typeof(GetApiKeyResult).GetProperties(),
+            p => p.Name.Contains("Hash", StringComparison.OrdinalIgnoreCase)
+              || p.Name.Contains("Key", StringComparison.OrdinalIgnoreCase)
+              || p.Name.Contains("Token", StringComparison.OrdinalIgnoreCase));
+    }
+}
