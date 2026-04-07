@@ -39,7 +39,7 @@ public sealed class GenerateApiKeyCommandHandler
 
         // Hash SHA-256 — seul ce hash est persisté
         var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-        var keyHash = Convert.ToHexString(hashBytes).ToLower();
+        var keyHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
 
         var apiKey = UserApiKey.Create(userId, keyHash, DateTime.UtcNow);
         await _repository.UpsertAsync(apiKey, cancellationToken);
