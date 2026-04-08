@@ -10,6 +10,8 @@ public sealed class InMemoryAuthorizationCodeStoreTests
 
     private static AuthorizationCodeEntry CreateEntry(int ttlMinutes = 5) => new(
         UserId.From(Guid.NewGuid()),
+        "Test User",
+        "testuser",
         "test-code-challenge",
         "http://localhost/callback",
         DateTime.UtcNow.AddMinutes(ttlMinutes));

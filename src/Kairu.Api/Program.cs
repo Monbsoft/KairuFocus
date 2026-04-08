@@ -40,6 +40,9 @@ builder.Services.AddHttpContextAccessor();
 // Current user service
 builder.Services.AddScoped<ICurrentUserService, ClaimsCurrentUserService>();
 
+// JWT token generation (shared between Web auth and MCP OAuth)
+builder.Services.AddSingleton<Kairu.Api.Auth.JwtTokenService>();
+
 // Authentication — JWT Bearer + GitHub OAuth
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
     ?? throw new InvalidOperationException("Jwt:SecretKey must be configured in appsettings or user secrets.");

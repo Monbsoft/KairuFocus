@@ -1,7 +1,9 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using Kairu.Api.Auth;
+
 using Kairu.Application.Identity.Commands.GetOrCreateUser;
 using Kairu.Application.OAuth;
 using Kairu.Domain.Common;
@@ -10,7 +12,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using Monbsoft.BrilliantMediator.Abstractions;
 
 namespace Kairu.Api.OAuth;
@@ -19,26 +20,27 @@ namespace Kairu.Api.OAuth;
 [AllowAnonymous]
 public sealed class OAuthController : ControllerBase
 {
+    private const string AcceptedClientId = "kairu-mcp";
     private const string OAuthStateCookieName = ".Kairu.OAuthState";
     private const string DataProtectionPurpose = "Kairu.OAuth.State";
     private const int AuthorizationCodeTtlMinutes = 5;
 
     private readonly IAuthorizationCodeStore _codeStore;
     private readonly IMediator _mediator;
-    private readonly IConfiguration _configuration;
+    private readonly JwtTokenService _jwtTokenService;
     private readonly IDataProtector _protector;
     private readonly ILogger<OAuthController> _logger;
 
     public OAuthController(
         IAuthorizationCodeStore codeStore,
         IMediator mediator,
-        IConfiguration configuration,
+        JwtTokenService jwtTokenService,
         IDataProtectionProvider dataProtectionProvider,
         ILogger<OAuthController> logger)
     {
         _codeStore = codeStore;
         _mediator = mediator;
-        _configuration = configuration;
+        _jwtTokenService = jwtTokenService;
         _protector = dataProtectionProvider.CreateProtector(DataProtectionPurpose);
         _logger = logger;
     }
@@ -79,6 +81,9 @@ public sealed class OAuthController : ControllerBase
         [FromQuery] string? scope)
     {
         // Validate required params
+        if (client_id != AcceptedClientId)
+            return BadRequest(new { error = "invalid_client" });
+
         if (response_type != "code")
             return BadRequest(new { error = "unsupported_response_type" });
 
@@ -89,14 +94,14 @@ public sealed class OAuthController : ControllerBase
             return BadRequest(new { error = "invalid_request", error_description = "redirect_uri is required." });
 
         // Store PKCE state in encrypted cookie (survives GitHub redirect)
-        var statePayload = $"{code_challenge}|{redirect_uri}|{state ?? string.Empty}";
+        var statePayload = JsonSerializer.Serialize(new OAuthStateCookie(code_challenge, redirect_uri, state ?? string.Empty));
         var encrypted = _protector.Protect(statePayload);
 
         Response.Cookies.Append(OAuthStateCookieName, encrypted, new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             MaxAge = TimeSpan.FromMinutes(10),
             Path = "/oauth"
         });
@@ -123,20 +128,19 @@ public sealed class OAuthController : ControllerBase
 
         Response.Cookies.Delete(OAuthStateCookieName, new CookieOptions { Path = "/oauth" });
 
-        string codeChallenge, redirectUri, state;
+        OAuthStateCookie? cookieState;
         try
         {
             var decrypted = _protector.Unprotect(encrypted);
-            var parts = decrypted.Split('|', 3);
-            if (parts.Length != 3) throw new FormatException();
-            codeChallenge = parts[0];
-            redirectUri = parts[1];
-            state = parts[2];
+            cookieState = JsonSerializer.Deserialize<OAuthStateCookie>(decrypted);
+            if (cookieState is null) throw new FormatException();
         }
         catch
         {
             return BadRequest(new { error = "invalid_request", error_description = "Corrupted OAuth state." });
         }
+
+        var (codeChallenge, redirectUri, state) = cookieState;
 
         // Authenticate via GitHub cookie
         var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -173,6 +177,8 @@ public sealed class OAuthController : ControllerBase
 
         var entry = new AuthorizationCodeEntry(
             userResult.Value.UserId,
+            userResult.Value.DisplayName,
+            userResult.Value.Login,
             codeChallenge,
             redirectUri,
             DateTime.UtcNow.AddMinutes(AuthorizationCodeTtlMinutes));
@@ -205,6 +211,9 @@ public sealed class OAuthController : ControllerBase
         if (grant_type != "authorization_code")
             return BadRequest(new { error = "unsupported_grant_type" });
 
+        if (client_id != AcceptedClientId)
+            return BadRequest(new { error = "invalid_client" });
+
         if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(code_verifier) || string.IsNullOrEmpty(redirect_uri))
             return BadRequest(new { error = "invalid_request" });
 
@@ -225,37 +234,17 @@ public sealed class OAuthController : ControllerBase
         if (!string.Equals(computedChallenge, entry.CodeChallenge, StringComparison.Ordinal))
             return BadRequest(new { error = "invalid_grant" });
 
-        // Generate JWT (same format as Web flow)
-        var token = GenerateJwt(entry.UserId);
-        var expiryHours = _configuration.GetValue<int>("Jwt:ExpiryHours", 24);
+        // Generate JWT (same claims as Web flow: sub + name + login)
+        var userResult = new GetOrCreateUserResult(entry.UserId, entry.DisplayName, entry.Login);
+        var token = _jwtTokenService.GenerateToken(userResult);
 
         return Ok(new
         {
             access_token = token,
             token_type = "Bearer",
-            expires_in = expiryHours * 3600
+            expires_in = _jwtTokenService.ExpiryHours * 3600
         });
     }
 
-    private string GenerateJwt(Domain.Identity.UserId userId)
-    {
-        var secretKey = _configuration["Jwt:SecretKey"]
-            ?? throw new InvalidOperationException("Jwt:SecretKey is not configured.");
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expiryHours = _configuration.GetValue<int>("Jwt:ExpiryHours", 24);
-
-        var claims = new[]
-        {
-            new Claim("sub", userId.Value.ToString()),
-        };
-
-        var jwtToken = new JwtSecurityToken(
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(expiryHours),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(jwtToken);
-    }
+    private sealed record OAuthStateCookie(string CodeChallenge, string RedirectUri, string State);
 }
