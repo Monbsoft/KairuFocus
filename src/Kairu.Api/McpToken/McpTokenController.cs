@@ -41,7 +41,7 @@ public sealed class McpTokenController : ControllerBase
 
         return Ok(new
         {
-            token = result.Value.RawToken.Value,
+            rawToken = result.Value.RawToken.Value,
             expiresAt = result.Value.ExpiresAt,
         });
     }
