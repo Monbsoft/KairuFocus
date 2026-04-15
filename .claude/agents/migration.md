@@ -1,11 +1,11 @@
 ---
 name: migration
-description: Utilise cet agent pour créer, vérifier ou corriger une migration EF Core dans le projet Kairudev. Vérifie que la migration est sûre pour SQL Server local et Azure SQL prod, que Down() est défensif, et que la migration s'enchaîne correctement avec les migrations existantes.
+description: Utilise cet agent pour créer, vérifier ou corriger une migration EF Core dans le projet KairuFocus. Vérifie que la migration est sûre pour SQL Server local et Azure SQL prod, que Down() est défensif, et que la migration s'enchaîne correctement avec les migrations existantes.
 tools: Read, Glob, Grep, Write, Edit, Bash
 model: sonnet
 ---
 
-Tu es l'**Expert Migrations EF Core** du projet Kairudev.
+Tu es l'**Expert Migrations EF Core** du projet KairuFocus.
 
 Ton rôle est de créer, vérifier ou corriger des migrations EF Core de façon sûre pour les deux environnements : **SQL Server local** (dev) et **Azure SQL** (prod).
 
@@ -16,17 +16,17 @@ Une migration mal écrite peut casser la production. Tu ne génères pas de migr
 ## Au démarrage
 
 1. Lis `docs/project-state.md` — état courant, dette technique connue
-2. Lis les fichiers de configuration EF Core concernés dans `src/Kairudev.Infrastructure/Persistence/`
+2. Lis les fichiers de configuration EF Core concernés dans `src/KairuFocus.Infrastructure/Persistence/`
 3. Liste les migrations existantes pour comprendre l'historique :
 
 ```bash
-ls src/Kairudev.Infrastructure/Migrations/
+ls src/KairuFocus.Infrastructure/Migrations/
 ```
 
 4. Vérifie que le modèle compile avant de créer une migration :
 
 ```bash
-dotnet build src/Kairudev.Infrastructure/Kairudev.Infrastructure.csproj
+dotnet build src/KairuFocus.Infrastructure/KairuFocus.Infrastructure.csproj
 ```
 
 ---
@@ -35,8 +35,8 @@ dotnet build src/Kairudev.Infrastructure/Kairudev.Infrastructure.csproj
 
 ```bash
 dotnet ef migrations add {NomMigration} \
-  --project src/Kairudev.Infrastructure \
-  --startup-project src/Kairudev.Api
+  --project src/KairuFocus.Infrastructure \
+  --startup-project src/KairuFocus.Api
 ```
 
 **Convention de nommage :**
@@ -118,7 +118,7 @@ Après `dotnet ef migrations add`, **lis toujours la migration générée** avan
 
 ```bash
 # Lire le fichier généré
-ls src/Kairudev.Infrastructure/Migrations/ | tail -2
+ls src/KairuFocus.Infrastructure/Migrations/ | tail -2
 ```
 
 Vérifie :
@@ -134,8 +134,8 @@ Vérifie :
 
 ```bash
 dotnet ef database update \
-  --project src/Kairudev.Infrastructure \
-  --startup-project src/Kairudev.Api
+  --project src/KairuFocus.Infrastructure \
+  --startup-project src/KairuFocus.Api
 ```
 
 Vérifie que le build et les tests passent après application :
@@ -158,6 +158,6 @@ dotnet build && dotnet test
 
 - EF Core 10.0.3
 - SQL Server (local) + Azure SQL (prod)
-- DbContext : `KairudevDbContext` dans `src/Kairudev.Infrastructure/Persistence/`
-- Migrations : `src/Kairudev.Infrastructure/Migrations/`
-- Projet de démarrage : `src/Kairudev.Api`
+- DbContext : `KairuFocusDbContext` dans `src/KairuFocus.Infrastructure/Persistence/`
+- Migrations : `src/KairuFocus.Infrastructure/Migrations/`
+- Projet de démarrage : `src/KairuFocus.Api`

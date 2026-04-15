@@ -4,19 +4,19 @@
     {
       "name": "AppHost (Aspire)",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/Kairudev.AppHost/Kairudev.AppHost.csproj", "--launch-profile", "http"],
+      "runtimeArgs": ["run", "--project", "src/KairuFocus.AppHost/KairuFocus.AppHost.csproj", "--launch-profile", "http"],
       "port": 15100
     },
     {
       "name": "API",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/Kairudev.Api/Kairudev.Api.csproj", "--launch-profile", "http"],
+      "runtimeArgs": ["run", "--project", "src/KairuFocus.Api/KairuFocus.Api.csproj", "--launch-profile", "http"],
       "port": 5205
     },
     {
       "name": "Web (Blazor WASM)",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/Kairudev.Web/Kairudev.Web.csproj", "--launch-profile", "http"],
+      "runtimeArgs": ["run", "--project", "src/KairuFocus.Web/KairuFocus.Web.csproj", "--launch-profile", "http"],
       "port": 5010
     }
   ]

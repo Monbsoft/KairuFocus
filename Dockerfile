@@ -4,11 +4,11 @@ WORKDIR /src
 
 COPY . .
 
-RUN dotnet publish src/Kairu.Api/Kairu.Api.csproj \
+RUN dotnet publish src/KairuFocus.Api/KairuFocus.Api.csproj \
       -c Release -r linux-x64 --self-contained false \
       -o /app/api
 
-RUN dotnet publish src/Kairu.Web/Kairu.Web.csproj \
+RUN dotnet publish src/KairuFocus.Web/KairuFocus.Web.csproj \
       -c Release \
       -o /app/web
 
@@ -24,4 +24,4 @@ COPY --from=build /app/api .
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "Kairu.Api.dll"]
+ENTRYPOINT ["dotnet", "KairuFocus.Api.dll"]

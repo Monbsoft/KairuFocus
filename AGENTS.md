@@ -1,7 +1,7 @@
-# Kairu — Prompt de démarrage projet
+# KairuFocus — Prompt de démarrage projet
 
 ## Contexte produit
-Kairu est une application destinée aux développeurs pour gérer leur activité
+KairuFocus est une application destinée aux développeurs pour gérer leur activité
 quotidienne. Elle regroupe :
 - Une **todo list de micro-tâches** (niveau journée)
 - Un **journal de bord** quotidien
@@ -279,7 +279,7 @@ public sealed class AddTaskCliPresenter : IAddTaskPresenter
 ### Structure de projet
 ```
 src/
-├── Kairu.Domain/
+├── KairuFocus.Domain/
 │   ├── Common/
 │   │   ├── Result.cs              # Result<T> — pas d'exceptions pour le flux normal
 │   │   ├── Entity.cs              # Base entity avec Id
@@ -292,7 +292,7 @@ src/
 │       ├── ITaskRepository.cs     # Interface (implémentée en Infrastructure)
 │       └── DomainErrors.cs
 │
-├── Kairu.Application/
+├── KairuFocus.Application/
 │   └── Tasks/
 │       ├── AddTask/
 │       │   ├── AddTaskRequest.cs
@@ -303,20 +303,20 @@ src/
 │       ├── CompleteTask/
 │       └── DeleteTask/
 │
-├── Kairu.Adapters/
+├── KairuFocus.Adapters/
 │   └── Tasks/
 │       ├── AddTaskCliPresenter.cs
 │       └── TaskViewModel.cs
 │
-└── Kairu.Infrastructure/
+└── KairuFocus.Infrastructure/
     ├── Persistence/
     │   └── JsonTaskRepository.cs      # ou SQLite
     └── DependencyInjection.cs
 
 tests/
-├── Kairu.Domain.Tests/
-├── Kairu.Application.Tests/        # Use Cases testés avec presenters mock
-└── Kairu.Infrastructure.Tests/
+├── KairuFocus.Domain.Tests/
+├── KairuFocus.Application.Tests/        # Use Cases testés avec presenters mock
+└── KairuFocus.Infrastructure.Tests/
 
 docs/
 └── spec.md

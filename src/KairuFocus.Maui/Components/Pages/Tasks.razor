@@ -1,0 +1,234 @@
+@page "/tasks"
+@implements IDisposable
+@using KairuFocus.Maui.Services
+@using KairuFocus.Maui.Auth
+@using KairuFocus.Maui.Helpers
+@inject TaskApiClient Api
+@inject MauiAuthService AuthService
+@inject NavigationManager Nav
+@inject MarkdownService MarkdownSvc
+
+<h2>Tâches</h2>
+
+<div class="mb-3">
+    <input class="form-control mb-2"
+           placeholder="Titre de la tâche…"
+           @bind="newTitle"
+           @bind:event="oninput"
+           @onkeydown="OnKeyDown" />
+    <textarea class="form-control mb-2"
+              placeholder="Description (optionnelle)…"
+              @bind="newDescription"
+              @bind:event="oninput"
+              rows="2"></textarea>
+
+    <div class="mb-2">
+        <div class="d-flex flex-wrap gap-1 mb-1">
+            @foreach (var tag in newTags)
+            {
+                <span class="badge @TagColorClass(tag)">
+                    @tag
+                    <button type="button" class="btn-close btn-close-white ms-1" style="font-size:0.6em;"
+                            @onclick="() => RemoveNewTag(tag)" aria-label="Retirer"></button>
+                </span>
+            }
+        </div>
+        <div class="input-group" style="max-width: 320px;">
+            <input class="form-control form-control-sm"
+                   placeholder="@(newTags.Count >= MaxTags ? "Maximum 5 tags" : "Ajouter un tag… (Entrée)")"
+                   disabled="@(newTags.Count >= MaxTags)"
+                   @bind="newTagInput"
+                   @bind:event="oninput"
+                   @onkeydown="OnNewTagKeyDown" />
+        </div>
+    </div>
+
+    <button class="btn btn-primary" @onclick="AddTask" disabled="@string.IsNullOrWhiteSpace(newTitle)">
+        Ajouter
+    </button>
+</div>
+
+<div class="d-flex gap-2 mb-3">
+    <input class="form-control"
+           placeholder="Rechercher par titre…"
+           value="@searchTerm"
+           @oninput="OnSearchInput" />
+    <select class="form-select" style="max-width: 180px;" value="@statusFilter" @onchange="OnStatusChanged">
+        <option value="OpenOnly">Ouvertes</option>
+        <option value="All">Toutes</option>
+        <option value="Pending">En attente</option>
+        <option value="InProgress">En cours</option>
+        <option value="Done">Terminées</option>
+    </select>
+</div>
+
+@if (errorMessage is not null)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (tasks is null)
+{
+    <p>Chargement…</p>
+}
+else if (tasks.Count == 0)
+{
+    <p class="text-muted">Aucune tâche ne correspond aux filtres.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var task in tasks)
+        {
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="@(task.Status == "Done" ? "text-decoration-line-through text-muted" : "")">
+                            <button class="btn btn-link p-0 text-start fw-bold" @onclick="() => NavigateToDetail(task.Id)">@task.Title</button>
+                        </div>
+                        @if (task.Tags is { Count: > 0 })
+                        {
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                @foreach (var tag in task.Tags)
+                                {
+                                    <span class="badge @TagColorClass(tag)">@tag</span>
+                                }
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(task.Description))
+                        {
+                            <div class="text-muted small mt-1">@((MarkupString)MarkdownSvc.Render(task.Description))</div>
+                        }
+                    </div>
+                    <div class="d-flex gap-2 align-items-center ms-3">
+                        <span class="badge @MarkdownService.StatusBadgeClass(task.Status)">@task.Status</span>
+                        @if (task.Status != "Done")
+                        {
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => NavigateToEdit(task.Id)" title="Modifier">&#x270E;</button>
+                            <button class="btn btn-sm btn-success" @onclick="() => CompleteTask(task.Id)" title="Compléter">&#x2713;</button>
+                        }
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteTask(task.Id)" title="Supprimer">&#x2715;</button>
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private const int MaxTags = 5;
+
+    private static string TagColorClass(string tag) => TagColors.GetClass(tag);
+
+    private List<TaskDto>? tasks;
+    private string newTitle = string.Empty;
+    private string newDescription = string.Empty;
+    private string newTagInput = string.Empty;
+    private List<string> newTags = [];
+    private string? errorMessage;
+    private string searchTerm = string.Empty;
+    private string statusFilter = "OpenOnly";
+    private CancellationTokenSource? _debounceToken;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await AuthService.IsAuthenticatedAsync())
+        {
+            Nav.NavigateTo("/login", forceLoad: false);
+            return;
+        }
+        await LoadTasksAsync();
+    }
+
+    private async Task LoadTasksAsync()
+    {
+        var search = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm.Trim();
+        tasks = await Api.GetAllAsync(search, statusFilter);
+    }
+
+    private void NavigateToDetail(Guid id) => Nav.NavigateTo($"/tasks/{id}");
+
+    private void NavigateToEdit(Guid id) => Nav.NavigateTo($"/tasks/{id}/edit");
+
+    private async Task AddTask()
+    {
+        errorMessage = null;
+        var description = string.IsNullOrWhiteSpace(newDescription) ? null : newDescription.Trim();
+        var added = await Api.AddAsync(newTitle.Trim(), description, newTags.Count > 0 ? newTags : null);
+        if (added is not null)
+        {
+            newTitle = string.Empty;
+            newDescription = string.Empty;
+            newTags = [];
+            newTagInput = string.Empty;
+            await LoadTasksAsync();
+        }
+        else
+        {
+            errorMessage = "Erreur lors de l'ajout de la tâche.";
+        }
+    }
+
+    private void AddNewTagFromInput()
+    {
+        var trimmed = newTagInput.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed) || newTags.Count >= MaxTags) return;
+        if (newTags.Any(t => string.Equals(t, trimmed, StringComparison.OrdinalIgnoreCase))) return;
+        if (trimmed.Length > 30) return;
+        newTags.Add(trimmed);
+        newTagInput = string.Empty;
+    }
+
+    private void RemoveNewTag(string tag) => newTags.Remove(tag);
+
+    private void OnNewTagKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") AddNewTagFromInput();
+    }
+
+    private async Task CompleteTask(Guid id)
+    {
+        errorMessage = null;
+        if (await Api.CompleteAsync(id))
+            await LoadTasksAsync();
+        else
+            errorMessage = "Erreur lors de la complétion.";
+    }
+
+    private async Task DeleteTask(Guid id)
+    {
+        errorMessage = null;
+        if (await Api.DeleteAsync(id))
+            await LoadTasksAsync();
+        else
+            errorMessage = "Erreur lors de la suppression.";
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        _debounceToken?.Cancel();
+        _debounceToken = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(300, _debounceToken.Token);
+            await LoadTasksAsync();
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private async Task OnStatusChanged(ChangeEventArgs e)
+    {
+        statusFilter = e.Value?.ToString() ?? "OpenOnly";
+        await LoadTasksAsync();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(newTitle))
+            await AddTask();
+    }
+
+    public void Dispose() => _debounceToken?.Dispose();
+}
+

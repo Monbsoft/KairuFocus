@@ -1,6 +1,6 @@
-# Agents GitHub Copilot pour Kairudev
+# Agents GitHub Copilot pour KairuFocus
 
-Ce dossier contient les définitions des agents GitHub Copilot spécialisés pour le projet Kairudev.
+Ce dossier contient les définitions des agents GitHub Copilot spécialisés pour le projet KairuFocus.
 
 ## Agents disponibles
 

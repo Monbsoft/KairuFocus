@@ -1,8 +1,8 @@
-# 🚀 Kairudev
+# 🚀 KairuFocus
 
 > Application de gestion d'activité quotidienne pour développeurs.
 
-Kairudev centralise en un seul endroit tout ce dont un développeur a besoin pour rester focus et organisé : todo list de micro-tâches, journal de bord, sessions Pomodoro et intégration avec les outils de ticketing (Jira).
+KairuFocus centralise en un seul endroit tout ce dont un développeur a besoin pour rester focus et organisé : todo list de micro-tâches, journal de bord, sessions Pomodoro et intégration avec les outils de ticketing (Jira).
 
 ---
 
@@ -48,18 +48,18 @@ Web / Maui      →  UI Blazor (WASM + Hybrid)
 
 ```
 src/
-├── Kairudev.Domain/          # 🧠 Bounded Contexts : Tasks, Pomodoro, Journal, Settings, Identity
-├── Kairudev.Application/     # ⚡ 30 use cases CQRS
-├── Kairudev.Infrastructure/  # 🗄️ EF Core + migrations + repositories
-├── Kairudev.Api/             # 🌐 REST API + GitHub OAuth + JWT
-├── Kairudev.Web/             # 💻 Blazor WASM
-├── Kairudev.Maui/            # 📱 .NET MAUI Blazor Hybrid
-├── Kairudev.AppHost/         # 🔭 Aspire orchestration
-└── Kairudev.ServiceDefaults/ # 📊 OpenTelemetry, health checks
+├── KairuFocus.Domain/          # 🧠 Bounded Contexts : Tasks, Pomodoro, Journal, Settings, Identity
+├── KairuFocus.Application/     # ⚡ 30 use cases CQRS
+├── KairuFocus.Infrastructure/  # 🗄️ EF Core + migrations + repositories
+├── KairuFocus.Api/             # 🌐 REST API + GitHub OAuth + JWT
+├── KairuFocus.Web/             # 💻 Blazor WASM
+├── KairuFocus.Maui/            # 📱 .NET MAUI Blazor Hybrid
+├── KairuFocus.AppHost/         # 🔭 Aspire orchestration
+└── KairuFocus.ServiceDefaults/ # 📊 OpenTelemetry, health checks
 tests/
-├── Kairudev.Domain.Tests/
-├── Kairudev.Application.Tests/
-└── Kairudev.Infrastructure.Tests/
+├── KairuFocus.Domain.Tests/
+├── KairuFocus.Application.Tests/
+└── KairuFocus.Infrastructure.Tests/
 docs/
 ├── spec.md                   # 📋 Spécification complète + ADR
 └── project-state.md          # 📍 État de l'itération courante
@@ -83,7 +83,7 @@ Crée une OAuth App sur [github.com/settings/developers](https://github.com/sett
 | Homepage URL | `http://localhost:5010` |
 | Authorization callback URL | `http://localhost:5205/signin-github` |
 
-Puis renseigne les credentials dans `src/Kairudev.Api/appsettings.Development.json` :
+Puis renseigne les credentials dans `src/KairuFocus.Api/appsettings.Development.json` :
 
 ```json
 {
@@ -106,7 +106,7 @@ Puis renseigne les credentials dans `src/Kairudev.Api/appsettings.Development.js
 **Option A — Aspire (recommandé)** : démarre API + Web + dashboard observabilité
 
 ```bash
-dotnet run --project src/Kairudev.AppHost/Kairudev.AppHost.csproj --launch-profile http
+dotnet run --project src/KairuFocus.AppHost/KairuFocus.AppHost.csproj --launch-profile http
 ```
 
 | Service | URL |
@@ -119,10 +119,10 @@ dotnet run --project src/Kairudev.AppHost/Kairudev.AppHost.csproj --launch-profi
 
 ```bash
 # Terminal 1 — API 🌐
-dotnet run --project src/Kairudev.Api/Kairudev.Api.csproj --launch-profile http
+dotnet run --project src/KairuFocus.Api/KairuFocus.Api.csproj --launch-profile http
 
 # Terminal 2 — Web 💻
-dotnet run --project src/Kairudev.Web/Kairudev.Web.csproj --launch-profile http
+dotnet run --project src/KairuFocus.Web/KairuFocus.Web.csproj --launch-profile http
 ```
 
 ### 3️⃣ Lancer les tests
