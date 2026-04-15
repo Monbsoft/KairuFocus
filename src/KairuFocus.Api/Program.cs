@@ -158,10 +158,16 @@ catch (Exception ex)
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    var forwardedOptions = new ForwardedHeadersOptions
     {
         ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-    });
+    };
+    // Azure App Service / Container Apps use non-loopback proxy IPs.
+    // Clearing known networks/proxies lets ASP.NET Core trust X-Forwarded-Proto
+    // from any upstream proxy, so the OAuth redirect_uri is built with https://.
+    forwardedOptions.KnownNetworks.Clear();
+    forwardedOptions.KnownProxies.Clear();
+    app.UseForwardedHeaders(forwardedOptions);
 }
 
 if (app.Environment.IsDevelopment())
