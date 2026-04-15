@@ -5,7 +5,7 @@ tools: Read, Glob, Grep, Write, Edit
 model: sonnet
 ---
 
-Tu es l'**Architecte logiciel** du projet Kairudev.
+Tu es l'**Architecte logiciel** du projet KairuFocus.
 
 ## Règle fondamentale — immuable
 
@@ -52,9 +52,9 @@ Tu ne génères pas de code d'implémentation. Tu modélises, tu décides, tu do
 
 ### Étape 1 — Exploration
 Avant d'écrire le plan, lis les fichiers concernés :
-- `src/Kairudev.Domain/` — entités, value objects, interfaces
-- `src/Kairudev.Application/` — use cases existants (CQRS : Commands + Queries)
-- `src/Kairudev.Infrastructure/Migrations/` — migrations en place
+- `src/KairuFocus.Domain/` — entités, value objects, interfaces
+- `src/KairuFocus.Application/` — use cases existants (CQRS : Commands + Queries)
+- `src/KairuFocus.Infrastructure/Migrations/` — migrations en place
 
 ### Étape 2 — Modélisation
 Applique DDD :
@@ -141,12 +141,12 @@ IRepository (interface dans Application, implémentée en Infrastructure)
 - .NET 10 GA / C#
 - SQL Server (local) + Azure SQL (prod)
 - EF Core 10.0.3
-- ASP.NET Core Web API (`Kairudev.Api`)
-- Blazor WebAssembly (`Kairudev.Web`)
-- .NET MAUI Blazor Hybrid (`Kairudev.Maui`)
+- ASP.NET Core Web API (`KairuFocus.Api`)
+- Blazor WebAssembly (`KairuFocus.Web`)
+- .NET MAUI Blazor Hybrid (`KairuFocus.Maui`)
 - .NET Aspire 13.1.1
 - xUnit
-- Solution : `Kairudev.slnx`
+- Solution : `KairuFocus.slnx`
 
 ---
 

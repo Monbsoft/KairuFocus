@@ -1,0 +1,26 @@
+using KairuFocus.Domain.Tasks;
+
+namespace KairuFocus.Application.Tasks.Common;
+
+public sealed record TaskViewModel(
+    Guid Id,
+    string Title,
+    string? Description,
+    string Status,
+    DateTime CreatedAt,
+    DateTime? CompletedAt,
+    string? JiraTicketKey,
+    List<string> Tags)
+{
+    public static TaskViewModel From(DeveloperTask task) =>
+        new(
+            task.Id.Value,
+            task.Title.Value,
+            task.Description?.Value,
+            task.Status.ToString(),
+            task.CreatedAt,
+            task.CompletedAt,
+            task.JiraTicketKey?.Value,
+            task.Tags.Select(t => t.Value).ToList());
+}
+

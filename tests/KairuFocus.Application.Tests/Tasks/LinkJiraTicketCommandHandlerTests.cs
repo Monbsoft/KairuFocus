@@ -1,0 +1,63 @@
+using KairuFocus.Application.Tasks.Commands.LinkJiraTicket;
+using KairuFocus.Application.Tests.Common;
+using KairuFocus.Domain.Identity;
+using KairuFocus.Domain.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
+
+namespace KairuFocus.Application.Tests.Tasks;
+
+public sealed class LinkJiraTicketCommandHandlerTests
+{
+    private readonly FakeTaskRepository _repository = new();
+    private readonly LinkJiraTicketCommandHandler _handler;
+
+    public LinkJiraTicketCommandHandlerTests()
+    {
+        _handler = new LinkJiraTicketCommandHandler(_repository, new FakeCurrentUserService(), NullLogger<LinkJiraTicketCommandHandler>.Instance);
+    }
+
+    private static DeveloperTask CreateTask()
+    {
+        var title = TaskTitle.Create("Test task").Value;
+        return DeveloperTask.Create(title, null, DateTime.UtcNow, FakeCurrentUserService.TestUserId);
+    }
+
+    [Fact]
+    public async Task Should_LinkJiraTicket_When_TaskExistsAndKeyIsValid()
+    {
+        var task = CreateTask();
+        _repository.Tasks.Add(task);
+
+        var result = await _handler.Handle(
+            new LinkJiraTicketCommand(task.Id.Value, "PROJ-123"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("PROJ-123", task.JiraTicketKey!.Value);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFound_When_TaskDoesNotExist()
+    {
+        var result = await _handler.Handle(
+            new LinkJiraTicketCommand(Guid.NewGuid(), "PROJ-123"));
+
+        Assert.True(result.IsNotFound);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("invalid")]
+    [InlineData("proj-123")]
+    public async Task Should_ReturnFailure_When_JiraKeyFormatIsInvalid(string invalidKey)
+    {
+        var task = CreateTask();
+        _repository.Tasks.Add(task);
+
+        var result = await _handler.Handle(
+            new LinkJiraTicketCommand(task.Id.Value, invalidKey));
+
+        Assert.False(result.IsSuccess);
+        Assert.False(result.IsNotFound);
+        Assert.NotNull(result.Error);
+    }
+}

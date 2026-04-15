@@ -1,0 +1,5 @@
+using Monbsoft.BrilliantMediator.Abstractions.Commands;
+
+namespace KairuFocus.Application.Tasks.Commands.UnlinkJiraTicket;
+
+public sealed record UnlinkJiraTicketCommand(Guid TaskId) : ICommand<UnlinkJiraTicketResult>;

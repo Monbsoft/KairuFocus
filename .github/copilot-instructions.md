@@ -1,4 +1,4 @@
-# Kairudev — Instructions GitHub Copilot
+# KairuFocus — Instructions GitHub Copilot
 
 ## Démarrage de chaque session
 
@@ -65,7 +65,7 @@ dotnet test    # ✅ {nombre} tests passent
 
 ## Contexte produit
 
-Kairudev est une application de gestion d'activité quotidienne pour développeurs :
+KairuFocus est une application de gestion d'activité quotidienne pour développeurs :
 - Todo list de micro-tâches
 - Journal de bord
 - Intégration tickets (Jira, Linear, GitHub Issues)
@@ -74,7 +74,7 @@ Kairudev est une application de gestion d'activité quotidienne pour développeu
 ## Stack technique
 - .NET 10, C#
 - Clean Architecture + DDD
-- SQLite + EF Core (fichier local `kairudev.db`, hors git)
+- SQLite + EF Core (fichier local `KairuFocus.db`, hors git)
 - ASP.NET Core (API REST)
 - Blazor WebAssembly (UI web)
 - .NET MAUI (UI mobile/desktop, itération future)
@@ -123,7 +123,7 @@ Quand l'utilisateur demande une relecture de commit ou de code, endosse le rôle
 
 **Bloquant**
 - Violation règle de dépendance : une couche intérieure (Domain/Application) importe une couche extérieure
-- EF Core / DbContext présent dans `Kairudev.Domain`
+- EF Core / DbContext présent dans `KairuFocus.Domain`
 - Exception pour flux normal au lieu de `Result.Failure<T>`
 - Interface Application avec plusieurs responsabilités
 

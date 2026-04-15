@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KairuFocus.Api/KairuFocus.Api.csproj" />
+    <Project Path="src/KairuFocus.AppHost/KairuFocus.AppHost.csproj" />
+    <Project Path="src/KairuFocus.Application/KairuFocus.Application.csproj" />
+    <Project Path="src/KairuFocus.Domain/KairuFocus.Domain.csproj" />
+    <Project Path="src/KairuFocus.Infrastructure/KairuFocus.Infrastructure.csproj" />
+    <Project Path="src/KairuFocus.Maui/KairuFocus.Maui.csproj">
+      <Build Solution="Release|*" Project="false" />
+      <Deploy Solution="Release|*" />
+    </Project>
+    <Project Path="src/KairuFocus.ServiceDefaults/KairuFocus.ServiceDefaults.csproj" />
+    <Project Path="src/KairuFocus.Web/KairuFocus.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KairuFocus.Application.Tests/KairuFocus.Application.Tests.csproj" />
+    <Project Path="tests/KairuFocus.Domain.Tests/KairuFocus.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
