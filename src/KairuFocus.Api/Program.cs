@@ -138,22 +138,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Apply database migrations safely
-try
+// Apply database migrations — the app cannot start without a valid schema
+using (var scope = app.Services.CreateScope())
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<KairuFocusDbContext>();
-        await db.Database.MigrateAsync();
-    }
-}
-catch (Exception ex)
-{
-    Console.Error.WriteLine($"ERROR: Failed to apply migrations: {ex.Message}");
-    // Log the error but don't crash the app if migrations fail
-    // This can happen if the database connection is not ready yet
-    if (!builder.Environment.IsProduction())
-        throw;
+    var db = scope.ServiceProvider.GetRequiredService<KairuFocusDbContext>();
+    Console.WriteLine("Applying database migrations...");
+    await db.Database.MigrateAsync();
+    Console.WriteLine("Database migrations applied successfully.");
 }
 
 if (!app.Environment.IsDevelopment())
