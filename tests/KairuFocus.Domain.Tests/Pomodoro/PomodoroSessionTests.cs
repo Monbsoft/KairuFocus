@@ -241,4 +241,18 @@ public sealed class PomodoroSessionTests
         Assert.True(result.IsFailure);
         Assert.Equal(PomodoroErrors.Pomodoro.SessionNotActive, result.Error);
     }
+
+    [Fact]
+    public void Should_ReturnFailure_When_UnlinkingOnCompletedSession()
+    {
+        var session = CreateActive();
+        var taskId = TaskId.New();
+        session.LinkTask(taskId);
+        session.Complete(Now.AddMinutes(25));
+
+        var result = session.UnlinkTask(taskId);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PomodoroErrors.Pomodoro.SessionNotActive, result.Error);
+    }
 }

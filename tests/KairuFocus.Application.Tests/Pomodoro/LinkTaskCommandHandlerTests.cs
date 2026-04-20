@@ -81,5 +81,6 @@ public sealed class LinkTaskCommandHandlerTests
 
         Assert.True(result.IsSuccess);
         Assert.Contains(task.Id, session.LinkedTaskIds);
+        Assert.Equal(1, _sessionRepository.UpdateAsyncCallCount);
     }
 }

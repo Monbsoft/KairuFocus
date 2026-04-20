@@ -13,6 +13,7 @@ using KairuFocus.Application.Pomodoro.Queries.GetTodaySprintSessions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Monbsoft.BrilliantMediator.Abstractions;
+using PomodoroErrors = KairuFocus.Domain.Pomodoro.DomainErrors;
 
 namespace KairuFocus.Api.Pomodoro;
 
@@ -135,9 +136,13 @@ public sealed class PomodoroController : ControllerBase
     {
         var result = await _mediator.DispatchAsync<UnlinkTaskCommand, UnlinkTaskResult>(new UnlinkTaskCommand(id), ct);
 
-        return result.IsSuccess
-            ? NoContent()
-            : BadRequest(new { error = result.Error });
+        return result switch
+        {
+            { IsSuccess: true } => NoContent(),
+            { IsNotFound: true } => NotFound(),
+            _ when result.Error == PomodoroErrors.Pomodoro.NoActiveSession => Conflict(new { error = result.Error }),
+            _ => BadRequest(new { error = result.Error })
+        };
     }
 
     [HttpPost("session/tasks")]

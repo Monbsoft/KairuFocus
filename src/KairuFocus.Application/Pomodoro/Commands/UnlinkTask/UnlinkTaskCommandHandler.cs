@@ -3,6 +3,7 @@ using KairuFocus.Domain.Pomodoro;
 using KairuFocus.Domain.Tasks;
 using Microsoft.Extensions.Logging;
 using Monbsoft.BrilliantMediator.Abstractions.Commands;
+using PomodoroErrors = KairuFocus.Domain.Pomodoro.DomainErrors;
 
 namespace KairuFocus.Application.Pomodoro.Commands.UnlinkTask;
 
@@ -34,12 +35,16 @@ public sealed class UnlinkTaskCommandHandler : ICommandHandler<UnlinkTaskCommand
         if (session is null)
         {
             _logger.LogWarning("No active session found for user {UserId}", userId);
-            return UnlinkTaskResult.Failure("No active session");
+            return UnlinkTaskResult.Failure(PomodoroErrors.Pomodoro.NoActiveSession);
         }
 
         var result = session.UnlinkTask(TaskId.From(command.TaskId));
         if (result.IsFailure)
+        {
+            if (result.Error == PomodoroErrors.Pomodoro.TaskNotLinked)
+                return UnlinkTaskResult.NotFound();
             return UnlinkTaskResult.Failure(result.Error);
+        }
 
         await _sessionRepository.UpdateAsync(session, cancellationToken);
         _logger.LogInformation("Task {TaskId} unlinked from session {SessionId} for user {UserId}", command.TaskId, session.Id.Value, userId);

@@ -39,7 +39,7 @@ public sealed class CreateTaskDuringSessionCommandHandler : ICommandHandler<Crea
         if (session is null)
         {
             _logger.LogWarning("No active session found for user {UserId}", userId);
-            return CreateTaskDuringSessionResult.Failure("No active session");
+            return CreateTaskDuringSessionResult.Failure(PomodoroErrors.Pomodoro.NoActiveSession);
         }
 
         if (session.SessionType != PomodoroSessionType.Sprint)

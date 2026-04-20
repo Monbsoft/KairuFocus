@@ -26,11 +26,11 @@ public sealed class UnlinkTaskCommandHandlerTests
         var result = await _sut.Handle(new UnlinkTaskCommand(Guid.NewGuid()));
 
         Assert.False(result.IsSuccess);
-        Assert.Equal("No active session", result.Error);
+        Assert.Equal(PomodoroErrors.Pomodoro.NoActiveSession, result.Error);
     }
 
     [Fact]
-    public async Task Should_ReturnFailure_When_TaskNotLinked()
+    public async Task Should_ReturnNotFound_When_TaskNotLinked()
     {
         var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25, FakeCurrentUserService.TestUserId);
         session.Start(DateTime.UtcNow);
@@ -39,7 +39,7 @@ public sealed class UnlinkTaskCommandHandlerTests
         var result = await _sut.Handle(new UnlinkTaskCommand(Guid.NewGuid()));
 
         Assert.False(result.IsSuccess);
-        Assert.Equal(PomodoroErrors.Pomodoro.TaskNotLinked, result.Error);
+        Assert.True(result.IsNotFound);
     }
 
     [Fact]
@@ -55,5 +55,6 @@ public sealed class UnlinkTaskCommandHandlerTests
 
         Assert.True(result.IsSuccess);
         Assert.DoesNotContain(taskId, session.LinkedTaskIds);
+        Assert.Equal(1, _sessionRepository.UpdateAsyncCallCount);
     }
 }
