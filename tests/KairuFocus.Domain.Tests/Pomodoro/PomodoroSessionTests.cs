@@ -169,4 +169,39 @@ public sealed class PomodoroSessionTests
 
         Assert.Equal(2, session.LinkedTaskIds.Count);
     }
+
+    [Fact]
+    public void Should_ReturnFailure_When_LinkingTaskOnPlannedSession()
+    {
+        var session = CreatePlanned();
+
+        var result = session.LinkTask(TaskId.New());
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PomodoroErrors.Pomodoro.SessionNotActive, result.Error);
+    }
+
+    [Fact]
+    public void Should_ReturnFailure_When_LinkingTaskOnShortBreakSession()
+    {
+        var session = PomodoroSession.Create(PomodoroSessionType.ShortBreak, 5, OwnerId);
+        session.Start(Now);
+
+        var result = session.LinkTask(TaskId.New());
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PomodoroErrors.Pomodoro.TaskLinkingNotAllowedForBreak, result.Error);
+    }
+
+    [Fact]
+    public void Should_ReturnFailure_When_LinkingTaskOnLongBreakSession()
+    {
+        var session = PomodoroSession.Create(PomodoroSessionType.LongBreak, 15, OwnerId);
+        session.Start(Now);
+
+        var result = session.LinkTask(TaskId.New());
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PomodoroErrors.Pomodoro.TaskLinkingNotAllowedForBreak, result.Error);
+    }
 }

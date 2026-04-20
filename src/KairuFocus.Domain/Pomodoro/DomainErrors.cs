@@ -11,5 +11,6 @@ public static class DomainErrors
         public const string TaskNotLinked = "Task is not linked to this session.";
         public const string InvalidDuration = "Duration must be between 1 and 120 minutes.";
         public const string InvalidTransition = "Invalid status transition.";
+        public const string TaskLinkingNotAllowedForBreak = "Linking a task is only allowed during a Sprint session.";
     }
 }
