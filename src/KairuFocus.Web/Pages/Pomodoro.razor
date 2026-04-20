@@ -131,8 +131,14 @@ else
                         @foreach (var task in _linkedTasks)
                         {
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span class="@(task.Status == "Done" ? "text-decoration-line-through text-muted" : "")">
-                                    @task.Title
+                                <span class="d-flex gap-2 align-items-center">
+                                    <span class="@(task.Status == "Done" ? "text-decoration-line-through text-muted" : "")">
+                                        @task.Title
+                                    </span>
+                                    @if (task.Tags is { Count: > 0 })
+                                    {
+                                        <span class="badge bg-light text-dark border">@task.Tags[0]</span>
+                                    }
                                 </span>
                                 <span class="d-flex gap-2 align-items-center">
                                     <span class="badge @BadgeClass(task.Status)">@task.Status</span>
