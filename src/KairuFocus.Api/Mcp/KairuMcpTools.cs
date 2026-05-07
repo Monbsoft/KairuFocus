@@ -20,10 +20,12 @@ public sealed class KairuFocusMcpTools(IMediator mediator)
     [McpServerTool, Description("Create a new task in KairuFocus. Returns the created task as JSON.")]
     public async Task<string> create_task(
         [Description("Task title (required, max 200 characters)")] string title,
-        [Description("Optional task description")] string? description = null)
+        [Description("Optional task description")] string? description = null,
+        [Description("Optional tags (e.g. Jira ticket key 'PROJ-123', or 'backend', 'urgent'). Each tag max 30 chars.")]
+            string[]? tags = null)
     {
         var result = await mediator.DispatchAsync<AddTaskCommand, AddTaskResult>(
-            new AddTaskCommand(title, description));
+            new AddTaskCommand(title, description, tags?.ToList()));
 
         return result.IsSuccess
             ? JsonSerializer.Serialize(result.Task, JsonOptions)
