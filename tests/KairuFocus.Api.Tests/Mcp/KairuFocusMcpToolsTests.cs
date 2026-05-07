@@ -129,4 +129,24 @@ public sealed class KairuFocusMcpToolsTests
         Assert.NotNull(captured);
         Assert.Null(captured!.Tags);
     }
+
+    [Fact]
+    public async Task Should_pass_null_tags_When_create_task_called_without_tags()
+    {
+        AddTaskCommand? captured = null;
+        var mediator = new TestMediator
+        {
+            DispatchResult = cmd =>
+            {
+                captured = (AddTaskCommand)cmd;
+                return AddTaskResult.Success(SampleTask());
+            }
+        };
+        var tools = new KairuFocusMcpTools(mediator);
+
+        await tools.create_task(title: "No tags here");
+
+        Assert.NotNull(captured);
+        Assert.Null(captured!.Tags);
+    }
 }
