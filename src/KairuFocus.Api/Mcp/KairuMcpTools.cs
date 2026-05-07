@@ -3,6 +3,7 @@ using System.Text.Json;
 using KairuFocus.Application.Tasks.Commands.AddTask;
 using KairuFocus.Application.Tasks.Commands.CompleteTask;
 using KairuFocus.Application.Tasks.Commands.DeleteTask;
+using KairuFocus.Application.Tasks.Commands.UpdateTask;
 using KairuFocus.Application.Tasks.Queries.ListTasks;
 using ModelContextProtocol.Server;
 using Monbsoft.BrilliantMediator.Abstractions;
@@ -20,14 +21,43 @@ public sealed class KairuFocusMcpTools(IMediator mediator)
     [McpServerTool, Description("Create a new task in KairuFocus. Returns the created task as JSON.")]
     public async Task<string> create_task(
         [Description("Task title (required, max 200 characters)")] string title,
-        [Description("Optional task description")] string? description = null)
+        [Description("Optional task description")] string? description = null,
+        [Description("Optional tags (e.g. Jira ticket key 'PROJ-123', or 'backend', 'urgent'). Each tag max 30 chars.")]
+            string[]? tags = null)
     {
         var result = await mediator.DispatchAsync<AddTaskCommand, AddTaskResult>(
-            new AddTaskCommand(title, description));
+            new AddTaskCommand(title, description, tags?.ToList()));
 
         return result.IsSuccess
             ? JsonSerializer.Serialize(result.Task, JsonOptions)
             : $"Error: {result.Error}";
+    }
+
+    [McpServerTool, Description(
+        "Update an existing task in KairuFocus. " +
+        "REPLACE semantics: title, description, and tags are all overwritten. " +
+        "Tags = null or [] CLEARS all tags. " +
+        "Description = null CLEARS the description. " +
+        "If you only want to rename, you MUST re-supply the existing description and tags.")]
+    public async Task<string> update_task(
+        [Description("Task ID (GUID format)")] string taskId,
+        [Description("New title (required, max 200 characters)")] string title,
+        [Description("New description, or null to clear it")] string? description = null,
+        [Description("Full list of tags. null or [] removes all tags. Each tag max 30 chars.")]
+            string[]? tags = null)
+    {
+        if (!Guid.TryParse(taskId, out var guid))
+            return "Error: taskId must be a valid GUID.";
+
+        var result = await mediator.DispatchAsync<UpdateTaskCommand, UpdateTaskResult>(
+            new UpdateTaskCommand(guid, title, description, tags?.ToList()));
+
+        return result switch
+        {
+            { IsSuccess: true } => JsonSerializer.Serialize(result.Task, JsonOptions),
+            { IsNotFound: true } => $"Error: Task {taskId} not found.",
+            _ => $"Error: {result.Error}"
+        };
     }
 
     [McpServerTool, Description("List tasks in KairuFocus. Returns a JSON array of tasks.")]
