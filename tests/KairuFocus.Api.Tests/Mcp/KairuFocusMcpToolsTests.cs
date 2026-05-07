@@ -49,7 +49,7 @@ public sealed class KairuFocusMcpToolsTests
     [Fact]
     public async Task Should_return_error_When_update_task_called_with_invalid_guid()
     {
-        var mediator = new TestMediator(); // pas de DispatchResult — ne devrait pas être appelé
+        var mediator = new TestMediator(); // No DispatchResult: should not be called.
         var tools = new KairuFocusMcpTools(mediator);
 
         var result = await tools.update_task(
