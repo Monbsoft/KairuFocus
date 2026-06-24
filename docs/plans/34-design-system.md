@@ -711,7 +711,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 
 ---
 
-## Phase 8 — Settings
+## Phase 8 — Settings ✅ complétée le 2026-06-24
 
 ### Settings.razor
 
@@ -895,6 +895,14 @@ feat(34): docs — mise à jour project-state.md + spec.md
 - **Bouton `nb-add-btn` conservé natif** : le bouton "+ note" garde sa classe CSS propre plutôt que d'utiliser `<Button Variant="ghost" Size="...">` car son rendu "tiret pointillé inline" ne correspond à aucun variant DS existant. `min-height: var(--target-min)` (44px) appliqué directement dans le CSS isolé — correction WCAG effective.
 
 - **`@using KairuFocus.Web.Helpers` conservé** : la directive `@using` pointe vers le namespace `Helpers` qui contient `TagColors.cs`. Elle ne cause aucune erreur de compilation même si `TagColors` n'est plus appelé — le using est simplement inutilisé mais inoffensif. Il peut être supprimé lors du nettoyage de `TagColors.cs`.
+
+### Phase 8 (Settings) — complétée le 2026-06-24
+
+- **`EditForm` retiré** : le composant `Button` force `type="button"` dans son markup — il est impossible de rendre un bouton `type="submit"` via le composant DS sans modifier son implémentation. L'`EditForm` avec `OnValidSubmit` est remplacé par un `<div>` wrapper : la validation reste 100% manuelle dans `SavePomodoroSettings`, comportement identique à l'original.
+
+- **Section "Objectif de focus" absente** : le JSX `SettingsScreen.jsx` inclut une section "🎯 Objectif de focus" (sprints visés par jour) absente dans le `Settings.razor` d'origine. Cette section n'a pas d'équivalent dans l'API (`SettingsApiClient` ne possède pas de propriété `SprintGoal`). Omise conformément à la règle "aucun nouvel endpoint, présentation seule".
+
+- **Chaînes FR en dur conservées** : labels "Sprint (min)", "Pause courte", "Pause longue", messages de validation, texte du modal — `Settings.razor` n'utilisait pas `@Loc` avant Phase 8. Même dette i18n que les phases précédentes.
 
 ### Phase 0 (fondation CSS) — complétée le 2026-06-24
 

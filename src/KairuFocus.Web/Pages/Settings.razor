@@ -7,176 +7,205 @@
 @inject IJSRuntime JSRuntime
 @inject ISoundService SoundService
 
-<h2>⚙ Paramètres</h2>
+<h1 class="kf-settings__title">⚙ Paramètres</h1>
 
 @if (!_loaded)
 {
-    <p>Chargement…</p>
+    <!-- Skeleton Doherty — évite le blank-screen pendant le chargement -->
+    <div class="kf-settings-skel" aria-busy="true" aria-label="Chargement des paramètres">
+        <div class="kf-skel kf-settings-skel__card"></div>
+        <div class="kf-skel kf-settings-skel__card"></div>
+        <div class="kf-skel kf-settings-skel__card"></div>
+        <div class="kf-skel kf-settings-skel__card"></div>
+    </div>
 }
 else
 {
-    <div style="max-width: 600px">
-        <!-- Theme Section -->
-        <div class="mb-5">
-            <h4>🎨 Thème</h4>
-            <div class="mb-3">
-                <label class="form-label">Préférence de thème</label>
-                <select class="form-select" @bind="_selectedTheme" @bind:after="OnThemeChanged">
+    <div class="kf-settings">
+
+        <!-- ── Section Thème ─────────────────────────────────────────── -->
+        <Card class="kf-section">
+            <h2 class="kf-section__title">🎨 Thème</h2>
+            <div class="kf-field-row">
+                <label class="kf-field-label" for="themeSelect">Préférence de thème</label>
+                <select id="themeSelect" class="kf-select" @bind="_selectedTheme" @bind:after="OnThemeChanged">
                     <option value="Light">☀️ Clair</option>
                     <option value="Dark">🌙 Sombre</option>
                     <option value="System">⚙️ Système</option>
                 </select>
-                <div class="form-text">Le thème sera appliqué immédiatement et sauvegardé.</div>
+                <div class="kf-hint">Le thème est appliqué immédiatement et sauvegardé.</div>
             </div>
-        </div>
+        </Card>
 
-        <!-- Ringtone Section -->
-        <div class="mb-5">
-            <h4>🔔 Sonnerie Pomodoro</h4>
-            <div class="mb-3">
-                <label class="form-label">Son de fin de session</label>
-                <div class="d-flex gap-2 align-items-center">
-                    <select class="form-select" @bind="_selectedRingtone" @bind:after="OnRingtoneChanged">
+        <!-- ── Section Sonnerie ──────────────────────────────────────── -->
+        <Card class="kf-section">
+            <h2 class="kf-section__title">🔔 Sonnerie Pomodoro</h2>
+            <div class="kf-inline">
+                <div class="kf-inline-grow">
+                    <label class="kf-field-label" for="ringtoneSelect">Son de fin de session</label>
+                    <select id="ringtoneSelect" class="kf-select" @bind="_selectedRingtone" @bind:after="OnRingtoneChanged">
                         <option value="None">🔇 Aucun son</option>
                         <option value="AlarmClock">⏰ Réveil</option>
                         <option value="Bird">🐦 Oiseau</option>
                     </select>
-                    <button type="button" class="btn btn-outline-secondary" @onclick="PreviewRingtone"
-                            disabled="@(_selectedRingtone == "None")">
-                        ▶ Tester
-                    </button>
                 </div>
-                <div class="form-text">Joué automatiquement à la fin de chaque sprint ou pause.</div>
+                <Button Variant="secondary"
+                        Disabled="@(_selectedRingtone == "None")"
+                        OnClick="PreviewRingtone">▶ Tester</Button>
             </div>
-        </div>
+            <div class="kf-hint">Joué automatiquement à la fin de chaque sprint ou pause.</div>
+        </Card>
 
-        <!-- MCP Token Section -->
-        <div class="mb-5">
-            <h4>Token MCP</h4>
+        <!-- ── Section Token MCP ─────────────────────────────────────── -->
+        <Card class="kf-section">
+            <h2 class="kf-section__title">Token MCP</h2>
 
             @if (_mcpLoading)
             {
-                <p class="text-muted">Chargement du statut…</p>
+                <p class="kf-mcp-empty">Chargement du statut…</p>
             }
             else if (_mcpLoadError)
             {
-                <p class="text-danger mb-2">Impossible de charger le statut du token. Veuillez rafraîchir la page.</p>
+                <Alert Tone="danger">Impossible de charger le statut du token. Veuillez rafraîchir la page.</Alert>
             }
             else if (_mcpHasToken)
             {
-                <p class="mb-2">
-                    Token actif — expire le
-                    <strong>@(_mcpExpiresAt?.ToLocalTime().ToString("dd/MM/yyyy") ?? "—")</strong>
-                </p>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-primary"
-                            @onclick="RegenerateToken" disabled="@_mcpActionInProgress">
-                        @(_mcpActionInProgress ? "En cours…" : "Régénérer")
-                    </button>
-                    <button type="button" class="btn btn-outline-danger"
-                            @onclick="RevokeToken" disabled="@_mcpActionInProgress">
-                        @(_mcpActionInProgress ? "En cours…" : "Révoquer")
-                    </button>
+                <div class="kf-mcp-status">
+                    <Badge Variant="done">Actif</Badge>
+                    <span>Expire le <strong>@(_mcpExpiresAt?.ToLocalTime().ToString("dd/MM/yyyy") ?? "—")</strong></span>
+                </div>
+                <div class="kf-actions" style="margin-top: 0">
+                    <Button Variant="secondary"
+                            Disabled="@_mcpActionInProgress"
+                            OnClick="RegenerateToken">@(_mcpActionInProgress ? "En cours…" : "Régénérer")</Button>
+                    <Button Variant="danger"
+                            Disabled="@_mcpActionInProgress"
+                            OnClick="RevokeToken">@(_mcpActionInProgress ? "En cours…" : "Révoquer")</Button>
                 </div>
             }
             else
             {
-                <p class="text-muted mb-2">Aucun token MCP configuré.</p>
-                <button type="button" class="btn btn-primary"
-                        @onclick="GenerateToken" disabled="@_mcpActionInProgress">
-                    @(_mcpActionInProgress ? "Génération…" : "Générer un token")
-                </button>
+                <p class="kf-mcp-empty">Aucun token MCP configuré.</p>
+                <Button Variant="primary"
+                        Disabled="@_mcpActionInProgress"
+                        OnClick="GenerateToken">@(_mcpActionInProgress ? "Génération…" : "Générer un token")</Button>
             }
 
             @if (_mcpError is not null)
             {
-                <div class="alert alert-danger mt-3">@_mcpError</div>
+                <div class="kf-mcp-error">
+                    <Alert Tone="danger">@_mcpError</Alert>
+                </div>
             }
-        </div>
+        </Card>
 
-        <!-- MCP Token One-Shot Modal -->
+        <!-- ── Modal Token MCP (one-shot) ───────────────────────────── -->
         @if (_mcpRawToken is not null)
         {
-            <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5);" role="dialog" aria-modal="true" aria-labelledby="mcpTokenModalTitle">
+            <div class="modal d-block kf-modal-scrim"
+                 tabindex="-1"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="mcpTokenModalTitle">
                 <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
+                    <div class="modal-content kf-modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="mcpTokenModalTitle">Token MCP généré</h5>
                         </div>
                         <div class="modal-body">
-                            <div class="alert alert-warning">
+                            <Alert Tone="warning">
                                 <strong>Attention :</strong> Ce token ne sera plus affiché. Copiez-le maintenant.
-                            </div>
-                            <label class="form-label" for="mcpTokenValue">Token</label>
-                            <div class="d-flex gap-2">
-                                <input id="mcpTokenValue" type="text" class="form-control font-monospace"
-                                       readonly value="@_mcpRawToken" />
-                                <button type="button" class="btn btn-outline-secondary"
-                                        @onclick="CopyTokenToClipboard">
-                                    @(_mcpCopied ? "Copie OK" : "Copier")
-                                </button>
+                            </Alert>
+                            <div style="margin-top: 0.75rem;">
+                                <label class="kf-field-label" for="mcpTokenValue">Token</label>
+                                <div class="kf-inline">
+                                    <input id="mcpTokenValue"
+                                           type="text"
+                                           class="kf-token-input"
+                                           readonly
+                                           value="@_mcpRawToken" />
+                                    <Button Variant="secondary"
+                                            OnClick="CopyTokenToClipboard">@(_mcpCopied ? "Copie OK" : "Copier")</Button>
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" @onclick="DismissTokenModal">
-                                J'ai copié, fermer
-                            </button>
+                            <Button Variant="primary" OnClick="DismissTokenModal">J'ai copié, fermer</Button>
                         </div>
                     </div>
                 </div>
             </div>
         }
 
-        <hr class="my-4" />
-        <h4>Pomodoro</h4>
-        <EditForm Model="_form" OnValidSubmit="SavePomodoroSettings">
-            <DataAnnotationsValidator />
+        <!-- ── Section Pomodoro ──────────────────────────────────────── -->
+        <Card class="kf-section">
+            <h2 class="kf-section__title">🍅 Pomodoro</h2>
+            <EditForm Model="_form" OnValidSubmit="SavePomodoroSettings">
+                <DataAnnotationsValidator />
+                <div class="kf-pomo-form">
 
-            <div class="mb-3">
-                <label class="form-label">Durée du sprint (minutes)</label>
-                <input type="number" class="form-control" @bind="_form.SprintDuration" min="1" max="120" />
-                <div class="form-text">Entre 1 et 120 minutes. Valeur par défaut : 25 minutes.</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Durée de la pause courte (minutes)</label>
-                <input type="number" class="form-control" @bind="_form.ShortBreakDuration" min="1" max="120" />
-                <div class="form-text">Entre 1 et 120 minutes. Valeur par défaut : 5 minutes.</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Durée de la pause longue (minutes)</label>
-                <input type="number" class="form-control" @bind="_form.LongBreakDuration" min="1" max="120" />
-                <div class="form-text">Entre 1 et 120 minutes. Valeur par défaut : 15 minutes.</div>
-            </div>
-
-            <div class="alert alert-info">
-                <strong>ℹ️ Rappel :</strong> Une pause longue est recommandée tous les 4 sprints.
-            </div>
-
-            @if (_successMessage is not null)
-            {
-                <div class="alert alert-success">
-                    ✓ @_successMessage
+                <div class="kf-grid3">
+                    <div>
+                        <label class="kf-field-label" for="sprintDuration">Sprint (min)</label>
+                        <input id="sprintDuration"
+                               type="number"
+                               class="kf-input"
+                               @bind="_form.SprintDuration"
+                               min="1"
+                               max="120" />
+                    </div>
+                    <div>
+                        <label class="kf-field-label" for="shortBreakDuration">Pause courte</label>
+                        <input id="shortBreakDuration"
+                               type="number"
+                               class="kf-input"
+                               @bind="_form.ShortBreakDuration"
+                               min="1"
+                               max="120" />
+                    </div>
+                    <div>
+                        <label class="kf-field-label" for="longBreakDuration">Pause longue</label>
+                        <input id="longBreakDuration"
+                               type="number"
+                               class="kf-input"
+                               @bind="_form.LongBreakDuration"
+                               min="1"
+                               max="120" />
+                    </div>
                 </div>
-            }
 
-            @if (_errorMessage is not null)
-            {
-                <div class="alert alert-danger">
-                    ⚠ @_errorMessage
+                <Alert Tone="info">
+                    <strong>Rappel :</strong> Une pause longue est recommandée tous les 4 sprints. Entre 1 et 120 minutes.
+                </Alert>
+
+                @if (_successMessage is not null)
+                {
+                    <div style="margin-top: 0.75rem;">
+                        <Alert Tone="success">@_successMessage</Alert>
+                    </div>
+                }
+
+                @if (_errorMessage is not null)
+                {
+                    <div style="margin-top: 0.75rem;">
+                        <Alert Tone="danger">@_errorMessage</Alert>
+                    </div>
+                }
+
+                <div class="kf-actions">
+                    <Button Type="submit"
+                            Variant="primary"
+                            Disabled="@_saving">
+                        @(_saving ? "Enregistrement…" : "Enregistrer")
+                    </Button>
+                    <Button Variant="secondary"
+                            Disabled="@_saving"
+                            OnClick="ResetToDefaults">Réinitialiser</Button>
                 </div>
-            }
+                </div>
+            </EditForm>
+        </Card>
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary" disabled="@_saving">
-                    @(_saving ? "Enregistrement…" : "Enregistrer")
-                </button>
-                <button type="button" class="btn btn-outline-secondary" @onclick="ResetToDefaults" disabled="@_saving">
-                    Réinitialiser
-                </button>
-            </div>
-        </EditForm>
     </div>
 }
 
@@ -363,9 +392,9 @@ else
             effectiveTheme = isDark ? "Dark" : "Light";
         }
 
-        await JSRuntime.InvokeVoidAsync("eval", 
-            effectiveTheme == "Dark" 
-                ? "document.documentElement.setAttribute('data-bs-theme', 'dark')" 
+        await JSRuntime.InvokeVoidAsync("eval",
+            effectiveTheme == "Dark"
+                ? "document.documentElement.setAttribute('data-bs-theme', 'dark')"
                 : "document.documentElement.setAttribute('data-bs-theme', 'light')");
     }
 

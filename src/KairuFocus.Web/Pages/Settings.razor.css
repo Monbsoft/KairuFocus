@@ -1,0 +1,192 @@
+/* Settings.razor.css — KairuFocus Design System, Phase 8
+   Toutes les valeurs via tokens CSS. Zéro hex en dur.
+   Light + dark automatiques via les tokens thémés. */
+
+/* ── Conteneur principal ──────────────────────────────────────────────── */
+.kf-settings {
+    max-width: var(--container-md);
+}
+
+/* ── Titre de page ────────────────────────────────────────────────────── */
+.kf-settings__title {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    margin: 0 0 1.5rem;
+    color: var(--text-primary);
+}
+
+/* ── Section Card ─────────────────────────────────────────────────────── */
+.kf-section {
+    margin-bottom: 1.25rem;
+}
+
+.kf-section__title {
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    margin: 0 0 1rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Ligne de champ ───────────────────────────────────────────────────── */
+.kf-field-row {
+    margin-bottom: 0;
+}
+
+.kf-field-label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-secondary);
+    margin-bottom: 0.4rem;
+}
+
+.kf-hint {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+}
+
+/* ── Rangée inline (select + bouton) ─────────────────────────────────── */
+.kf-inline {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-end;
+}
+
+.kf-inline-grow {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ── Grille 3 colonnes (inputs Pomodoro) ──────────────────────────────── */
+.kf-grid3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+/* ── Rangée d'actions ─────────────────────────────────────────────────── */
+.kf-actions {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+/* ── Statut token MCP ─────────────────────────────────────────────────── */
+.kf-mcp-status {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.kf-mcp-empty {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.kf-mcp-error {
+    margin-top: 0.75rem;
+}
+
+/* ── Input / Select scoped ────────────────────────────────────────────── */
+.kf-input {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    min-height: var(--target-min);
+    transition:
+        border-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.kf-input:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 0;
+    border-color: var(--primary-border);
+}
+
+.kf-input::placeholder {
+    color: var(--text-muted);
+}
+
+.kf-select {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    min-height: var(--target-min);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    cursor: pointer;
+    transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.kf-select:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 0;
+    border-color: var(--primary-border);
+}
+
+/* ── Modal MCP token ──────────────────────────────────────────────────── */
+.kf-modal-scrim {
+    background: var(--overlay-scrim);
+}
+
+.kf-modal-content {
+    box-shadow: var(--shadow-xl);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+}
+
+.kf-token-input {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-sm);
+    min-height: var(--target-min);
+}
+
+.kf-token-input:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 0;
+}
+
+/* ── Skeleton de chargement ───────────────────────────────────────────── */
+.kf-settings-skel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: var(--container-md);
+}
+
+.kf-settings-skel__card {
+    height: 120px;
+    border-radius: var(--radius-lg);
+}

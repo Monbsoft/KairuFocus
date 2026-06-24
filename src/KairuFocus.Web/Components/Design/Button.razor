@@ -21,7 +21,7 @@
 }
 else
 {
-    <button type="button"
+    <button type="@Type"
             class="kf-btn kf-btn--@Variant kf-btn--@Size"
             disabled="@Disabled"
             @onclick="OnClick"
@@ -44,6 +44,9 @@ else
 
     /// <summary>Height tier: sm (36px) | md (44px) | lg (48px)</summary>
     [Parameter] public string Size { get; set; } = "md";
+
+    /// <summary>Native button type: button (default) | submit | reset. Use "submit" inside an EditForm.</summary>
+    [Parameter] public string Type { get; set; } = "button";
 
     /// <summary>Render as anchor ("a") instead of button. Requires Href.</summary>
     [Parameter] public string? As { get; set; }
