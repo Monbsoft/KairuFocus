@@ -1,0 +1,49 @@
+/* ============================================================
+   KairuFocus — Radius, elevation & motion tokens
+   ============================================================ */
+
+:root {
+  /* ---- Corner radii ---- */
+  --radius-xs:   4px;    /* badges, small chips, inner controls */
+  --radius-sm:   6px;    /* buttons, inputs */
+  --radius-md:   8px;    /* nav icons, menus, journal header */
+  --radius-lg:   12px;   /* cards, stat tiles, panels */
+  --radius-xl:   18px;   /* brand logo tile */
+  --radius-pill: 999px;  /* pills, avatars, toggles */
+
+  /* ---- Elevation (shadows) — tuned for light surfaces ---- */
+  --shadow-xs:  0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-sm:  0 2px 12px rgba(16, 24, 40, 0.06);   /* resting card */
+  --shadow-md:  0 4px 16px rgba(16, 24, 40, 0.10);   /* hover lift */
+  --shadow-lg:  0 8px 24px rgba(16, 24, 40, 0.12);   /* feature-card hover */
+  --shadow-xl:  0 16px 40px rgba(16, 24, 40, 0.18);  /* dialogs */
+  --shadow-brand: 0 8px 32px rgba(13, 110, 253, 0.30); /* brand-mark glow */
+
+  /* ---- Motion durations & easing (Doherty < 400ms) ---- */
+  --duration-instant: 100ms; /* @kind other */
+  --duration-fast:    150ms; /* @kind other */
+  --duration-base:    200ms; /* @kind other */
+  --duration-slow:    300ms; /* @kind other */
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1); /* @kind other */
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+}
+
+/* Elevation reads heavier on dark surfaces */
+[data-bs-theme="dark"] {
+  --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-sm:  0 2px 12px rgba(0, 0, 0, 0.45);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.50);
+  --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-xl:  0 16px 40px rgba(0, 0, 0, 0.65);
+}
+
+/* Honor reduced-motion globally */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms; /* @kind other */
+    --duration-fast:    0ms; /* @kind other */
+    --duration-base:    0ms; /* @kind other */
+    --duration-slow:    0ms; /* @kind other */
+  }
+}

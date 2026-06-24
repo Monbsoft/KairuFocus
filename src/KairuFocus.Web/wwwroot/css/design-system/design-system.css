@@ -1,0 +1,15 @@
+/* ============================================================
+   KairuFocus Design System — global entry point
+   Consumers link THIS file. It is an import manifest only.
+
+   NOTE: tokens in this directory are the CSS source of truth
+   for both KairuFocus.Web (Blazor WASM) and KairuFocus.Maui
+   (Blazor Hybrid). Do not modify individual token files
+   without updating both targets.
+   ============================================================ */
+
+@import url("colors.css");
+@import url("typography.css");
+@import url("spacing.css");
+@import url("radius-elevation-motion.css");
+@import url("base.css");

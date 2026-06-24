@@ -1,0 +1,78 @@
+/* ============================================================
+   KairuFocus — Base layer
+   Minimal element defaults wired to tokens. Consumers get
+   sensible body typography + theme-aware surface out of the box.
+   (Bridges Bootstrap vars so the token system and the
+   app's existing Bootstrap usage stay in sync.)
+   ============================================================ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--surface-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Bridge: keep Bootstrap's runtime vars pointed at our tokens */
+:root,
+[data-bs-theme="light"],
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--surface-base);
+  --bs-body-color: var(--text-primary);
+  --bs-border-color: var(--border-subtle);
+  --bs-primary: var(--primary);
+  --bs-secondary-color: var(--text-muted);
+  --bs-tertiary-bg: var(--surface-sunken);
+  --bs-secondary-bg: var(--surface-hover);
+
+  /* Extended Bootstrap bridge (Phase 0.4) */
+  --bs-link-color: var(--primary);
+  --bs-link-hover-color: var(--primary-hover);
+  --bs-success: var(--success);
+  --bs-danger: var(--danger);
+  --bs-warning: var(--warning);
+  --bs-info: var(--info);
+  --bs-card-bg: var(--surface-card);
+  --bs-card-border-color: var(--border-subtle);
+  --bs-modal-bg: var(--surface-elevated);
+}
+
+/* --bs-primary-rgb: used by Bootstrap for rgba() opacity variants
+   (e.g. .btn-check:checked + .btn-outline-primary uses rgba(var(--bs-primary-rgb), 0.15))
+   Value is the RGB decomposition of the primary color per theme. */
+:root,
+[data-bs-theme="light"] {
+  --bs-primary-rgb: 13, 110, 253;  /* kf-blue-600 */
+}
+
+[data-bs-theme="dark"] {
+  --bs-primary-rgb: 43, 125, 255;  /* kf-blue-500 */
+}
+
+/* Accessible focus — never remove the ring without a replacement */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--primary);
+  text-underline-offset: 0.15em;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--primary-subtle);
+}

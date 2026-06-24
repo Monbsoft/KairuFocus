@@ -737,15 +737,15 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 ## Critères d'acceptance (non-négociables)
 
 **Visuels :**
-- [ ] Tous les tokens DS actifs en light et dark (pas de hex résiduel dans les fichiers portés).
-- [ ] `data-bs-theme="dark"` fonctionne sans override manuel : les tokens CSS répondent automatiquement.
-- [ ] Police JetBrains Mono chargée depuis `wwwroot/css/design-system/fonts/` (aucune requête vers Google).
-- [ ] Zéro `@import` Google Fonts dans les fichiers CSS actifs.
+- [x] Tous les tokens DS actifs en light et dark (pas de hex résiduel dans les fichiers portés). ← Phase 0 : app.css + design-system/
+- [x] `data-bs-theme="dark"` fonctionne sans override manuel : les tokens CSS répondent automatiquement. ← Phase 0
+- [x] Police JetBrains Mono chargée depuis `wwwroot/css/design-system/fonts/` (aucune requête vers Google). ← Phase 0 : @font-face self-hosted
+- [x] Zéro `@import` Google Fonts dans les fichiers CSS actifs. ← Phase 0
 
 **Accessibilité WCAG 2.1 AA :**
 - [ ] Contraste texte ≥ 4.5:1 sur fond en light et dark (à valider avec un outil tel que axe ou Lighthouse).
-- [ ] Focus visible sur tous les éléments interactifs : `outline: 2px solid var(--focus-ring)`.
-- [ ] `h1:focus { outline: none }` supprimé.
+- [x] Focus visible sur tous les éléments interactifs : `outline: 2px solid var(--focus-ring)`. ← Phase 0 : base.css :focus-visible
+- [x] `h1:focus { outline: none }` supprimé. ← Phase 0 : app.css
 - [ ] Cibles tap ≥ 44px : tous les boutons md/lg, IconButton md. Boutons sm (36px) uniquement en contexte dense (rangées de tâches).
 - [ ] `aria-label` sur tous les `IconButton` et icônes seules.
 - [ ] `aria-current="page"` sur le lien de navigation actif.
@@ -753,7 +753,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 - [ ] Boutons de navigation journal (précédent/suivant) ≥ 44px.
 
 **Motion :**
-- [ ] `prefers-reduced-motion: reduce` → toutes les transitions CSS à 0ms via les tokens.
+- [x] `prefers-reduced-motion: reduce` → toutes les transitions CSS à 0ms via les tokens. ← Phase 0 : radius-elevation-motion.css @media
   Vérifier avec DevTools "Emulate prefers-reduced-motion".
 
 **Bootstrap 5 / aucun framework supplémentaire :**
@@ -766,13 +766,13 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 - [ ] Autres chaînes en dur (Dashboard date locale, labels session Pomodoro) documentés comme écarts.
 
 **Build et tests :**
-- [ ] `dotnet build KairuFocus.Web` sans warning ni erreur.
+- [x] `dotnet build KairuFocus.Web` sans warning ni erreur. ← Phase 0 : 0 warning, 0 erreur
 - [ ] `dotnet test` — zéro régression (les tests domain/application ne sont pas impactés par la présentation).
 - [ ] L'app démarre et navigue sans erreur console JS.
 
 **Offline / PWA :**
-- [ ] Les polices woff2 sont présentes dans `wwwroot/` → précachées automatiquement par `dotnet publish`.
-- [ ] Les tokens CSS sont précachés (même mécanisme).
+- [x] Les polices woff2 sont présentes dans `wwwroot/` → précachées automatiquement par `dotnet publish`. ← Phase 0 : 4 woff2 déjà dans wwwroot/css/design-system/fonts/
+- [x] Les tokens CSS sont précachés (même mécanisme). ← Phase 0 : 5 fichiers CSS dans wwwroot/css/design-system/
 
 ---
 
@@ -828,9 +828,11 @@ feat(34): docs — mise à jour project-state.md + spec.md
 
 ## Écarts constatés
 
-_(à remplir par blazor-ux lors de l'implémentation)_
+### Phase 0 (fondation CSS) — complétée le 2026-06-24
 
 - `PomodoroApi.GetTodaySprintCountAsync()` — vérifier si l'endpoint existe pour le bloc dots du Dashboard.
 - Chaînes en dur Pomodoro (labels session, status) — hors scope i18n de cette PR, à documenter.
 - Date Dashboard formatée `fr-FR` hardcodée — noter comme dette.
 - Dashboard (CADRAGE VERROUILLÉ — présentation seule) : bloc dots "Focus aujourd'hui" **omis** dans cette PR (nécessiterait un endpoint backend). Bloc "À reprendre" ajouté **seulement** si l'API actuelle expose déjà la donnée sans nouvel endpoint, sinon omis. Aucune modification API/Application/Domain.
+- `app.css` ligne `code { color: ... }` : l'original utilisait `#c02d76` (rose vif). Remplacé par `var(--task)` (purple-500 light / a78bdb dark) — couleur la plus proche du DS pour les inline code. Si le rendu visuel est jugé trop éloigné, un token `--code-color` dédié peut être ajouté en Phase 1+.
+- `app.css` `.loading-progress circle` stroke initial : l'original utilisait `#e0e0e0`. Remplacé par `var(--border-default)` (gray-300 light / slate-700 dark), seule valeur thème-aware équivalente disponible dans les tokens. Légèrement plus sombre en light (dee2e6 vs e0e0e0) — sans impact visible sur l'UX de chargement.
