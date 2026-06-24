@@ -1,0 +1,390 @@
+/* ============================================================
+   Journal.razor.css — CSS isolé Blazor pour la page Journal
+   Extrait du <style> inline (Phase 7 — itération #34).
+
+   Variables --nb-* conservées : elles capturent la théma-
+   tisation "papier/encre" spécifique à la timeline du journal
+   (light : warm-off-white / dark : ink-navy). Leurs valeurs
+   hex pointent vers les tokens DS quand un équivalent existe.
+
+   À noter : les valeurs hex résiduelles (--nb-body-bg,
+   --nb-comment-bg, --nb-time-color, etc.) sont intentionnelles.
+   Ces teintes « warm paper / ink » n'ont pas de token DS exact
+   — les tokens les plus proches (surface-card, text-muted, etc.)
+   auraient une apparence différente et casseraient l'esthétique
+   cahier. L'écart est documenté dans les Écarts constatés.
+
+   NOTE Maui : ce fichier CSS (via le scoping Blazor) n'est pas
+   réutilisé tel quel en MAUI Blazor Hybrid, mais les tokens DS
+   dans wwwroot/css/design-system/ sont la source de vérité
+   commune aux deux cibles.
+   ============================================================ */
+
+/* ── Variables — light (défaut) ──────────────────────────── */
+.notebook {
+    --nb-body-bg:            #fafaf7;
+    --nb-body-border:        #e4e0d8;
+    --nb-dot-default-bg:     #fafaf7;
+    --nb-dot-default-border: #c8c4bc;
+    --nb-line-color:         #e8e4da;
+    --nb-time-color:         #a09ea8;
+    --nb-label-color:        #2c2c3a;
+    --nb-tasks-label-color:  #9896a8;
+    --nb-tasks-item-color:   #3a3848;
+    --nb-comment-bg:         #f0ede6;
+    --nb-comment-border:     #d4c89a;
+    --nb-comment-text-color: #3c3a4a;
+    --nb-add-btn-border:     #ccc8be;
+    --nb-add-btn-color:      #b0aeba;
+    --nb-btn-icon-color:     #888888;
+
+    /* Dots couleur : valeurs hex → tokens DS quand mappables */
+    --nb-sprint-dot-bg:      var(--primary-subtle);
+    --nb-break-dot-bg:       var(--success-subtle);
+    --nb-task-dot-bg:        var(--task-subtle);
+    --nb-warn-dot-bg:        #fff3e8;  /* --kf-orange-500 n'a pas de -subtle dans DS */
+
+    max-width: var(--container-read);
+    margin: 0 auto;
+}
+
+/* ── Variables — dark ─────────────────────────────────────── */
+[data-bs-theme="dark"] .notebook {
+    --nb-body-bg:            #13131f;
+    --nb-body-border:        #252538;
+    --nb-dot-default-bg:     #13131f;
+    --nb-dot-default-border: #3a3a5c;
+    --nb-line-color:         #252538;
+    --nb-time-color:         #6272a4;
+    --nb-label-color:        #ccd6f6;
+    --nb-tasks-label-color:  #6272a4;
+    --nb-tasks-item-color:   #8892b0;
+    --nb-comment-bg:         #1c1c2e;
+    --nb-comment-border:     #3a3a5c;
+    --nb-comment-text-color: #8892b0;
+    --nb-add-btn-border:     #3a3a5c;
+    --nb-add-btn-color:      #6272a4;
+    --nb-btn-icon-color:     #6272a4;
+
+    /* Dots couleur dark — tokens DS */
+    --nb-sprint-dot-bg:      var(--primary-subtle);
+    --nb-break-dot-bg:       var(--success-subtle);
+    --nb-task-dot-bg:        var(--task-subtle);
+    --nb-warn-dot-bg:        #3e1e0d;  /* orange foncé, pas de token DS */
+}
+
+/* ── En-tête (surface invariante — même en dark) ─────────── */
+.notebook-header {
+    background: var(--brand-hero);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    padding: 1.25rem;
+    display: grid;
+    grid-template-columns: var(--target-min) 1fr var(--target-min);
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.notebook-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* ── Boutons de navigation jour ───────────────────────────── */
+/* Correction WCAG : anciennement 32×32px (< 44px). Désormais  */
+/* min 44×44px via --target-min. Padding compensatoire pour    */
+/* conserver l'aspect visuel centré (flèche 1rem ≈ 16px).      */
+.nb-nav-btn {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-xs);
+    color: #ccd6f6;
+    font-size: 1rem;
+    min-width: var(--target-min);
+    min-height: var(--target-min);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--duration-fast) var(--ease-standard),
+                border-color var(--duration-fast) var(--ease-standard);
+    padding: 0;
+    justify-self: center;
+}
+
+.nb-nav-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.nb-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.nb-nav-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.notebook-day {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);   /* 0.18em → token */
+    color: #8892b0;
+    font-weight: var(--weight-bold);
+}
+
+.notebook-date {
+    font-size: 1.3rem;
+    font-weight: var(--weight-bold);
+    color: #e6f1ff;
+    line-height: 1.2;
+}
+
+.notebook-subtitle {
+    font-size: 0.75rem;
+    color: #8892b0;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    align-self: flex-end;
+}
+
+/* ── Corps ───────────────────────────────────────────────── */
+.notebook-body {
+    background: var(--nb-body-bg);
+    border: 1px solid var(--nb-body-border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    min-height: 120px;
+}
+
+.notebook-empty {
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.notebook-empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.4;
+}
+
+/* ── Timeline ────────────────────────────────────────────── */
+.notebook-timeline {
+    padding: 1rem 1.25rem 1rem 0.75rem;
+}
+
+.nb-entry {
+    display: grid;
+    grid-template-columns: 48px 20px 1fr;
+    gap: 0 0.5rem;
+    min-height: 40px;
+}
+
+/* Colonne heure */
+.nb-time {
+    font-size: 0.72rem;
+    font-weight: var(--weight-bold);
+    color: var(--nb-time-color);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding-top: 2px;
+    letter-spacing: 0.02em;
+}
+
+/* Colonne dot + ligne */
+.nb-dot-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.nb-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--nb-dot-default-border);
+    background: var(--nb-dot-default-bg);
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.nb-line {
+    width: 2px;
+    flex-grow: 1;
+    background: var(--nb-line-color);
+    margin-top: 3px;
+    min-height: 16px;
+}
+
+.nb-entry:last-child .nb-line {
+    display: none;
+}
+
+/* Variantes de couleur des dots — tokens DS (hex supprimés) */
+.nb-sprint .nb-dot { border-color: var(--primary);        background: var(--nb-sprint-dot-bg); }
+.nb-break  .nb-dot { border-color: var(--success);        background: var(--nb-break-dot-bg);  }
+.nb-task   .nb-dot { border-color: var(--task);           background: var(--nb-task-dot-bg);   }
+.nb-warn   .nb-dot { border-color: var(--kf-orange-500);  background: var(--nb-warn-dot-bg);   }
+
+/* ── Contenu d'une entrée ────────────────────────────────── */
+.nb-content {
+    padding-bottom: 1rem;
+}
+
+.nb-event {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-bottom: 0.2rem;
+}
+
+.nb-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.nb-label {
+    font-size: 0.88rem;
+    font-weight: var(--weight-bold);
+    color: var(--nb-label-color);
+}
+
+/* ── Tâches travaillées ──────────────────────────────────── */
+.nb-tasks {
+    margin: 0.3rem 0 0.2rem 1.4rem;
+}
+
+.nb-tasks-header {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);   /* 0.08em → token */
+    color: var(--nb-tasks-label-color);
+    font-weight: var(--weight-bold);
+}
+
+.nb-tasks-list {
+    margin: 0.2rem 0 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.nb-tasks-list li {
+    font-size: 0.83rem;
+    color: var(--nb-tasks-item-color);
+    padding: 0.1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.nb-tasks-list li::before {
+    content: '→';
+    color: var(--primary);   /* hex #0d6efd → token */
+    font-weight: var(--weight-bold);
+    font-size: 0.75rem;
+}
+
+/* ── Commentaires ────────────────────────────────────────── */
+.nb-comment {
+    margin: 0.3rem 0 0 1.4rem;
+}
+
+.nb-comment-body {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    background: var(--nb-comment-bg);
+    border-left: 3px solid var(--nb-comment-border);
+    padding: 0.3rem 0.5rem;
+    border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+    font-size: 0.82rem;
+}
+
+.nb-comment-text {
+    flex-grow: 1;
+    color: var(--nb-comment-text-color);
+}
+
+.nb-comment-actions {
+    display: flex;
+    gap: 0.2rem;
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-standard);   /* 0.15s → token */
+    flex-shrink: 0;
+}
+
+.nb-comment-body:hover .nb-comment-actions,
+.nb-comment-body:focus-within .nb-comment-actions {
+    opacity: 1;
+}
+
+/* btn-icon : petits boutons icône dans la zone commentaire.   */
+/* Ils opèrent en contexte très dense (ligne de commentaire)   */
+/* — cible sm (36px) acceptable selon WCAG dense-layout. Mais  */
+/* on leur donne au moins 28px × 28px + aria-label via le      */
+/* composant IconButton Size="sm" (36px). */
+.nb-comment-actions .kf-iconbtn {
+    /* Le composant IconButton applique déjà 36px via --sm.    */
+    /* Aucune surcharge nécessaire ici. */
+}
+
+/* ── Icônes texte legacy (utilisées UNIQUEMENT si btn-icon    */
+/* natif est encore présent — à terme remplacé par IconButton) */
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 0 0.2rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--nb-btn-icon-color);
+    line-height: 1;
+}
+
+.btn-icon:hover         { color: var(--primary); }   /* hex → token */
+.btn-icon-danger:hover  { color: var(--danger);  }   /* hex → token */
+
+/* ── Bouton "+ note" ─────────────────────────────────────── */
+/* Contexte dense inline — min-height 44px pour WCAG.          */
+.nb-add-btn {
+    background: none;
+    border: 1px dashed var(--nb-add-btn-border);
+    border-radius: var(--radius-xs);
+    padding: 0 var(--space-2);
+    font-size: 0.72rem;
+    color: var(--nb-add-btn-color);
+    cursor: pointer;
+    margin-left: 1.4rem;
+    margin-top: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);   /* WCAG : cible ≥ 44px */
+    transition: border-color var(--duration-fast) var(--ease-standard),
+                color var(--duration-fast) var(--ease-standard),
+                background var(--duration-fast) var(--ease-standard);
+}
+
+.nb-add-btn:hover {
+    border-color: var(--primary);          /* hex → token */
+    color: var(--primary);                 /* hex → token */
+    background: var(--nb-sprint-dot-bg);
+}
+
+.nb-add-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* ── Zone de saisie commentaire ──────────────────────────── */
+.nb-add-comment {
+    margin-left: 1.4rem;
+}
+
+/* ── Boutons commentaire — slots pour <Button> DS ─────────── */
+/* Le composant Button applique les tokens via kf-btn.          */
+/* Pas de surcharge CSS ici — la taille sm (36px) est valide   */
+/* dans ce contexte de formulaire inline dense.                 */

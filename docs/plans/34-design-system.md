@@ -691,7 +691,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 
 ---
 
-## Phase 7 — Journal
+## Phase 7 — Journal ✅ complétée le 2026-06-24
 
 ### Journal.razor
 
@@ -881,6 +881,20 @@ feat(34): docs — mise à jour project-state.md + spec.md
 - **`Progress` lors de l'état idle/done** : quand la session n'est pas active, `Progress = 1.0` (anneau plein) pour montrer un état initial complet plutôt qu'un anneau vide — cohérent avec la logique `DashOffset` d'origine (qui retournait `0` = pas de décalage = cercle plein).
 
 - **Badge "Interrompu" dans SprintLibre** : la valeur `sprint.Status == "Interrupted"` ne correspond à aucun `Status` mappé dans `Badge.razor` (`Todo`/`InProgress`/`Done`). Rendu via `Variant="inprogress"` avec `ChildContent` explicite "Interrompu" (sémantiquement proche, pas de token dédié).
+
+### Phase 7 (Journal) — complétée le 2026-06-24
+
+- **Variables `--nb-*` "warm paper" conservées en hex** : les teintes spécifiques au cahier (`--nb-body-bg: #fafaf7`, `--nb-comment-bg: #f0ede6`, etc.) n'ont pas d'équivalent exact dans les tokens DS. Les tokens disponibles (`--surface-card`, `--surface-sunken`) auraient une apparence neutre-grise cassant l'esthétique "papier jauni" voulue par le DS. Seuls les tokens DS existants (`--primary-subtle`, `--success-subtle`, `--task-subtle`) sont utilisés pour les fonds des dots colorés. Décision intentionnelle, documentée.
+
+- **`--nb-warn-dot-bg` sans token DS** : `var(--kf-orange-500)` n'a pas de variante `-subtle` dans `colors.css`. Valeurs hex conservées : `#fff3e8` (light) et `#3e1e0d` (dark). Si un token `--warning-subtle` ou `--kf-orange-subtle` est ajouté au DS, les remplacer directement.
+
+- **`TagColors.cs` (Web) — plus aucune référence active** : après migration de `Journal.razor` vers `<Tag Hash>`, `TagColors.GetClass()` n'est plus appelé nulle part dans les pages Web. Le fichier `src/KairuFocus.Web/Helpers/TagColors.cs` subsiste mais est du code mort. Il n'a pas été supprimé dans cette PR (risque de régression sur d'éventuels usages hors-pages non détectés). Suppression propre recommandée dans une PR de nettoyage dédiée.
+
+- **`IconButton Size="sm"` dans les actions commentaire** : les icônes Modifier/Supprimer opèrent dans un contexte commentaire très dense (ligne de 0.82rem de hauteur). `Size="sm"` (36px) est la taille tolérée par WCAG en contexte dense-layout. La cible reste visuellement petite — acceptable car `aria-label` est présent et la zone `nb-comment-body:focus-within` révèle les boutons au focus clavier.
+
+- **Bouton `nb-add-btn` conservé natif** : le bouton "+ note" garde sa classe CSS propre plutôt que d'utiliser `<Button Variant="ghost" Size="...">` car son rendu "tiret pointillé inline" ne correspond à aucun variant DS existant. `min-height: var(--target-min)` (44px) appliqué directement dans le CSS isolé — correction WCAG effective.
+
+- **`@using KairuFocus.Web.Helpers` conservé** : la directive `@using` pointe vers le namespace `Helpers` qui contient `TagColors.cs`. Elle ne cause aucune erreur de compilation même si `TagColors` n'est plus appelé — le using est simplement inutilisé mais inoffensif. Il peut être supprimé lors du nettoyage de `TagColors.cs`.
 
 ### Phase 0 (fondation CSS) — complétée le 2026-06-24
 
