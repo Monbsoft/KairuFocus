@@ -108,51 +108,9 @@ code {
     text-align: start;
 }
 
-/* ── Menu contextuel Pomodoro (bouton ···) ─────────────────────────────── */
-.btn-more { background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 0 8px; }
-.dropdown-menu-simple { position: absolute; right: 0; top: 100%; background: var(--bs-body-bg); border: 1px solid var(--bs-border-color); border-radius: var(--radius-xs); padding: 4px 0; z-index: 100; min-width: 160px; }
-.dropdown-menu-simple button { display: block; width: 100%; padding: 8px 16px; background: none; border: none; text-align: left; cursor: pointer; }
-.dropdown-menu-simple button:hover { background: var(--bs-secondary-bg); }
-
-/* ── Logout button ─────────────────────────────────────────────────────── */
-.btn-logout {
-    background: none;
-    border: none;
-    padding: 0.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.7;
-    transition: opacity var(--duration-base) var(--ease-standard);
-}
-
-.btn-logout:hover {
-    opacity: 1;
-}
-
-/* ── Bouton GitHub (couleur brand invariante — blanc GitHub) ───────────── */
-.btn-github {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.75rem;
-    background: #fff;
-    color: #24292e;
-    border: none;
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1rem;
-    transition: background var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-}
-
-.btn-github:hover {
-    background: #f0f0f0;
-    color: #24292e;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-}
+/* .btn-more / .dropdown-menu-simple — SUPPRIMÉ : remplacé par <Button Variant="ghost"> en Phase 6 */
+/* .btn-logout — SUPPRIMÉ : remplacé par .kf-navicon--btn dans NavMenu.razor.css en Phase 2 */
+/* .btn-github — SUPPRIMÉ : remplacé par <Button Variant="accent"> dans Login.razor et Home.razor en Phase 3 */
 
 /* ── Landing page (Phase 3 — DS kf-landing / kf-hero / kf-features) ────── */
 .kf-landing {
@@ -274,132 +232,11 @@ code {
 
 /* dark handled automatically by var(--text-muted) */
 
-/* ── Dashboard ─────────────────────────────────────────────────────────── */
-.dashboard-page {
-    padding: 1.5rem;
-    max-width: var(--container-lg);
-}
-
-.dashboard-header {
-    margin-bottom: 2rem;
-}
-
-.dashboard-greeting {
-    font-size: var(--text-2xl);
-    font-weight: 700;
-    margin: 0;
-}
-
-.dashboard-date {
-    color: var(--text-muted);
-    margin: 0.25rem 0 0;
-    text-transform: capitalize;
-}
-
-.dashboard-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2.5rem;
-}
-
-.stat-card {
-    background: var(--surface-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    cursor: pointer;
-    transition: box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
-}
-
-.stat-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-}
-
-/* [data-bs-theme="dark"] .stat-card — SUPPRIMÉ : tokens gèrent le dark automatiquement */
-
-.stat-card.stat-active {
-    border-color: var(--success);
-    background: var(--success-subtle);
-}
-
-/* [data-bs-theme="dark"] .stat-card.stat-active — SUPPRIMÉ : tokens gèrent le dark automatiquement */
-
-.stat-icon {
-    font-size: 1.8rem;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-.stat-value {
-    font-size: 1.6rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.stat-badge-active {
-    font-size: 1rem;
-    color: var(--success);
-    font-weight: 700;
-}
-
-.stat-label {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    margin-top: 0.2rem;
-}
-
-.dashboard-section-title {
-    font-size: var(--text-base);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-wide);
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-}
-
-.dashboard-quicklinks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.quicklink-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--surface-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem 1.75rem;
-    text-decoration: none;
-    color: inherit;
-    transition: box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard);
-    min-width: 100px;
-}
-
-.quicklink-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-    border-color: var(--primary-border);
-    color: var(--primary);
-}
-
-/* [data-bs-theme="dark"] .quicklink-card — SUPPRIMÉ : tokens gèrent le dark automatiquement */
-
-.quicklink-icon {
-    font-size: 1.75rem;
-}
-
-.quicklink-label {
-    font-size: var(--text-xs);
-    font-weight: 600;
-}
+/* .dashboard-page / .dashboard-header / .dashboard-greeting / .dashboard-date /
+   .dashboard-stats / .stat-card / .stat-icon / .stat-value / .stat-badge-active /
+   .stat-label / .dashboard-section-title / .dashboard-quicklinks / .quicklink-card /
+   .quicklink-icon / .quicklink-label — SUPPRIMÉ : remplacés par .kf-dash* / .kf-stats /
+   <StatCard> / .kf-quick* en Phase 4. Aucune référence restante dans les fichiers .razor. */
 
 /* ── Dashboard DS — Phase 4
    Classes kf-dash* alignées sur DashboardScreen.jsx.
@@ -563,22 +400,6 @@ code {
     gap: 1rem;
 }
 
-/* ── Journal Timeline */
-.timeline {
-    padding-left: 0;
-}
-
-.timeline-entry {
-    border-left: 2px solid var(--border-default);
-    padding-left: 1.5rem;
-    position: relative;
-}
-
-.timeline-entry:last-child {
-    border-left-color: transparent;
-}
-
-.timeline-icon {
-    font-size: 1.5rem;
-    margin-top: -0.25rem;
-}
+/* .timeline / .timeline-entry / .timeline-icon — SUPPRIMÉ : remplacés par
+   .kf-nb__timeline / .nb-entry dans Journal.razor.css en Phase 7.
+   Aucune référence restante dans les fichiers .razor. */

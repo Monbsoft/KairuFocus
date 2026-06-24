@@ -91,13 +91,17 @@
         color var(--duration-fast) var(--ease-standard);
 }
 
-/* Active state — Von Restorff: highlight the current location */
+/* Active state — Von Restorff: highlight the current location.
+   Blazor NavLink only adds the .active CSS class; it does NOT emit
+   aria-current. NavMenu.razor subscribes to LocationChanged and sets
+   aria-current="page" explicitly (WCAG 4.1.2). Both selectors are kept
+   so the visual style is applied regardless of rendering order. */
 .kf-navicon.active {
     background-color: rgba(255, 255, 255, 0.37); /* invariant translucent on dark sidebar */
     color: white;
 }
 
-/* aria-current="page" is added by Blazor NavLink on top of .active */
+/* Targets the aria-current="page" attribute emitted by NavMenu.razor */
 .kf-navicon[aria-current="page"] {
     background-color: rgba(255, 255, 255, 0.37);
     color: white;

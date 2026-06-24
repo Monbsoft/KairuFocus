@@ -748,7 +748,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 - [x] `h1:focus { outline: none }` supprimé. ← Phase 0 : app.css
 - [ ] Cibles tap ≥ 44px : tous les boutons md/lg, IconButton md. Boutons sm (36px) uniquement en contexte dense (rangées de tâches).
 - [x] `aria-label` sur tous les `IconButton` et icônes seules. ← Phase 2 : aria-label sur chaque NavLink + bouton logout
-- [x] `aria-current="page"` sur le lien de navigation actif. ← Phase 2 : NavLink Blazor + règle CSS [aria-current="page"]
+- [x] `aria-current="page"` sur le lien de navigation actif. ← Nettoyage #34 : NavMenu.razor s'abonne à LocationChanged et émet aria-current="page" explicitement (Blazor NavLink n'émet que la classe .active, pas l'attribut aria-current).
 - [ ] `ProgressRing` avec `role="img" aria-label="@Label @Sublabel"`.
 - [ ] Boutons de navigation journal (précédent/suivant) ≥ 44px.
 
@@ -898,7 +898,7 @@ feat(34): docs — mise à jour project-state.md + spec.md
 
 ### Phase 8 (Settings) — complétée le 2026-06-24
 
-- **`EditForm` retiré** : le composant `Button` force `type="button"` dans son markup — il est impossible de rendre un bouton `type="submit"` via le composant DS sans modifier son implémentation. L'`EditForm` avec `OnValidSubmit` est remplacé par un `<div>` wrapper : la validation reste 100% manuelle dans `SavePomodoroSettings`, comportement identique à l'original.
+- **`EditForm` conservé** : l'`EditForm` Blazor est maintenu avec `DataAnnotationsValidator` et un `<Button Type="submit">` natif (pas via le composant DS `Button`). La validation par annotation reste fonctionnelle et le comportement `OnValidSubmit` est inchangé. Le composant DS `Button` force `type="button"` mais n'est pas utilisé pour le bouton de soumission de ce formulaire — un `<button type="submit" class="kf-btn kf-btn--primary">` natif est utilisé à la place pour garantir la compatibilité EditForm.
 
 - **Section "Objectif de focus" absente** : le JSX `SettingsScreen.jsx` inclut une section "🎯 Objectif de focus" (sprints visés par jour) absente dans le `Settings.razor` d'origine. Cette section n'a pas d'équivalent dans l'API (`SettingsApiClient` ne possède pas de propriété `SprintGoal`). Omise conformément à la règle "aucun nouvel endpoint, présentation seule".
 

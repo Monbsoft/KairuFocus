@@ -2,6 +2,7 @@
 @inject AuthService AuthService
 @inject JwtAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
+@implements IDisposable
 
 <div class="kf-side__brand-row">
     <span class="kf-side__brand" aria-hidden="true">K</span>
@@ -17,6 +18,7 @@
             <NavLink class="kf-navicon"
                      href="dashboard"
                      aria-label="Tableau de bord"
+                     aria-current="@(IsActive("dashboard") ? "page" : null)"
                      Match="NavLinkMatch.Prefix">
                 @* Home icon — house with chimney *@
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -34,6 +36,7 @@
             <NavLink class="kf-navicon"
                      href="tasks"
                      aria-label="Taches"
+                     aria-current="@(IsActive("tasks") ? "page" : null)"
                      Match="NavLinkMatch.Prefix">
                 @* CheckSquare icon *@
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -51,6 +54,7 @@
             <NavLink class="kf-navicon"
                      href="pomodoro"
                      aria-label="Pomodoro"
+                     aria-current="@(IsActive("pomodoro") ? "page" : null)"
                      Match="NavLinkMatch.Prefix">
                 @* Tomato / timer icon *@
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -71,6 +75,7 @@
             <NavLink class="kf-navicon"
                      href="journal"
                      aria-label="Journal"
+                     aria-current="@(IsActive("journal") ? "page" : null)"
                      Match="NavLinkMatch.Prefix">
                 @* Book / open book icon *@
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -88,6 +93,7 @@
             <NavLink class="kf-navicon"
                      href="settings"
                      aria-label="Parametres"
+                     aria-current="@(IsActive("settings") ? "page" : null)"
                      Match="NavLinkMatch.Prefix">
                 @* Settings / gear icon *@
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -126,6 +132,37 @@
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    // ── aria-current="page" — WCAG 4.1.2 ────────────────────────────────
+    // Blazor NavLink adds only the CSS class .active; it does NOT emit
+    // aria-current. We subscribe to LocationChanged and recompute IsActive
+    // on each navigation so that aria-current="page" is actually rendered
+    // in the DOM (verified via browser DevTools / axe audit).
+    private string _currentPath = "/";
+
+    protected override void OnInitialized()
+    {
+        _currentPath = new Uri(Nav.Uri).AbsolutePath.TrimEnd('/').ToLowerInvariant();
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        _currentPath = new Uri(e.Location).AbsolutePath.TrimEnd('/').ToLowerInvariant();
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Returns true when the current URL path starts with /{segment}.
+    /// Mirrors NavLinkMatch.Prefix behaviour used on the NavLink elements.
+    /// </summary>
+    private bool IsActive(string segment)
+        => _currentPath.StartsWith("/" + segment, StringComparison.OrdinalIgnoreCase);
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
 
     private void ToggleNavMenu()
     {
