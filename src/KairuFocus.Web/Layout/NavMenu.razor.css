@@ -1,40 +1,84 @@
-.navbar-toggler {
-    background-color: rgba(255, 255, 255, 0.1);
+/* ============================================================
+   NavMenu — Sidebar rail navigation
+   Tokens: var(--radius-md), var(--duration-fast),
+           var(--ease-standard), var(--topbar-height),
+           var(--target-comfy)
+   Invariant translucent surfaces (rgba) preserved on dark sidebar.
+   ============================================================ */
+
+/* ---- Brand row (logo + mobile toggler) ---- */
+.kf-side__brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--topbar-height);
+    padding: 0 0.5rem;
 }
 
-.top-row {
-    min-height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.navbar-brand-icon {
+.kf-side__brand {
     color: white;
     font-size: 1.4rem;
     font-weight: 700;
     letter-spacing: 0.05em;
 }
 
-.nav-item {
+.kf-side__toggler {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    display: none;
+}
+
+/* ---- Scrollable nav area ---- */
+.kf-nav-scrollable {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---- Nav container ---- */
+.kf-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0.75rem;
+    flex: 1;
+}
+
+/* ---- Nav items ---- */
+.kf-navitem {
     width: 100%;
     padding-bottom: 0.25rem;
+    display: flex;
+    justify-content: center;
 }
 
-.nav-item:first-of-type {
-    padding-top: 0.75rem;
+.kf-navitem:first-of-type {
+    padding-top: 0.25rem;
 }
 
-.nav-item-settings {
+.kf-navitem--settings {
     margin-top: auto;
     padding-top: 0.25rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* invariant sidebar surface */
 }
 
-/* Lien icône centré */
-.nav-item ::deep a.nav-icon {
+.kf-navitem--logout {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* invariant sidebar surface */
+}
+
+/* ---- Navicon — shared styles for NavLink and button ---- */
+.kf-navicon {
     color: #d7d7d7;
-    border-radius: 8px;
-    height: 3rem;
+    border-radius: var(--radius-md);
+    /* ≥48px = --target-comfy, satisfies WCAG 2.1 AA + Fitts */
+    min-height: var(--target-comfy);
+    min-width: var(--target-comfy);
     width: 3rem;
+    height: 3rem;
     margin: 0 auto;
     display: flex;
     align-items: center;
@@ -42,22 +86,44 @@
     font-size: 1.4rem;
     text-decoration: none;
     position: relative;
-    transition: background-color 0.15s ease;
+    transition:
+        background-color var(--duration-fast) var(--ease-standard),
+        color var(--duration-fast) var(--ease-standard);
 }
 
-.nav-item ::deep a.nav-icon.active {
+/* Active state — Von Restorff: highlight the current location */
+.kf-navicon.active {
+    background-color: rgba(255, 255, 255, 0.37); /* invariant translucent on dark sidebar */
+    color: white;
+}
+
+/* aria-current="page" is added by Blazor NavLink on top of .active */
+.kf-navicon[aria-current="page"] {
     background-color: rgba(255, 255, 255, 0.37);
     color: white;
 }
 
-.nav-item ::deep a.nav-icon:hover {
-    background-color: rgba(255, 255, 255, 0.15);
+.kf-navicon:hover {
+    background-color: rgba(255, 255, 255, 0.15); /* invariant translucent */
     color: white;
 }
 
-/* Tooltip CSS */
-.nav-item ::deep a.nav-icon::after {
-    content: attr(title);
+/* Focus visible — never hidden */
+.kf-navicon:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* ---- Button variant (logout) ---- */
+.kf-navicon--btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+/* ---- Tooltip CSS (label revealed on hover) ---- */
+.kf-navicon__tip {
     position: absolute;
     left: calc(100% + 12px);
     top: 50%;
@@ -65,61 +131,45 @@
     background-color: rgba(0, 0, 0, 0.85);
     color: white;
     padding: 0.3rem 0.65rem;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-size: 0.8rem;
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity var(--duration-fast) var(--ease-standard);
     z-index: 1000;
 }
 
-.nav-item ::deep a.nav-icon:hover::after {
+.kf-navicon:hover .kf-navicon__tip,
+.kf-navicon:focus-visible .kf-navicon__tip {
     opacity: 1;
 }
 
-.nav-item-logout {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
-}
-
-.nav-item-logout button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    width: 100%;
-    color: #d7d7d7;
-    border-radius: 8px;
-    height: 3rem;
-    width: 3rem;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    transition: background-color 0.15s ease;
-}
-
-.nav-item-logout button:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    color: white;
-}
-
-@media (min-width: 641px) {
-    .navbar-toggler {
-        display: none;
-    }
-
-    .collapse {
+/* ============================================================
+   Responsive — desktop: sticky rail | mobile: collapsible
+   ============================================================ */
+@media (max-width: 640.98px) {
+    .kf-side__toggler {
         display: block;
     }
 
-    .nav-scrollable {
-        height: calc(100vh - 3.5rem);
+    .kf-nav-scrollable.collapse {
+        display: none;
+    }
+}
+
+@media (min-width: 641px) {
+    .kf-side__toggler {
+        display: none;
+    }
+
+    .kf-nav-scrollable {
+        /* Full height minus the brand row at top */
+        height: calc(100vh - var(--topbar-height));
         overflow-y: auto;
-        display: flex;
-        flex-direction: column;
+    }
+
+    .kf-nav-scrollable.collapse {
+        display: flex; /* always visible on desktop */
     }
 }

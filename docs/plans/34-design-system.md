@@ -495,7 +495,7 @@ Role = `"alert"` si `Tone == "danger"`, `"status"` sinon (WCAG live region).
 
 ---
 
-## Phase 2 — AppShell (Layout)
+## Phase 2 — AppShell (Layout) ✅ complétée le 2026-06-24
 
 ### MainLayout.razor + MainLayout.razor.css
 
@@ -747,8 +747,8 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 - [x] Focus visible sur tous les éléments interactifs : `outline: 2px solid var(--focus-ring)`. ← Phase 0 : base.css :focus-visible
 - [x] `h1:focus { outline: none }` supprimé. ← Phase 0 : app.css
 - [ ] Cibles tap ≥ 44px : tous les boutons md/lg, IconButton md. Boutons sm (36px) uniquement en contexte dense (rangées de tâches).
-- [ ] `aria-label` sur tous les `IconButton` et icônes seules.
-- [ ] `aria-current="page"` sur le lien de navigation actif.
+- [x] `aria-label` sur tous les `IconButton` et icônes seules. ← Phase 2 : aria-label sur chaque NavLink + bouton logout
+- [x] `aria-current="page"` sur le lien de navigation actif. ← Phase 2 : NavLink Blazor + règle CSS [aria-current="page"]
 - [ ] `ProgressRing` avec `role="img" aria-label="@Label @Sublabel"`.
 - [ ] Boutons de navigation journal (précédent/suivant) ≥ 44px.
 

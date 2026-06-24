@@ -1,77 +1,66 @@
-.page {
+/* ============================================================
+   MainLayout — AppShell structure
+   Tokens: var(--sidebar-width), var(--topbar-height),
+           var(--brand-sidebar), var(--surface-card),
+           var(--border-subtle), var(--space-6), var(--space-8)
+   ============================================================ */
+
+.kf-app {
     position: relative;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
 }
 
-main {
+.kf-side {
+    background: var(--brand-sidebar);
+}
+
+.kf-main {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
-.sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
-}
-
-.top-row {
-    background-color: var(--bs-tertiary-bg);
-    border-bottom: 1px solid var(--bs-border-color);
-    justify-content: flex-end;
-    height: 3.5rem;
+.kf-top {
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border-subtle);
+    height: var(--topbar-height);
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    padding-inline: var(--space-6);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
-
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
-
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.kf-content {
+    flex: 1;
+    padding: var(--space-6) var(--space-8);
+}
 
 @media (max-width: 640.98px) {
-    .top-row {
+    .kf-top {
         justify-content: space-between;
     }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
+    .kf-content {
+        padding: var(--space-4);
     }
 }
 
 @media (min-width: 641px) {
-    .page {
+    .kf-app {
         flex-direction: row;
     }
 
-    .sidebar {
-        width: 64px;
+    .kf-side {
+        width: var(--sidebar-width);
         height: 100vh;
         position: sticky;
         top: 0;
-    }
-
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
-
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+        flex-shrink: 0;
     }
 }

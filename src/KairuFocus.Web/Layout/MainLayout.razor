@@ -3,20 +3,19 @@
 @inject SettingsApiClient SettingsApi
 @inject IJSRuntime JSRuntime
 
-<div class="page">
-    <div class="sidebar">
+<div class="kf-app">
+    <div class="kf-side">
         <NavMenu />
     </div>
 
-    <main>
-        <div class="top-row px-4">
+    <main class="kf-main">
+        <header class="kf-top">
             <CultureSelector />
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+        </header>
 
-        <article class="content px-4">
+        <div class="kf-content">
             @Body
-        </article>
+        </div>
     </main>
 </div>
 
@@ -48,9 +47,9 @@
             effectiveTheme = isDark ? "Dark" : "Light";
         }
 
-        await JSRuntime.InvokeVoidAsync("eval", 
-            effectiveTheme == "Dark" 
-                ? "document.documentElement.setAttribute('data-bs-theme', 'dark')" 
+        await JSRuntime.InvokeVoidAsync("eval",
+            effectiveTheme == "Dark"
+                ? "document.documentElement.setAttribute('data-bs-theme', 'dark')"
                 : "document.documentElement.setAttribute('data-bs-theme', 'light')");
     }
 }
