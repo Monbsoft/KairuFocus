@@ -644,7 +644,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 
 ---
 
-## Phase 6 — Pomodoro et Sprint Libre
+## Phase 6 — Pomodoro et Sprint Libre ✅ complétée le 2026-06-24
 
 ### Pomodoro.razor
 
@@ -867,6 +867,20 @@ feat(34): docs — mise à jour project-state.md + spec.md
 - **`TagColors.cs` (Web) encore référencé dans** : `src/KairuFocus.Web/Pages/Journal.razor` (ligne 68, `@TagColors.GetClass(tag)`). Migration vers `<Tag>` prévue en Phase 7 (Journal). Le fichier n'est pas supprimé.
 
 - **CSS isolé `.razor.css`** : `kf-input`, `kf-select`, `kf-md`, `kf-tab2` définis séparément dans `Tasks.razor.css`, `TaskDetail.razor.css` et `TaskEdit.razor.css` (CSS scoping Blazor interdit le partage entre composants). La duplication est intentionnelle et nécessaire.
+
+### Phase 6 (Pomodoro + SprintLibre) — complétée le 2026-06-24
+
+- **Mapping `RingState` réel** : les valeurs C# sont `Status = "Active"/"Completed"/"Interrupted"` et `SessionType = "Sprint"/"ShortBreak"/"LongBreak"`. Mapping appliqué : `Active+Sprint→"sprint"`, `Active+ShortBreak→"shortBreak"`, `Active+LongBreak→"longBreak"`, `Completed→"done"`, `Interrupted→"interrupted"`, `null/autre→"idle"`. Identique au plan §Phase 6.
+
+- **Menu "···" supprimé** : le `<button class="btn-more">` et `dropdown-menu-simple` sont remplacés par un `<Button Variant="ghost">Sprint libre</Button>` (inactif) ou `<Button Variant="secondary">Mode focus</Button>` (actif). L'implémentation du mode focus (overlay plein écran) est omise dans cette PR — elle nécessiterait un état CSS `position:fixed` global potentiellement conflictuel avec le layout AppShell. Documenté comme amélioration future.
+
+- **Libellés FR en dur conservés** : labels session "Sprint en cours", "Pause courte", "Pause longue", "Prêt", "Terminé", "Interrompu", "Tâches du sprint", "Démarrer", "Interrompre", "Terminer", "Sprints du jour", "Sans tâche" — dette i18n hors scope de cette PR, documentée selon le plan §Observations.
+
+- **`kf-input` / `kf-select` définis dans les deux fichiers `.razor.css`** : le CSS scoping Blazor interdit le partage entre composants. La duplication est intentionnelle et nécessaire (même pattern que Phase 5).
+
+- **`Progress` lors de l'état idle/done** : quand la session n'est pas active, `Progress = 1.0` (anneau plein) pour montrer un état initial complet plutôt qu'un anneau vide — cohérent avec la logique `DashOffset` d'origine (qui retournait `0` = pas de décalage = cercle plein).
+
+- **Badge "Interrompu" dans SprintLibre** : la valeur `sprint.Status == "Interrupted"` ne correspond à aucun `Status` mappé dans `Badge.razor` (`Todo`/`InProgress`/`Done`). Rendu via `Variant="inprogress"` avec `ChildContent` explicite "Interrompu" (sémantiquement proche, pas de token dédié).
 
 ### Phase 0 (fondation CSS) — complétée le 2026-06-24
 

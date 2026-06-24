@@ -1,6 +1,7 @@
 @page "/pomodoro"
 @attribute [Authorize]
 @using KairuFocus.Web.Services
+@using KairuFocus.Web.Components.Design
 @inject PomodoroApiClient PomodoroApi
 @inject TaskApiClient TaskApi
 @inject SettingsApiClient SettingsApi
@@ -8,224 +9,177 @@
 @inject NavigationManager Nav
 @implements IAsyncDisposable
 
-<div class="d-flex align-items-center justify-content-between mb-1">
-    <h2 class="mb-0">Pomodoro</h2>
-    <div style="position:relative">
-        <button class="btn-more" @onclick="ToggleMoreMenu" title="Plus d'options">&#xB7;&#xB7;&#xB7;</button>
-        @if (_moreMenuOpen)
-        {
-            <div class="dropdown-menu-simple">
-                <button @onclick="NavigateToSprintLibre">Sprint libre</button>
-            </div>
-        }
+<div class="kf-pomo">
+
+    <!-- En-tête -->
+    <div class="kf-pomo__head">
+        <h1>Pomodoro</h1>
+        <Button Variant="ghost" OnClick="NavigateToSprintLibre">Sprint libre</Button>
     </div>
-</div>
 
-@if (!_loaded)
-{
-    <p>Chargement…</p>
-}
-else
-{
-    <div class="d-flex flex-column align-items-center gap-3">
-
-        <!-- Sélection du type de session (onglets) -->
+    @if (!_loaded)
+    {
+        <p class="text-muted">Chargement…</p>
+    }
+    else
+    {
+        <!-- Onglets de type de session (masqués pendant une session active) -->
         @if (_session is null || _session.Status is "Completed" or "Interrupted")
         {
-            <div class="btn-group mb-3" role="group" aria-label="Type de session">
-                <input type="radio" class="btn-check" name="sessionType" id="typeSprint" value="Sprint" 
-                       checked="@(_selectedSessionType == "Sprint")" @onchange="@(e => SelectSessionType("Sprint"))">
-                <label class="btn btn-outline-primary" for="typeSprint">
+            <div class="kf-tabs" role="tablist" aria-label="Type de session">
+                <button role="tab"
+                        aria-selected="@(_selectedSessionType == "Sprint" ? "true" : "false")"
+                        class="kf-tab @(_selectedSessionType == "Sprint" ? "is-active" : "")"
+                        @onclick='() => SelectSessionType("Sprint")'>
                     🍅 Sprint (@_sprintDuration min)
-                </label>
-
-                <input type="radio" class="btn-check" name="sessionType" id="typeShortBreak" value="ShortBreak" 
-                       checked="@(_selectedSessionType == "ShortBreak")" @onchange="@(e => SelectSessionType("ShortBreak"))">
-                <label class="btn btn-outline-success" for="typeShortBreak">
+                </button>
+                <button role="tab"
+                        aria-selected="@(_selectedSessionType == "ShortBreak" ? "true" : "false")"
+                        class="kf-tab @(_selectedSessionType == "ShortBreak" ? "is-active" : "")"
+                        @onclick='() => SelectSessionType("ShortBreak")'>
                     ☕ Pause courte (@_shortBreakDuration min)
-                </label>
-
-                <input type="radio" class="btn-check" name="sessionType" id="typeLongBreak" value="LongBreak" 
-                       checked="@(_selectedSessionType == "LongBreak")" @onchange="@(e => SelectSessionType("LongBreak"))">
-                <label class="btn btn-outline-info" for="typeLongBreak">
+                </button>
+                <button role="tab"
+                        aria-selected="@(_selectedSessionType == "LongBreak" ? "true" : "false")"
+                        class="kf-tab @(_selectedSessionType == "LongBreak" ? "is-active" : "")"
+                        @onclick='() => SelectSessionType("LongBreak")'>
                     🌙 Pause longue (@_longBreakDuration min)
-                </label>
+                </button>
             </div>
         }
 
-        <!-- Horloge circulaire -->
-        <svg viewBox="0 0 220 220" width="220" height="220" style="overflow:visible">
-            <!-- Cercle de fond -->
-            <circle cx="110" cy="110" r="95"
-                    fill="none"
-                    stroke="#e9ecef"
-                    stroke-width="14" />
-            <!-- Arc de progression -->
-            <circle cx="110" cy="110" r="95"
-                    fill="none"
-                    stroke="@ArcColor"
-                    stroke-width="14"
-                    stroke-linecap="round"
-                    stroke-dasharray="@_circumference.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
-                    stroke-dashoffset="@DashOffset.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
-                    transform="rotate(-90 110 110)"
-                    style="transition: stroke-dashoffset 0.8s linear, stroke 0.4s ease;" />
-            <!-- Temps restant -->
-            <text x="110" y="105"
-                  text-anchor="middle"
-                  dominant-baseline="middle"
-                  font-size="42"
-                  font-family="monospace"
-                  fill="currentColor">
-                @TimeDisplay
-            </text>
-            <!-- Statut -->
-            <text x="110" y="148"
-                  text-anchor="middle"
-                  font-size="15"
-                  fill="#6c757d">
-                @StatusLabel
-            </text>
-        </svg>
+        <!-- Anneau de progression -->
+        <div class="kf-pomo__ring">
+            <ProgressRing Progress="@Progress"
+                          State="@RingState"
+                          Size="236"
+                          Label="@TimeDisplay"
+                          Sublabel="@StatusLabel" />
+        </div>
 
         <!-- Boutons de contrôle -->
-        <div class="d-flex gap-2">
+        <div class="kf-pomo__controls">
             @if (_session is null || _session.Status is "Completed" or "Interrupted")
             {
-                <button class="btn btn-primary btn-lg" @onclick="StartSession">
-                    ▶ Démarrer
-                </button>
+                <Button Variant="primary" Size="lg" OnClick="StartSession">▶ Démarrer</Button>
             }
             else if (_session.Status == "Active")
             {
-                <button class="btn btn-outline-warning btn-lg" @onclick="InterruptSession">
-                    ⏹ Interrompre
-                </button>
+                <Button Variant="secondary" Size="lg" OnClick="InterruptSession">⏹ Interrompre</Button>
             }
         </div>
 
-        <!-- Résultat après fin de session -->
+        <!-- Résultat fin de session (Peak-End) -->
         @if (_completedSessionType is not null)
         {
             var (icon, label, next) = _completedSessionType switch
             {
-                "Sprint"     => ("🍅", "Sprint terminé !",      _suggestedNextSessionType switch { "LongBreak" => "Pause recommandée : longue", "ShortBreak" => "Pause recommandée : courte", _ => "" }),
+                "Sprint"     => ("🍅", "Sprint terminé !", _suggestedNextSessionType switch { "LongBreak" => "Pause recommandée : longue", "ShortBreak" => "Pause recommandée : courte", _ => "" }),
                 "ShortBreak" => ("☕", "Pause courte terminée !", "Sprint recommandé !"),
                 "LongBreak"  => ("🌙", "Pause longue terminée !", "Sprint recommandé !"),
-                _            => ("✅", "Session terminée !",       "")
+                _            => ("✅", "Session terminée !", "")
             };
-            <div class="alert alert-success text-center" style="max-width:360px">
-                @icon @label <strong>@next</strong>
-            </div>
+            <Alert Tone="success">@icon @label <strong>@next</strong></Alert>
         }
 
-        <!-- Tâches liées au sprint actif — masqué pendant une pause -->
+        <!-- Tâches liées au sprint actif — masquées pendant une pause -->
         @if (_session?.Status == "Active" && _session.SessionType == "Sprint")
         {
-            <div style="width:100%;max-width:480px">
-                <h5 class="mb-2">Tâches du sprint</h5>
+            <div class="kf-sprinttasks">
+                <h2>Tâches du sprint</h2>
 
                 @if (_linkedTasks.Count > 0)
                 {
-                    <ul class="list-group mb-3">
+                    <div class="kf-linked">
                         @foreach (var task in _linkedTasks)
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span class="d-flex gap-2 align-items-center">
-                                    <span class="@(task.Status == "Done" ? "text-decoration-line-through text-muted" : "")">
-                                        @task.Title
-                                    </span>
-                                    @if (task.Tags is { Count: > 0 })
-                                    {
-                                        <span class="badge bg-light text-dark border">@task.Tags[0]</span>
-                                    }
+                            var currentTask = task;
+                            <div class="kf-linkedrow">
+                                <span class="kf-linkedrow__title @(currentTask.Status == "Done" ? "kf-linkedrow__title--done" : "")">
+                                    @currentTask.Title
                                 </span>
-                                <span class="d-flex gap-2 align-items-center">
-                                    <span class="badge @BadgeClass(task.Status)">@task.Status</span>
-                                    @if (task.Status == "Todo")
+                                <span class="kf-linkedrow__actions">
+                                    <Badge Status="@currentTask.Status" />
+                                    @if (currentTask.Status == "Todo")
                                     {
-                                        <button class="btn btn-sm btn-outline-primary"
-                                                title="Marquer @task.Title en cours"
-                                                aria-label="Marquer la tâche @task.Title comme en cours"
-                                                @onclick="() => SetTaskInProgress(task.Id)">
-                                            En cours
-                                        </button>
+                                        <IconButton Label="@($"Marquer {currentTask.Title} en cours")"
+                                                    Tone="primary"
+                                                    Outline="true"
+                                                    Size="sm"
+                                                    OnClick="() => SetTaskInProgress(currentTask.Id)">
+                                            ▶
+                                        </IconButton>
                                     }
-                                    @if (task.Status != "Done")
+                                    @if (currentTask.Status != "Done")
                                     {
-                                        <button class="btn btn-sm btn-success"
-                                                title="Terminer @task.Title"
-                                                aria-label="Terminer la tâche @task.Title"
-                                                @onclick="() => CompleteLinkedTask(task.Id)">
+                                        <IconButton Label="@($"Terminer {currentTask.Title}")"
+                                                    Tone="success"
+                                                    Outline="true"
+                                                    Size="sm"
+                                                    OnClick="() => CompleteLinkedTask(currentTask.Id)">
                                             ✓
-                                        </button>
+                                        </IconButton>
                                     }
-                                    <button class="btn btn-sm btn-outline-danger"
-                                            title="Retirer @task.Title du sprint"
-                                            aria-label="Retirer la tâche @task.Title du sprint"
-                                            @onclick="() => UnlinkTask(task.Id)">
+                                    <IconButton Label="@($"Retirer {currentTask.Title} du sprint")"
+                                                Tone="danger"
+                                                Outline="true"
+                                                Size="sm"
+                                                OnClick="() => UnlinkTask(currentTask.Id)">
                                         ✕
-                                    </button>
+                                    </IconButton>
                                 </span>
-                            </li>
+                            </div>
                         }
-                    </ul>
+                    </div>
                 }
 
                 <!-- Lier une tâche existante -->
-                <div class="mb-2">
-                    <select class="form-select form-select-sm" @bind="_selectedTaskIdToLink">
+                <div class="kf-pomo__link-row">
+                    <select class="kf-select kf-select--sm" @bind="_selectedTaskIdToLink">
                         <option value="">— Lier une tâche existante —</option>
                         @foreach (var task in GetLinkableTasks())
                         {
                             <option value="@task.Id">@FormatTaskOption(task)</option>
                         }
                     </select>
-                    <button class="btn btn-sm btn-outline-secondary mt-1"
-                            disabled="@string.IsNullOrEmpty(_selectedTaskIdToLink)"
-                            @onclick="LinkExistingTask">
+                    <Button Variant="secondary"
+                            Size="sm"
+                            Disabled="@string.IsNullOrEmpty(_selectedTaskIdToLink)"
+                            OnClick="LinkExistingTask">
                         Lier
-                    </button>
+                    </Button>
                 </div>
 
-                <!-- Créer une nouvelle tâche -->
-                <div class="d-flex gap-2">
-                    <input class="form-control form-control-sm"
+                <!-- Créer une nouvelle tâche pendant le sprint -->
+                <div class="kf-pomo__newtask-row">
+                    <input class="kf-input kf-input--sm"
                            placeholder="Nouvelle tâche pendant le sprint…"
                            @bind="_newTaskTitle"
                            @bind:event="oninput"
                            @onkeydown="OnNewTaskKeyDown" />
-                    <button class="btn btn-sm btn-primary"
-                            disabled="@string.IsNullOrWhiteSpace(_newTaskTitle)"
-                            @onclick="CreateTask">
+                    <Button Variant="primary"
+                            Size="sm"
+                            Disabled="@string.IsNullOrWhiteSpace(_newTaskTitle)"
+                            OnClick="CreateTask">
                         +
-                    </button>
+                    </Button>
                 </div>
             </div>
         }
 
+        <!-- Erreur -->
         @if (_errorMessage is not null)
         {
-            <div class="alert alert-danger" style="max-width:480px">@_errorMessage</div>
+            <Alert Tone="danger">@_errorMessage</Alert>
         }
-    </div>
-}
+    }
+
+</div>
 
 @code {
-    // ── Constantes SVG ─────────────────────────────────────────────────────
+    // ── Constantes SVG (conservées pour DashOffset / Progress) ────────────
     private const double Radius = 95.0;
     private readonly double _circumference = 2 * Math.PI * Radius;
-
-    // ── Menu contextuel ───────────────────────────────────────────────────
-    private bool _moreMenuOpen;
-
-    private void ToggleMoreMenu() => _moreMenuOpen = !_moreMenuOpen;
-
-    private void NavigateToSprintLibre()
-    {
-        _moreMenuOpen = false;
-        Nav.NavigateTo("/pomodoro/libre");
-    }
 
     // ── État ──────────────────────────────────────────────────────────────
     private bool _loaded;
@@ -250,7 +204,33 @@ else
     private int _totalSeconds;
     private CancellationTokenSource? _timerCts;
 
-    // ── Computed ──────────────────────────────────────────────────────────
+    // ── Computed — présentation ───────────────────────────────────────────
+
+    /// <summary>Fraction restante pour ProgressRing (1.0 = plein, 0.0 = vide).</summary>
+    private double Progress =>
+        (_totalSeconds > 0 && _session?.Status == "Active")
+            ? Math.Clamp((double)_remainingSeconds / _totalSeconds, 0.0, 1.0)
+            : (_session?.Status == "Completed" ? 1.0 : 1.0);
+
+    /// <summary>
+    /// Mapping Status + SessionType → state ProgressRing.
+    /// Valeurs réelles C# : Status = "Active"/"Completed"/"Interrupted"/null
+    ///                       SessionType = "Sprint"/"ShortBreak"/"LongBreak"
+    /// </summary>
+    private string RingState => _session?.Status switch
+    {
+        "Active" => _session.SessionType switch
+        {
+            "Sprint"     => "sprint",
+            "ShortBreak" => "shortBreak",
+            "LongBreak"  => "longBreak",
+            _            => "sprint"
+        },
+        "Completed"   => "done",
+        "Interrupted" => "interrupted",
+        _             => "idle"
+    };
+
     private string TimeDisplay =>
         _remainingSeconds >= 0
             ? $"{_remainingSeconds / 60:D2}:{_remainingSeconds % 60:D2}"
@@ -260,30 +240,17 @@ else
     {
         "Active" => _session.SessionType switch
         {
-            "Sprint" => "Sprint en cours",
+            "Sprint"     => "Sprint en cours",
             "ShortBreak" => "Pause courte",
-            "LongBreak" => "Pause longue",
-            _ => "En cours"
+            "LongBreak"  => "Pause longue",
+            _            => "En cours"
         },
         "Completed"   => "Terminé",
         "Interrupted" => "Interrompu",
         _             => "Prêt"
     };
 
-    private string ArcColor => _session?.Status switch
-    {
-        "Active" => _session.SessionType switch
-        {
-            "Sprint" => "#0d6efd",      // Bleu pour sprint
-            "ShortBreak" => "#198754",  // Vert pour pause courte
-            "LongBreak" => "#0dcaf0",   // Cyan pour pause longue
-            _ => "#0d6efd"
-        },
-        "Completed"   => "#198754",
-        "Interrupted" => "#ffc107",
-        _             => "#adb5bd"
-    };
-
+    // DashOffset conservé pour compatibilité (non utilisé directement dans le template — Progress le remplace)
     private double DashOffset
     {
         get
@@ -306,7 +273,6 @@ else
         _allTasks = await TaskApi.GetAllAsync();
         _session  = await PomodoroApi.GetCurrentSessionAsync();
 
-        // Load suggested session type and durations
         var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
         if (suggested is not null)
         {
@@ -347,6 +313,8 @@ else
         _selectedSessionType = sessionType;
         StateHasChanged();
     }
+
+    private void NavigateToSprintLibre() => Nav.NavigateTo("/pomodoro/libre");
 
     private async Task StartSession()
     {
@@ -549,11 +517,4 @@ else
         task.Tags is { Count: > 0 }
             ? $"[{task.Tags[0]}] {task.Title}"
             : task.Title;
-
-    private static string BadgeClass(string status) => status switch
-    {
-        "Done"       => "bg-success",
-        "InProgress" => "bg-warning text-dark",
-        _            => "bg-secondary"
-    };
 }
