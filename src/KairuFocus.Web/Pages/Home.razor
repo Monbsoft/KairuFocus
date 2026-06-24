@@ -7,55 +7,41 @@
 
 <PageTitle>@Loc["PageTitle"]</PageTitle>
 
-<div class="landing">
-    <section class="landing-hero">
-        <div class="landing-hero-content">
-            <div class="landing-logo">K</div>
-            <h1 class="landing-title">KairuFocus</h1>
-            <p class="landing-tagline">@Loc["Tagline"]</p>
-            <p class="landing-desc">
-                @Loc["Description"]
-            </p>
-            <a href="@_githubLoginUrl" class="btn btn-github btn-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="me-2" aria-hidden="true">
-                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-                </svg>
-                @Loc["LoginButton"]
-            </a>
+<div class="kf-landing">
+    <section class="kf-hero">
+        <div class="kf-hero__in">
+            <div class="kf-hero__logo" aria-hidden="true">K</div>
+            <h1 class="kf-hero__title">KairuFocus</h1>
+            <p class="kf-hero__tag">@Loc["Tagline"]</p>
+            <p class="kf-hero__desc">@Loc["Description"]</p>
+            <Button Variant="accent" Size="lg" As="a" Href="@_githubLoginUrl">
+                <Icon>@GithubIcon</Icon>
+                <ChildContent>@Loc["LoginButton"]</ChildContent>
+            </Button>
         </div>
     </section>
 
-    <section class="landing-features">
-        <div class="container">
-            <div class="row g-4 justify-content-center">
-                <div class="col-md-6 col-lg-3">
-                    <div class="feature-card">
-                        <div class="feature-icon">&#9745;</div>
-                        <h3 class="feature-title">@Loc["FeatureTasks"]</h3>
-                        <p class="feature-desc">@Loc["FeatureTasksDesc"]</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="feature-card">
-                        <div class="feature-icon">&#127813;</div>
-                        <h3 class="feature-title">@Loc["FeaturePomodoro"]</h3>
-                        <p class="feature-desc">@Loc["FeaturePomodoroDesc"]</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="feature-card">
-                        <div class="feature-icon">&#128214;</div>
-                        <h3 class="feature-title">@Loc["FeatureJournal"]</h3>
-                        <p class="feature-desc">@Loc["FeatureJournalDesc"]</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <div class="feature-card">
-                        <div class="feature-icon">&#129302;</div>
-                        <h3 class="feature-title">@Loc["FeatureAI"]</h3>
-                        <p class="feature-desc">@Loc["FeatureAIDesc"]</p>
-                    </div>
-                </div>
+    <section class="kf-features">
+        <div class="kf-features__grid">
+            <div class="kf-feature">
+                <span class="kf-feature__icon" aria-hidden="true">&#9745;</span>
+                <h3 class="kf-feature__title">@Loc["FeatureTasks"]</h3>
+                <p class="kf-feature__desc">@Loc["FeatureTasksDesc"]</p>
+            </div>
+            <div class="kf-feature">
+                <span class="kf-feature__icon" aria-hidden="true">&#127813;</span>
+                <h3 class="kf-feature__title">@Loc["FeaturePomodoro"]</h3>
+                <p class="kf-feature__desc">@Loc["FeaturePomodoroDesc"]</p>
+            </div>
+            <div class="kf-feature">
+                <span class="kf-feature__icon" aria-hidden="true">&#128214;</span>
+                <h3 class="kf-feature__title">@Loc["FeatureJournal"]</h3>
+                <p class="kf-feature__desc">@Loc["FeatureJournalDesc"]</p>
+            </div>
+            <div class="kf-feature">
+                <span class="kf-feature__icon" aria-hidden="true">&#129302;</span>
+                <h3 class="kf-feature__title">@Loc["FeatureAI"]</h3>
+                <p class="kf-feature__desc">@Loc["FeatureAIDesc"]</p>
             </div>
         </div>
     </section>
@@ -63,6 +49,15 @@
 
 @code {
     private string _githubLoginUrl = "#";
+
+    // GitHub SVG icon — brand asset, rendered via RenderFragment to avoid Razor SVG parsing issues.
+    private static readonly RenderFragment GithubIcon = builder =>
+    {
+        builder.AddMarkupContent(0,
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\">" +
+            "<path d=\"M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z\"/>" +
+            "</svg>");
+    };
 
     protected override void OnInitialized()
     {

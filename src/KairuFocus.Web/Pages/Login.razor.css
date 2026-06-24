@@ -1,47 +1,52 @@
-.login-container {
+/* ── Login page — kf-login* (Phase 3, DS LoginScreen.jsx) ──────────────── */
+
+.kf-login {
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    background: var(--bs-body-bg);
+    background: var(--surface-base);
+    padding: 1.5rem;
 }
 
-.login-card {
+.kf-login__card {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
     padding: 2.5rem 2rem;
-    background: var(--bs-body-bg);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
     max-width: 380px;
     width: 100%;
+    text-align: center;
 }
 
-.login-logo {
+.kf-login__logo {
     width: 64px;
     height: 64px;
-    background: #0d6efd;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
+    background: var(--brand-mark-bg);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 2rem;
-    font-weight: 700;
-    color: white;
+    font-weight: 800;
+    /* White is invariant here: it is the contrast color against the brand gradient */
+    color: #fff;
 }
 
-.login-title {
+.kf-login__title {
     font-size: 1.75rem;
     font-weight: 700;
-    margin: 0;
+    margin: 0.25rem 0 0;
+    color: var(--text-primary);
 }
 
-.login-subtitle {
-    color: var(--bs-secondary);
-    text-align: center;
-    margin: 0;
+.kf-login__sub {
+    color: var(--text-muted);
+    margin: 0 0 0.5rem;
     font-size: 0.9rem;
 }
-

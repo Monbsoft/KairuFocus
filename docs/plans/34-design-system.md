@@ -539,7 +539,7 @@ Role = `"alert"` si `Tone == "danger"`, `"status"` sinon (WCAG live region).
 
 ---
 
-## Phase 3 — Login et Landing
+## Phase 3 — Login et Landing ✅ complétée le 2026-06-24
 
 ### Login.razor + Login.razor.css
 
@@ -762,7 +762,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 
 **i18n :**
 - [ ] Toutes les chaînes visibles par l'utilisateur passent par `@Loc` / `.resx`.
-- [ ] Cas identifiés en dur dans Login.razor → portés en `.resx` dans cette PR.
+- [x] Cas identifiés en dur dans Login.razor → portés en `.resx` dans cette PR. ← Phase 3
 - [ ] Autres chaînes en dur (Dashboard date locale, labels session Pomodoro) documentés comme écarts.
 
 **Build et tests :**
@@ -837,6 +837,14 @@ feat(34): docs — mise à jour project-state.md + spec.md
 - **Alert.razor — `color-mix()`** : le JSX source utilise `color-mix(in srgb, ...)` pour les bordures. Conservé tel quel (Edge ≥109, Firefox ≥113, Chrome ≥111). Si color-mix() n'est pas supporté, `border-color: transparent` (inoffensif). Documenté en commentaire CSS.
 
 - **`--pomo-done` absent des tokens** : le JSX source mappe l'état `done` sur `var(--pomo-done)` mais ce token n'existe pas dans `colors.css`. Solution appliquée : `.kf-ring--done { stroke: var(--success) }` (même valeur sémantique, cohérent avec le plan §1.4).
+
+### Phase 3 (Login + Landing) — complétée le 2026-06-24
+
+- **Login.resx — 8 langues non traduites** : les fichiers `.resx` créés sont `Login.resx` (fallback fr) et `Login.fr.resx`. Les 8 autres langues supportées par Home (en, de, es, pt, it, ru, ja, ko, zh) n'ont pas de traduction pour Login. Le fallback évite tout texte cassé — les utilisateurs dans ces locales verront les chaînes françaises jusqu'à ce que les traductions soient fournies. À documenter pour une itération i18n dédiée.
+
+- **Icône SVG GitHub dans Button** : le composant `Button` accepte un `RenderFragment Icon`. L'icône SVG ne peut pas être insérée directement en Razor markup dans un slot nommé non-ChildContent (le compilateur Razor RZ9996 refuse `<Icon><svg>…</svg></Icon>` quand le composant déclare plusieurs RenderFragment). Solution appliquée : `RenderFragment` statique dans `@code` avec `builder.AddMarkupContent()`. Comportement identique, pas d'impact UX.
+
+- **`btn-github` dans app.css conservé** : la classe `.btn-github` existe encore dans `app.css` pour d'éventuels usages legacy. Elle n'est plus référencée dans Login.razor ni Home.razor après cette phase. Peut être supprimée en nettoyage Phase 8 ou dans une PR dédiée.
 
 ### Phase 0 (fondation CSS) — complétée le 2026-06-24
 
