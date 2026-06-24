@@ -597,7 +597,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 
 ---
 
-## Phase 5 — Tasks, TaskDetail, TaskEdit
+## Phase 5 — Tasks, TaskDetail, TaskEdit ✅ complétée le 2026-06-24
 
 ### Tasks.razor
 
@@ -857,6 +857,16 @@ feat(34): docs — mise à jour project-state.md + spec.md
 - **Chaînes FR en dur conservées** : greeting ("Bonjour,"), date `fr-FR`, labels StatCard ("Taches en cours", "Sprint actif", etc.) et labels quick links — documentés comme dette i18n (#34 hors scope). Seules les nouvelles chaînes introduites par le bloc Zeigarnik passent par `@Loc` (fichier `Dashboard.resx` créé, fallback FR uniquement).
 
 - **`Dashboard.resx` créé** avec 8 clés (Resume.*, Stats.SectionLabel, QuickLinks.SectionLabel, Loading). Pas de fichiers `.fr.resx` / `.en.resx` créés — même pattern que `Login.resx` (fallback FR seul, i18n multi-langue reportée).
+
+### Phase 5 (Tasks, TaskDetail, TaskEdit) — complétée le 2026-06-24
+
+- **`Tag.ChildContent` de type `string?`** : le compilateur Razor (RZ9986 / CS1660) refuse `<Tag Hash>@variable</Tag>` quand `ChildContent` est `string?` (contenu mixte non supporté en attribut de composant). Solution appliquée : syntaxe attribut explicite `<Tag Hash ChildContent="@variable" />` partout où le contenu est une expression C# dynamique. Les lambdas capturant des variables de boucle `foreach` nécessitent une capture locale explicite (`var current = task;` ou `var capturedTag = tag;`) pour éviter le piège de closure.
+
+- **Chaînes FR en dur conservées** : titres "Tâches", "Modifier la tâche", labels de filtres, messages d'erreur, empty state — même pattern que Dashboard (dette i18n documentée, hors scope). Aucun `@inject IStringLocalizer` ajouté car ces pages n'utilisaient pas `@Loc` avant la phase 5.
+
+- **`TagColors.cs` (Web) encore référencé dans** : `src/KairuFocus.Web/Pages/Journal.razor` (ligne 68, `@TagColors.GetClass(tag)`). Migration vers `<Tag>` prévue en Phase 7 (Journal). Le fichier n'est pas supprimé.
+
+- **CSS isolé `.razor.css`** : `kf-input`, `kf-select`, `kf-md`, `kf-tab2` définis séparément dans `Tasks.razor.css`, `TaskDetail.razor.css` et `TaskEdit.razor.css` (CSS scoping Blazor interdit le partage entre composants). La duplication est intentionnelle et nécessaire.
 
 ### Phase 0 (fondation CSS) — complétée le 2026-06-24
 

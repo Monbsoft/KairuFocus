@@ -5,45 +5,67 @@
 @inject NavigationManager Nav
 @inject MarkdownService MarkdownSvc
 
-@if (notFound)
-{
-    <div class="alert alert-warning">Tâche introuvable.</div>
-    <button class="btn btn-secondary" @onclick="GoBack">Retour</button>
-}
-else if (task is null)
-{
-    <p>Chargement…</p>
-}
-else
-{
-    <div class="d-flex align-items-center gap-3 mb-3">
-        <h2 class="mb-0">@task.Title</h2>
-        <span class="badge @MarkdownService.StatusBadgeClass(task.Status)">@task.Status</span>
-        @if (!string.IsNullOrWhiteSpace(task.JiraTicketKey))
-        {
-            <span class="badge bg-primary">@task.JiraTicketKey</span>
-        }
-    </div>
+<PageTitle>@(task?.Title ?? "Tâche") — KairuFocus</PageTitle>
 
-    <div class="border rounded p-3 bg-body-tertiary mb-3" style="min-height: 100px;">
-        @if (string.IsNullOrWhiteSpace(task.Description))
-        {
-            <p class="text-muted fst-italic">Aucune description.</p>
-        }
-        else
-        {
-            @((MarkupString)MarkdownSvc.Render(task.Description))
-        }
-    </div>
+<div class="kf-te">
+    @if (notFound)
+    {
+        <Alert Tone="warning">Tâche introuvable.</Alert>
+        <div class="kf-te__actions">
+            <Button Variant="secondary" OnClick="GoBack">Retour</Button>
+        </div>
+    }
+    else if (task is null)
+    {
+        <p style="color: var(--text-muted);">Chargement…</p>
+    }
+    else
+    {
+        <div class="kf-te__back">
+            <Button Variant="ghost" Size="sm" OnClick="GoBack">← Retour</Button>
+        </div>
 
-    <div class="d-flex gap-2">
-        @if (task.Status != "Done")
+        <div class="kf-te__head">
+            <h1 class="kf-te__title">@task.Title</h1>
+            <Badge Status="@task.Status" />
+            @if (!string.IsNullOrWhiteSpace(task.JiraTicketKey))
+            {
+                <Badge Variant="solid">@task.JiraTicketKey</Badge>
+            }
+        </div>
+
+        @if (task.Tags is { Count: > 0 })
         {
-            <button class="btn btn-primary" @onclick="GoToEdit">Modifier</button>
+            <div class="kf-te__tags">
+                @foreach (var tag in task.Tags)
+                {
+                    <Tag Hash ChildContent="@tag" />
+                }
+            </div>
         }
-        <button class="btn btn-secondary" @onclick="GoBack">Retour</button>
-    </div>
-}
+
+        <Card Class="kf-detailcard">
+            @if (string.IsNullOrWhiteSpace(task.Description))
+            {
+                <p class="kf-md__empty">Aucune description.</p>
+            }
+            else
+            {
+                <div class="kf-md" style="border: none; padding: 0; background: transparent; min-height: 80px;">
+                    @((MarkupString)MarkdownSvc.Render(task.Description))
+                </div>
+            }
+        </Card>
+
+        <div class="kf-te__actions">
+            @if (task.Status != "Done")
+            {
+                <Button Variant="primary" OnClick="GoToEdit">Modifier</Button>
+            }
+            <Button Variant="secondary" OnClick="GoBack">Retour</Button>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter] public Guid Id { get; set; }

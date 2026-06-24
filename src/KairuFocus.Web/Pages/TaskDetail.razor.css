@@ -1,0 +1,85 @@
+/* TaskDetail — CSS isolé Phase 5 (partagé avec le layout kf-te) */
+
+.kf-te {
+    max-width: var(--container-md);
+}
+
+.kf-te__back {
+    margin-bottom: 1rem;
+}
+
+.kf-te__head {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.kf-te__title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.kf-te__tags {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Markdown content container (detail view) */
+.kf-md {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    background: var(--surface-sunken);
+    min-height: 100px;
+    color: var(--text-primary);
+    line-height: var(--leading-relaxed);
+}
+
+.kf-md h1,
+.kf-md h2,
+.kf-md h3 {
+    margin: .4rem 0;
+    font-weight: 700;
+}
+
+.kf-md h1 { font-size: var(--text-lg); }
+.kf-md h2 { font-size: var(--text-md); }
+.kf-md h3 { font-size: var(--text-base); }
+
+.kf-md code {
+    font-family: var(--font-mono);
+    font-size: .85em;
+    background: var(--surface-hover);
+    padding: .1em .35em;
+    border-radius: 4px;
+}
+
+.kf-md ul {
+    margin: .4rem 0;
+    padding-left: 1.25rem;
+}
+
+.kf-md li { margin: .15rem 0; }
+.kf-md p  { margin: .4rem 0; }
+
+.kf-md__empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.kf-detailcard {
+    margin-bottom: 1.25rem;
+}
+
+.kf-te__actions {
+    display: flex;
+    gap: .6rem;
+    margin-top: 1.5rem;
+}

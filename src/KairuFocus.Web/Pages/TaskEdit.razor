@@ -5,121 +5,126 @@
 @inject NavigationManager Nav
 @inject MarkdownService MarkdownSvc
 
-@if (notFound)
-{
-    <div class="alert alert-warning">Tâche introuvable.</div>
-    <button class="btn btn-secondary" @onclick="GoBack">Retour</button>
-}
-else if (task is null)
-{
-    <p>Chargement…</p>
-}
-else
-{
-    <h2>Modifier la tâche</h2>
+<PageTitle>Modifier — KairuFocus</PageTitle>
 
-    @if (errorMessage is not null)
+<div class="kf-te">
+    @if (notFound)
     {
-        <div class="alert alert-danger">@errorMessage</div>
+        <Alert Tone="warning">Tâche introuvable.</Alert>
+        <div class="kf-te__actions">
+            <Button Variant="secondary" OnClick="GoBack">Retour</Button>
+        </div>
     }
+    else if (task is null)
+    {
+        <p style="color: var(--text-muted);">Chargement…</p>
+    }
+    else
+    {
+        <div class="kf-te__back">
+            <Button Variant="ghost" Size="sm" OnClick="GoBack">← Retour</Button>
+        </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-bold">Titre</label>
-        <input class="form-control" @bind="editTitle" @bind:event="oninput" placeholder="Titre…" />
-    </div>
+        <h1 class="kf-te__title" style="margin-bottom: 1.25rem;">Modifier la tâche</h1>
 
-    <div class="mb-3">
-        <label class="form-label fw-bold">Tags</label>
-        <div class="d-flex flex-wrap gap-1 mb-1">
-            @foreach (var tag in editTags)
+        @if (errorMessage is not null)
+        {
+            <Alert Tone="danger">@errorMessage</Alert>
+        }
+
+        @* Champ Titre *@
+        <div class="kf-te__field">
+            <label class="kf-te__label" for="edit-title">Titre</label>
+            <input id="edit-title"
+                   class="kf-input"
+                   placeholder="Titre…"
+                   @bind="editTitle"
+                   @bind:event="oninput" />
+        </div>
+
+        @* Champ Tags *@
+        <div class="kf-te__field">
+            <span class="kf-te__label">Tags</span>
+            <div class="kf-te__tags">
+                @foreach (var tag in editTags)
+                {
+                    var capturedTag = tag;
+                    <Tag Hash ChildContent="@capturedTag" OnRemove="() => RemoveEditTag(capturedTag)" />
+                }
+            </div>
+            <div style="max-width: 320px;">
+                <input class="kf-input"
+                       placeholder="@(editTags.Count >= MaxTags ? "Maximum 5 tags" : "Ajouter un tag… (Entrée)")"
+                       aria-label="Ajouter un tag"
+                       disabled="@(editTags.Count >= MaxTags)"
+                       @bind="editTagInput"
+                       @bind:event="oninput"
+                       @onkeydown="OnEditTagKeyDown" />
+            </div>
+        </div>
+
+        @* Champ Description — onglets Éditer / Prévisualiser *@
+        <div class="kf-te__field">
+            <span class="kf-te__label">Description</span>
+
+            <div class="kf-tabs2" role="tablist">
+                <button role="tab"
+                        aria-selected="@(editTab == "edit")"
+                        class="kf-tab2 @(editTab == "edit" ? "is-active" : "")"
+                        @onclick='() => editTab = "edit"'>
+                    Éditer
+                </button>
+                <button role="tab"
+                        aria-selected="@(editTab == "preview")"
+                        class="kf-tab2 @(editTab == "preview" ? "is-active" : "")"
+                        @onclick='() => editTab = "preview"'>
+                    Prévisualiser
+                </button>
+            </div>
+
+            @if (editTab == "edit")
             {
-                <span class="badge @TagColorClass(tag)">
-                    @tag
-                    <button type="button" class="btn-close btn-close-white ms-1" style="font-size:0.6em;"
-                            @onclick="() => RemoveEditTag(tag)" aria-label="Retirer"></button>
-                </span>
+                <textarea class="kf-md kf-md-edit"
+                          rows="10"
+                          aria-label="Description Markdown"
+                          placeholder="Description en Markdown…"
+                          @bind="editDescMd"
+                          @bind:event="oninput"></textarea>
+                <div class="kf-charcount @(editDescMd.Length > DescriptionMaxLength ? "kf-charcount--over" : "")">
+                    @editDescMd.Length / @DescriptionMaxLength
+                </div>
+            }
+            else
+            {
+                <div class="kf-md kf-mdpreview">
+                    @if (string.IsNullOrWhiteSpace(editDescMd))
+                    {
+                        <p class="kf-md__empty">Aucun contenu à prévisualiser.</p>
+                    }
+                    else
+                    {
+                        @((MarkupString)MarkdownSvc.Render(editDescMd))
+                    }
+                </div>
             }
         </div>
-        <div class="input-group" style="max-width: 320px;">
-            <input class="form-control form-control-sm"
-                   placeholder="@(editTags.Count >= MaxTags ? "Maximum 5 tags" : "Ajouter un tag… (Entrée)")"
-                   disabled="@(editTags.Count >= MaxTags)"
-                   @bind="editTagInput"
-                   @bind:event="oninput"
-                   @onkeydown="OnEditTagKeyDown" />
+
+        <div class="kf-te__actions">
+            <Button Variant="primary"
+                    Disabled="@(editDescMd.Length > DescriptionMaxLength || string.IsNullOrWhiteSpace(editTitle))"
+                    OnClick="SaveEdit">
+                Enregistrer
+            </Button>
+            <Button Variant="secondary" OnClick="GoBack">Annuler</Button>
         </div>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label fw-bold">Description</label>
-        <ul class="nav nav-tabs mb-2">
-            <li class="nav-item">
-                <button class="nav-link @(editTab == "edit" ? "active" : "")" @onclick='() => editTab = "edit"'>Éditer</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link @(editTab == "preview" ? "active" : "")" @onclick='() => editTab = "preview"'>Prévisualiser</button>
-            </li>
-        </ul>
-        @if (editTab == "edit")
-        {
-            <textarea class="form-control font-monospace"
-                      rows="12"
-                      @bind="editDescMd"
-                      @bind:event="oninput"
-                      placeholder="Description en Markdown…"></textarea>
-            <div class="mt-1 small @(editDescMd.Length > DescriptionMaxLength ? "text-danger fw-bold" : "text-muted")">
-                @editDescMd.Length / @DescriptionMaxLength
-            </div>
-        }
-        else
-        {
-            <div class="border rounded p-3 bg-body-tertiary" style="min-height: 200px;">
-                @if (string.IsNullOrWhiteSpace(editDescMd))
-                {
-                    <p class="text-muted fst-italic">Aucun contenu à prévisualiser.</p>
-                }
-                else
-                {
-                    @((MarkupString)MarkdownSvc.Render(editDescMd))
-                }
-            </div>
-        }
-    </div>
-
-    <div class="d-flex gap-2">
-        <button class="btn btn-primary"
-                disabled="@(editDescMd.Length > DescriptionMaxLength || string.IsNullOrWhiteSpace(editTitle))"
-                @onclick="SaveEdit">Enregistrer</button>
-        <button class="btn btn-secondary" @onclick="GoBack">Annuler</button>
-    </div>
-}
+    }
+</div>
 
 @code {
     private const int MaxTags = 5;
-
-    private static readonly string[] TagPalette =
-    [
-        "bg-primary",
-        "bg-success",
-        "bg-danger",
-        "bg-warning text-dark",
-        "bg-info text-dark",
-        "bg-secondary",
-        "text-bg-purple",
-        "text-bg-orange",
-        "text-bg-teal",
-        "text-bg-pink"
-    ];
-
-    private static string TagColorClass(string tag)
-    {
-        var hash = Math.Abs(tag.ToLowerInvariant().GetHashCode());
-        return TagPalette[hash % TagPalette.Length];
-    }
+    private const int DescriptionMaxLength = 5000;
 
     [Parameter] public Guid Id { get; set; }
-
-    private const int DescriptionMaxLength = 5000;
 
     private TaskDto? task;
     private bool notFound;
@@ -183,4 +188,3 @@ else
 
     private void GoBack() => Nav.NavigateTo("/tasks");
 }
-
