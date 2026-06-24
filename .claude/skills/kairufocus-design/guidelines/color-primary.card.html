@@ -1,0 +1,26 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Primary — Blue" subtitle="The K-mark blue; primary actions, links, sprint ring" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-card); font-family: var(--font-sans); }
+  .row { display: flex; gap: 10px; }
+  .sw { flex: 1; }
+  .chip { height: 64px; border-radius: var(--radius-md); border: 1px solid rgba(0,0,0,.06); }
+  .lbl { margin-top: 8px; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+  .nm { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:var(--kf-blue-100)"></div><div class="lbl">blue-100</div></div>
+    <div class="sw"><div class="chip" style="background:var(--kf-blue-200)"></div><div class="lbl">blue-200</div></div>
+    <div class="sw"><div class="chip" style="background:var(--kf-blue-500)"></div><div class="lbl">blue-500</div></div>
+    <div class="sw"><div class="chip" style="background:var(--kf-blue-600)"></div><div class="nm" style="color:#fff;margin-top:-28px;margin-left:8px;position:relative">primary</div><div class="lbl">blue-600 · #0d6efd</div></div>
+    <div class="sw"><div class="chip" style="background:var(--kf-blue-700)"></div><div class="lbl">blue-700 · hover</div></div>
+    <div class="sw"><div class="chip" style="background:var(--kf-blue-800)"></div><div class="lbl">blue-800 · active</div></div>
+  </div>
+</body>
+</html>

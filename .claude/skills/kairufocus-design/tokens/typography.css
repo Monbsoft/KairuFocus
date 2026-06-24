@@ -1,0 +1,48 @@
+/* ============================================================
+   KairuFocus — Typography tokens
+   Sans: native system stack (honors the app's Helvetica Neue
+   heritage — fast, zero-load, familiar to developers).
+   Mono: JetBrains Mono for timers, code, tags-as-data and any
+   tabular/numeric voice (the app uses monospace for the
+   Pomodoro clock — we give that voice a real brand face).
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---- Families ---- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+               Helvetica, Arial, "Noto Sans", sans-serif,
+               "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "SF Mono", Menlo,
+               Consolas, "Liberation Mono", monospace;
+
+  /* ---- Type scale (1.20 minor-third, rem-based) ---- */
+  --text-xs:    0.75rem;   /* 12px — meta, time labels, badges */
+  --text-sm:    0.875rem;  /* 14px — secondary body, list meta */
+  --text-base:  1rem;      /* 16px — body default */
+  --text-md:    1.125rem;  /* 18px — lead body, card titles */
+  --text-lg:    1.375rem;  /* 22px — section headings (h4/h5) */
+  --text-xl:    1.75rem;   /* 28px — page titles (h2) */
+  --text-2xl:   2.25rem;   /* 36px — dashboard greeting / hero sub */
+  --text-3xl:   3rem;      /* 48px — landing hero title */
+
+  /* ---- Weights ---- */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-extra:    800;
+
+  /* ---- Line heights ---- */
+  --leading-tight:   1.15;  /* display / large headings */
+  --leading-snug:    1.3;   /* headings, card titles */
+  --leading-normal:  1.5;   /* UI text */
+  --leading-relaxed: 1.7;   /* long-form descriptions */
+
+  /* ---- Letter spacing ---- */
+  --tracking-tight:  -0.02em;  /* hero / big titles */
+  --tracking-normal: 0;
+  --tracking-wide:   0.08em;   /* uppercase section eyebrows */
+  --tracking-wider:  0.18em;   /* journal day label */
+}

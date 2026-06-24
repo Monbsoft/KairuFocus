@@ -1,0 +1,55 @@
+/* ============================================================
+   KairuFocus — Base layer
+   Minimal element defaults wired to tokens. Consumers get
+   sensible body typography + theme-aware surface out of the box.
+   (Bridges a few Bootstrap vars so the token system and the
+   app's existing Bootstrap usage stay in sync.)
+   ============================================================ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--surface-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Bridge: keep Bootstrap's runtime vars pointed at our tokens */
+:root,
+[data-bs-theme="light"],
+[data-bs-theme="dark"] {
+  --bs-body-bg: var(--surface-base);
+  --bs-body-color: var(--text-primary);
+  --bs-border-color: var(--border-subtle);
+  --bs-primary: var(--primary);
+  --bs-secondary-color: var(--text-muted);
+  --bs-tertiary-bg: var(--surface-sunken);
+  --bs-secondary-bg: var(--surface-hover);
+}
+
+/* Accessible focus — never remove the ring without a replacement */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--primary);
+  text-underline-offset: 0.15em;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--primary-subtle);
+}

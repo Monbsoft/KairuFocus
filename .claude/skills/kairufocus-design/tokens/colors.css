@@ -1,0 +1,195 @@
+/* ============================================================
+   KairuFocus — Color tokens
+   Base palette (raw hues) + semantic aliases (theme-aware).
+   Grounded in the real app colors: blue primary, navy/purple
+   sidebar, coral accent, Bootstrap-aligned semantic hues.
+   ============================================================ */
+
+:root {
+  /* ---- Brand: primary blue (the "K" mark, primary actions) ---- */
+  --kf-blue-50:  #e7f1ff;
+  --kf-blue-100: #cfe2ff;
+  --kf-blue-200: #9ec5fe;
+  --kf-blue-400: #4d94ff;
+  --kf-blue-500: #2b7dff;
+  --kf-blue-600: #0d6efd;   /* primary */
+  --kf-blue-700: #0b5ed7;   /* hover   */
+  --kf-blue-800: #0a58ca;   /* active  */
+
+  /* ---- Brand: ink / navy (hero, sidebar, dark surfaces) ---- */
+  --kf-ink-900:      #13131f;  /* deepest app surface (dark theme body) */
+  --kf-ink-850:      #1a1a2e;  /* hero darkest */
+  --kf-ink-800:      #16213e;  /* hero mid / elevated dark navy */
+  --kf-ink-700:      #0f3460;  /* hero light */
+  --kf-sidebar-top:  #052767;  /* sidebar gradient start (deep blue) */
+  --kf-sidebar-end:  #3a0647;  /* sidebar gradient end (deep purple) */
+
+  /* ---- Brand: coral accent (logo highlight, isolation/CTA pop) ---- */
+  --kf-coral-400: #ff6b81;
+  --kf-coral-500: #e94560;
+  --kf-coral-600: #d63a52;
+
+  /* ---- Semantic hues (aligned to the app's Bootstrap usage) ---- */
+  --kf-green-400:  #34c77b;
+  --kf-green-500:  #198754;  /* success / sprint break */
+  --kf-green-600:  #157347;
+  --kf-red-500:    #dc3545;  /* danger */
+  --kf-red-600:    #bb2d3b;
+  --kf-amber-400:  #ffce3a;
+  --kf-amber-500:  #ffc107;  /* warning / interrupted */
+  --kf-cyan-500:   #0dcaf0;  /* info / long break */
+  --kf-purple-500: #6f42c1;  /* task accent (journal dots) */
+  --kf-orange-500: #fd7e14;  /* warn dots / orange tag */
+  --kf-pink-500:   #d63384;
+  --kf-teal-500:   #20c997;
+
+  /* ---- Neutral: warm-gray for light surfaces ---- */
+  --kf-white:     #ffffff;
+  --kf-gray-50:   #f8f9fa;
+  --kf-gray-100:  #f1f3f5;
+  --kf-gray-200:  #e9ecef;
+  --kf-gray-300:  #dee2e6;
+  --kf-gray-400:  #ced4da;
+  --kf-gray-500:  #adb5bd;
+  --kf-gray-600:  #6c757d;
+  --kf-gray-700:  #495057;
+  --kf-gray-800:  #343a40;
+  --kf-gray-900:  #212529;
+
+  /* ---- Neutral: slate for dark surfaces ---- */
+  --kf-slate-950: #0f172a;
+  --kf-slate-900: #13131f;
+  --kf-slate-850: #172033;
+  --kf-slate-800: #1e293b;
+  --kf-slate-700: #334155;
+  --kf-slate-600: #475569;
+  --kf-slate-400: #94a3b8;
+  --kf-slate-300: #cbd5e1;
+  --kf-slate-200: #e2e8f0;
+}
+
+/* ============================================================
+   Semantic aliases — LIGHT (default)
+   ============================================================ */
+:root,
+[data-bs-theme="light"] {
+  /* Surfaces */
+  --surface-base:      var(--kf-gray-50);   /* app background */
+  --surface-card:      var(--kf-white);     /* cards, panels */
+  --surface-elevated:  var(--kf-white);     /* popovers, dropdowns */
+  --surface-sunken:    var(--kf-gray-100);  /* inset / muted areas */
+  --surface-hover:     var(--kf-gray-100);  /* row / item hover */
+
+  /* Borders */
+  --border-subtle:     var(--kf-gray-200);
+  --border-default:    var(--kf-gray-300);
+  --border-strong:     var(--kf-gray-400);
+
+  /* Text */
+  --text-primary:      var(--kf-gray-900);
+  --text-secondary:    var(--kf-gray-700);
+  --text-muted:        var(--kf-gray-600);
+  --text-on-accent:    var(--kf-white);
+
+  /* Primary */
+  --primary:           var(--kf-blue-600);
+  --primary-hover:     var(--kf-blue-700);
+  --primary-active:    var(--kf-blue-800);
+  --primary-subtle:    var(--kf-blue-50);   /* tinted background */
+  --primary-border:    var(--kf-blue-200);
+  --on-primary:        var(--kf-white);
+
+  /* Accent (coral) */
+  --accent:            var(--kf-coral-500);
+  --accent-hover:      var(--kf-coral-600);
+
+  /* Status — solid + subtle background + readable text-on-subtle */
+  --success:           var(--kf-green-500);
+  --success-subtle:    #e8f5ee;
+  --success-text:      #0f5132;
+  --danger:            var(--kf-red-500);
+  --danger-subtle:     #fbe9eb;
+  --danger-text:       #842029;
+  --warning:           var(--kf-amber-500);
+  --warning-subtle:    #fff3cd;
+  --warning-text:      #664d03;
+  --info:              var(--kf-cyan-500);
+  --info-subtle:       #e8f8fc;
+  --info-text:         #055160;
+  --task:              var(--kf-purple-500);
+  --task-subtle:       #f0ebfa;
+
+  /* Pomodoro ring states */
+  --pomo-sprint:       var(--kf-blue-600);
+  --pomo-short-break:  var(--kf-green-500);
+  --pomo-long-break:   var(--kf-cyan-500);
+  --pomo-interrupted:  var(--kf-amber-500);
+  --pomo-track:        var(--kf-gray-200);
+
+  /* Interaction */
+  --focus-ring:        var(--kf-blue-500);
+  --overlay-scrim:     rgba(15, 23, 42, 0.5);
+
+  /* Invariant brand surfaces (same in both themes) */
+  --brand-sidebar:     linear-gradient(180deg, var(--kf-sidebar-top) 0%, var(--kf-sidebar-end) 70%);
+  --brand-hero:        linear-gradient(135deg, var(--kf-ink-850) 0%, var(--kf-ink-800) 50%, var(--kf-ink-700) 100%);
+  --brand-mark-bg:     var(--kf-blue-600);
+}
+
+/* ============================================================
+   Semantic aliases — DARK
+   ============================================================ */
+[data-bs-theme="dark"] {
+  /* Surfaces */
+  --surface-base:      var(--kf-slate-950);
+  --surface-card:      var(--kf-slate-800);
+  --surface-elevated:  var(--kf-slate-850);
+  --surface-sunken:    var(--kf-slate-900);
+  --surface-hover:     var(--kf-slate-700);
+
+  /* Borders */
+  --border-subtle:     var(--kf-slate-700);
+  --border-default:    var(--kf-slate-700);
+  --border-strong:     var(--kf-slate-600);
+
+  /* Text */
+  --text-primary:      var(--kf-slate-200);
+  --text-secondary:    var(--kf-slate-300);
+  --text-muted:        var(--kf-slate-400);
+  --text-on-accent:    var(--kf-white);
+
+  /* Primary — lift slightly for contrast on dark */
+  --primary:           var(--kf-blue-500);
+  --primary-hover:     var(--kf-blue-400);
+  --primary-active:    var(--kf-blue-600);
+  --primary-subtle:    #0d1b3e;
+  --primary-border:    #1e3a6e;
+  --on-primary:        var(--kf-white);
+
+  /* Accent */
+  --accent:            var(--kf-coral-400);
+  --accent-hover:      var(--kf-coral-500);
+
+  /* Status */
+  --success:           var(--kf-green-400);
+  --success-subtle:    #0d2818;
+  --success-text:      #75d6a3;
+  --danger:            #f1707d;
+  --danger-subtle:     #3a1418;
+  --danger-text:       #f6a6ae;
+  --warning:           var(--kf-amber-400);
+  --warning-subtle:    #3a2e08;
+  --warning-text:      #ffd86b;
+  --info:              var(--kf-cyan-500);
+  --info-subtle:       #0a2e38;
+  --info-text:         #6fdcf0;
+  --task:              #a78bdb;
+  --task-subtle:       #1e0d3e;
+
+  /* Pomodoro */
+  --pomo-track:        var(--kf-slate-700);
+
+  /* Interaction */
+  --focus-ring:        var(--kf-blue-400);
+  --overlay-scrim:     rgba(0, 0, 0, 0.6);
+}

@@ -1,0 +1,25 @@
+<!-- @dsCard group="Brand" viewport="700x170" name="Motion" subtitle="Short durations (Doherty <400ms); hover to preview easing" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-card); font-family: var(--font-sans); display:flex; gap:18px; align-items:center; }
+  .track { flex:1; }
+  .lane { height: 36px; background: var(--surface-sunken); border-radius: var(--radius-pill); position: relative; overflow: hidden; cursor: pointer; }
+  .dot { position:absolute; top:4px; left:4px; width:28px; height:28px; border-radius:50%; background: var(--primary); }
+  .lane:hover .dot { left: calc(100% - 32px); }
+  .f { transition: left var(--duration-fast) var(--ease-standard); }
+  .b { transition: left var(--duration-base) var(--ease-standard); }
+  .o { transition: left var(--duration-slow) var(--ease-out); }
+  .lbl { margin-top: 8px; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); }
+  .hint { font-size: 11px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="track"><div class="lane"><div class="dot f"></div></div><div class="lbl">fast · 150ms · standard</div></div>
+  <div class="track"><div class="lane"><div class="dot b"></div></div><div class="lbl">base · 200ms · standard</div></div>
+  <div class="track"><div class="lane"><div class="dot o"></div></div><div class="lbl">slow · 300ms · ease-out</div></div>
+</body>
+</html>
