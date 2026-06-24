@@ -1,0 +1,37 @@
+/* ProgressRing — KairuFocus Design System
+   Ported from ProgressRing.jsx.
+   Les couleurs d'arc sont gérées via classes CSS scoped (pas de stroke inline)
+   afin que prefers-reduced-motion s'applique via les tokens --duration-*. */
+
+/* Transition déclarée en CSS isolé pour hériter de
+   @media (prefers-reduced-motion: reduce) { --duration-*: 0ms } */
+.kf-ring__arc {
+    transition:
+        stroke-dashoffset var(--duration-slow) linear,
+        stroke var(--duration-base) ease;
+}
+
+/* Couleurs d'arc — mappées sur les tokens pomo */
+.kf-ring--sprint {
+    stroke: var(--pomo-sprint);
+}
+
+.kf-ring--short-break {
+    stroke: var(--pomo-short-break);
+}
+
+.kf-ring--long-break {
+    stroke: var(--pomo-long-break);
+}
+
+.kf-ring--interrupted {
+    stroke: var(--pomo-interrupted);
+}
+
+.kf-ring--done {
+    stroke: var(--success);
+}
+
+.kf-ring--idle {
+    stroke: var(--text-muted);
+}

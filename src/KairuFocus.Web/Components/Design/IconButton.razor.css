@@ -1,0 +1,72 @@
+/* IconButton — KairuFocus Design System
+   Ported from IconButton.jsx. Cible minimale 44px (Fitts / WCAG 2.5.5). */
+
+.kf-iconbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--target-min);  /* 44px */
+    height: var(--target-min); /* 44px */
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+        background-color var(--duration-fast) var(--ease-standard),
+        color var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard);
+}
+
+.kf-iconbtn__inner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.kf-iconbtn:hover:not(:disabled) {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.kf-iconbtn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.kf-iconbtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Size variant — compact context only */
+.kf-iconbtn--sm {
+    width: 36px;
+    height: 36px;
+}
+
+/* Outline variant */
+.kf-iconbtn--outline {
+    border-color: var(--border-default);
+}
+
+/* Tone hover overrides */
+.kf-iconbtn--primary:hover:not(:disabled) {
+    background: var(--primary-subtle);
+    color: var(--primary);
+    border-color: var(--primary-border);
+}
+
+.kf-iconbtn--success:hover:not(:disabled) {
+    background: var(--success-subtle);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.kf-iconbtn--danger:hover:not(:disabled) {
+    background: var(--danger-subtle);
+    color: var(--danger);
+    border-color: var(--danger);
+}

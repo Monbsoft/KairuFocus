@@ -264,7 +264,7 @@ Transformations token par token :
 
 ---
 
-## Phase 1 — Composants Blazor partagés
+## Phase 1 — Composants Blazor partagés ✅ complétée le 2026-06-24
 
 Tous les composants vivent dans `src/KairuFocus.Web/Components/Design/`.
 Chaque composant = un fichier `.razor` + un `.razor.css` isolé.
@@ -766,7 +766,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 - [ ] Autres chaînes en dur (Dashboard date locale, labels session Pomodoro) documentés comme écarts.
 
 **Build et tests :**
-- [x] `dotnet build KairuFocus.Web` sans warning ni erreur. ← Phase 0 : 0 warning, 0 erreur
+- [x] `dotnet build KairuFocus.Web` sans warning ni erreur. ← Phase 0 : 0 warning, 0 erreur / Phase 1 : 0 warning, 0 erreur
 - [ ] `dotnet test` — zéro régression (les tests domain/application ne sont pas impactés par la présentation).
 - [ ] L'app démarre et navigue sans erreur console JS.
 
@@ -827,6 +827,16 @@ feat(34): docs — mise à jour project-state.md + spec.md
 ---
 
 ## Écarts constatés
+
+### Phase 1 (composants partagés) — complétée le 2026-06-24
+
+- **ProgressRing.razor — tag `<text>` SVG** : le compilateur Razor (RZ1023) interprète `<text>` comme un fragment Razor spécial et refuse les attributs. Solution appliquée : les éléments `<text>` SVG sont rendus via `MarkupString` avec `HtmlEncode` sur les valeurs dynamiques (Label, Sublabel). Comportement identique au JSX source.
+
+- **Tag.razor vs TagColors.cs** : `TagColors.cs` retourne des classes Bootstrap (`bg-primary`, `bg-warning text-dark`, etc.) pour un usage legacy dans les pages existantes. `Tag.razor` utilise les tokens CSS DS (`var(--primary)`, `var(--warning)`, etc.) pour la cohérence visuelle. L'algorithme djb2 est rigoureusement identique (même hash → même index de palette). L'écart est intentionnel : `TagColors.cs` est la source de vérité de l'algorithme, `Tag.razor` est la source de vérité du style DS. Un refactor de `TagColors.cs` vers des tokens CSS est possible mais hors scope de cette PR.
+
+- **Alert.razor — `color-mix()`** : le JSX source utilise `color-mix(in srgb, ...)` pour les bordures. Conservé tel quel (Edge ≥109, Firefox ≥113, Chrome ≥111). Si color-mix() n'est pas supporté, `border-color: transparent` (inoffensif). Documenté en commentaire CSS.
+
+- **`--pomo-done` absent des tokens** : le JSX source mappe l'état `done` sur `var(--pomo-done)` mais ce token n'existe pas dans `colors.css`. Solution appliquée : `.kf-ring--done { stroke: var(--success) }` (même valeur sémantique, cohérent avec le plan §1.4).
 
 ### Phase 0 (fondation CSS) — complétée le 2026-06-24
 

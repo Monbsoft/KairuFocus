@@ -1,0 +1,40 @@
+@* IconButton — cible carrée ≥44px (md) ou 36px (sm).
+   Label OBLIGATOIRE (EditorRequired) — devient aria-label.
+   Lois UX : Fitts (44px), accessibilité (label réel). *@
+
+<button type="button"
+        aria-label="@Label"
+        title="@Label"
+        class="@_cssClass"
+        disabled="@Disabled"
+        @onclick="OnClick">
+    <span aria-hidden="true" class="kf-iconbtn__inner">@ChildContent</span>
+</button>
+
+@code {
+    /// <summary>Accessible name — becomes aria-label and tooltip. REQUIRED.</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>Color tone on hover: default | primary | success | danger</summary>
+    [Parameter] public string Tone { get; set; } = "default";
+
+    /// <summary>Size: md (44px) | sm (36px)</summary>
+    [Parameter] public string Size { get; set; } = "md";
+
+    /// <summary>Adds a visible border (border-color: var(--border-default)).</summary>
+    [Parameter] public bool Outline { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private string _cssClass => string.Join(" ", new[]
+    {
+        "kf-iconbtn",
+        $"kf-iconbtn--{Tone}",
+        Size == "sm" ? "kf-iconbtn--sm" : null,
+        Outline ? "kf-iconbtn--outline" : null,
+    }.Where(c => c is not null));
+}

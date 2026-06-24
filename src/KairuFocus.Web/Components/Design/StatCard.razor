@@ -1,0 +1,70 @@
+@* StatCard — tuile de métrique dashboard.
+   Lois UX : Miller/chunking (grouper les métriques), affordance de clic. *@
+
+@if (As == "button")
+{
+    <button type="button" class="@_cssClass" @onclick="OnClick">
+        <span class="kf-stat__icon" style="background: @_iconBg" aria-hidden="true">@Icon</span>
+        <span class="kf-stat__text">
+            <span class="kf-stat__value @(Active ? "kf-stat__value--active" : "")">@Value</span>
+            <span class="kf-stat__label">@Label</span>
+        </span>
+    </button>
+}
+else if (As == "a")
+{
+    <a href="@Href" class="@_cssClass">
+        <span class="kf-stat__icon" style="background: @_iconBg" aria-hidden="true">@Icon</span>
+        <span class="kf-stat__text">
+            <span class="kf-stat__value @(Active ? "kf-stat__value--active" : "")">@Value</span>
+            <span class="kf-stat__label">@Label</span>
+        </span>
+    </a>
+}
+else
+{
+    <div class="@_cssClass">
+        <span class="kf-stat__icon" style="background: @_iconBg" aria-hidden="true">@Icon</span>
+        <span class="kf-stat__text">
+            <span class="kf-stat__value @(Active ? "kf-stat__value--active" : "")">@Value</span>
+            <span class="kf-stat__label">@Label</span>
+        </span>
+    </div>
+}
+
+@code {
+    /// <summary>Emoji ou texte d'icône (ex. "✅"). REQUIS.</summary>
+    [Parameter, EditorRequired] public string Icon { get; set; } = "";
+
+    /// <summary>Valeur principale affichée en grand (ex. "3"). REQUISE.</summary>
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+
+    /// <summary>Label descriptif sous la valeur (ex. "Tâches en cours"). REQUIS.</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>Teinte du fond d'icône : primary | success | warning | info | task</summary>
+    [Parameter] public string Tone { get; set; } = "primary";
+
+    /// <summary>Applique le style d'état actif (bordure verte + fond subtil).</summary>
+    [Parameter] public bool Active { get; set; }
+
+    /// <summary>Élément HTML rendu : null/unset → div | "button" | "a"</summary>
+    [Parameter] public string? As { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    [Parameter] public string? Href { get; set; }
+
+    private static readonly Dictionary<string, string> IconTint = new()
+    {
+        ["primary"] = "var(--primary-subtle)",
+        ["success"] = "var(--success-subtle)",
+        ["warning"] = "var(--warning-subtle)",
+        ["info"]    = "var(--info-subtle)",
+        ["task"]    = "var(--task-subtle)",
+    };
+
+    private string _iconBg => IconTint.TryGetValue(Tone, out var bg) ? bg : "var(--surface-sunken)";
+
+    private string _cssClass => Active ? "kf-stat kf-stat--active" : "kf-stat";
+}

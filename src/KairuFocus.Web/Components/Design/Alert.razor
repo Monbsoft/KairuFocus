@@ -1,0 +1,26 @@
+@* Alert — bandeau de feedback inline.
+   role="alert" si danger (live region assertive), "status" sinon (polite).
+   Lois UX : feedback immédiat (Doherty), hiérarchie visuelle de sévérité. *@
+
+<div role="@_role" class="kf-alert kf-alert--@Tone">
+    <span class="kf-alert__icon" aria-hidden="true">@_icon</span>
+    <div class="kf-alert__body">@ChildContent</div>
+</div>
+
+@code {
+    /// <summary>Sévérité : success | danger | warning | info</summary>
+    [Parameter] public string Tone { get; set; } = "info";
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    // role="alert" (assertive) pour les erreurs, "status" (polite) sinon — WCAG live region
+    private string _role => Tone == "danger" ? "alert" : "status";
+
+    private string _icon => Tone switch
+    {
+        "success" => "✓",
+        "danger"  => "⚠",
+        "warning" => "ℹ",
+        _         => "ℹ"
+    };
+}

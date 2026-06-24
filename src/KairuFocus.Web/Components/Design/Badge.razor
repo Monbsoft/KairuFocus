@@ -1,0 +1,45 @@
+@* Badge — pastille de statut ou de catégorie.
+   Status "Todo"|"InProgress"|"Done" → variant + label FR automatiques.
+   Lois UX : chunking (statut visible d'un coup d'oeil), hiérarchie visuelle. *@
+
+@{
+    var (resolvedVariant, resolvedLabel) = Resolve();
+    var displayText = ChildContent is not null ? null : resolvedLabel;
+}
+
+<span class="kf-badge kf-badge--@resolvedVariant">
+    @if (Dot)
+    {
+        <span class="kf-badge__dot" aria-hidden="true"></span>
+    }
+    @if (ChildContent is not null)
+    {
+        @ChildContent
+    }
+    else
+    {
+        @displayText
+    }
+</span>
+
+@code {
+    /// <summary>Statut applicatif : "Todo" | "InProgress" | "Done" — génère variant + label FR.</summary>
+    [Parameter] public string? Status { get; set; }
+
+    /// <summary>Variant explicite : "todo" | "inprogress" | "done" | "info" | "danger" | "solid"</summary>
+    [Parameter] public string? Variant { get; set; }
+
+    /// <summary>Affiche un point coloré à gauche du texte.</summary>
+    [Parameter] public bool Dot { get; set; }
+
+    /// <summary>Contenu personnalisé (remplace le label auto-généré).</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private (string variant, string label) Resolve() => Status switch
+    {
+        "Todo"       => ("todo",       "En attente"),
+        "InProgress" => ("inprogress", "En cours"),
+        "Done"       => ("done",       "Terminé"),
+        _            => (Variant ?? "todo", "")
+    };
+}

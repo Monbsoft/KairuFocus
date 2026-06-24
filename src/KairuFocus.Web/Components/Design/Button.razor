@@ -1,0 +1,67 @@
+@* Button — variants: primary|secondary|ghost|danger|accent ; sizes: sm|md|lg
+   Lois UX : Von Restorff (un seul primary/accent par vue), Fitts (≥44px pour md/lg). *@
+
+@if (As == "a")
+{
+    <a href="@Href"
+       class="kf-btn kf-btn--@Variant kf-btn--@Size @(Disabled ? "kf-btn--disabled" : "")"
+       aria-disabled="@(Disabled ? "true" : null)"
+       tabindex="@(Disabled ? -1 : null)"
+       @attributes="AdditionalAttributes">
+        @if (Icon is not null)
+        {
+            <span aria-hidden="true" class="kf-btn__icon">@Icon</span>
+        }
+        @ChildContent
+        @if (IconRight is not null)
+        {
+            <span aria-hidden="true" class="kf-btn__icon">@IconRight</span>
+        }
+    </a>
+}
+else
+{
+    <button type="button"
+            class="kf-btn kf-btn--@Variant kf-btn--@Size"
+            disabled="@Disabled"
+            @onclick="OnClick"
+            @attributes="AdditionalAttributes">
+        @if (Icon is not null)
+        {
+            <span aria-hidden="true" class="kf-btn__icon">@Icon</span>
+        }
+        @ChildContent
+        @if (IconRight is not null)
+        {
+            <span aria-hidden="true" class="kf-btn__icon">@IconRight</span>
+        }
+    </button>
+}
+
+@code {
+    /// <summary>Visual variant: primary | secondary | ghost | danger | accent</summary>
+    [Parameter] public string Variant { get; set; } = "primary";
+
+    /// <summary>Height tier: sm (36px) | md (44px) | lg (48px)</summary>
+    [Parameter] public string Size { get; set; } = "md";
+
+    /// <summary>Render as anchor ("a") instead of button. Requires Href.</summary>
+    [Parameter] public string? As { get; set; }
+
+    [Parameter] public string? Href { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Icon slot rendered before ChildContent (wrapped in aria-hidden span).</summary>
+    [Parameter] public RenderFragment? Icon { get; set; }
+
+    /// <summary>Icon slot rendered after ChildContent (wrapped in aria-hidden span).</summary>
+    [Parameter] public RenderFragment? IconRight { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+}

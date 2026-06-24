@@ -1,0 +1,101 @@
+@* ProgressRing — cercle de progression SVG pour le Pomodoro.
+   Lois UX : Goal-Gradient (progression visible), Peak-End (état done distinct).
+   La couleur de l'arc est gérée via classes CSS scoped (.kf-ring--<state>)
+   pour hériter de prefers-reduced-motion via les tokens --duration-*.
+   Note : les éléments SVG <text> sont rendus via MarkupString car Razor
+   interprète <text> comme un fragment razor spécial (RZ1023). *@
+
+@{
+    var radius = (Size - Stroke) / 2.0;
+    var circumference = 2.0 * Math.PI * radius;
+    var clamped = Math.Max(0.0, Math.Min(1.0, Progress));
+    var offset = circumference * (1.0 - clamped);
+    var halfSize = Size / 2.0;
+    var arcClass = $"kf-ring__arc {StateToClass(State)}";
+    var ariaLabel = string.IsNullOrEmpty(Label)
+        ? "Minuteur"
+        : string.IsNullOrEmpty(Sublabel) ? Label : $"{Label} {Sublabel}";
+    var labelFontSize = (Size * 0.19).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    var sublabelFontSize = (Size * 0.07).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    var halfSizeStr = halfSize.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    var radiusStr = radius.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    var circumStr = circumference.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+    var offsetStr = offset.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+}
+
+<svg width="@Size" height="@Size" viewBox="0 0 @Size @Size"
+     role="img" aria-label="@ariaLabel">
+    @* Track (fond de l'anneau) *@
+    <circle cx="@halfSizeStr" cy="@halfSizeStr" r="@radiusStr"
+            fill="none"
+            stroke="var(--pomo-track)"
+            stroke-width="@Stroke" />
+
+    @* Arc (progression) — couleur via classe CSS scoped, PAS de stroke inline *@
+    <circle cx="@halfSizeStr" cy="@halfSizeStr" r="@radiusStr"
+            fill="none"
+            stroke-width="@Stroke"
+            stroke-linecap="round"
+            stroke-dasharray="@circumStr"
+            stroke-dashoffset="@offsetStr"
+            transform="rotate(-90 @halfSizeStr @halfSizeStr)"
+            class="@arcClass" />
+
+    @* Label principal (ex. "24:59") — rendu via MarkupString car <text> est réservé par Razor *@
+    @if (Label is not null)
+    {
+        @((MarkupString)$"""
+        <text x="50%" y="48%"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              font-family="var(--font-mono)"
+              font-weight="700"
+              font-size="{labelFontSize}"
+              fill="currentColor">{System.Net.WebUtility.HtmlEncode(Label)}</text>
+        """)
+    }
+
+    @* Sous-label (ex. "Sprint en cours") *@
+    @if (Sublabel is not null)
+    {
+        @((MarkupString)$"""
+        <text x="50%" y="66%"
+              text-anchor="middle"
+              font-family="var(--font-sans)"
+              font-size="{sublabelFontSize}"
+              fill="var(--text-muted)">{System.Net.WebUtility.HtmlEncode(Sublabel)}</text>
+        """)
+    }
+</svg>
+
+@code {
+    /// <summary>Fraction restante du timer (0.0 = vide, 1.0 = plein).</summary>
+    [Parameter] public double Progress { get; set; } = 1.0;
+
+    /// <summary>État de session : sprint | shortBreak | longBreak | interrupted | done | idle</summary>
+    [Parameter] public string State { get; set; } = "sprint";
+
+    /// <summary>Taille du SVG en pixels (largeur = hauteur).</summary>
+    [Parameter] public int Size { get; set; } = 220;
+
+    /// <summary>Épaisseur du trait en pixels.</summary>
+    [Parameter] public int Stroke { get; set; } = 14;
+
+    /// <summary>Texte central principal (ex. "24:59").</summary>
+    [Parameter] public string? Label { get; set; }
+
+    /// <summary>Sous-texte central (ex. "Sprint en cours").</summary>
+    [Parameter] public string? Sublabel { get; set; }
+
+    /// <summary>Maps session state to scoped CSS class for arc stroke color.</summary>
+    private static string StateToClass(string state) => state switch
+    {
+        "sprint"      => "kf-ring--sprint",
+        "shortBreak"  => "kf-ring--short-break",
+        "longBreak"   => "kf-ring--long-break",
+        "interrupted" => "kf-ring--interrupted",
+        "done"        => "kf-ring--done",
+        "idle"        => "kf-ring--idle",
+        _             => "kf-ring--sprint"
+    };
+}

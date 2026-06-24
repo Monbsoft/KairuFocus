@@ -1,0 +1,39 @@
+/* Card — KairuFocus Design System
+   Ported from Card.jsx. Hover-lift via transform + shadow. */
+
+.kf-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-6);
+    color: var(--text-primary);
+}
+
+.kf-card--flush {
+    padding: 0;
+}
+
+.kf-card--interactive {
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+        box-shadow var(--duration-base) var(--ease-standard),
+        transform var(--duration-base) var(--ease-standard),
+        border-color var(--duration-base) var(--ease-standard);
+}
+
+.kf-card--interactive:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.kf-card--interactive:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.kf-card--active {
+    border-color: var(--success);
+    background: var(--success-subtle);
+}

@@ -1,0 +1,59 @@
+@* Card — surface container.
+   Interactive ajoute le hover-lift (Fitts — zone cliquable élargie).
+   Active indique un état actif (ex. sprint en cours).
+   Flush supprime le padding interne. *@
+
+@if (_tag == "button")
+{
+    <button type="button" class="@_cssClass" @onclick="OnClick" @attributes="AdditionalAttributes">
+        @ChildContent
+    </button>
+}
+else if (_tag == "a")
+{
+    <a class="@_cssClass" @attributes="AdditionalAttributes">
+        @ChildContent
+    </a>
+}
+else
+{
+    <div class="@_cssClass" @attributes="AdditionalAttributes">
+        @ChildContent
+    </div>
+}
+
+@code {
+    /// <summary>Adds hover-lift transition (cursor pointer, shadow on hover).</summary>
+    [Parameter] public bool Interactive { get; set; }
+
+    /// <summary>Applies active state styling (green border + subtle bg).</summary>
+    [Parameter] public bool Active { get; set; }
+
+    /// <summary>Removes internal padding.</summary>
+    [Parameter] public bool Flush { get; set; }
+
+    /// <summary>HTML element to render: "div" (default) | "button" | "a"</summary>
+    [Parameter] public string? As { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string _tag => As switch
+    {
+        "button" => "button",
+        "a" => "a",
+        _ => "div"
+    };
+
+    private string _cssClass => string.Join(" ", new[]
+    {
+        "kf-card",
+        Interactive ? "kf-card--interactive" : null,
+        Active ? "kf-card--active" : null,
+        Flush ? "kf-card--flush" : null,
+    }.Where(c => c is not null));
+}

@@ -1,0 +1,71 @@
+@* Tag — chip coloré avec hash djb2 déterministe (même algo que TagColors.cs).
+   NOTE : TagColors.cs retourne des classes Bootstrap (bg-primary, etc.) pour
+   un usage legacy. Tag.razor utilise les tokens CSS DS pour la cohérence visuelle.
+   Le hash djb2 est identique — même tag → même index → couleur cohérente.
+   Lois UX : chunking (identification rapide par couleur), affordance suppression. *@
+
+<span class="kf-tag" style="background: @_bg; color: @_textColor">
+    @if (Hash)
+    {
+        <span class="kf-tag__hash" aria-hidden="true">#</span>
+    }
+    @ChildContent
+    @if (OnRemove.HasDelegate)
+    {
+        <button type="button"
+                class="kf-tag__x"
+                aria-label="Retirer @ChildContent"
+                @onclick="OnRemove"
+                @onclick:stopPropagation="true">
+            ×
+        </button>
+    }
+</span>
+
+@code {
+    /// <summary>Texte du tag.</summary>
+    [Parameter] public string? ChildContent { get; set; }
+
+    /// <summary>Affiche un # devant le texte.</summary>
+    [Parameter] public bool Hash { get; set; }
+
+    /// <summary>Si défini → affiche un bouton × avec aria-label="Retirer {texte}".</summary>
+    [Parameter] public EventCallback OnRemove { get; set; }
+
+    // Palette CSS tokens — parité exacte de position avec TagColors.cs
+    // TagColors.cs : bg-primary, bg-success, bg-danger, bg-warning text-dark,
+    //                bg-info text-dark, bg-secondary, text-bg-purple,
+    //                text-bg-orange, text-bg-teal, text-bg-pink
+    private static readonly string[] Palette =
+    [
+        "var(--primary)",        // 0 → bg-primary
+        "var(--success)",        // 1 → bg-success
+        "var(--danger)",         // 2 → bg-danger
+        "var(--warning)",        // 3 → bg-warning text-dark
+        "var(--info)",           // 4 → bg-info text-dark
+        "var(--text-muted)",     // 5 → bg-secondary
+        "var(--task)",           // 6 → text-bg-purple
+        "var(--kf-orange-500)",  // 7 → text-bg-orange
+        "var(--kf-teal-500)",    // 8 → text-bg-teal
+        "var(--kf-pink-500)",    // 9 → text-bg-pink
+    ];
+
+    // Indices dont le token de couleur est clair → texte sombre requis (WCAG)
+    // Correspond à bg-warning (3) et bg-info (4) dans TagColors.cs
+    private static readonly HashSet<int> DarkTextIndices = [3, 4];
+
+    private int ComputeIndex()
+    {
+        var n = (ChildContent ?? "").ToLowerInvariant();
+        uint hash = 5381;
+        foreach (var c in n)
+            hash = hash * 33 ^ c;
+        return (int)(hash % (uint)Palette.Length);
+    }
+
+    private string _bg => Palette[ComputeIndex()];
+
+    private string _textColor => DarkTextIndices.Contains(ComputeIndex())
+        ? "#1a1a1a"  // texte sombre sur fond clair (warning/info)
+        : "#fff";    // texte blanc sur fonds sombres
+}

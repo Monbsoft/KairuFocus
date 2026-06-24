@@ -1,0 +1,46 @@
+/* Tag — KairuFocus Design System
+   Ported from Tag.jsx. Couleur fond+texte injectée inline via tokens. */
+
+.kf-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+    padding: 0.28rem 0.5rem;
+    border-radius: var(--radius-xs);
+    white-space: nowrap;
+}
+
+.kf-tag__hash {
+    opacity: 0.7;
+}
+
+/* Bouton × : cible min 14px avec padding élargi pour WCAG 2.5.5 */
+.kf-tag__x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.1rem;
+    width: 14px;
+    height: 14px;
+    padding: 2px; /* élargit la zone de clic sans déformer le rendu */
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    border: none;
+    color: inherit;
+    font-size: 10px;
+    line-height: 1;
+}
+
+.kf-tag__x:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.kf-tag__x:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+}
