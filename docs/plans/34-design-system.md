@@ -575,7 +575,7 @@ Tous ces styles vont dans `app.css` (landing est one-off, pas de composant parta
 
 ---
 
-## Phase 4 — Dashboard
+## Phase 4 — Dashboard ✅ complétée le 2026-06-24
 
 ### Dashboard.razor
 
@@ -845,6 +845,18 @@ feat(34): docs — mise à jour project-state.md + spec.md
 - **Icône SVG GitHub dans Button** : le composant `Button` accepte un `RenderFragment Icon`. L'icône SVG ne peut pas être insérée directement en Razor markup dans un slot nommé non-ChildContent (le compilateur Razor RZ9996 refuse `<Icon><svg>…</svg></Icon>` quand le composant déclare plusieurs RenderFragment). Solution appliquée : `RenderFragment` statique dans `@code` avec `builder.AddMarkupContent()`. Comportement identique, pas d'impact UX.
 
 - **`btn-github` dans app.css conservé** : la classe `.btn-github` existe encore dans `app.css` pour d'éventuels usages legacy. Elle n'est plus référencée dans Login.razor ni Home.razor après cette phase. Peut être supprimée en nettoyage Phase 8 ou dans une PR dédiée.
+
+### Phase 4 (Dashboard) — complétée le 2026-06-24
+
+- **Bloc "À reprendre" (Zeigarnik) : INCLUS.** La session active (`_currentSession?.Status == "Active"`) et la première tâche `InProgress` (dérivée de `Tasks.GetAllAsync()` déjà chargé) sont disponibles sans nouvel appel API. La session active est prioritaire sur la tâche. Le bloc n'apparaît que si au moins l'une des deux données est présente.
+
+- **Bloc "Focus aujourd'hui" (dots Goal-Gradient) : OMIS.** Il nécessiterait un compteur de sprints du jour. `GetTodaySprintSessionsAsync` existe dans `PomodoroApiClient` mais représenterait un appel API supplémentaire non prévu dans le cadrage "présentation seule". À implémenter dans une itération dédiée avec l'accord du backend.
+
+- **Classes `.dashboard-*` / `.stat-card` / `.quicklink-card` conservées** dans `app.css` : elles ne sont plus référencées par `Dashboard.razor` mais leur suppression risque d'affecter d'autres pages non encore portées (hors scope Phase 4). Purge prévue en Phase 8.
+
+- **Chaînes FR en dur conservées** : greeting ("Bonjour,"), date `fr-FR`, labels StatCard ("Taches en cours", "Sprint actif", etc.) et labels quick links — documentés comme dette i18n (#34 hors scope). Seules les nouvelles chaînes introduites par le bloc Zeigarnik passent par `@Loc` (fichier `Dashboard.resx` créé, fallback FR uniquement).
+
+- **`Dashboard.resx` créé** avec 8 clés (Resume.*, Stats.SectionLabel, QuickLinks.SectionLabel, Loading). Pas de fichiers `.fr.resx` / `.en.resx` créés — même pattern que `Login.resx` (fallback FR seul, i18n multi-langue reportée).
 
 ### Phase 0 (fondation CSS) — complétée le 2026-06-24
 

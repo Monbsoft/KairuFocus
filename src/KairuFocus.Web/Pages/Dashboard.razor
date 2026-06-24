@@ -5,89 +5,123 @@
 @inject PomodoroApiClient Pomodoro
 @inject JournalApiClient Journal
 @inject NavigationManager Nav
+@inject IStringLocalizer<Dashboard> Loc
 
 <PageTitle>Tableau de bord — KairuFocus</PageTitle>
 
-<div class="dashboard-page">
+<div class="kf-dash">
     @if (!_loaded)
     {
-        <div class="d-flex justify-content-center align-items-center" style="height:60vh">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Chargement...</span>
-            </div>
+        @* Skeleton Doherty — feedback immédiat, évite le spinner brut. *@
+        <div class="kf-dash__head" aria-busy="true" aria-label="@Loc["Loading"]">
+            <div class="kf-skel" style="width: 260px; height: 30px;"></div>
+            <div style="height: 8px;"></div>
+            <div class="kf-skel" style="width: 200px; height: 16px;"></div>
+        </div>
+        <div style="height: 24px;"></div>
+        <div class="kf-skel" style="width: 100%; height: 88px; border-radius: var(--radius-lg);"></div>
+        <div style="height: 24px;"></div>
+        <div class="kf-skelrow">
+            <div class="kf-skel" style="width: 100%; height: 84px; border-radius: var(--radius-lg);"></div>
+            <div class="kf-skel" style="width: 100%; height: 84px; border-radius: var(--radius-lg);"></div>
+            <div class="kf-skel" style="width: 100%; height: 84px; border-radius: var(--radius-lg);"></div>
+            <div class="kf-skel" style="width: 100%; height: 84px; border-radius: var(--radius-lg);"></div>
         </div>
     }
     else
     {
-        <div class="dashboard-header">
-            <div>
-                <h1 class="dashboard-greeting">Bonjour, @_userName &#128075;</h1>
-                <p class="dashboard-date">@DateTime.Now.ToString("dddd d MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))</p>
-            </div>
+        @* Greeting + date — texte en FR par design (i18n backlog #34) *@
+        <div class="kf-dash__head">
+            <h1 class="kf-dash__greet">Bonjour, @_userName &#128075;</h1>
+            <p class="kf-dash__date">@DateTime.Now.ToString("dddd d MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))</p>
         </div>
 
-        <!-- Stats -->
-        <div class="dashboard-stats">
-            <div class="stat-card stat-tasks-pending" @onclick='() => Nav.NavigateTo("/tasks")'>
-                <div class="stat-icon">&#9745;</div>
-                <div class="stat-body">
-                    <div class="stat-value">@_tasksPending</div>
-                    <div class="stat-label">Taches en cours</div>
+        @* Zeigarnik — "À reprendre" : session active OU première tâche InProgress.
+           Données issues des appels déjà effectués (pas de nouvel endpoint). *@
+        @if (_resumeSession is not null || _resumeTask is not null)
+        {
+            <h2 class="kf-eyebrow">@Loc["Resume.SectionLabel"]</h2>
+            <Card Interactive Flush As="button" OnClick="NavigateToResume" class="kf-resume">
+                <div class="kf-resume__in">
+                    <div class="kf-resume__icon" aria-hidden="true">
+                        @(_resumeSession is not null ? "&#9208;" : "&#128640;")
+                    </div>
+                    <div class="kf-resume__body">
+                        <p class="kf-resume__title">
+                            @(_resumeSession is not null
+                                ? Loc["Resume.ActiveSprint"]
+                                : Loc["Resume.ActiveTask"])
+                        </p>
+                        <div class="kf-resume__meta">
+                            @if (_resumeSession is not null)
+                            {
+                                <span>@_resumeSession.SessionType</span>
+                                <Badge Status="InProgress" />
+                            }
+                            else if (_resumeTask is not null)
+                            {
+                                <span>@_resumeTask.Title</span>
+                                <Badge Status="InProgress" />
+                            }
+                        </div>
+                    </div>
+                    <Button Variant="primary" Size="sm">
+                        <ChildContent>
+                            @(_resumeSession is not null
+                                ? Loc["Resume.Button.Sprint"]
+                                : Loc["Resume.Button.Task"])
+                        </ChildContent>
+                    </Button>
                 </div>
-            </div>
-            <div class="stat-card stat-tasks-done" @onclick='() => Nav.NavigateTo("/tasks")'>
-                <div class="stat-icon">&#10003;</div>
-                <div class="stat-body">
-                    <div class="stat-value">@_tasksDone</div>
-                    <div class="stat-label">Taches terminees</div>
-                </div>
-            </div>
-            <div class="stat-card stat-pomodoro @(_currentSession is not null ? "stat-active" : "")" @onclick='() => Nav.NavigateTo("/pomodoro")'>
-                <div class="stat-icon">&#127813;</div>
-                <div class="stat-body">
-                    @if (_currentSession is not null)
-                    {
-                        <div class="stat-value stat-badge-active">En cours</div>
-                        <div class="stat-label">@_currentSession.SessionType</div>
-                    }
-                    else
-                    {
-                        <div class="stat-value">—</div>
-                        <div class="stat-label">Aucun sprint actif</div>
-                    }
-                </div>
-            </div>
-            <div class="stat-card stat-journal" @onclick='() => Nav.NavigateTo("/journal")'>
-                <div class="stat-icon">&#128214;</div>
-                <div class="stat-body">
-                    <div class="stat-value">@_journalEntries</div>
-                    <div class="stat-label">Entrees aujourd'hui</div>
-                </div>
-            </div>
+            </Card>
+            <div style="height: 1.75rem;"></div>
+        }
+
+        @* Stats groupées — Miller/chunking *@
+        <h2 class="kf-eyebrow">@Loc["Stats.SectionLabel"]</h2>
+        <div class="kf-stats">
+            <StatCard As="button"
+                      Icon="&#9745;"
+                      Value="@_tasksPending.ToString()"
+                      Label="Taches en cours"
+                      Tone="primary"
+                      OnClick='() => Nav.NavigateTo("/tasks")' />
+            <StatCard As="button"
+                      Icon="&#10003;"
+                      Value="@_tasksDone.ToString()"
+                      Label="Taches terminees"
+                      Tone="success"
+                      OnClick='() => Nav.NavigateTo("/tasks")' />
+            <StatCard As="button"
+                      Icon="&#127813;"
+                      Value="@(_currentSession is not null ? "En cours" : "—")"
+                      Label="@(_currentSession is not null ? "Sprint actif" : "Aucun sprint actif")"
+                      Tone="warning"
+                      Active="@(_currentSession is not null)"
+                      OnClick='() => Nav.NavigateTo("/pomodoro")' />
+            <StatCard As="button"
+                      Icon="&#128214;"
+                      Value="@_journalEntries.ToString()"
+                      Label="Entrees aujourd'hui"
+                      Tone="task"
+                      OnClick='() => Nav.NavigateTo("/journal")' />
         </div>
 
-        <!-- Acces rapides -->
-        <h2 class="dashboard-section-title">Acces rapides</h2>
-        <div class="dashboard-quicklinks">
-            <a href="/tasks" class="quicklink-card">
-                <span class="quicklink-icon">&#9745;</span>
-                <span class="quicklink-label">Mes taches</span>
+        @* Accès rapides — réduit à 3 liens (Hick's Law).
+           Tickets omis (BC désactivé #19). Paramètres omis (disponible dans la sidebar). *@
+        <h2 class="kf-eyebrow">@Loc["QuickLinks.SectionLabel"]</h2>
+        <div class="kf-quick">
+            <a href="/tasks" class="kf-quick__link">
+                <span class="kf-quick__icon" aria-hidden="true">&#9745;</span>
+                <span class="kf-quick__label">Mes taches</span>
             </a>
-            <a href="/pomodoro" class="quicklink-card">
-                <span class="quicklink-icon">&#127813;</span>
-                <span class="quicklink-label">Pomodoro</span>
+            <a href="/pomodoro" class="kf-quick__link">
+                <span class="kf-quick__icon" aria-hidden="true">&#127813;</span>
+                <span class="kf-quick__label">Pomodoro</span>
             </a>
-            <a href="/journal" class="quicklink-card">
-                <span class="quicklink-icon">&#128214;</span>
-                <span class="quicklink-label">Journal</span>
-            </a>
-            <a href="/tickets" class="quicklink-card">
-                <span class="quicklink-icon">&#127915;</span>
-                <span class="quicklink-label">Tickets</span>
-            </a>
-            <a href="/settings" class="quicklink-card">
-                <span class="quicklink-icon">&#9881;</span>
-                <span class="quicklink-label">Parametres</span>
+            <a href="/journal" class="kf-quick__link">
+                <span class="kf-quick__icon" aria-hidden="true">&#128214;</span>
+                <span class="kf-quick__label">Journal</span>
             </a>
         </div>
     }
@@ -99,6 +133,12 @@
     private int _tasksDone;
     private int _journalEntries;
     private PomodoroSessionDto? _currentSession;
+
+    // Zeigarnik — session interrompue/active ou première tâche InProgress
+    // Dérivé des données déjà chargées, pas de nouvel appel API.
+    private PomodoroSessionDto? _resumeSession;
+    private TaskDto? _resumeTask;
+
     private bool _loaded;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -112,14 +152,25 @@
 
         var tasks = await Tasks.GetAllAsync();
         _tasksPending = tasks.Count(t => t.Status != "Done");
-        _tasksDone = tasks.Count(t => t.Status == "Done");
+        _tasksDone    = tasks.Count(t => t.Status == "Done");
+
+        // Première tâche InProgress pour le bloc Zeigarnik (donnée déjà disponible)
+        _resumeTask = tasks.FirstOrDefault(t => t.Status == "InProgress");
 
         var entries = await Journal.GetTodayEntriesAsync();
         _journalEntries = entries.Count;
 
         _currentSession = await Pomodoro.GetCurrentSessionAsync();
 
+        // Session active prioritaire sur la tâche InProgress pour Zeigarnik
+        _resumeSession = _currentSession?.Status == "Active" ? _currentSession : null;
+
         _loaded = true;
         StateHasChanged();
+    }
+
+    private void NavigateToResume()
+    {
+        Nav.NavigateTo(_resumeSession is not null ? "/pomodoro" : "/tasks");
     }
 }

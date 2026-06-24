@@ -401,6 +401,168 @@ code {
     font-weight: 600;
 }
 
+/* ── Dashboard DS — Phase 4
+   Classes kf-dash* alignées sur DashboardScreen.jsx.
+   Les anciennes classes .dashboard-* / .stat-card / .quicklink-card sont conservées
+   pour éviter toute régression éventuelle, elles seront purgées en Phase 8. */
+
+.kf-dash {
+    max-width: var(--container-lg);
+}
+
+.kf-dash__head {
+    margin-bottom: 1.75rem;
+}
+
+.kf-dash__greet {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.kf-dash__date {
+    color: var(--text-muted);
+    margin: 0.25rem 0 0;
+    text-transform: capitalize;
+}
+
+/* Eyebrow label — section heading (uppercase muted) */
+.kf-eyebrow {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--text-muted);
+    margin: 0 0 0.85rem;
+}
+
+/* Zeigarnik resume block */
+.kf-resume {
+    overflow: hidden;
+}
+
+.kf-resume__in {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+}
+
+.kf-resume__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-md);
+    background: var(--warning-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    flex-shrink: 0;
+}
+
+.kf-resume__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.kf-resume__title {
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.2rem;
+}
+
+.kf-resume__meta {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Stats grid — auto-fit colonnes (Miller/chunking) */
+.kf-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Quick links — 3 liens maximum (Hick's Law) */
+.kf-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.kf-quick__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.5rem;
+    min-width: 96px;
+    min-height: var(--target-min, 44px);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+        transform var(--duration-base) var(--ease-standard),
+        box-shadow var(--duration-base) var(--ease-standard),
+        border-color var(--duration-base) var(--ease-standard),
+        color var(--duration-base) var(--ease-standard);
+}
+
+.kf-quick__link:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-border);
+    color: var(--primary);
+}
+
+.kf-quick__link:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.kf-quick__icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.kf-quick__label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+/* Skeleton Doherty — animation pulsée sur surface-sunken */
+.kf-skel {
+    background: var(--surface-sunken);
+    border-radius: var(--radius-sm);
+    animation: kf-skel-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes kf-skel-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kf-skel {
+        animation: none;
+    }
+}
+
+.kf-skelrow {
+    display: flex;
+    gap: 1rem;
+}
+
 /* ── Journal Timeline */
 .timeline {
     padding-left: 0;
