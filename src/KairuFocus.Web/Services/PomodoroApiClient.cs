@@ -34,7 +34,10 @@ public sealed class PomodoroApiClient
 
     public async Task<FocusSummaryDto?> GetFocusSummaryAsync()
     {
-        var response = await _http.GetAsync("api/pomodoro/focus-summary");
+        // DateTimeOffset.Now.Offset reflects the browser's local UTC offset in Blazor WASM.
+        // Convention: local = UTC + offsetMinutes (positive east of UTC, e.g. UTC+2 => +120).
+        var offsetMinutes = (int)DateTimeOffset.Now.Offset.TotalMinutes;
+        var response = await _http.GetAsync($"api/pomodoro/focus-summary?offsetMinutes={offsetMinutes}");
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadFromJsonAsync<FocusSummaryDto>();
     }

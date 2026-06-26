@@ -54,18 +54,16 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
                 cancellationToken);
     }
 
-    public async Task<int> GetCompletedSprintsTodayCountAsync(UserId userId, CancellationToken cancellationToken = default)
-    {
-        var today = DateTime.UtcNow.Date;
-        return await _context.PomodoroSessions
+    public async Task<int> GetCompletedSprintsTodayCountAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default) =>
+        await _context.PomodoroSessions
             .CountAsync(
                 s => s.OwnerId == userId
                      && s.SessionType == PomodoroSessionType.Sprint
                      && s.Status == PomodoroSessionStatus.Completed
                      && s.EndedAt.HasValue
-                     && s.EndedAt.Value.Date == today,
+                     && s.EndedAt.Value >= startUtc
+                     && s.EndedAt.Value < endUtc,
                 cancellationToken);
-    }
 
     public async Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, CancellationToken cancellationToken = default)
     {
@@ -94,33 +92,29 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<PomodoroSession>> GetCompletedSprintSessionsTodayAsync(UserId userId, CancellationToken cancellationToken = default)
-    {
-        var today = DateTime.UtcNow.Date;
-        return await _context.PomodoroSessions
+    public async Task<IReadOnlyList<PomodoroSession>> GetCompletedSprintSessionsTodayAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default) =>
+        await _context.PomodoroSessions
             .Where(s => s.OwnerId == userId
                         && s.SessionType == PomodoroSessionType.Sprint
                         && s.Status == PomodoroSessionStatus.Completed
                         && s.EndedAt.HasValue
-                        && s.EndedAt.Value.Date == today)
+                        && s.EndedAt.Value >= startUtc
+                        && s.EndedAt.Value < endUtc)
             .OrderBy(s => s.StartedAt)
             .ToListAsync(cancellationToken);
-    }
 
-    public async Task<IReadOnlyList<DateOnly>> GetCompletedSprintDatesAsync(UserId userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, CancellationToken cancellationToken = default)
     {
-        // Materialize the distinct UTC-day DateTimes server-side, then convert to DateOnly client-side
-        // (DateOnly projection is not translatable by the SQL Server provider).
-        var days = await _context.PomodoroSessions
+        // Return raw UTC EndedAt values. Date-to-local bucketing is done in the Application layer
+        // (ADR-020). Avoids non-translatable EF expressions (e.g. .Date, AddMinutes) on SQLite.
+        var endTimes = await _context.PomodoroSessions
             .Where(s => s.OwnerId == userId
                         && s.SessionType == PomodoroSessionType.Sprint
                         && s.Status == PomodoroSessionStatus.Completed
                         && s.EndedAt.HasValue)
-            .Select(s => s.EndedAt!.Value.Date)
-            .Distinct()
-            .OrderByDescending(d => d)
+            .Select(s => s.EndedAt!.Value)
             .ToListAsync(cancellationToken);
 
-        return days.Select(DateOnly.FromDateTime).ToList();
+        return endTimes;
     }
 }

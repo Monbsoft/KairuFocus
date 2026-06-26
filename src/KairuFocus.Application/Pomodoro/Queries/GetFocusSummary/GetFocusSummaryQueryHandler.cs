@@ -31,11 +31,18 @@ public sealed class GetFocusSummaryQueryHandler
     {
         var userId = _currentUserService.CurrentUserId;
 
-        _logger.LogDebug("Building focus summary for user {UserId}", userId);
+        _logger.LogDebug("Building focus summary for user {UserId} (offsetMinutes={Offset})", userId, query.OffsetMinutes);
 
-        var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(userId, cancellationToken);
+        // Compute local "today" window expressed as a UTC range.
+        var offset = TimeSpan.FromMinutes(query.OffsetMinutes);
+        var nowLocal = DateTime.UtcNow + offset;          // ticks shifted to represent local clock
+        var todayLocal = DateOnly.FromDateTime(nowLocal);
+        var startUtc = nowLocal.Date - offset;            // UTC instant corresponding to local midnight today
+        var endUtc = startUtc + TimeSpan.FromDays(1);
 
-        var sessions = await _sessionRepository.GetCompletedSprintSessionsTodayAsync(userId, cancellationToken);
+        var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(userId, startUtc, endUtc, cancellationToken);
+
+        var sessions = await _sessionRepository.GetCompletedSprintSessionsTodayAsync(userId, startUtc, endUtc, cancellationToken);
         var totalSeconds = sessions.Sum(s =>
             s.StartedAt.HasValue && s.EndedAt.HasValue
                 ? (s.EndedAt.Value - s.StartedAt.Value).TotalSeconds
@@ -45,8 +52,14 @@ public sealed class GetFocusSummaryQueryHandler
         var settings = await _settingsRepository.GetByUserIdAsync(userId, cancellationToken);
         var dailyGoal = settings.DailySprintGoal;
 
-        var completedDates = await _sessionRepository.GetCompletedSprintDatesAsync(userId, cancellationToken);
-        var streak = StreakCalculator.Compute(completedDates, DateOnly.FromDateTime(DateTime.UtcNow));
+        // Map each raw UTC end-time to a local date, then compute streak.
+        // Bucketing is done here in the Application layer (ADR-020).
+        var endTimes = await _sessionRepository.GetCompletedSprintEndTimesAsync(userId, cancellationToken);
+        var localDates = endTimes
+            .Select(t => DateOnly.FromDateTime(t + offset))
+            .Distinct()
+            .ToList();
+        var streak = StreakCalculator.Compute(localDates, todayLocal);
 
         _logger.LogDebug(
             "Focus summary for user {UserId}: sprints={Sprints}, minutes={Minutes}, goal={Goal}, streak={Streak}",

@@ -51,10 +51,10 @@ public sealed class PomodoroController : ControllerBase
     // ── Focus / Dashboard ──────────────────────────────────────────────────
 
     [HttpGet("focus-summary")]
-    public async Task<IActionResult> GetFocusSummary(CancellationToken ct)
+    public async Task<IActionResult> GetFocusSummary([FromQuery] int offsetMinutes = 0, CancellationToken ct = default)
     {
         var result = await _mediator.SendAsync<GetFocusSummaryQuery, GetFocusSummaryResult>(
-            new GetFocusSummaryQuery(), ct);
+            new GetFocusSummaryQuery(offsetMinutes), ct);
         return Ok(result);
     }
 

@@ -38,7 +38,10 @@ public sealed class GetSuggestedSessionTypeQueryHandler : IQueryHandler<GetSugge
         PomodoroSessionType suggestedType;
         if (latestSession?.SessionType == PomodoroSessionType.Sprint)
         {
-            var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(userId, cancellationToken);
+            // Use UTC day window (offset=0) — suggestion logic does not require local-day precision.
+            var utcDayStart = DateTime.UtcNow.Date;
+            var utcDayEnd = utcDayStart.AddDays(1);
+            var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(userId, utcDayStart, utcDayEnd, cancellationToken);
             // Dernier cycle était un sprint → suggérer une pause
             suggestedType = sprintsToday % PomodoroSettings.SprintsBeforeLongBreak == 0
                 ? PomodoroSessionType.LongBreak
