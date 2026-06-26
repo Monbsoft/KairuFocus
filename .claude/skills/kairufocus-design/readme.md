@@ -49,7 +49,7 @@ Everything visual here was lifted from that code: the navy→purple sidebar grad
 
 **Color.** Built on a blue primary (`#0d6efd`, the “K” mark), a coral accent (`#e94560`, from the logo, used sparingly as an isolation pop), and Bootstrap-aligned semantic hues (success green, danger red, warning amber, info cyan, plus a task purple seen in the journal dots). Neutrals split by theme: a **warm-gray** ramp for light surfaces, a **cool-slate** ramp for dark. Two invariant brand surfaces stay constant across themes: the sidebar gradient (`#052767 → #3a0647`) and the hero gradient (`#1a1a2e → #16213e → #0f3460`). Every semantic color is exposed as a theme-aware alias (`--surface-card`, `--text-primary`, `--primary`, `--success`…) so a single token works in both themes. Status colors come in three flavors — solid, `-subtle` background, and a readable `-text` for text-on-subtle (AA-checked).
 
-**Typography.** Sans is a **native system stack** (honoring the app’s original `Helvetica Neue` heritage — fast, zero-load, familiar). The numeric/code voice is **JetBrains Mono** (the app sets the Pomodoro clock in `monospace`; we give that voice a real face — used for timers, code, tag-as-data, and tabular figures). A 1.20 minor-third scale from 12px → 48px. Large display sizes use tight tracking (`-0.02em`); uppercase eyebrows use wide tracking.
+**Typography.** Both families are **native system stacks** — fast, zero-load, no third-party CDN. Sans honors the app’s original `Helvetica Neue` heritage. The numeric/code voice is a **developer-monospace stack** that prefers the devtool faces a developer is likely to already have installed locally — `JetBrains Mono` → `Cascadia Code` → the OS UI mono (`ui-monospace`) → classic system monos — used for timers, code, tag-as-data, and tabular figures. No webfont is fetched (the app only specified a generic `monospace` for the clock; this gives that voice real character without an external request). A 1.20 minor-third scale from 12px → 48px. Large display sizes use tight tracking (`-0.02em`); uppercase eyebrows use wide tracking.
 
 **Spacing & layout.** A single 4px-based scale. Fixed structural sizes: a **64px** sidebar rail and a **3.5rem** top row (both lifted from the app). Reading/content widths are capped — 600px for forms/Settings, 700px for the Journal, 960px for the Dashboard. The sidebar is sticky and persistent (Jakob); the active nav item is highlighted (Von Restorff).
 
@@ -100,7 +100,7 @@ KairuFocus uses **three** icon registers, in this order of preference:
 
 ## ⚠️ Substitutions & flags — please confirm
 
-- **JetBrains Mono** was introduced as the brand monospace. The app itself only specifies a generic `monospace` for the Pomodoro clock; I chose JetBrains Mono (a developer-tool-appropriate face, on Google Fonts) to give that numeric/code voice real character. **If you’d rather keep a generic system mono, or use a different face (e.g. SF Mono, JetBrains is just my pick), tell me and I’ll swap it.** It’s loaded via Google Fonts `@import`; for offline/production you may want to self-host the woff2 files.
+- **Monospace = zero-load system stack.** The app only specifies a generic `monospace` for the Pomodoro clock. Rather than pull a webfont from a third-party CDN (Google Fonts sends the visitor’s IP to Google at render time — a GDPR concern if this CSS is ever served to real users), `--font-mono` prefers devtool faces a developer likely already has locally (`JetBrains Mono` → `Cascadia Code` → `ui-monospace`) and degrades to the classic system monos. No external request, offline-friendly, instant. **If you want a guaranteed-identical face on every machine, self-host a woff2 (JetBrains Mono is OFL — drop it in `assets/` and add a local `@font-face`) rather than re-introducing the remote `@import`.**
 - **System sans** is used for body/UI rather than a branded webfont, to stay faithful and fast. If you’d like a distinctive heading face (e.g. Geist), say so.
 - The token color values systematize the app’s scattered inline colors into a clean light/dark scale — a few in-between steps were interpolated. Spot-check against your brand intent.
 
@@ -119,7 +119,7 @@ KairuFocus uses **three** icon registers, in this order of preference:
 
 **Tokens** (`tokens/`, all `@import`ed by `styles.css`)
 - `colors.css` — base palette + theme-aware semantic aliases (light + dark).
-- `typography.css` — families (system sans + JetBrains Mono), scale, weights, leading, tracking.
+- `typography.css` — families (system sans + zero-load developer-mono stack), scale, weights, leading, tracking.
 - `spacing.css` — 4px scale + structural sizes + hit targets.
 - `radius-elevation-motion.css` — radii, shadow ramp, durations & easing.
 - `base.css` — element defaults + Bootstrap `--bs-*` bridge + focus ring.

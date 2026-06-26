@@ -2,20 +2,24 @@
    KairuFocus — Typography tokens
    Sans: native system stack (honors the app's Helvetica Neue
    heritage — fast, zero-load, familiar to developers).
-   Mono: JetBrains Mono for timers, code, tags-as-data and any
-   tabular/numeric voice (the app uses monospace for the
-   Pomodoro clock — we give that voice a real brand face).
+   Mono: a zero-load developer-monospace stack. We prefer the
+   devtool faces a developer is likely to already have locally
+   (JetBrains Mono → Cascadia → the OS UI mono via ui-monospace),
+   then fall back to the classic system monos. NO webfont is
+   fetched — no external request, GDPR-clean, instant, offline.
+   (The app only specified a generic `monospace` for the Pomodoro
+   clock; this gives that numeric/code voice real character
+   without pulling a font from a third-party CDN.)
    ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
   /* ---- Families ---- */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
                Helvetica, Arial, "Noto Sans", sans-serif,
                "Apple Color Emoji", "Segoe UI Emoji";
-  --font-mono: "JetBrains Mono", "SFMono-Regular", "SF Mono", Menlo,
-               Consolas, "Liberation Mono", monospace;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Cascadia Mono", ui-monospace,
+               "SFMono-Regular", "SF Mono", Menlo, Consolas,
+               "Liberation Mono", monospace;
 
   /* ---- Type scale (1.20 minor-third, rem-based) ---- */
   --text-xs:    0.75rem;   /* 12px — meta, time labels, badges */
