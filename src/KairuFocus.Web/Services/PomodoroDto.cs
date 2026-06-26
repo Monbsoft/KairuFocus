@@ -4,7 +4,14 @@ public sealed record PomodoroSettingsDto(
     int SprintDurationMinutes,
     int ShortBreakDurationMinutes,
     int LongBreakDurationMinutes,
-    int SprintsBeforeLongBreak);
+    int SprintsBeforeLongBreak,
+    int DailySprintGoal);
+
+public sealed record FocusSummaryDto(
+    int SprintsToday,
+    int FocusMinutesToday,
+    int DailySprintGoal,
+    int Streak);
 
 public sealed record PomodoroSessionDto(
     Guid Id,
