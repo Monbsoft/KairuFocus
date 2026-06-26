@@ -1,0 +1,27 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+
+@Body
+
+@code {
+    // Pages publiques : aucun chrome d'app. On applique le thème du système
+    // (le visiteur n'a pas de préférence enregistrée). Même pattern eval que MainLayout.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            var isDark = await JSRuntime.InvokeAsync<bool>(
+                "eval", "window.matchMedia('(prefers-color-scheme: dark)').matches");
+            await JSRuntime.InvokeVoidAsync(
+                "eval",
+                isDark
+                    ? "document.documentElement.setAttribute('data-bs-theme', 'dark')"
+                    : "document.documentElement.setAttribute('data-bs-theme', 'light')");
+        }
+        catch
+        {
+            // Si l'interop échoue, la landing reste en thème clair par défaut.
+        }
+    }
+}
