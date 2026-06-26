@@ -33,10 +33,17 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
     }
 
     public Task<int> GetCompletedTodayCountAsync(UserId userId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Sessions.Count(s => s.OwnerId == userId && s.Status == PomodoroSessionStatus.Completed));
+        Task.FromResult(Sessions.Count(s => s.OwnerId == userId
+                                            && s.Status == PomodoroSessionStatus.Completed
+                                            && s.EndedAt.HasValue
+                                            && s.EndedAt.Value.Date == DateTime.UtcNow.Date));
 
     public Task<int> GetCompletedSprintsTodayCountAsync(UserId userId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Sessions.Count(s => s.OwnerId == userId && s.SessionType == PomodoroSessionType.Sprint && s.Status == PomodoroSessionStatus.Completed));
+        Task.FromResult(Sessions.Count(s => s.OwnerId == userId
+                                            && s.SessionType == PomodoroSessionType.Sprint
+                                            && s.Status == PomodoroSessionStatus.Completed
+                                            && s.EndedAt.HasValue
+                                            && s.EndedAt.Value.Date == DateTime.UtcNow.Date));
 
     public Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, CancellationToken cancellationToken = default) =>
         Task.FromResult(Sessions
@@ -54,5 +61,26 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
                         && (s.Status == PomodoroSessionStatus.Completed
                             || s.Status == PomodoroSessionStatus.Interrupted))
             .OrderBy(s => s.StartedAt)
+            .ToList());
+
+    public Task<IReadOnlyList<PomodoroSession>> GetCompletedSprintSessionsTodayAsync(UserId userId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<PomodoroSession>>(Sessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value.Date == DateTime.UtcNow.Date)
+            .OrderBy(s => s.StartedAt)
+            .ToList());
+
+    public Task<IReadOnlyList<DateOnly>> GetCompletedSprintDatesAsync(UserId userId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<DateOnly>>(Sessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.EndedAt.HasValue)
+            .Select(s => DateOnly.FromDateTime(s.EndedAt!.Value.Date))
+            .Distinct()
+            .OrderByDescending(d => d)
             .ToList());
 }

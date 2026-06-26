@@ -93,4 +93,34 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
             .OrderBy(s => s.StartedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<PomodoroSession>> GetCompletedSprintSessionsTodayAsync(UserId userId, CancellationToken cancellationToken = default)
+    {
+        var today = DateTime.UtcNow.Date;
+        return await _context.PomodoroSessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value.Date == today)
+            .OrderBy(s => s.StartedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<DateOnly>> GetCompletedSprintDatesAsync(UserId userId, CancellationToken cancellationToken = default)
+    {
+        // Materialize the distinct UTC-day DateTimes server-side, then convert to DateOnly client-side
+        // (DateOnly projection is not translatable by the SQL Server provider).
+        var days = await _context.PomodoroSessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.EndedAt.HasValue)
+            .Select(s => s.EndedAt!.Value.Date)
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToListAsync(cancellationToken);
+
+        return days.Select(DateOnly.FromDateTime).ToList();
+    }
 }

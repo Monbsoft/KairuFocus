@@ -25,7 +25,8 @@ internal sealed class EfCorePomodoroSettingsRepository : IPomodoroSettingsReposi
         return PomodoroSettings.Create(
             row.SprintDurationMinutes,
             row.ShortBreakDurationMinutes,
-            row.LongBreakDurationMinutes).Value;
+            row.LongBreakDurationMinutes,
+            row.DailySprintGoal).Value;
     }
 
     public async Task SaveAsync(PomodoroSettings settings, UserId userId, CancellationToken cancellationToken = default)
@@ -40,7 +41,8 @@ internal sealed class EfCorePomodoroSettingsRepository : IPomodoroSettingsReposi
                 UserId = userId.Value.ToString(),
                 SprintDurationMinutes = settings.SprintDurationMinutes,
                 ShortBreakDurationMinutes = settings.ShortBreakDurationMinutes,
-                LongBreakDurationMinutes = settings.LongBreakDurationMinutes
+                LongBreakDurationMinutes = settings.LongBreakDurationMinutes,
+                DailySprintGoal = settings.DailySprintGoal
             };
             await _context.PomodoroSettings.AddAsync(row, cancellationToken);
         }
@@ -49,6 +51,7 @@ internal sealed class EfCorePomodoroSettingsRepository : IPomodoroSettingsReposi
             row.SprintDurationMinutes = settings.SprintDurationMinutes;
             row.ShortBreakDurationMinutes = settings.ShortBreakDurationMinutes;
             row.LongBreakDurationMinutes = settings.LongBreakDurationMinutes;
+            row.DailySprintGoal = settings.DailySprintGoal;
         }
 
         await _context.SaveChangesAsync(cancellationToken);

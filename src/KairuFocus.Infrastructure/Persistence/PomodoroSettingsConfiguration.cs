@@ -14,5 +14,6 @@ internal sealed class PomodoroSettingsConfiguration : IEntityTypeConfiguration<P
         builder.Property(s => s.SprintDurationMinutes).HasColumnType("int").IsRequired();
         builder.Property(s => s.ShortBreakDurationMinutes).HasColumnType("int").IsRequired();
         builder.Property(s => s.LongBreakDurationMinutes).HasColumnType("int").IsRequired();
+        builder.Property(s => s.DailySprintGoal).HasColumnType("int").IsRequired().HasDefaultValue(4);
     }
 }

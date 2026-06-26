@@ -13,4 +13,17 @@ public interface IPomodoroSessionRepository
     Task<int> GetCompletedSprintsTodayCountAsync(UserId userId, CancellationToken cancellationToken = default);
     Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PomodoroSession>> GetTodaySprintSessionsAsync(UserId userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// All sprint sessions completed today (UTC day). Criterion aligned with
+    /// GetCompletedSprintsTodayCountAsync (Sprint + Completed + EndedAt UTC day),
+    /// covering both free and regular sprints. Used to sum today's focus time.
+    /// </summary>
+    Task<IReadOnlyList<PomodoroSession>> GetCompletedSprintSessionsTodayAsync(UserId userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Distinct UTC-day dates for which the user completed >= 1 sprint, ordered descending.
+    /// Criterion aligned with GetCompletedSprintsTodayCountAsync (Sprint + Completed + EndedAt UTC day).
+    /// </summary>
+    Task<IReadOnlyList<DateOnly>> GetCompletedSprintDatesAsync(UserId userId, CancellationToken cancellationToken = default);
 }
