@@ -12,17 +12,20 @@ public sealed class GetFocusSummaryQueryHandler
     private readonly IPomodoroSettingsRepository _settingsRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<GetFocusSummaryQueryHandler> _logger;
+    private readonly TimeProvider _timeProvider;
 
     public GetFocusSummaryQueryHandler(
         IPomodoroSessionRepository sessionRepository,
         IPomodoroSettingsRepository settingsRepository,
         ICurrentUserService currentUserService,
-        ILogger<GetFocusSummaryQueryHandler> logger)
+        ILogger<GetFocusSummaryQueryHandler> logger,
+        TimeProvider timeProvider)
     {
         _sessionRepository = sessionRepository;
         _settingsRepository = settingsRepository;
         _currentUserService = currentUserService;
         _logger = logger;
+        _timeProvider = timeProvider;
     }
 
     public async Task<GetFocusSummaryResult> Handle(
@@ -35,7 +38,7 @@ public sealed class GetFocusSummaryQueryHandler
 
         // Compute local "today" window expressed as a UTC range.
         var offset = TimeSpan.FromMinutes(query.OffsetMinutes);
-        var nowLocal = DateTime.UtcNow + offset;          // ticks shifted to represent local clock
+        var nowLocal = _timeProvider.GetUtcNow().UtcDateTime + offset;  // ticks shifted to represent local clock
         var todayLocal = DateOnly.FromDateTime(nowLocal);
         var startUtc = nowLocal.Date - offset;            // UTC instant corresponding to local midnight today
         var endUtc = startUtc + TimeSpan.FromDays(1);
