@@ -162,13 +162,29 @@ code {
 
 /* ── Landing page ──────────────────────────────────────────────────────── */
 .landing {
+    /* Tokens scopés (light) — valeurs identiques à l'existant, factorisées. */
+    --landing-hero-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    --landing-features-bg: #f8f9fa;
+    --landing-card-bg: #ffffff;
+    --landing-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    --landing-card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --landing-desc-color: #6c757d;
+    --landing-focus-ring: #2b7dff;
+
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
+[data-bs-theme="dark"] .landing {
+    --landing-features-bg: #1a1a2e;
+    --landing-card-bg: #16213e;
+    --landing-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.30);
+    --landing-desc-color: #adb5bd;
+}
+
 .landing-hero {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: var(--landing-hero-bg);
     color: #fff;
     display: flex;
     align-items: center;
@@ -220,31 +236,22 @@ code {
 
 .landing-features {
     padding: 4rem 1rem;
-    background: #f8f9fa;
-}
-
-[data-bs-theme="dark"] .landing-features {
-    background: #1a1a2e;
+    background: var(--landing-features-bg);
 }
 
 .feature-card {
-    background: #fff;
+    background: var(--landing-card-bg);
     border-radius: 12px;
     padding: 2rem 1.5rem;
     text-align: center;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: var(--landing-card-shadow);
     transition: transform 0.2s, box-shadow 0.2s;
     height: 100%;
 }
 
 .feature-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-
-[data-bs-theme="dark"] .feature-card {
-    background: #16213e;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    box-shadow: var(--landing-card-shadow-hover);
 }
 
 .feature-icon {
@@ -261,13 +268,14 @@ code {
 
 .feature-desc {
     font-size: 0.9rem;
-    color: #6c757d;
+    color: var(--landing-desc-color);
     line-height: 1.6;
     margin: 0;
 }
 
-[data-bs-theme="dark"] .feature-desc {
-    color: #adb5bd;
+.landing .btn-github:focus-visible {
+    outline: 2px solid var(--landing-focus-ring);
+    outline-offset: 2px;
 }
 
 /* ════════════════════════════════════════════════════════════════════════
