@@ -75,12 +75,13 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
             .OrderBy(s => s.StartedAt)
             .ToList());
 
-    public Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, DateTime sinceUtc, CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<DateTime>>(Sessions
             .Where(s => s.OwnerId == userId
                         && s.SessionType == PomodoroSessionType.Sprint
                         && s.Status == PomodoroSessionStatus.Completed
-                        && s.EndedAt.HasValue)
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value >= sinceUtc)
             .Select(s => s.EndedAt!.Value)
             .ToList());
 }

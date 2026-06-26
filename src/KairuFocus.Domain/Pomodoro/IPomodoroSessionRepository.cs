@@ -27,9 +27,11 @@ public interface IPomodoroSessionRepository
     Task<IReadOnlyList<PomodoroSession>> GetCompletedSprintSessionsTodayAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// EndedAt (UTC) of all completed sprint sessions for the user, unfiltered by date.
-    /// The Application layer maps these to local dates using the user's UTC offset.
+    /// EndedAt (UTC) of completed sprint sessions for the user where EndedAt >= sinceUtc.
+    /// The Application layer maps these to local dates using the user's UTC offset (ADR-020).
     /// No date bucketing in SQL — safe for both SQL Server and SQLite providers.
+    /// The sinceUtc bound limits the result set to a recent window (e.g. last 366 days)
+    /// so that the in-memory bucketing does not materialise the user's entire history.
     /// </summary>
-    Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, DateTime sinceUtc, CancellationToken cancellationToken = default);
 }

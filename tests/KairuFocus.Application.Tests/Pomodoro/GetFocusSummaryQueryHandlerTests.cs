@@ -182,4 +182,30 @@ public sealed class GetFocusSummaryQueryHandlerTests
         // startUtc=2026-06-25 22:00 and endUtc=2026-06-26 22:00.
         Assert.Equal(1, result.SprintsToday);
     }
+
+    // ── Lookback window tests ──────────────────────────────────────────────
+
+    [Fact]
+    public async Task Should_NotCountOldSprint_When_EndedAtIsOutsideLookbackWindow()
+    {
+        // Fixed now = 2026-06-26 12:00 UTC, offset = 0.
+        // startUtc = 2026-06-26 00:00 UTC.
+        // sinceUtc = startUtc - 366 days = 2025-06-25 00:00 UTC.
+        // A sprint ending before sinceUtc must NOT be included in the streak computation.
+        // It is NOT a sprint for today either, so SprintsToday and Streak should both be 0.
+
+        // Sprint ending at 2025-06-24 12:00 UTC — one day before sinceUtc.
+        var tooOldEndedAt = new DateTime(2025, 6, 24, 12, 0, 0, DateTimeKind.Utc);
+        _sessionRepository.Sessions.Add(FreeSprintCompleted(tooOldEndedAt.AddMinutes(-25), 25));
+
+        // Also add a sprint for today to confirm it IS counted (verifies the filter is additive, not exclusive).
+        var todayAt9 = FixedUtcNow.Date.AddHours(9);
+        _sessionRepository.Sessions.Add(FreeSprintCompleted(todayAt9, 25));
+
+        var result = await _sut.Handle(new GetFocusSummaryQuery());
+
+        // The old sprint is excluded from the streak window; today's sprint is included.
+        Assert.Equal(1, result.SprintsToday);
+        Assert.Equal(1, result.Streak); // only today counts; the ancient sprint is invisible
+    }
 }

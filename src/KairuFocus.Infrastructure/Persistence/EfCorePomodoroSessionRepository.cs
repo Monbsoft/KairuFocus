@@ -103,15 +103,17 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
             .OrderBy(s => s.StartedAt)
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, DateTime sinceUtc, CancellationToken cancellationToken = default)
     {
-        // Return raw UTC EndedAt values. Date-to-local bucketing is done in the Application layer
-        // (ADR-020). Avoids non-translatable EF expressions (e.g. .Date, AddMinutes) on SQLite.
+        // Return raw UTC EndedAt values bounded by sinceUtc.
+        // Date-to-local bucketing is done in the Application layer (ADR-020).
+        // Simple >= comparison is provider-safe (SQL Server and SQLite).
         var endTimes = await _context.PomodoroSessions
             .Where(s => s.OwnerId == userId
                         && s.SessionType == PomodoroSessionType.Sprint
                         && s.Status == PomodoroSessionStatus.Completed
-                        && s.EndedAt.HasValue)
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value >= sinceUtc)
             .Select(s => s.EndedAt!.Value)
             .ToListAsync(cancellationToken);
 

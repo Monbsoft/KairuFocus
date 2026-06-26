@@ -8,6 +8,14 @@ namespace KairuFocus.Application.Pomodoro.Queries.GetFocusSummary;
 public sealed class GetFocusSummaryQueryHandler
     : IQueryHandler<GetFocusSummaryQuery, GetFocusSummaryResult>
 {
+    /// <summary>
+    /// Maximum streak window loaded from the repository.
+    /// A streak cannot exceed this many consecutive days; beyond that the user
+    /// has almost certainly missed a day. The bound prevents materialising the
+    /// user's entire history on every dashboard load.
+    /// </summary>
+    private const int StreakLookbackDays = 366;
+
     private readonly IPomodoroSessionRepository _sessionRepository;
     private readonly IPomodoroSettingsRepository _settingsRepository;
     private readonly ICurrentUserService _currentUserService;
@@ -57,7 +65,11 @@ public sealed class GetFocusSummaryQueryHandler
 
         // Map each raw UTC end-time to a local date, then compute streak.
         // Bucketing is done here in the Application layer (ADR-020).
-        var endTimes = await _sessionRepository.GetCompletedSprintEndTimesAsync(userId, cancellationToken);
+        // sinceUtc bounds the query to the last StreakLookbackDays days so that
+        // the repository does not materialise the user's full history on every load.
+        // Any streak longer than StreakLookbackDays is capped — an acceptable limit.
+        var sinceUtc = startUtc.AddDays(-StreakLookbackDays);
+        var endTimes = await _sessionRepository.GetCompletedSprintEndTimesAsync(userId, sinceUtc, cancellationToken);
         var localDates = endTimes
             .Select(t => DateOnly.FromDateTime(t + offset))
             .Distinct()
