@@ -22,11 +22,13 @@ internal sealed class EfCorePomodoroSettingsRepository : IPomodoroSettingsReposi
         if (row is null)
             return PomodoroSettings.Default;
 
-        return PomodoroSettings.Create(
+        var result = PomodoroSettings.Create(
             row.SprintDurationMinutes,
             row.ShortBreakDurationMinutes,
             row.LongBreakDurationMinutes,
-            row.DailySprintGoal).Value;
+            row.DailySprintGoal);
+
+        return result.IsFailure ? PomodoroSettings.Default : result.Value;
     }
 
     public async Task SaveAsync(PomodoroSettings settings, UserId userId, CancellationToken cancellationToken = default)
