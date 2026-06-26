@@ -1,0 +1,22 @@
+<!-- @dsCard group="Brand" viewport="700x200" name="Elevation" subtitle="xs → xl shadow ramp; cards rest at sm, lift to md/lg on hover" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 28px; background: var(--surface-base); font-family: var(--font-sans); display:flex; gap:26px; align-items:center; justify-content:center; }
+  .item { text-align:center; }
+  .box { width: 96px; height: 64px; background: var(--surface-card); border-radius: var(--radius-lg); }
+  .nm { margin-top: 14px; font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  .lbl { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-xs)"></div><div class="nm">xs</div><div class="lbl">rest inputs</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-sm)"></div><div class="nm">sm</div><div class="lbl">card rest</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-md)"></div><div class="nm">md</div><div class="lbl">hover</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-lg)"></div><div class="nm">lg</div><div class="lbl">feature hover</div></div>
+  <div class="item"><div class="box" style="box-shadow:var(--shadow-xl)"></div><div class="nm">xl</div><div class="lbl">dialog</div></div>
+</body>
+</html>

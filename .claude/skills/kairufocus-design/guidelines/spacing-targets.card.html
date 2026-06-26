@@ -1,0 +1,22 @@
+<!-- @dsCard group="Spacing" viewport="700x170" name="Hit targets — Fitts / AA" subtitle="Min 44px tap targets; comfy 48px for primary actions" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-card); font-family: var(--font-sans); display:flex; gap:24px; align-items:center; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; border:none; border-radius: var(--radius-sm); font-weight:600; cursor:pointer; }
+  .primary { height: var(--target-comfy); padding: 0 24px; background: var(--primary); color: var(--on-primary); font-size: 15px; }
+  .icon { width: var(--target-min); height: var(--target-min); background: var(--surface-sunken); color: var(--text-secondary); border:1px solid var(--border-subtle); font-size:16px; }
+  .col { text-align:center; }
+  .lbl { margin-top: 8px; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); }
+  .bad { width:28px; height:28px; opacity:.5; border:1px dashed var(--danger); border-radius:var(--radius-xs); display:inline-flex;align-items:center;justify-content:center; color:var(--danger); font-size:12px; }
+</style>
+</head>
+<body>
+  <div class="col"><button class="btn primary">Démarrer un sprint</button><div class="lbl">48px · comfy</div></div>
+  <div class="col"><button class="btn icon">✓</button><div class="lbl">44px · min</div></div>
+  <div class="col"><span class="bad">✕</span><div class="lbl" style="color:var(--danger)">28px · avoid</div></div>
+</body>
+</html>

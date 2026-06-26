@@ -1,0 +1,23 @@
+<!-- @dsCard group="Brand" viewport="700x200" name="Logo — The K mark" subtitle="White K on brand blue; coral-glow variant for heroes" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--surface-card); font-family: var(--font-sans); display:flex; gap:32px; align-items:center; }
+  .item { text-align:center; }
+  img { display:block; border-radius: var(--radius-xl); }
+  .tile { width:88px; height:88px; border-radius: var(--radius-xl); background: var(--brand-mark-bg); display:flex; align-items:center; justify-content:center; color:#fff; font-size:44px; font-weight:800; }
+  .hero-tile { background: linear-gradient(135deg, var(--kf-coral-500), var(--kf-ink-700)); box-shadow: var(--shadow-brand); }
+  .lockup { display:flex; align-items:center; gap:12px; }
+  .word { font-size:26px; font-weight:800; letter-spacing:var(--tracking-tight); color:var(--text-primary); }
+  .lbl { margin-top:10px; font-size:11px; font-family: var(--font-mono); color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="item"><img src="../assets/kairufocus-logo-192.png" width="88" height="88" alt="KairuFocus logo"><div class="lbl">app icon</div></div>
+  <div class="item"><div class="tile hero-tile">K</div><div class="lbl">hero / landing</div></div>
+  <div class="item"><div class="lockup"><div class="tile" style="width:48px;height:48px;font-size:24px;border-radius:var(--radius-md)">K</div><span class="word">KairuFocus</span></div><div class="lbl">horizontal lockup</div></div>
+</body>
+</html>

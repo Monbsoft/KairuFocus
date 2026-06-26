@@ -1,0 +1,95 @@
+<!-- @dsCard group="KairuFocus" viewport="1280x800" name="KairuFocus Web — interactive" subtitle="Landing → Dashboard → Tasks → Pomodoro → Journal → Settings" -->
+<!-- @startingPoint section="Screens" subtitle="Full KairuFocus web app shell + screens" viewport="1280x800" -->
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KairuFocus — UI Kit</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: var(--surface-base); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="mockData.jsx"></script>
+<script type="text/babel" src="AppShell.jsx"></script>
+<script type="text/babel" src="LandingScreen.jsx"></script>
+<script type="text/babel" src="LoginScreen.jsx"></script>
+<script type="text/babel" src="DashboardScreen.jsx"></script>
+<script type="text/babel" src="StatsScreen.jsx"></script>
+<script type="text/babel" src="TasksScreen.jsx"></script>
+<script type="text/babel" src="TaskEditScreen.jsx"></script>
+<script type="text/babel" src="PomodoroScreen.jsx"></script>
+<script type="text/babel" src="SprintLibreScreen.jsx"></script>
+<script type="text/babel" src="JournalScreen.jsx"></script>
+<script type="text/babel" src="SettingsScreen.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  const [screen, setScreen] = React.useState("landing");
+  const [authed, setAuthed] = React.useState(false);
+  const [entry, setEntry] = React.useState("landing"); // 'landing' | 'login'
+  const [theme, setTheme] = React.useState("light");
+  const [tasks, setTasks] = React.useState(window.KFData.initialTasks);
+  const [running, setRunning] = React.useState(false);
+  const [dayOffset, setDayOffset] = React.useState(0);
+  const [detail, setDetail] = React.useState(null); // { task, mode: 'detail'|'edit' }
+  const [sprintGoal, setSprintGoal] = React.useState(window.KFData.focus.sprintGoal);
+  const user = window.KFData.user;
+  const focus = { ...window.KFData.focus, sprintGoal: sprintGoal };
+
+  const toggleTheme = () => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next); document.documentElement.setAttribute("data-bs-theme", next);
+  };
+  const login = () => { setAuthed(true); setScreen("dashboard"); };
+  const logout = () => { setAuthed(false); setEntry("login"); };
+
+  // optimistic task ops
+  const addTask = (t) => setTasks((prev) => [{ id: "n" + Date.now(), status: "Todo", ...t }, ...prev]);
+  const completeTask = (id) => setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status: t.status === "Done" ? "Todo" : "Done" } : t));
+  const deleteTask = (id) => setTasks((prev) => prev.filter((t) => t.id !== id));
+
+  const linkedTasks = tasks.filter((t) => t.status === "InProgress");
+  const completeLinked = (id) => setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status: "Done" } : t));
+  const unlink = (id) => setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status: "Todo" } : t));
+  const resumeTask = tasks.find((t) => t.status === "InProgress");
+
+  const openDetail = (task) => { setDetail({ task, mode: "detail" }); setScreen("taskedit"); };
+  const openEdit = (task) => { setDetail({ task, mode: "edit" }); setScreen("taskedit"); };
+  const saveTask = (updated) => { setTasks((prev) => prev.map((t) => t.id === updated.id ? updated : t)); setScreen("tasks"); setDetail(null); };
+
+  if (!authed) {
+    return entry === "login"
+      ? <window.LoginScreen onLogin={login} />
+      : <window.LandingScreen onLogin={login} />;
+  }
+
+  let content;
+  if (screen === "dashboard") content = <window.DashboardScreen user={user} tasks={tasks} currentSession={running} resumeTask={resumeTask} onNavigate={setScreen} focus={focus} />;
+  else if (screen === "tasks") content = <window.TasksScreen tasks={tasks} onAdd={addTask} onComplete={completeTask} onDelete={deleteTask} onOpen={openDetail} onEdit={openEdit} />;
+  else if (screen === "taskedit" && detail) content = <window.TaskEditScreen task={detail.task} mode={detail.mode} onSave={saveTask} onBack={() => { setScreen("tasks"); setDetail(null); }} onEdit={openEdit} />;
+  else if (screen === "pomodoro") content = <window.PomodoroScreen linkedTasks={linkedTasks} onCompleteLinked={completeLinked} onUnlink={unlink} running={running} onRunningChange={setRunning} onSprintLibre={() => setScreen("sprintlibre")} />;
+  else if (screen === "sprintlibre") content = <window.SprintLibreScreen tasks={tasks} onBack={() => setScreen("pomodoro")} />;
+  else if (screen === "journal") content = <window.JournalScreen entries={window.KFData.journal} dayOffset={dayOffset} onPrev={() => setDayOffset((d) => d - 1)} onNext={() => setDayOffset((d) => Math.min(0, d + 1))} />;
+  else if (screen === "settings") content = <window.SettingsScreen sprintGoal={sprintGoal} onSprintGoal={setSprintGoal} />;
+  else if (screen === "stats") content = <window.StatsScreen onBack={() => setScreen("dashboard")} />;
+
+  return (
+    <window.AppShell active={screen === "taskedit" ? "tasks" : (screen === "sprintlibre" ? "pomodoro" : (screen === "stats" ? "dashboard" : screen))} onNavigate={setScreen} onLogout={logout} theme={theme} onToggleTheme={toggleTheme} user={user}>
+      {content}
+    </window.AppShell>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

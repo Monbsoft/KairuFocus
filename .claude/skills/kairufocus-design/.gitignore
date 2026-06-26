@@ -1,0 +1,2 @@
+# Redundant packaged export of this folder — the source files are versioned, the archive is not.
+*.zip

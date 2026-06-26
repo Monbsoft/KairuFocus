@@ -1,0 +1,33 @@
+<!-- @dsCard group="Colors" viewport="700x190" name="Pomodoro — Ring states" subtitle="Sprint blue · short-break green · long-break cyan · interrupted amber" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-card); font-family: var(--font-sans); display:flex; gap:24px; align-items:center; justify-content:center; }
+  .item { text-align: center; }
+  svg { display: block; }
+  .lbl { margin-top: 8px; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+  .nm { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+</style>
+</head>
+<body>
+  <div class="item">
+    <svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" fill="none" stroke="var(--pomo-track)" stroke-width="8"/><circle cx="40" cy="40" r="32" fill="none" stroke="var(--pomo-sprint)" stroke-width="8" stroke-linecap="round" stroke-dasharray="150 201" transform="rotate(-90 40 40)"/></svg>
+    <div class="nm">Sprint</div><div class="lbl">--pomo-sprint</div>
+  </div>
+  <div class="item">
+    <svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" fill="none" stroke="var(--pomo-track)" stroke-width="8"/><circle cx="40" cy="40" r="32" fill="none" stroke="var(--pomo-short-break)" stroke-width="8" stroke-linecap="round" stroke-dasharray="120 201" transform="rotate(-90 40 40)"/></svg>
+    <div class="nm">Short break</div><div class="lbl">--pomo-short-break</div>
+  </div>
+  <div class="item">
+    <svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" fill="none" stroke="var(--pomo-track)" stroke-width="8"/><circle cx="40" cy="40" r="32" fill="none" stroke="var(--pomo-long-break)" stroke-width="8" stroke-linecap="round" stroke-dasharray="90 201" transform="rotate(-90 40 40)"/></svg>
+    <div class="nm">Long break</div><div class="lbl">--pomo-long-break</div>
+  </div>
+  <div class="item">
+    <svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" fill="none" stroke="var(--pomo-track)" stroke-width="8"/><circle cx="40" cy="40" r="32" fill="none" stroke="var(--pomo-interrupted)" stroke-width="8" stroke-linecap="round" stroke-dasharray="60 201" transform="rotate(-90 40 40)"/></svg>
+    <div class="nm">Interrupted</div><div class="lbl">--pomo-interrupted</div>
+  </div>
+</body>
+</html>

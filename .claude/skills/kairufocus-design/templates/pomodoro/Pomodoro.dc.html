@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Pomodoro page" description="KairuFocus Pomodoro focus page — app shell, session-type tabs, the circular ProgressRing timer, and a big primary Start control (Flow + Goal-Gradient + Fitts)." -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="display:flex; min-height:100vh; background:var(--surface-base); font-family:var(--font-sans); color:var(--text-primary);">
+
+  <aside style="width:64px; flex-shrink:0; position:sticky; top:0; height:100vh; background:var(--brand-sidebar); display:flex; flex-direction:column; align-items:center;">
+    <div style="height:3.5rem; width:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); color:#fff; font-size:1.4rem; font-weight:700; letter-spacing:.05em;">K</div>
+    <nav style="display:flex; flex-direction:column; align-items:center; gap:.35rem; padding-top:.75rem; flex:1; width:100%;">
+      <div style="width:3rem; height:3rem; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#d7d7d7; font-size:1.3rem;">⌂</div>
+      <div style="width:3rem; height:3rem; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#d7d7d7; font-size:1.3rem;">☑️</div>
+      <div style="width:3rem; height:3rem; border-radius:8px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.37); color:#fff; font-size:1.3rem;">🍅</div>
+      <div style="width:3rem; height:3rem; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#d7d7d7; font-size:1.3rem;">📖</div>
+    </nav>
+  </aside>
+
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <header style="height:3.5rem; background:var(--surface-card); border-bottom:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:flex-end; padding:0 1.5rem; gap:.6rem;">
+      <span style="font-size:.875rem; font-weight:600; color:var(--text-secondary);">dev</span>
+      <span style="width:28px; height:28px; border-radius:999px; background:var(--primary); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">D</span>
+    </header>
+
+    <main style="padding:1.5rem 2rem; max-width:560px; width:100%; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:1.25rem;">
+      <h1 style="font-size:1.75rem; font-weight:700; margin:0; align-self:flex-start;">Pomodoro</h1>
+
+      <!-- Session type tabs -->
+      <div style="display:inline-flex; background:var(--surface-sunken); border-radius:8px; padding:4px; gap:4px;">
+        <button style="border:none; background:var(--surface-card); color:var(--text-primary); box-shadow:var(--shadow-xs); padding:.5rem .9rem; border-radius:6px; font-size:.875rem; font-weight:600; font-family:var(--font-sans); cursor:pointer;">🍅 Sprint (25 min)</button>
+        <button style="border:none; background:transparent; color:var(--text-secondary); padding:.5rem .9rem; border-radius:6px; font-size:.875rem; font-weight:600; font-family:var(--font-sans); cursor:pointer;">☕ Pause courte (5 min)</button>
+        <button style="border:none; background:transparent; color:var(--text-secondary); padding:.5rem .9rem; border-radius:6px; font-size:.875rem; font-weight:600; font-family:var(--font-sans); cursor:pointer;">🌙 Pause longue (15 min)</button>
+      </div>
+
+      <!-- The ring -->
+      <div style="padding:.5rem 0;">
+        <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.ProgressRing" progress="1" state="idle" size="236" label="25:00" sublabel="Prêt" hint-size="236px,236px"></x-import>
+      </div>
+
+      <!-- Primary control (Von Restorff + Fitts) -->
+      <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.Button" variant="primary" size="lg" hint-size="160px,48px">▶ Démarrer</x-import>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

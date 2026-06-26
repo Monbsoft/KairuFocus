@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Tasks page" description="KairuFocus app shell (navy rail + top row) with the Tasks list — add form, conventional checkbox to complete, hashed tags, status badges, big action targets." -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  body { margin: 0; }
+</style>
+</helmet>
+
+<div style="display:flex; min-height:100vh; background:var(--surface-base); font-family:var(--font-sans); color:var(--text-primary);">
+
+  <!-- Sidebar rail (Jakob: persistent nav · Von Restorff: active item) -->
+  <aside style="width:64px; flex-shrink:0; position:sticky; top:0; height:100vh; background:var(--brand-sidebar); display:flex; flex-direction:column; align-items:center;">
+    <div style="height:3.5rem; width:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); color:#fff; font-size:1.4rem; font-weight:700; letter-spacing:.05em;">K</div>
+    <nav style="display:flex; flex-direction:column; align-items:center; gap:.35rem; padding-top:.75rem; flex:1; width:100%;">
+      <div aria-label="Tableau de bord" style="width:3rem; height:3rem; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#d7d7d7; font-size:1.3rem;">⌂</div>
+      <div aria-label="Tâches" style="width:3rem; height:3rem; border-radius:8px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.37); color:#fff; font-size:1.3rem;">☑️</div>
+      <div aria-label="Pomodoro" style="width:3rem; height:3rem; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#d7d7d7; font-size:1.3rem;">🍅</div>
+      <div aria-label="Journal" style="width:3rem; height:3rem; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#d7d7d7; font-size:1.3rem;">📖</div>
+    </nav>
+  </aside>
+
+  <!-- Main column -->
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <header style="height:3.5rem; background:var(--surface-card); border-bottom:1px solid var(--border-subtle); display:flex; align-items:center; justify-content:flex-end; padding:0 1.5rem; gap:.6rem;">
+      <span style="font-size:.875rem; font-weight:600; color:var(--text-secondary);">dev</span>
+      <span style="width:28px; height:28px; border-radius:999px; background:var(--primary); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">D</span>
+    </header>
+
+    <main style="padding:1.5rem 2rem; max-width:960px; width:100%;">
+      <h1 style="font-size:1.75rem; font-weight:700; margin:0 0 1.25rem;">Tâches</h1>
+
+      <!-- Add card -->
+      <div style="background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:12px; box-shadow:var(--shadow-sm); padding:1.5rem; margin-bottom:1.5rem; display:flex; flex-direction:column; gap:.75rem;">
+        <input placeholder="Titre de la tâche…" style="height:44px; padding:0 .85rem; border:1px solid var(--border-default); border-radius:6px; background:var(--surface-card); color:var(--text-primary); font-family:var(--font-sans); font-size:1rem;">
+        <textarea placeholder="Description (optionnelle)…" rows="2" style="padding:.6rem .85rem; border:1px solid var(--border-default); border-radius:6px; background:var(--surface-card); color:var(--text-primary); font-family:var(--font-sans); font-size:1rem; resize:vertical;"></textarea>
+        <div>
+          <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.Button" hint-size="110px,44px">Ajouter</x-import>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div style="display:flex; gap:.75rem; margin-bottom:1.25rem;">
+        <input placeholder="Rechercher par titre…" style="flex:1; height:44px; padding:0 .85rem; border:1px solid var(--border-default); border-radius:6px; background:var(--surface-card); color:var(--text-primary); font-family:var(--font-sans); font-size:1rem;">
+        <select style="width:180px; height:44px; padding:0 .85rem; border:1px solid var(--border-default); border-radius:6px; background:var(--surface-card); color:var(--text-primary); font-family:var(--font-sans); font-size:1rem;">
+          <option>Ouvertes</option><option>Toutes</option><option>En cours</option><option>Terminées</option>
+        </select>
+      </div>
+
+      <!-- Task rows -->
+      <div style="display:flex; flex-direction:column; gap:.6rem;">
+
+        <div style="display:flex; align-items:flex-start; gap:.85rem; padding:1rem 1.25rem; background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:12px;">
+          <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.Checkbox" hint-size="44px,44px"></x-import>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:1rem; font-weight:600;">Refactor du handler d'authentification JWT</div>
+            <div style="display:flex; gap:.4rem; flex-wrap:wrap; align-items:center; margin-top:.5rem;">
+              <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.Badge" status="InProgress" hint-size="70px,22px"></x-import>
+              <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.Tag" hash="true" hint-size="70px,22px">backend</x-import>
+            </div>
+          </div>
+          <div style="display:flex; gap:.4rem; flex-shrink:0;">
+            <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.IconButton" label="Modifier" tone="primary" outline="true" hint-size="44px,44px">✎</x-import>
+            <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.IconButton" label="Supprimer" tone="danger" outline="true" hint-size="44px,44px">✕</x-import>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:flex-start; gap:.85rem; padding:1rem 1.25rem; background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:12px;">
+          <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.Checkbox" hint-size="44px,44px"></x-import>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:1rem; font-weight:600;">Écrire les tests d'intégration du JournalApiClient</div>
+            <div style="display:flex; gap:.4rem; flex-wrap:wrap; align-items:center; margin-top:.5rem;">
+              <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.Badge" status="Todo" hint-size="70px,22px"></x-import>
+              <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.Tag" hash="true" hint-size="60px,22px">tests</x-import>
+            </div>
+          </div>
+          <div style="display:flex; gap:.4rem; flex-shrink:0;">
+            <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.IconButton" label="Modifier" tone="primary" outline="true" hint-size="44px,44px">✎</x-import>
+            <x-import component-from-global-scope="KairuFocusDesignSystem_0d3740.IconButton" label="Supprimer" tone="danger" outline="true" hint-size="44px,44px">✕</x-import>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>
