@@ -18,13 +18,14 @@ public sealed class PomodoroApiClient
         return await response.Content.ReadFromJsonAsync<PomodoroSettingsDto>();
     }
 
-    public async Task<bool> SaveSettingsAsync(int sprint, int shortBreak, int longBreak)
+    public async Task<bool> SaveSettingsAsync(int sprint, int shortBreak, int longBreak, int dailySprintGoal)
     {
         var response = await _http.PutAsJsonAsync("api/pomodoro/settings", new
         {
             SprintDurationMinutes = sprint,
             ShortBreakDurationMinutes = shortBreak,
-            LongBreakDurationMinutes = longBreak
+            LongBreakDurationMinutes = longBreak,
+            DailySprintGoal = dailySprintGoal
         });
         return response.IsSuccessStatusCode;
     }
