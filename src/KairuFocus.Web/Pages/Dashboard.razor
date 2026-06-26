@@ -118,7 +118,7 @@
                     @if (_currentSession is not null)
                     {
                         <span class="kf-stat__value kf-stat__value--active">En cours</span>
-                        <span class="kf-stat__label">Sprint actif</span>
+                        <span class="kf-stat__label">@(_currentSession.SessionType == "Sprint" ? "Sprint actif" : "Pause en cours")</span>
                     }
                     else
                     {
@@ -197,7 +197,8 @@
             ?? user.FindFirst("login")?.Value
             ?? "dev";
 
-        var tasks = await Tasks.GetAllAsync();
+        // Fetch all tasks (including Done) so both counters are accurate.
+        var tasks = await Tasks.GetAllAsync(statusFilter: "All");
         _tasksPending = tasks.Count(t => t.Status != "Done");
         _tasksDone = tasks.Count(t => t.Status == "Done");
 
@@ -254,16 +255,29 @@
             return;
         }
 
-        // 2) Sinon, sprint Pomodoro en cours.
+        // 2) Sinon, session Pomodoro en cours (sprint ou pause).
         if (_currentSession is not null)
         {
             _resumeIcon = "⏸️";
-            _resumeTitle = "Sprint en cours";
-            _resumeSubtitle = "Un sprint Pomodoro est en cours";
-            _resumeBadge = "En cours";
-            _resumeCta = "Reprendre le sprint";
             _resumeHref = "/pomodoro";
-            _resumeAriaLabel = "Reprendre le sprint Pomodoro en cours";
+            _resumeBadge = "En cours";
+
+            if (_currentSession.SessionType == "Sprint")
+            {
+                _resumeTitle = "Sprint en cours";
+                _resumeSubtitle = "Un sprint Pomodoro est en cours";
+                _resumeCta = "Reprendre le sprint";
+                _resumeAriaLabel = "Reprendre le sprint Pomodoro en cours";
+            }
+            else
+            {
+                var breakLabel = _currentSession.SessionType == "LongBreak" ? "Pause longue" : "Pause courte";
+                _resumeTitle = "Pause en cours";
+                _resumeSubtitle = $"{breakLabel} en cours";
+                _resumeCta = "Reprendre la pause";
+                _resumeAriaLabel = $"Reprendre la {breakLabel.ToLowerInvariant()} Pomodoro en cours";
+            }
+
             return;
         }
 
