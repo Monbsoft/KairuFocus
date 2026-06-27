@@ -1,4 +1,5 @@
 using KairuFocus.Application.Common;
+using KairuFocus.Application.Pomodoro.Common;
 using KairuFocus.Domain.Pomodoro;
 using Microsoft.Extensions.Logging;
 using Monbsoft.BrilliantMediator.Abstractions.Queries;
@@ -11,17 +12,20 @@ public sealed class GetSuggestedSessionTypeQueryHandler : IQueryHandler<GetSugge
     private readonly IPomodoroSettingsRepository _settingsRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<GetSuggestedSessionTypeQueryHandler> _logger;
+    private readonly TimeProvider _timeProvider;
 
     public GetSuggestedSessionTypeQueryHandler(
         IPomodoroSessionRepository sessionRepository,
         IPomodoroSettingsRepository settingsRepository,
         ICurrentUserService currentUserService,
-        ILogger<GetSuggestedSessionTypeQueryHandler> logger)
+        ILogger<GetSuggestedSessionTypeQueryHandler> logger,
+        TimeProvider timeProvider)
     {
         _sessionRepository = sessionRepository;
         _settingsRepository = settingsRepository;
         _currentUserService = currentUserService;
         _logger = logger;
+        _timeProvider = timeProvider;
     }
 
     public async Task<GetSuggestedSessionTypeResult> Handle(
@@ -38,18 +42,19 @@ public sealed class GetSuggestedSessionTypeQueryHandler : IQueryHandler<GetSugge
         PomodoroSessionType suggestedType;
         if (latestSession?.SessionType == PomodoroSessionType.Sprint)
         {
-            // Use UTC day window (offset=0) — suggestion logic does not require local-day precision.
-            var utcDayStart = DateTime.UtcNow.Date;
-            var utcDayEnd = utcDayStart.AddDays(1);
-            var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(userId, utcDayStart, utcDayEnd, cancellationToken);
-            // Dernier cycle était un sprint → suggérer une pause
+            // Use the user's local-day window (aligned with GetFocusSummaryQueryHandler)
+            // so that both "sprints today" counts are consistent near midnight.
+            // Offset is clamped to a valid timezone range inside LocalDayWindow.From (correction E).
+            var window = LocalDayWindow.From(_timeProvider.GetUtcNow().UtcDateTime, query.OffsetMinutes);
+            var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(
+                userId, window.StartUtc, window.EndUtc, cancellationToken);
+
             suggestedType = sprintsToday % PomodoroSettings.SprintsBeforeLongBreak == 0
                 ? PomodoroSessionType.LongBreak
                 : PomodoroSessionType.ShortBreak;
         }
         else
         {
-            // Dernier cycle était une pause (ou aucune session) → suggérer un sprint
             suggestedType = PomodoroSessionType.Sprint;
         }
 

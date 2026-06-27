@@ -208,4 +208,42 @@ public sealed class GetFocusSummaryQueryHandlerTests
         Assert.Equal(1, result.SprintsToday);
         Assert.Equal(1, result.Streak); // only today counts; the ancient sprint is invisible
     }
+
+    // ── focusMinutes clamping tests (correction C) ────────────────────────
+
+    [Fact]
+    public async Task Should_CountOnlyPortionWithinWindow_When_SprintStartedBeforeLocalMidnight()
+    {
+        // Fixed now = 2026-06-26 12:00 UTC, offset = 0.
+        // startUtc = 2026-06-26 00:00 UTC, endUtc = 2026-06-27 00:00 UTC.
+        // Sprint started at 2026-06-25 23:45 UTC (before window) and ended at 2026-06-26 00:10 UTC (in window).
+        // Actual duration = 25 min; portion within window = 10 min (from 00:00 to 00:10 UTC).
+        var startedAt = new DateTime(2026, 6, 25, 23, 45, 0, DateTimeKind.Utc);
+        var endedAt = new DateTime(2026, 6, 26, 0, 10, 0, DateTimeKind.Utc);
+
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 0, FakeCurrentUserService.TestUserId);
+        session.Start(startedAt);
+        session.Complete(endedAt);
+        _sessionRepository.Sessions.Add(session);
+
+        var result = await _sut.Handle(new GetFocusSummaryQuery());
+
+        // Only the 10-minute portion within the window is credited, not the full 25 minutes.
+        Assert.Equal(1, result.SprintsToday);
+        Assert.Equal(10, result.FocusMinutesToday);
+    }
+
+    // ── Clamp tests (correction E) ────────────────────────────────────────
+
+    [Fact]
+    public async Task Should_NotThrow_When_OffsetMinutesIsOutOfRange()
+    {
+        // offsetMinutes = 1440 is outside the valid range (max +840).
+        // The handler must clamp it and produce a valid result.
+        var result = await _sut.Handle(new GetFocusSummaryQuery(OffsetMinutes: 1440));
+
+        Assert.Equal(0, result.SprintsToday);
+        Assert.Equal(0, result.FocusMinutesToday);
+        Assert.Equal(0, result.Streak);
+    }
 }

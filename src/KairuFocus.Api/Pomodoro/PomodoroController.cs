@@ -61,9 +61,9 @@ public sealed class PomodoroController : ControllerBase
     // ── Session ────────────────────────────────────────────────────────────
 
     [HttpGet("session/suggested")]
-    public async Task<IActionResult> GetSuggestedSessionType(CancellationToken ct)
+    public async Task<IActionResult> GetSuggestedSessionType([FromQuery] int offsetMinutes = 0, CancellationToken ct = default)
     {
-        var result = await _mediator.SendAsync<GetSuggestedSessionTypeQuery, GetSuggestedSessionTypeResult>(new GetSuggestedSessionTypeQuery(), ct);
+        var result = await _mediator.SendAsync<GetSuggestedSessionTypeQuery, GetSuggestedSessionTypeResult>(new GetSuggestedSessionTypeQuery(offsetMinutes), ct);
         return Ok(new
         {
             SuggestedType = result.SuggestedType.ToString(),
