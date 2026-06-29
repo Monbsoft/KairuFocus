@@ -7,6 +7,8 @@ namespace KairuFocus.Application.Pomodoro.Queries.GetFocusStats;
 /// Chaque sprint est attribué à la date LOCALE de sa fin (EndedAt + offset) — ADR-020/021.
 /// Par jour : nombre de sprints + somme des durées (minutes, arrondie).
 /// Seuls les jours ayant au moins un sprint sont émis ; le client comble les jours vides.
+/// La durée n'est PAS clampée à la borne de lookback : un sprint à cheval (~25 min) est
+/// crédité en entier — effet négligeable à l'échelle d'une rétrospective annuelle.
 /// </summary>
 internal static class FocusStatsAggregator
 {

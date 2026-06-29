@@ -97,4 +97,16 @@ public sealed class GetFocusStatsQueryHandlerTests
         var day = Assert.Single(result.Days);
         Assert.Equal(new DateOnly(2026, 6, 26), day.Date);
     }
+
+    [Fact]
+    public async Task Should_BucketOnPreviousLocalDate_When_OffsetNegative()
+    {
+        // Sprint ends 2026-06-26 02:00 UTC => with -300 (UTC-5) => local 2026-06-25 21:00 => previous local day.
+        _sessionRepository.Sessions.Add(SprintCompleted(new DateTime(2026, 6, 26, 1, 35, 0, DateTimeKind.Utc), 25));
+
+        var result = await _sut.Handle(new GetFocusStatsQuery(OffsetMinutes: -300));
+
+        var day = Assert.Single(result.Days);
+        Assert.Equal(new DateOnly(2026, 6, 25), day.Date);
+    }
 }
