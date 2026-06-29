@@ -32,7 +32,8 @@ public sealed class SaveSettingsCommandHandler : ICommandHandler<SaveSettingsCom
         var settingsResult = PomodoroSettings.Create(
             command.SprintDurationMinutes,
             command.ShortBreakDurationMinutes,
-            command.LongBreakDurationMinutes);
+            command.LongBreakDurationMinutes,
+            command.DailySprintGoal);
 
         if (settingsResult.IsFailure)
             return SaveSettingsResult.Validation(settingsResult.Error);

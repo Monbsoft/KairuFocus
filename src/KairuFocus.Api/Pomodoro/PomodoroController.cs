@@ -7,6 +7,7 @@ using KairuFocus.Application.Pomodoro.Commands.SaveSettings;
 using KairuFocus.Application.Pomodoro.Commands.StartSession;
 using KairuFocus.Application.Pomodoro.Commands.UpdateTaskStatus;
 using KairuFocus.Application.Pomodoro.Queries.GetCurrentSession;
+using KairuFocus.Application.Pomodoro.Queries.GetFocusSummary;
 using KairuFocus.Application.Pomodoro.Queries.GetSettings;
 using KairuFocus.Application.Pomodoro.Queries.GetSuggestedSessionType;
 using KairuFocus.Application.Pomodoro.Queries.GetTodaySprintSessions;
@@ -47,12 +48,22 @@ public sealed class PomodoroController : ControllerBase
             : BadRequest(new { error = result.ValidationError });
     }
 
+    // ── Focus / Dashboard ──────────────────────────────────────────────────
+
+    [HttpGet("focus-summary")]
+    public async Task<IActionResult> GetFocusSummary([FromQuery] int offsetMinutes = 0, CancellationToken ct = default)
+    {
+        var result = await _mediator.SendAsync<GetFocusSummaryQuery, GetFocusSummaryResult>(
+            new GetFocusSummaryQuery(offsetMinutes), ct);
+        return Ok(result);
+    }
+
     // ── Session ────────────────────────────────────────────────────────────
 
     [HttpGet("session/suggested")]
-    public async Task<IActionResult> GetSuggestedSessionType(CancellationToken ct)
+    public async Task<IActionResult> GetSuggestedSessionType([FromQuery] int offsetMinutes = 0, CancellationToken ct = default)
     {
-        var result = await _mediator.SendAsync<GetSuggestedSessionTypeQuery, GetSuggestedSessionTypeResult>(new GetSuggestedSessionTypeQuery(), ct);
+        var result = await _mediator.SendAsync<GetSuggestedSessionTypeQuery, GetSuggestedSessionTypeResult>(new GetSuggestedSessionTypeQuery(offsetMinutes), ct);
         return Ok(new
         {
             SuggestedType = result.SuggestedType.ToString(),

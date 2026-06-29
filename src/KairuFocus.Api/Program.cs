@@ -86,6 +86,9 @@ else if (!builder.Environment.IsDevelopment() && !isTesting)
 }
 // Sinon (dev ou Testing sans config Azure) : PersistKeysToFileSystem implicite, acceptable localement.
 
+// TimeProvider — injectable pour les handlers qui ont besoin de l'heure courante (testabilité).
+builder.Services.AddSingleton(TimeProvider.System);
+
 // BrilliantMediator — handlers auto-découverts par le source generator
 builder.Services.AddBrilliantMediator()
     .AddGeneratedHandlers()

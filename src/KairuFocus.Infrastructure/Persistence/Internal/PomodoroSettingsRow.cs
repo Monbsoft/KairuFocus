@@ -7,4 +7,5 @@ internal sealed class PomodoroSettingsRow
     public int SprintDurationMinutes { get; set; }
     public int ShortBreakDurationMinutes { get; set; }
     public int LongBreakDurationMinutes { get; set; }
+    public int DailySprintGoal { get; set; }
 }

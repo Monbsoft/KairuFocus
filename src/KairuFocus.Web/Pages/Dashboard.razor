@@ -8,109 +8,197 @@
 
 <PageTitle>Tableau de bord — KairuFocus</PageTitle>
 
-<div class="dashboard-page">
+<div class="kf-dash" aria-busy="@((!_loaded).ToString().ToLowerInvariant())">
     @if (!_loaded)
     {
-        <div class="d-flex justify-content-center align-items-center" style="height:60vh">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Chargement...</span>
+        <!-- Statut annoncé aux lecteurs d'écran pendant le chargement -->
+        <span class="visually-hidden" role="status">Chargement du tableau de bord…</span>
+        <!-- Skeleton de chargement (purement décoratif, masqué aux lecteurs d'écran) -->
+        <div aria-hidden="true">
+            <div class="kf-dash__head">
+                <div class="kf-skel" style="width:260px;height:30px"></div>
+                <div style="height:8px"></div>
+                <div class="kf-skel" style="width:200px;height:16px"></div>
+            </div>
+            <div class="kf-skel" style="width:100%;height:92px"></div>
+            <div style="height:24px"></div>
+            <div class="kf-skel" style="width:100%;height:160px"></div>
+            <div style="height:24px"></div>
+            <div class="kf-skelrow">
+                <div class="kf-skel" style="height:84px"></div>
+                <div class="kf-skel" style="height:84px"></div>
+                <div class="kf-skel" style="height:84px"></div>
             </div>
         </div>
     }
     else
     {
-        <div class="dashboard-header">
-            <div>
-                <h1 class="dashboard-greeting">Bonjour, @_userName &#128075;</h1>
-                <p class="dashboard-date">@DateTime.Now.ToString("dddd d MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))</p>
+        <!-- En-tête -->
+        <div class="kf-dash__head">
+            <h1 class="kf-dash__greet">Bonjour, @_userName <span aria-hidden="true">&#128075;</span></h1>
+            <p class="kf-dash__date">@_today</p>
+        </div>
+
+        <!-- À reprendre (Zeigarnik) -->
+        <h2 class="kf-eyebrow">À reprendre</h2>
+        <div class="kf-card kf-resume" role="button" tabindex="0"
+             aria-label="@_resumeAriaLabel"
+             @onclick="OnResumeClick" @onkeydown="OnResumeKeyDown">
+            <div class="kf-resume__in">
+                <div class="kf-resume__icon" aria-hidden="true">@_resumeIcon</div>
+                <div class="kf-resume__body">
+                    <p class="kf-resume__title">@_resumeTitle</p>
+                    <div class="kf-resume__meta">
+                        <span>@_resumeSubtitle</span>
+                        @if (_resumeBadge is not null)
+                        {
+                            <span class="kf-resume__badge">@_resumeBadge</span>
+                        }
+                    </div>
+                </div>
+                <span class="btn btn-primary kf-resume__btn" aria-hidden="true">@_resumeCta</span>
             </div>
         </div>
 
-        <!-- Stats -->
-        <div class="dashboard-stats">
-            <div class="stat-card stat-tasks-pending" @onclick='() => Nav.NavigateTo("/tasks")'>
-                <div class="stat-icon">&#9745;</div>
-                <div class="stat-body">
-                    <div class="stat-value">@_tasksPending</div>
-                    <div class="stat-label">Taches en cours</div>
+        <!-- Focus aujourd'hui (Goal-Gradient) -->
+        <h2 class="kf-eyebrow">Focus aujourd'hui</h2>
+        <div class="kf-card kf-focuscard">
+            <div class="kf-focushero">
+                <div class="kf-focushero__top">
+                    <span class="kf-focushero__lbl">Objectif de sprints</span>
+                    <span class="kf-focushero__count">@_sprintsToday / @_sprintGoal</span>
+                </div>
+                <div class="kf-dots" role="img" aria-label="@_dotsAriaLabel">
+                    @for (var i = 0; i < _sprintGoal; i++)
+                    {
+                        <span class="kf-dot @(i < _sprintsToday ? "kf-dot--on" : "kf-dot--off")"></span>
+                    }
+                </div>
+                <div class="kf-focushero__hint">@_focusHint</div>
+            </div>
+            <div class="kf-focusmeta">
+                <div class="kf-fi">
+                    <div class="kf-fi__icon" style="background: var(--primary-subtle)" aria-hidden="true">&#9201;</div>
+                    <div>
+                        <div class="kf-fi__val">@_focusTimeLabel</div>
+                        <div class="kf-fi__lbl">Temps de focus</div>
+                    </div>
+                </div>
+                <div class="kf-fi">
+                    <div class="kf-fi__icon" style="background: var(--danger-subtle)" aria-hidden="true">&#128293;</div>
+                    <div>
+                        <div class="kf-fi__val">@_streak j</div>
+                        <div class="kf-fi__lbl">Série de focus</div>
+                    </div>
                 </div>
             </div>
-            <div class="stat-card stat-tasks-done" @onclick='() => Nav.NavigateTo("/tasks")'>
-                <div class="stat-icon">&#10003;</div>
-                <div class="stat-body">
-                    <div class="stat-value">@_tasksDone</div>
-                    <div class="stat-label">Taches terminees</div>
-                </div>
-            </div>
-            <div class="stat-card stat-pomodoro @(_currentSession is not null ? "stat-active" : "")" @onclick='() => Nav.NavigateTo("/pomodoro")'>
-                <div class="stat-icon">&#127813;</div>
-                <div class="stat-body">
+        </div>
+
+        <!-- Aperçu -->
+        <h2 class="kf-eyebrow">Aperçu</h2>
+        <div class="kf-stats">
+            <button type="button" class="kf-card kf-stat" @onclick='() => Nav.NavigateTo("/tasks")'>
+                <span class="kf-stat__icon" aria-hidden="true">&#9745;</span>
+                <span>
+                    <span class="kf-stat__value">@_tasksPending</span>
+                    <span class="kf-stat__label">Tâches en cours</span>
+                </span>
+            </button>
+            <button type="button" class="kf-card kf-stat" @onclick='() => Nav.NavigateTo("/tasks")'>
+                <span class="kf-stat__icon" aria-hidden="true">&#10003;</span>
+                <span>
+                    <span class="kf-stat__value">@_tasksDone</span>
+                    <span class="kf-stat__label">Tâches terminées</span>
+                </span>
+            </button>
+            <button type="button" class="kf-card kf-stat @(_currentSession is not null ? "kf-stat--active" : "")"
+                    @onclick='() => Nav.NavigateTo("/pomodoro")'>
+                <span class="kf-stat__icon" aria-hidden="true">&#127813;</span>
+                <span>
                     @if (_currentSession is not null)
                     {
-                        <div class="stat-value stat-badge-active">En cours</div>
-                        <div class="stat-label">@_currentSession.SessionType</div>
+                        <span class="kf-stat__value kf-stat__value--active">En cours</span>
+                        <span class="kf-stat__label">@(_currentSession.SessionType == "Sprint" ? "Sprint actif" : "Pause en cours")</span>
                     }
                     else
                     {
-                        <div class="stat-value">—</div>
-                        <div class="stat-label">Aucun sprint actif</div>
+                        <span class="kf-stat__value">—</span>
+                        <span class="kf-stat__label">Aucun sprint actif</span>
                     }
-                </div>
-            </div>
-            <div class="stat-card stat-journal" @onclick='() => Nav.NavigateTo("/journal")'>
-                <div class="stat-icon">&#128214;</div>
-                <div class="stat-body">
-                    <div class="stat-value">@_journalEntries</div>
-                    <div class="stat-label">Entrees aujourd'hui</div>
-                </div>
-            </div>
+                </span>
+            </button>
+            <button type="button" class="kf-card kf-stat" @onclick='() => Nav.NavigateTo("/journal")'>
+                <span class="kf-stat__icon" aria-hidden="true">&#128214;</span>
+                <span>
+                    <span class="kf-stat__value">@_journalEntries</span>
+                    <span class="kf-stat__label">Entrées aujourd'hui</span>
+                </span>
+            </button>
         </div>
 
-        <!-- Acces rapides -->
-        <h2 class="dashboard-section-title">Acces rapides</h2>
-        <div class="dashboard-quicklinks">
-            <a href="/tasks" class="quicklink-card">
-                <span class="quicklink-icon">&#9745;</span>
-                <span class="quicklink-label">Mes taches</span>
+        <!-- Accès rapides (Hick) -->
+        <h2 class="kf-eyebrow">Accès rapides</h2>
+        <div class="kf-quick">
+            <a href="/tasks">
+                <span class="kf-quick__icon" aria-hidden="true">&#9745;</span>
+                <span class="kf-quick__label">Mes tâches</span>
             </a>
-            <a href="/pomodoro" class="quicklink-card">
-                <span class="quicklink-icon">&#127813;</span>
-                <span class="quicklink-label">Pomodoro</span>
+            <a href="/pomodoro">
+                <span class="kf-quick__icon" aria-hidden="true">&#127813;</span>
+                <span class="kf-quick__label">Pomodoro</span>
             </a>
-            <a href="/journal" class="quicklink-card">
-                <span class="quicklink-icon">&#128214;</span>
-                <span class="quicklink-label">Journal</span>
-            </a>
-            <a href="/tickets" class="quicklink-card">
-                <span class="quicklink-icon">&#127915;</span>
-                <span class="quicklink-label">Tickets</span>
-            </a>
-            <a href="/settings" class="quicklink-card">
-                <span class="quicklink-icon">&#9881;</span>
-                <span class="quicklink-label">Parametres</span>
+            <a href="/journal">
+                <span class="kf-quick__icon" aria-hidden="true">&#128214;</span>
+                <span class="kf-quick__label">Journal</span>
             </a>
         </div>
     }
 </div>
 
 @code {
+    private const string InProgressStatus = "InProgress";
+
     private string _userName = "dev";
+    private string _today = "";
     private int _tasksPending;
     private int _tasksDone;
     private int _journalEntries;
     private PomodoroSessionDto? _currentSession;
     private bool _loaded;
 
+    // Focus summary
+    private int _sprintsToday;
+    private int _sprintGoal = 4;
+    private int _focusMinutes;
+    private int _streak;
+
+    // Resume block (Zeigarnik)
+    private TaskDto? _resumeTask;
+    private string _resumeIcon = "🚀";
+    private string _resumeTitle = "Reprendre une tâche";
+    private string _resumeSubtitle = "Choisissez une tâche pour vous remettre au travail";
+    private string? _resumeBadge;
+    private string _resumeCta = "Continuer";
+    private string _resumeAriaLabel = "Reprendre une tâche";
+    private string _resumeHref = "/tasks";
+
+    private string _focusTimeLabel = "0h 00";
+    private string _focusHint = "";
+    private string _dotsAriaLabel = "";
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
+
+        _today = DateTime.Now.ToString("dddd d MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"));
 
         var user = await AuthService.GetCurrentUserAsync();
         _userName = user.FindFirst("name")?.Value
             ?? user.FindFirst("login")?.Value
             ?? "dev";
 
-        var tasks = await Tasks.GetAllAsync();
+        // Fetch all tasks (including Done) so both counters are accurate.
+        var tasks = await Tasks.GetAllAsync(statusFilter: "All");
         _tasksPending = tasks.Count(t => t.Status != "Done");
         _tasksDone = tasks.Count(t => t.Status == "Done");
 
@@ -119,7 +207,97 @@
 
         _currentSession = await Pomodoro.GetCurrentSessionAsync();
 
+        var focus = await Pomodoro.GetFocusSummaryAsync();
+        if (focus is not null)
+        {
+            _sprintsToday = focus.SprintsToday;
+            _sprintGoal = Math.Max(1, focus.DailySprintGoal);
+            _focusMinutes = focus.FocusMinutesToday;
+            _streak = focus.Streak;
+        }
+
+        BuildFocusLabels();
+        BuildResumeBlock(tasks);
+
         _loaded = true;
         StateHasChanged();
+    }
+
+    private void BuildFocusLabels()
+    {
+        _focusTimeLabel = $"{_focusMinutes / 60}h {(_focusMinutes % 60):D2}";
+
+        var sprintsLeft = Math.Max(0, _sprintGoal - _sprintsToday);
+        _focusHint = sprintsLeft == 0
+            ? "🎉 Objectif atteint — belle journée de focus !"
+            : $"Plus que {sprintsLeft} sprint{(sprintsLeft > 1 ? "s" : "")} pour atteindre votre objectif.";
+
+        _dotsAriaLabel = $"{_sprintsToday} sprint{(_sprintsToday > 1 ? "s" : "")} effectué{(_sprintsToday > 1 ? "s" : "")} sur un objectif de {_sprintGoal}";
+    }
+
+    private void BuildResumeBlock(List<TaskDto> tasks)
+    {
+        // 1) Tâche « en cours » la plus récente (Zeigarnik) — pas de LastWorkedAt, tri par CreatedAt desc.
+        _resumeTask = tasks
+            .Where(t => t.Status == InProgressStatus)
+            .OrderByDescending(t => t.CreatedAt)
+            .FirstOrDefault();
+
+        if (_resumeTask is not null)
+        {
+            _resumeIcon = "⏸️";
+            _resumeTitle = "Tâche en cours";
+            _resumeSubtitle = _resumeTask.Title;
+            _resumeBadge = "En cours";
+            _resumeCta = "Reprendre";
+            _resumeHref = "/tasks";
+            _resumeAriaLabel = $"Reprendre la tâche en cours : {_resumeTask.Title}";
+            return;
+        }
+
+        // 2) Sinon, session Pomodoro en cours (sprint ou pause).
+        if (_currentSession is not null)
+        {
+            _resumeIcon = "⏸️";
+            _resumeHref = "/pomodoro";
+            _resumeBadge = "En cours";
+
+            if (_currentSession.SessionType == "Sprint")
+            {
+                _resumeTitle = "Sprint en cours";
+                _resumeSubtitle = "Un sprint Pomodoro est en cours";
+                _resumeCta = "Reprendre le sprint";
+                _resumeAriaLabel = "Reprendre le sprint Pomodoro en cours";
+            }
+            else
+            {
+                var breakLabel = _currentSession.SessionType == "LongBreak" ? "Pause longue" : "Pause courte";
+                _resumeTitle = "Pause en cours";
+                _resumeSubtitle = $"{breakLabel} en cours";
+                _resumeCta = "Reprendre la pause";
+                _resumeAriaLabel = $"Reprendre la {breakLabel.ToLowerInvariant()} Pomodoro en cours";
+            }
+
+            return;
+        }
+
+        // 3) Sinon, CTA générique.
+        _resumeIcon = "🚀";
+        _resumeTitle = "Reprendre une tâche";
+        _resumeSubtitle = "Choisissez une tâche pour vous remettre au travail";
+        _resumeBadge = null;
+        _resumeCta = "Continuer";
+        _resumeHref = "/tasks";
+        _resumeAriaLabel = "Reprendre une tâche";
+    }
+
+    private void OnResumeClick() => Nav.NavigateTo(_resumeHref);
+
+    private void OnResumeKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            Nav.NavigateTo(_resumeHref);
+        }
     }
 }

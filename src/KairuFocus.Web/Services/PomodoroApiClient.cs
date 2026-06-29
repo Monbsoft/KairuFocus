@@ -18,22 +18,37 @@ public sealed class PomodoroApiClient
         return await response.Content.ReadFromJsonAsync<PomodoroSettingsDto>();
     }
 
-    public async Task<bool> SaveSettingsAsync(int sprint, int shortBreak, int longBreak)
+    public async Task<bool> SaveSettingsAsync(int sprint, int shortBreak, int longBreak, int dailySprintGoal)
     {
         var response = await _http.PutAsJsonAsync("api/pomodoro/settings", new
         {
             SprintDurationMinutes = sprint,
             ShortBreakDurationMinutes = shortBreak,
-            LongBreakDurationMinutes = longBreak
+            LongBreakDurationMinutes = longBreak,
+            DailySprintGoal = dailySprintGoal
         });
         return response.IsSuccessStatusCode;
+    }
+
+    // ── Focus / Dashboard ──────────────────────────────────────────────────
+
+    public async Task<FocusSummaryDto?> GetFocusSummaryAsync()
+    {
+        // DateTimeOffset.Now.Offset reflects the browser's local UTC offset in Blazor WASM.
+        // Convention: local = UTC + offsetMinutes (positive east of UTC, e.g. UTC+2 => +120).
+        var offsetMinutes = (int)DateTimeOffset.Now.Offset.TotalMinutes;
+        var response = await _http.GetAsync($"api/pomodoro/focus-summary?offsetMinutes={offsetMinutes}");
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<FocusSummaryDto>();
     }
 
     // ── Session ────────────────────────────────────────────────────────────
 
     public async Task<SuggestedSessionTypeDto?> GetSuggestedSessionTypeAsync()
     {
-        var response = await _http.GetAsync("api/pomodoro/session/suggested");
+        // DateTimeOffset.Now.Offset reflects the browser's local UTC offset in Blazor WASM.
+        var offsetMinutes = (int)DateTimeOffset.Now.Offset.TotalMinutes;
+        var response = await _http.GetAsync($"api/pomodoro/session/suggested?offsetMinutes={offsetMinutes}");
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadFromJsonAsync<SuggestedSessionTypeDto>();
     }

@@ -54,18 +54,16 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
                 cancellationToken);
     }
 
-    public async Task<int> GetCompletedSprintsTodayCountAsync(UserId userId, CancellationToken cancellationToken = default)
-    {
-        var today = DateTime.UtcNow.Date;
-        return await _context.PomodoroSessions
+    public async Task<int> GetCompletedSprintsTodayCountAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default) =>
+        await _context.PomodoroSessions
             .CountAsync(
                 s => s.OwnerId == userId
                      && s.SessionType == PomodoroSessionType.Sprint
                      && s.Status == PomodoroSessionStatus.Completed
                      && s.EndedAt.HasValue
-                     && s.EndedAt.Value.Date == today,
+                     && s.EndedAt.Value >= startUtc
+                     && s.EndedAt.Value < endUtc,
                 cancellationToken);
-    }
 
     public async Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, CancellationToken cancellationToken = default)
     {
@@ -92,5 +90,33 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
                             || s.Status == PomodoroSessionStatus.Interrupted))
             .OrderBy(s => s.StartedAt)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<PomodoroSession>> GetCompletedSprintSessionsTodayAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default) =>
+        await _context.PomodoroSessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value >= startUtc
+                        && s.EndedAt.Value < endUtc)
+            .OrderBy(s => s.StartedAt)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, DateTime sinceUtc, CancellationToken cancellationToken = default)
+    {
+        // Return raw UTC EndedAt values bounded by sinceUtc.
+        // Date-to-local bucketing is done in the Application layer (ADR-020).
+        // Simple >= comparison is provider-safe (SQL Server and SQLite).
+        var endTimes = await _context.PomodoroSessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value >= sinceUtc)
+            .Select(s => s.EndedAt!.Value)
+            .ToListAsync(cancellationToken);
+
+        return endTimes;
     }
 }

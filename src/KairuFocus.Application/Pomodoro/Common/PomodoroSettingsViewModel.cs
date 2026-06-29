@@ -6,12 +6,14 @@ public sealed record PomodoroSettingsViewModel(
     int SprintDurationMinutes,
     int ShortBreakDurationMinutes,
     int LongBreakDurationMinutes,
-    int SprintsBeforeLongBreak)
+    int SprintsBeforeLongBreak,
+    int DailySprintGoal)
 {
     public static PomodoroSettingsViewModel From(PomodoroSettings settings) =>
         new(
             settings.SprintDurationMinutes,
             settings.ShortBreakDurationMinutes,
             settings.LongBreakDurationMinutes,
-            PomodoroSettings.SprintsBeforeLongBreak);
+            PomodoroSettings.SprintsBeforeLongBreak,
+            settings.DailySprintGoal);
 }

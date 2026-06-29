@@ -18,13 +18,14 @@ public sealed class PomodoroApiClient
         return await response.Content.ReadFromJsonAsync<PomodoroSettingsDto>();
     }
 
-    public async Task<bool> SaveSettingsAsync(int sprint, int shortBreak, int longBreak)
+    public async Task<bool> SaveSettingsAsync(int sprint, int shortBreak, int longBreak, int dailySprintGoal)
     {
         var response = await _http.PutAsJsonAsync("api/pomodoro/settings", new
         {
             SprintDurationMinutes = sprint,
             ShortBreakDurationMinutes = shortBreak,
-            LongBreakDurationMinutes = longBreak
+            LongBreakDurationMinutes = longBreak,
+            DailySprintGoal = dailySprintGoal
         });
         return response.IsSuccessStatusCode;
     }
@@ -33,7 +34,9 @@ public sealed class PomodoroApiClient
 
     public async Task<SuggestedSessionTypeDto?> GetSuggestedSessionTypeAsync()
     {
-        var response = await _http.GetAsync("api/pomodoro/session/suggested");
+        // DateTimeOffset.Now.Offset reflects the device's local UTC offset on MAUI.
+        var offsetMinutes = (int)DateTimeOffset.Now.Offset.TotalMinutes;
+        var response = await _http.GetAsync($"api/pomodoro/session/suggested?offsetMinutes={offsetMinutes}");
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadFromJsonAsync<SuggestedSessionTypeDto>();
     }
