@@ -42,6 +42,15 @@ public sealed class PomodoroApiClient
         return await response.Content.ReadFromJsonAsync<FocusSummaryDto>();
     }
 
+    public async Task<FocusStatsDto?> GetFocusStatsAsync()
+    {
+        // local = UTC + offsetMinutes (cf. GetFocusSummaryAsync).
+        var offsetMinutes = (int)DateTimeOffset.Now.Offset.TotalMinutes;
+        var response = await _http.GetAsync($"api/pomodoro/focus-stats?offsetMinutes={offsetMinutes}");
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<FocusStatsDto>();
+    }
+
     // ── Session ────────────────────────────────────────────────────────────
 
     public async Task<SuggestedSessionTypeDto?> GetSuggestedSessionTypeAsync()

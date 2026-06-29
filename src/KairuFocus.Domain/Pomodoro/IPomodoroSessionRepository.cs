@@ -34,4 +34,12 @@ public interface IPomodoroSessionRepository
     /// so that the in-memory bucketing does not materialise the user's entire history.
     /// </summary>
     Task<IReadOnlyList<DateTime>> GetCompletedSprintEndTimesAsync(UserId userId, DateTime sinceUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// (StartedAt, EndedAt) UTC of completed sprint sessions for the user where EndedAt >= sinceUtc.
+    /// Covers both free and regular sprints. Used to aggregate daily focus statistics
+    /// (sprint counts + focus minutes) in the Application layer (ADR-020/021).
+    /// Simple >= comparison is provider-safe (no date bucketing in SQL).
+    /// </summary>
+    Task<IReadOnlyList<CompletedSprintInterval>> GetCompletedSprintIntervalsAsync(UserId userId, DateTime sinceUtc, CancellationToken cancellationToken = default);
 }

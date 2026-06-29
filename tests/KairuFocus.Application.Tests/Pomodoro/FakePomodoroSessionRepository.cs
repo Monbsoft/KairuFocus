@@ -84,4 +84,15 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
                         && s.EndedAt.Value >= sinceUtc)
             .Select(s => s.EndedAt!.Value)
             .ToList());
+
+    public Task<IReadOnlyList<CompletedSprintInterval>> GetCompletedSprintIntervalsAsync(UserId userId, DateTime sinceUtc, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<CompletedSprintInterval>>(Sessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.StartedAt.HasValue
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value >= sinceUtc)
+            .Select(s => new CompletedSprintInterval(s.StartedAt!.Value, s.EndedAt!.Value))
+            .ToList());
 }

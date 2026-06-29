@@ -402,6 +402,9 @@ code {
 .kf-fi__icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0; }
 .kf-fi__val { font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 700; line-height: 1; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .kf-fi__lbl { font-size: var(--text-xs); color: var(--text-muted); margin-top: .3rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+.kf-focuscard__link { display: inline-block; margin-top: 1rem; font-size: var(--text-sm); font-weight: 600; color: var(--primary); text-decoration: none; }
+.kf-focuscard__link:hover { text-decoration: underline; }
+.kf-focuscard__link:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 @media (max-width: 720px) { .kf-focusmeta { gap: 1.25rem; } }
 
 /* ── Secondary stats (Aperçu) ──────────────────────────────────────────── */
@@ -461,3 +464,119 @@ code {
     font-size: 1.5rem;
     margin-top: -0.25rem;
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Stats — KairuFocus design-system port (itération #35).
+   Tokens SCOPÉS à .kf-stats-page (jumeaux de .kf-dash). Light = défaut ;
+   dark overrides sur [data-bs-theme="dark"].
+   ════════════════════════════════════════════════════════════════════════ */
+.kf-stats-page {
+    --surface-card:    #ffffff;
+    --surface-sunken:  #f1f3f5;
+    --border-subtle:   #e9ecef;
+    --text-primary:    #212529;
+    --text-secondary:  #495057;
+    --text-muted:      #6c757d;
+    --primary:         #0d6efd;
+    --primary-subtle:  #e7f1ff;
+    --primary-border:  #9ec5fe;
+    /* heatmap (intensité bleue marque) */
+    --hm-l0: #ebedf0;
+    --hm-l1: #cfe2ff;
+    --hm-l2: #9ec5fe;
+    --hm-l3: #4d94ff;
+    --hm-l4: #0d6efd;
+    --text-xs:  0.75rem;
+    --text-sm:  0.875rem;
+    --text-md:  1.125rem;
+    --text-lg:  1.375rem;
+    --text-2xl: 2.25rem;
+    --tracking-wide: 0.08em;
+    --radius-md:   8px;
+    --radius-lg:   12px;
+    --radius-pill: 999px;
+    --shadow-md: 0 4px 16px rgba(16, 24, 40, 0.10);
+    --duration-base: 200ms;
+    --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+    --container-lg: 960px;
+
+    max-width: var(--container-lg);
+    padding: 1.5rem;
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .kf-stats-page {
+    --surface-card:    #1e293b;
+    --surface-sunken:  #13131f;
+    --border-subtle:   #334155;
+    --text-primary:    #e2e8f0;
+    --text-secondary:  #cbd5e1;
+    --text-muted:      #94a3b8;
+    --primary:         #2b7dff;
+    --primary-subtle:  #0d1b3e;
+    --primary-border:  #1e3a6e;
+    --hm-l0: #172033;
+    --hm-l1: #0d2a52;
+    --hm-l2: #14478f;
+    --hm-l3: #1f6fe0;
+    --hm-l4: #2b7dff;
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.50);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kf-stats-page { --duration-base: 0ms; }
+}
+
+/* En-tête + toggle */
+.kf-stats-page__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.kf-stats-page__title { font-size: var(--text-2xl); font-weight: 700; margin: 0; color: var(--text-primary); }
+.kf-stats-page__sub { color: var(--text-muted); margin: .25rem 0 0; }
+
+.kf-seg { display: inline-flex; background: var(--surface-sunken); border-radius: var(--radius-md); padding: 3px; }
+.kf-seg__btn { border: 0; background: transparent; color: var(--text-secondary); font-weight: 600; font-size: var(--text-sm); padding: .5rem 1rem; min-height: 44px; border-radius: 6px; cursor: pointer; transition: background var(--duration-base) var(--ease-standard); }
+.kf-seg__btn--on { background: var(--primary); color: #fff; }
+.kf-seg__btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+/* Empty state (la carte partagée .kf-card est définie globalement plus haut) */
+.kf-stats-page__empty { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+.kf-stats-page__empty-icon { font-size: 1.6rem; }
+.kf-stats-page__empty-text { margin: 0; color: var(--text-secondary); }
+
+/* KPI */
+.kf-stats-page__kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+.kf-kpi { padding: 1.1rem 1.25rem; }
+.kf-kpi__label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-muted); font-weight: 700; }
+.kf-kpi__value { font-size: var(--text-2xl); font-weight: 700; margin-top: .2rem; color: var(--text-primary); }
+.kf-kpi__hint { font-size: var(--text-xs); color: var(--text-muted); margin-top: .15rem; }
+
+/* Graphe à barres */
+.kf-barcard { padding: 1.1rem 1.25rem; margin-bottom: 1.5rem; }
+.kf-barcard__title { font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; }
+.kf-bars { display: flex; align-items: flex-end; gap: .5rem; height: 140px; }
+.kf-bars__col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .35rem; height: 100%; }
+.kf-bars__track { flex: 1; width: 70%; min-width: 6px; display: flex; align-items: flex-end; background: var(--surface-sunken); border-radius: 5px; overflow: hidden; }
+.kf-bars__fill { width: 100%; background: var(--primary); border-radius: 5px 5px 0 0; transition: height var(--duration-base) var(--ease-standard); }
+.kf-bars__lbl { font-size: 10px; color: var(--text-muted); }
+
+/* Heatmap */
+.kf-hmcard { padding: 1.1rem 1.25rem; }
+.kf-hmcard__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .85rem; flex-wrap: wrap; }
+.kf-hmcard__total { font-size: var(--text-xs); color: var(--text-muted); }
+.kf-hm { overflow-x: auto; }
+.kf-hm__months { display: flex; gap: 3px; margin-bottom: 4px; font-size: 10px; color: var(--text-muted); }
+.kf-hm__month { width: 13px; flex: 0 0 13px; white-space: nowrap; }
+.kf-hm__grid { display: flex; gap: 3px; }
+.kf-hm__col { display: flex; flex-direction: column; gap: 3px; }
+.kf-hm__cell { width: 13px; height: 13px; border-radius: 3px; background: var(--hm-l0); display: inline-block; }
+.kf-hm__cell--l0 { background: var(--hm-l0); }
+.kf-hm__cell--l1 { background: var(--hm-l1); }
+.kf-hm__cell--l2 { background: var(--hm-l2); }
+.kf-hm__cell--l3 { background: var(--hm-l3); }
+.kf-hm__cell--l4 { background: var(--hm-l4); }
+.kf-hm__cell--empty { background: transparent; }
+.kf-hm__legend { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-top: .85rem; font-size: var(--text-xs); color: var(--text-muted); }
+
+/* Skeleton : la règle de base .kf-skel + l'animation @keyframes kf-shimmer
+   sont définies globalement plus haut dans ce fichier (pas scopées à .kf-dash),
+   donc le skeleton de chargement fonctionne ici sans duplication. */
+.kf-stats-page .kf-skelrow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }

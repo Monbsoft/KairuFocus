@@ -7,6 +7,7 @@ using KairuFocus.Application.Pomodoro.Commands.SaveSettings;
 using KairuFocus.Application.Pomodoro.Commands.StartSession;
 using KairuFocus.Application.Pomodoro.Commands.UpdateTaskStatus;
 using KairuFocus.Application.Pomodoro.Queries.GetCurrentSession;
+using KairuFocus.Application.Pomodoro.Queries.GetFocusStats;
 using KairuFocus.Application.Pomodoro.Queries.GetFocusSummary;
 using KairuFocus.Application.Pomodoro.Queries.GetSettings;
 using KairuFocus.Application.Pomodoro.Queries.GetSuggestedSessionType;
@@ -55,6 +56,14 @@ public sealed class PomodoroController : ControllerBase
     {
         var result = await _mediator.SendAsync<GetFocusSummaryQuery, GetFocusSummaryResult>(
             new GetFocusSummaryQuery(offsetMinutes), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("focus-stats")]
+    public async Task<IActionResult> GetFocusStats([FromQuery] int offsetMinutes = 0, CancellationToken ct = default)
+    {
+        var result = await _mediator.SendAsync<GetFocusStatsQuery, GetFocusStatsResult>(
+            new GetFocusStatsQuery(offsetMinutes), ct);
         return Ok(result);
     }
 
