@@ -1,11 +1,10 @@
 @page "/stats"
 @attribute [Authorize]
 @inject PomodoroApiClient Pomodoro
-@inject NavigationManager Nav
 
 <PageTitle>Statistiques — KairuFocus</PageTitle>
 
-<div class="kf-stats" aria-busy="@((!_loaded).ToString().ToLowerInvariant())">
+<div class="kf-stats-page" aria-busy="@((!_loaded).ToString().ToLowerInvariant())">
     @if (!_loaded)
     {
         <span class="visually-hidden" role="status">Chargement des statistiques…</span>
@@ -25,10 +24,10 @@
     else
     {
         <!-- En-tête + toggle période -->
-        <div class="kf-stats__head">
+        <div class="kf-stats-page__head">
             <div>
-                <h1 class="kf-stats__title">Statistiques du focus</h1>
-                <p class="kf-stats__sub">Ton activité de concentration au fil du temps</p>
+                <h1 class="kf-stats-page__title">Statistiques du focus</h1>
+                <p class="kf-stats-page__sub">Ton activité de concentration au fil du temps</p>
             </div>
             <div class="kf-seg" role="group" aria-label="Choisir la période">
                 <button type="button" class="kf-seg__btn @(_period == Period.Week ? "kf-seg__btn--on" : "")"
@@ -42,14 +41,14 @@
 
         @if (!_hasAnyData)
         {
-            <div class="kf-card kf-stats__empty">
-                <span class="kf-stats__empty-icon" aria-hidden="true">&#127813;</span>
-                <p class="kf-stats__empty-text">Lance un premier sprint pour voir tes statistiques grandir ici.</p>
+            <div class="kf-card kf-stats-page__empty">
+                <span class="kf-stats-page__empty-icon" aria-hidden="true">&#127813;</span>
+                <p class="kf-stats-page__empty-text">Lance un premier sprint pour voir tes statistiques grandir ici.</p>
             </div>
         }
 
         <!-- KPI -->
-        <div class="kf-stats__kpis">
+        <div class="kf-stats-page__kpis">
             <div class="kf-card kf-kpi">
                 <div class="kf-kpi__label">Temps de focus</div>
                 <div class="kf-kpi__value">@_focusTimeLabel</div>

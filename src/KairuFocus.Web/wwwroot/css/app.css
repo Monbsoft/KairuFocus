@@ -467,10 +467,10 @@ code {
 
 /* ════════════════════════════════════════════════════════════════════════
    Stats — KairuFocus design-system port (itération #35).
-   Tokens SCOPÉS à .kf-stats (jumeaux de .kf-dash). Light = défaut ;
+   Tokens SCOPÉS à .kf-stats-page (jumeaux de .kf-dash). Light = défaut ;
    dark overrides sur [data-bs-theme="dark"].
    ════════════════════════════════════════════════════════════════════════ */
-.kf-stats {
+.kf-stats-page {
     --surface-card:    #ffffff;
     --surface-sunken:  #f1f3f5;
     --border-subtle:   #e9ecef;
@@ -505,7 +505,7 @@ code {
     color: var(--text-primary);
 }
 
-[data-bs-theme="dark"] .kf-stats {
+[data-bs-theme="dark"] .kf-stats-page {
     --surface-card:    #1e293b;
     --surface-sunken:  #13131f;
     --border-subtle:   #334155;
@@ -524,29 +524,26 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .kf-stats { --duration-base: 0ms; }
+    .kf-stats-page { --duration-base: 0ms; }
 }
 
 /* En-tête + toggle */
-.kf-stats__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.kf-stats__title { font-size: var(--text-2xl); font-weight: 700; margin: 0; color: var(--text-primary); }
-.kf-stats__sub { color: var(--text-muted); margin: .25rem 0 0; }
+.kf-stats-page__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.kf-stats-page__title { font-size: var(--text-2xl); font-weight: 700; margin: 0; color: var(--text-primary); }
+.kf-stats-page__sub { color: var(--text-muted); margin: .25rem 0 0; }
 
 .kf-seg { display: inline-flex; background: var(--surface-sunken); border-radius: var(--radius-md); padding: 3px; }
 .kf-seg__btn { border: 0; background: transparent; color: var(--text-secondary); font-weight: 600; font-size: var(--text-sm); padding: .5rem 1rem; min-height: 44px; border-radius: 6px; cursor: pointer; transition: background var(--duration-base) var(--ease-standard); }
 .kf-seg__btn--on { background: var(--primary); color: #fff; }
 .kf-seg__btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 
-/* Carte partagée */
-.kf-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); }
-
-/* Empty state */
-.kf-stats__empty { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
-.kf-stats__empty-icon { font-size: 1.6rem; }
-.kf-stats__empty-text { margin: 0; color: var(--text-secondary); }
+/* Empty state (la carte partagée .kf-card est définie globalement plus haut) */
+.kf-stats-page__empty { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+.kf-stats-page__empty-icon { font-size: 1.6rem; }
+.kf-stats-page__empty-text { margin: 0; color: var(--text-secondary); }
 
 /* KPI */
-.kf-stats__kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+.kf-stats-page__kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
 .kf-kpi { padding: 1.1rem 1.25rem; }
 .kf-kpi__label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-muted); font-weight: 700; }
 .kf-kpi__value { font-size: var(--text-2xl); font-weight: 700; margin-top: .2rem; color: var(--text-primary); }
@@ -582,4 +579,4 @@ code {
 /* Skeleton : la règle de base .kf-skel + l'animation @keyframes kf-shimmer
    sont définies globalement plus haut dans ce fichier (pas scopées à .kf-dash),
    donc le skeleton de chargement fonctionne ici sans duplication. */
-.kf-stats .kf-skelrow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.kf-stats-page .kf-skelrow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
