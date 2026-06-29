@@ -1,0 +1,255 @@
+@page "/stats"
+@attribute [Authorize]
+@inject PomodoroApiClient Pomodoro
+@inject NavigationManager Nav
+
+<PageTitle>Statistiques — KairuFocus</PageTitle>
+
+<div class="kf-stats" aria-busy="@((!_loaded).ToString().ToLowerInvariant())">
+    @if (!_loaded)
+    {
+        <span class="visually-hidden" role="status">Chargement des statistiques…</span>
+        <div aria-hidden="true">
+            <div class="kf-skel" style="width:260px;height:30px"></div>
+            <div style="height:20px"></div>
+            <div class="kf-skelrow">
+                <div class="kf-skel" style="height:96px"></div>
+                <div class="kf-skel" style="height:96px"></div>
+            </div>
+            <div style="height:20px"></div>
+            <div class="kf-skel" style="width:100%;height:160px"></div>
+            <div style="height:20px"></div>
+            <div class="kf-skel" style="width:100%;height:180px"></div>
+        </div>
+    }
+    else
+    {
+        <!-- En-tête + toggle période -->
+        <div class="kf-stats__head">
+            <div>
+                <h1 class="kf-stats__title">Statistiques du focus</h1>
+                <p class="kf-stats__sub">Ton activité de concentration au fil du temps</p>
+            </div>
+            <div class="kf-seg" role="group" aria-label="Choisir la période">
+                <button type="button" class="kf-seg__btn @(_period == Period.Week ? "kf-seg__btn--on" : "")"
+                        aria-pressed="@((_period == Period.Week).ToString().ToLowerInvariant())"
+                        @onclick="() => SetPeriod(Period.Week)">Semaine</button>
+                <button type="button" class="kf-seg__btn @(_period == Period.Month ? "kf-seg__btn--on" : "")"
+                        aria-pressed="@((_period == Period.Month).ToString().ToLowerInvariant())"
+                        @onclick="() => SetPeriod(Period.Month)">Mois</button>
+            </div>
+        </div>
+
+        @if (!_hasAnyData)
+        {
+            <div class="kf-card kf-stats__empty">
+                <span class="kf-stats__empty-icon" aria-hidden="true">&#127813;</span>
+                <p class="kf-stats__empty-text">Lance un premier sprint pour voir tes statistiques grandir ici.</p>
+            </div>
+        }
+
+        <!-- KPI -->
+        <div class="kf-stats__kpis">
+            <div class="kf-card kf-kpi">
+                <div class="kf-kpi__label">Temps de focus</div>
+                <div class="kf-kpi__value">@_focusTimeLabel</div>
+                <div class="kf-kpi__hint">@_periodLabel</div>
+            </div>
+            <div class="kf-card kf-kpi">
+                <div class="kf-kpi__label">Sprints complétés</div>
+                <div class="kf-kpi__value">@_kpiSprints</div>
+                <div class="kf-kpi__hint">@_periodLabel</div>
+            </div>
+        </div>
+
+        <!-- Graphe à barres : temps de focus / jour -->
+        <div class="kf-card kf-barcard">
+            <div class="kf-barcard__title">Focus par jour — @_periodLabel.ToLowerInvariant()</div>
+            <div class="kf-bars" role="img" aria-label="@_barsAriaLabel">
+                @foreach (var bar in _bars)
+                {
+                    <div class="kf-bars__col" title="@bar.Title">
+                        <div class="kf-bars__track">
+                            <div class="kf-bars__fill" style="height:@(bar.HeightPct)%"></div>
+                        </div>
+                        <span class="kf-bars__lbl">@bar.Label</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Heatmap annuelle -->
+        <div class="kf-card kf-hmcard">
+            <div class="kf-hmcard__head">
+                <div class="kf-barcard__title">Activité de focus — 12 derniers mois</div>
+                <div class="kf-hmcard__total">@_yearSprints sprints sur l'année</div>
+            </div>
+            <div class="kf-hm" role="img" aria-label="@_heatmapAriaLabel">
+                <div class="kf-hm__months" aria-hidden="true">
+                    @foreach (var col in _columns)
+                    {
+                        <span class="kf-hm__month">@col.MonthLabel</span>
+                    }
+                </div>
+                <div class="kf-hm__grid" aria-hidden="true">
+                    @foreach (var col in _columns)
+                    {
+                        <div class="kf-hm__col">
+                            @foreach (var cell in col.Cells)
+                            {
+                                <span class="kf-hm__cell @cell.CssClass" title="@cell.Title"></span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="kf-hm__legend" aria-hidden="true">
+                <span>Moins</span>
+                <span class="kf-hm__cell kf-hm__cell--l0"></span>
+                <span class="kf-hm__cell kf-hm__cell--l1"></span>
+                <span class="kf-hm__cell kf-hm__cell--l2"></span>
+                <span class="kf-hm__cell kf-hm__cell--l3"></span>
+                <span class="kf-hm__cell kf-hm__cell--l4"></span>
+                <span>Plus</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private enum Period { Week, Month }
+
+    private static readonly System.Globalization.CultureInfo Fr = new("fr-FR");
+    private static readonly string[] DayAbbrev = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+
+    private bool _loaded;
+    private bool _hasAnyData;
+    private Period _period = Period.Week;
+
+    private Dictionary<DateOnly, FocusDayDto> _byDate = new();
+    private DateOnly _today;
+    private int _yearSprints;
+
+    // KPI + barres (recalculés au toggle)
+    private int _kpiSprints;
+    private int _kpiMinutes;
+    private string _focusTimeLabel = "0h 00";
+    private string _periodLabel = "7 derniers jours";
+    private string _barsAriaLabel = "";
+    private List<Bar> _bars = new();
+
+    // Heatmap (construite une fois)
+    private List<HeatColumn> _columns = new();
+    private string _heatmapAriaLabel = "";
+
+    private sealed record Bar(string Label, string Title, int HeightPct);
+    private sealed record HeatCell(string CssClass, string Title);
+    private sealed record HeatColumn(string MonthLabel, List<HeatCell> Cells);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        _today = DateOnly.FromDateTime(DateTime.Today);
+
+        var stats = await Pomodoro.GetFocusStatsAsync();
+        var days = stats?.Days ?? [];
+        _byDate = days.ToDictionary(d => d.Date);
+        _yearSprints = days.Sum(d => d.SprintCount);
+        _hasAnyData = _yearSprints > 0;
+
+        BuildHeatmap();
+        Recompute();
+
+        _loaded = true;
+        StateHasChanged();
+    }
+
+    private void SetPeriod(Period period)
+    {
+        if (_period == period) return;
+        _period = period;
+        Recompute();
+    }
+
+    private void Recompute()
+    {
+        var periodDays = _period == Period.Week ? 7 : 30;
+        _periodLabel = _period == Period.Week ? "7 derniers jours" : "30 derniers jours";
+
+        var start = _today.AddDays(-(periodDays - 1));
+        var slice = new List<(DateOnly Date, int Count, int Minutes)>(periodDays);
+        for (var i = 0; i < periodDays; i++)
+        {
+            var date = start.AddDays(i);
+            _byDate.TryGetValue(date, out var stat);
+            slice.Add((date, stat?.SprintCount ?? 0, stat?.FocusMinutes ?? 0));
+        }
+
+        _kpiSprints = slice.Sum(s => s.Count);
+        _kpiMinutes = slice.Sum(s => s.Minutes);
+        _focusTimeLabel = $"{_kpiMinutes / 60}h {(_kpiMinutes % 60):D2}";
+
+        var maxMinutes = Math.Max(1, slice.Max(s => s.Minutes));
+        _bars = slice.Select(s =>
+        {
+            var height = (int)Math.Round(s.Minutes * 100.0 / maxMinutes);
+            var label = _period == Period.Week ? DayAbbrev[(int)s.Date.ToDateTime(TimeOnly.MinValue).DayOfWeek] : "";
+            var title = $"{s.Date.ToDateTime(TimeOnly.MinValue).ToString("dddd d MMMM", Fr)} — {s.Minutes / 60}h {(s.Minutes % 60):D2}";
+            return new Bar(label, title, height);
+        }).ToList();
+
+        _barsAriaLabel = $"Temps de focus par jour sur les {periodDays} derniers jours, total {_focusTimeLabel}.";
+    }
+
+    private void BuildHeatmap()
+    {
+        const int totalDays = 371; // 53 semaines
+        var gridStart = _today.AddDays(-(totalDays - 1));
+        // Aligner le début sur un lundi (colonnes = semaines lun→dim).
+        var deltaToMonday = ((int)gridStart.ToDateTime(TimeOnly.MinValue).DayOfWeek + 6) % 7;
+        gridStart = gridStart.AddDays(-deltaToMonday);
+
+        _columns = new List<HeatColumn>();
+        var cursor = gridStart;
+        var lastMonth = -1;
+
+        while (cursor <= _today)
+        {
+            var cells = new List<HeatCell>(7);
+            var colFirst = cursor;
+            for (var d = 0; d < 7; d++)
+            {
+                if (cursor > _today)
+                {
+                    cells.Add(new HeatCell("kf-hm__cell--empty", ""));
+                }
+                else
+                {
+                    _byDate.TryGetValue(cursor, out var stat);
+                    var count = stat?.SprintCount ?? 0;
+                    var title = $"{cursor.ToDateTime(TimeOnly.MinValue).ToString("d MMMM yyyy", Fr)} — {count} sprint{(count > 1 ? "s" : "")}";
+                    cells.Add(new HeatCell($"kf-hm__cell--l{Level(count)}", title));
+                }
+                cursor = cursor.AddDays(1);
+            }
+
+            // Label du mois affiché quand la première ligne de la colonne change de mois.
+            var month = colFirst.Month;
+            var monthLabel = month != lastMonth ? Fr.DateTimeFormat.GetAbbreviatedMonthName(month) : "";
+            lastMonth = month;
+            _columns.Add(new HeatColumn(monthLabel, cells));
+        }
+
+        _heatmapAriaLabel = $"Carte d'activité de focus sur les 12 derniers mois : {_yearSprints} sprints complétés au total.";
+    }
+
+    private static int Level(int count) => count switch
+    {
+        <= 0 => 0,
+        <= 2 => 1,
+        <= 4 => 2,
+        <= 6 => 3,
+        _ => 4,
+    };
+}
