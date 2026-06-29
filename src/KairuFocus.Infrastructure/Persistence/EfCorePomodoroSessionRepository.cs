@@ -119,4 +119,20 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
 
         return endTimes;
     }
+
+    public async Task<IReadOnlyList<CompletedSprintInterval>> GetCompletedSprintIntervalsAsync(UserId userId, DateTime sinceUtc, CancellationToken cancellationToken = default)
+    {
+        // Return (StartedAt, EndedAt) pairs bounded by sinceUtc.
+        // Local-date bucketing is done in the Application layer (ADR-020/021).
+        // Simple >= comparison is provider-safe (SQL Server and SQLite).
+        return await _context.PomodoroSessions
+            .Where(s => s.OwnerId == userId
+                        && s.SessionType == PomodoroSessionType.Sprint
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.StartedAt.HasValue
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value >= sinceUtc)
+            .Select(s => new CompletedSprintInterval(s.StartedAt!.Value, s.EndedAt!.Value))
+            .ToListAsync(cancellationToken);
+    }
 }
