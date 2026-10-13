@@ -188,16 +188,23 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("SessionType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PomodoroSessions_OwnerId_ActiveUnique")
+                        .HasFilter("[Status] = N'Active' AND [OwnerId] IS NOT NULL");
 
                     b.ToTable("PomodoroSessions", (string)null);
                 });
