@@ -104,6 +104,15 @@ else
             }
         </div>
 
+        <!-- Fin de session non enregistrée (consigne persistante) -->
+        @if (_completionStalled)
+        {
+            <div class="alert alert-danger" role="alert" style="max-width:480px">
+                Impossible de terminer la session pour le moment. Ton temps est écoulé : n'appuie pas sur « Interrompre », tu perdrais la session.
+                Vérifie ta connexion, puis ouvre une autre page (Journal, Tâches…) et reviens sur Pomodoro pour réessayer.
+            </div>
+        }
+
         <!-- Résultat après fin de session -->
         @if (_completedSessionType is not null)
         {
@@ -225,6 +234,7 @@ else
     private List<TaskDto> _linkedTasks = [];
     private string? _errorMessage;
     private string? _infoMessage;
+    private bool _completionStalled; // the timer loop died while completing: the session is over locally, not on the server
     private bool _starting;
     private string _newTaskTitle = string.Empty;
     private string _selectedTaskIdToLink = string.Empty;
@@ -343,6 +353,7 @@ else
         _starting = true;
         _errorMessage = null;
         _infoMessage = null;
+        _completionStalled = false;
         _completedSessionType = null;
         _suggestedNextSessionType = null;
         StateHasChanged();
@@ -380,6 +391,7 @@ else
             return;
         }
 
+        _completionStalled = false;
         _session = await PomodoroApi.GetCurrentSessionAsync();
         RefreshLinkedTasks();
     }
@@ -396,14 +408,23 @@ else
         }
 
         _completedSessionType = completedType;
-        _session = await PomodoroApi.GetCurrentSessionAsync();
+
+        // The completion is recorded: a failed reload must end on a completed state, not reach the loop's catch.
+        // _session is only replaced once the reload is over, so "Démarrer" is not offered while it is pending.
+        PomodoroSessionDto? current = null;
+        try
+        {
+            current = await PomodoroApi.GetCurrentSessionAsync();
+
+            var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
+            _suggestedNextSessionType = suggested?.SuggestedType;
+            if (suggested is not null)
+                _selectedSessionType = suggested.SuggestedType;
+        }
+        catch (Exception) { }
+
+        _session = current;
         _remainingSeconds = 0;
-
-        var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
-        _suggestedNextSessionType = suggested?.SuggestedType;
-        if (suggested is not null)
-            _selectedSessionType = suggested.SuggestedType;
-
         RefreshLinkedTasks();
         StateHasChanged();
     }
@@ -522,7 +543,25 @@ else
                 }
                 while (await timer.WaitForNextTickAsync(token));
             }
-            catch (OperationCanceledException) { }
+            catch (Exception) when (token.IsCancellationRequested)
+            {
+                // Mostly the ordinary cancellation of WaitForNextTickAsync, plus any late failure of a loop that
+                // StopTimer / DisposeAsync cancelled (the token stays readable once its source is disposed).
+                // Known limit: InterruptSession cancels before knowing its outcome, so if it fails, a failed
+                // completion request of this loop is swallowed too.
+            }
+            catch (Exception)
+            {
+                // Live loop: typically CompleteSessionAsync failing on the network when the app resumes with
+                // an expired deadline. An HttpClient timeout lands here too (TaskCanceledException, token not
+                // cancelled). The page stays at 00:00 while the task block remains usable, hence a dedicated
+                // flag rather than _errorMessage, which the task actions reset.
+                await InvokeAsync(() =>
+                {
+                    _completionStalled = true;
+                    StateHasChanged();
+                });
+            }
         }, token);
     }
 
