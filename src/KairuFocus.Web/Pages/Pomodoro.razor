@@ -98,7 +98,13 @@ else
             }
             else if (_session.Status == "Active")
             {
-                <button class="btn btn-outline-warning btn-lg" @onclick="InterruptSession">
+                if (_completionFailed)
+                {
+                    <button class="btn btn-primary btn-lg" @onclick="CompleteSession" disabled="@_completing">
+                        @(_completing ? "Nouvelle tentative…" : "↻ Réessayer")
+                    </button>
+                }
+                <button class="btn btn-outline-warning btn-lg" @onclick="InterruptSession" disabled="@_completing">
                     ⏹ Interrompre
                 </button>
             }
@@ -244,6 +250,8 @@ else
     private string? _errorMessage;
     private string? _infoMessage;
     private bool _starting;
+    private bool _completing;       // a completion request is in flight (blocks double submit)
+    private bool _completionFailed; // the last completion failed and the session may still be active: offer "Réessayer"
     private string _newTaskTitle = string.Empty;
     private string _selectedTaskIdToLink = string.Empty;
     private XpToast? _xpToast;
@@ -314,11 +322,23 @@ else
     // ── Lifecycle ─────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        _allTasks = await TaskApi.GetAllAsync();
+        // None of the secondary loads below may keep the page on "Chargement…" or prevent a running
+        // session from being resumed: each failure is absorbed and falls back to the field defaults.
+        try
+        {
+            _allTasks = await TaskApi.GetAllAsync();
+        }
+        catch (Exception ex) when (IsApiCallFailure(ex))
+        {
+            // The task list is the only fallback the user can see (linking tasks), so tell them.
+            _allTasks = [];
+            _errorMessage = "Impossible de charger les tâches.";
+        }
+
         _session  = await PomodoroApi.GetCurrentSessionAsync();
 
-        // Load suggested session type and durations
-        var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
+        // Load suggested session type and durations (silent fallback to the field defaults)
+        var suggested = await GetSuggestedSessionTypeOrNullAsync();
         if (suggested is not null)
         {
             _selectedSessionType = suggested.SuggestedType;
@@ -327,7 +347,14 @@ else
             _longBreakDuration = suggested.LongBreakDurationMinutes;
         }
 
-        var userSettings = await SettingsApi.GetSettingsAsync();
+        // Settings only drive the ringtone and volume here: silent fallback to the field defaults.
+        UserSettingsDto? userSettings = null;
+        try
+        {
+            userSettings = await SettingsApi.GetSettingsAsync();
+        }
+        catch (Exception ex) when (IsApiCallFailure(ex)) { }
+
         if (userSettings is not null)
         {
             _ringtonePreference = userSettings.RingtonePreference;
@@ -367,6 +394,7 @@ else
         _infoMessage = null;
         _completedSessionType = null;
         _suggestedNextSessionType = null;
+        _completionFailed = false;
         StateHasChanged();
 
         try
@@ -431,36 +459,106 @@ else
 
         _session = await PomodoroApi.GetCurrentSessionAsync();
         _completedSessionType = null;
+        _completionFailed = false;
         RefreshLinkedTasks();
     }
 
     private async Task OnTimerCompleted()
     {
-        await SoundService.PlayRingtoneAsync(_ringtonePreference, _alarmVolume);
-
-        var completedType = _session?.SessionType;
-        var xpAwarded = await PomodoroApi.CompleteSessionAsync();
-        if (xpAwarded is null)
+        // The ringtone plays once, at expiry. Retries ("Réessayer") call CompleteSession directly,
+        // which skips it. The ringtone is accessory (JS interop can fail, e.g. script not loaded):
+        // a failure here must never prevent the session from being completed.
+        try
         {
-            _errorMessage = "Impossible de terminer la session.";
+            await SoundService.PlayRingtoneAsync(_ringtonePreference, _alarmVolume);
+        }
+        catch (Exception) { }
+
+        await CompleteSession();
+    }
+
+    /// <summary>Completes the active session. Runs from the timer loop (via <c>InvokeAsync</c>) and
+    /// from the "Réessayer" button, so every state change is followed by an explicit
+    /// <c>StateHasChanged()</c>. A failed attempt never leaves the page stuck: see
+    /// <see cref="RecoverFromFailedCompletionAsync"/>. An unexpected exception is turned into the
+    /// same recoverable failure state here rather than in the timer loop's catch-all, which also
+    /// covers mid-countdown ticks where "Réessayer" would mean a premature end.</summary>
+    private async Task CompleteSession()
+    {
+        if (_completing) return;
+        _completing = true;
+        _errorMessage = null;
+        _infoMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var completedType = _session?.SessionType;
+            var xpAwarded = await PomodoroApi.CompleteSessionAsync();
+            if (xpAwarded is null)
+            {
+                await RecoverFromFailedCompletionAsync();
+                return;
+            }
+
+            _completionFailed = false;
+            _completedSessionType = completedType;
+            _session = await PomodoroApi.GetCurrentSessionAsync();
+            _remainingSeconds = 0;
+
+            var suggested = await GetSuggestedSessionTypeOrNullAsync();
+            _suggestedNextSessionType = suggested?.SuggestedType;
+            if (suggested is not null)
+                _selectedSessionType = suggested.SuggestedType;
+
+            RefreshLinkedTasks();
             StateHasChanged();
+
+            if (xpAwarded.Value > 0 && _xpToast is not null)
+                _ = _xpToast.ShowAsync(xpAwarded.Value);
+        }
+        catch (Exception)
+        {
+            // Unexpected failure: don't surface ex.Message, offer "Réessayer" instead.
+            _completionFailed = true;
+            _errorMessage = "Impossible de terminer la session. Réessaie.";
+        }
+        finally
+        {
+            _completing = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>Called after a failed completion request. Asks the server what became of the
+    /// session. If it is gone (204 — e.g. completed from another tab, so our request got a 400),
+    /// the page goes back to "Prêt" with an informational message: we can't know what was credited,
+    /// so no "Sprint terminé !" banner and no XP toast. If it is still active, or the server can't
+    /// be reached, the page shows an error and offers "Réessayer" (no automatic retry loop);
+    /// "Interrompre" stays available.</summary>
+    private async Task RecoverFromFailedCompletionAsync()
+    {
+        var lookup = await PomodoroApi.LookupCurrentSessionAsync();
+
+        if (lookup.Succeeded && lookup.Session is null)
+        {
+            _session = null;
+            _completionFailed = false;
+            _completedSessionType = null;
+            _suggestedNextSessionType = null;
+            _remainingSeconds = 0;
+            _totalSeconds = 0;
+            _infoMessage = "Cette session n'est plus active (elle a peut-être été terminée depuis un autre onglet).";
+            RefreshLinkedTasks();
             return;
         }
 
-        _completedSessionType = completedType;
-        _session = await PomodoroApi.GetCurrentSessionAsync();
-        _remainingSeconds = 0;
-
-        var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
-        _suggestedNextSessionType = suggested?.SuggestedType;
-        if (suggested is not null)
-            _selectedSessionType = suggested.SuggestedType;
-
-        RefreshLinkedTasks();
-        StateHasChanged();
-
-        if (xpAwarded.Value > 0 && _xpToast is not null)
-            _ = _xpToast.ShowAsync(xpAwarded.Value);
+        _completionFailed = true;
+        _errorMessage = lookup.Unauthorized
+            ? "Ta session a expiré, reconnecte-toi."
+            : lookup.Succeeded
+                ? "Impossible de terminer la session. Réessaie."
+                : "Serveur injoignable, vérifie ta connexion puis réessaie.";
     }
 
     private async Task LinkExistingTask()
@@ -616,6 +714,26 @@ else
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────
+    /// <summary>True for the exceptions an API call can raise on a non-2xx status
+    /// (<c>GetFromJsonAsync</c>), a network error, a timeout or an unparsable body.</summary>
+    private static bool IsApiCallFailure(Exception ex) =>
+        ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException;
+
+    /// <summary><c>GetSuggestedSessionTypeAsync</c> throws on a network error (unlike on a non-2xx
+    /// status, where it returns null). The suggestion is only a convenience, so a failure falls
+    /// back to <c>null</c>.</summary>
+    private async Task<SuggestedSessionTypeDto?> GetSuggestedSessionTypeOrNullAsync()
+    {
+        try
+        {
+            return await PomodoroApi.GetSuggestedSessionTypeAsync();
+        }
+        catch (Exception ex) when (IsApiCallFailure(ex))
+        {
+            return null;
+        }
+    }
+
     private void RefreshLinkedTasks()
     {
         if (_session is null) { _linkedTasks = []; return; }
