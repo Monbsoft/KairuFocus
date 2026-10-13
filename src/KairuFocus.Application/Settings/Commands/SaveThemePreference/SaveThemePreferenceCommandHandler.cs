@@ -24,8 +24,12 @@ public sealed class SaveThemePreferenceCommandHandler : ICommandHandler<SaveThem
 
     public async Task<SaveThemePreferenceResult> Handle(SaveThemePreferenceCommand command, CancellationToken cancellationToken = default)
     {
-        // Parse theme preference
-        if (!Enum.TryParse<ThemePreference>(command.ThemePreference, ignoreCase: true, out var themePreference))
+        // Parse theme preference.
+        // Enum.TryParse alone also accepts numeric strings ("7", "1"), comma-separated lists ("Light,Dark")
+        // and surrounding whitespace (" Dark "). The contract is names only: accept a single member name,
+        // case-insensitively, and nothing else.
+        if (!Enum.TryParse<ThemePreference>(command.ThemePreference, ignoreCase: true, out var themePreference)
+            || !Enum.GetNames<ThemePreference>().Contains(command.ThemePreference, StringComparer.OrdinalIgnoreCase))
         {
             return SaveThemePreferenceResult.Failure($"Invalid theme preference '{command.ThemePreference}'. Valid values: Light, Dark, System.");
         }

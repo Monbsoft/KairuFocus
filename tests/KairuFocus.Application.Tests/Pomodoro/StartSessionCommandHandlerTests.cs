@@ -49,6 +49,23 @@ public sealed class StartSessionCommandHandlerTests
         return session;
     }
 
+    /// <summary>
+    /// A regular sprint with the default duration (PomodoroSettings.Default: 25/5/15), on the
+    /// result, on the stored session and in the journal — a rejected value must leave no trace
+    /// of the type it tried to designate.
+    /// </summary>
+    private void AssertFellBackToSprint(StartSessionResult result)
+    {
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Sprint", result.Session!.SessionType);
+        Assert.Equal(25, result.Session.PlannedDurationMinutes);
+        var stored = Assert.Single(_sessionRepository.Sessions);
+        Assert.Equal(PomodoroSessionType.Sprint, stored.SessionType);
+        Assert.Equal(25, stored.PlannedDurationMinutes);
+        var entry = Assert.Single(_journalRepository.Entries);
+        Assert.Equal(JournalEventType.SprintStarted, entry.EventType);
+    }
+
     [Fact]
     public async Task Should_ReturnTheExistingSession_When_TheSameStartIsSubmittedTwiceInARow()
     {
@@ -237,6 +254,89 @@ public sealed class StartSessionCommandHandlerTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(nameof(PomodoroSessionType.Sprint), result.Session!.SessionType);
+    }
+
+    // ── Session type parsing: exactly one member name, anything else falls back to Sprint ──
+
+    [Theory]
+    [InlineData("Sprint", PomodoroSessionType.Sprint, "Sprint", 25)]
+    [InlineData("sprint", PomodoroSessionType.Sprint, "Sprint", 25)]
+    [InlineData("ShortBreak", PomodoroSessionType.ShortBreak, "ShortBreak", 5)]
+    [InlineData("shortbreak", PomodoroSessionType.ShortBreak, "ShortBreak", 5)]
+    [InlineData("LongBreak", PomodoroSessionType.LongBreak, "LongBreak", 15)]
+    [InlineData("LONGBREAK", PomodoroSessionType.LongBreak, "LongBreak", 15)]
+    public async Task Should_StartTheRequestedSessionType_When_TheSessionTypeIsAMemberName(
+        string value, PomodoroSessionType expectedType, string expectedTypeName, int expectedDurationMinutes)
+    {
+        var result = await _sut.Handle(new StartSessionCommand(value));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expectedTypeName, result.Session!.SessionType);
+        Assert.Equal(expectedDurationMinutes, result.Session.PlannedDurationMinutes);
+        var stored = Assert.Single(_sessionRepository.Sessions);
+        Assert.Equal(expectedType, stored.SessionType);
+        Assert.Equal(expectedDurationMinutes, stored.PlannedDurationMinutes);
+    }
+
+    [Theory]
+    [InlineData("7")]
+    [InlineData("-1")]
+    public async Task Should_StartASprint_When_TheSessionTypeIsNumericOutsideEnum(string value)
+    {
+        var result = await _sut.Handle(new StartSessionCommand(value));
+
+        AssertFellBackToSprint(result);
+    }
+
+    // Names only: numeric values are not part of the contract, even when they map to a member.
+    // "0" is deliberately absent: it maps to Sprint, which is also the fallback, so it could
+    // not tell the two behaviours apart.
+    [Theory]
+    [InlineData("1")]
+    [InlineData("2")]
+    public async Task Should_StartASprint_When_TheSessionTypeIsNumericMatchingMember(string value)
+    {
+        var result = await _sut.Handle(new StartSessionCommand(value));
+
+        AssertFellBackToSprint(result);
+    }
+
+    // Enum.TryParse ORs comma-separated names — "ShortBreak,LongBreak" is the undefined value 3
+    // (1|2), "Sprint,ShortBreak" is ShortBreak (0|1) — and trims surrounding whitespace.
+    [Theory]
+    [InlineData("ShortBreak,LongBreak")]
+    [InlineData("Sprint,ShortBreak")]
+    [InlineData(" ShortBreak ")]
+    [InlineData("LongBreak ")]
+    public async Task Should_StartASprint_When_TheSessionTypeIsNotExactlyOneMemberName(string value)
+    {
+        var result = await _sut.Handle(new StartSessionCommand(value));
+
+        AssertFellBackToSprint(result);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Should_StartASprint_When_TheSessionTypeIsBlank(string value)
+    {
+        var result = await _sut.Handle(new StartSessionCommand(value));
+
+        AssertFellBackToSprint(result);
+    }
+
+    [Fact]
+    public async Task Should_StartAFreeSprint_When_IsFreeSessionIsSetWithABreakSessionType()
+    {
+        var result = await _sut.Handle(new StartSessionCommand("LongBreak", IsFreeSession: true));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Sprint", result.Session!.SessionType);
+        Assert.Equal(0, result.Session.PlannedDurationMinutes);
+        var stored = Assert.Single(_sessionRepository.Sessions);
+        Assert.Equal(PomodoroSessionType.Sprint, stored.SessionType);
+        var entry = Assert.Single(_journalRepository.Entries);
+        Assert.Equal(JournalEventType.SprintStarted, entry.EventType);
     }
 
     [Fact]

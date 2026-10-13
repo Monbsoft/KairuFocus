@@ -50,11 +50,11 @@ public sealed class StartSessionCommandHandler : ICommandHandler<StartSessionCom
         _logger.LogDebug("Starting session of type {SessionType} for user {UserId}", command.SessionType, userId);
 
         // Parse session type — sprint libre forces Sprint type.
+        // Anything that is not exactly a member name (missing, unknown, numeric, list — see
+        // EnumName) deliberately falls back to Sprint rather than failing the start.
         // Resolved before the conflict check: idempotence compares the effective type.
-        var sessionType = command.IsFreeSession
-            ? PomodoroSessionType.Sprint
-            : string.IsNullOrWhiteSpace(command.SessionType) ||
-              !Enum.TryParse<PomodoroSessionType>(command.SessionType, true, out var parsedType)
+        var sessionType = (command.IsFreeSession
+            || !EnumName.TryParse<PomodoroSessionType>(command.SessionType, out var parsedType))
                 ? PomodoroSessionType.Sprint
                 : parsedType;
 
