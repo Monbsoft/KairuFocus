@@ -128,6 +128,36 @@ public sealed class CompleteSessionCommandHandlerTests
         Assert.Equal(JournalEventType.BreakCompleted, _journalRepository.Entries[0].EventType);
     }
 
+    // ── Journal failure (ADR-023) ──────────────────────────────────────────
+
+    [Fact]
+    public async Task Should_CompleteSession_When_JournalEntryThrows()
+    {
+        // The completion is already persisted: a failing journal must NEVER fail it.
+        AddActiveSession(PomodoroSessionType.Sprint, DateTime.UtcNow.AddMinutes(-25));
+        _fakeMediator.ThrowOnCreateEntry = true;
+
+        var result = await _sut.Handle(new CompleteSessionCommand());
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, _sessionRepository.UpdateAsyncCallCount);
+        Assert.Empty(_journalRepository.Entries);
+    }
+
+    [Fact]
+    public async Task Should_CreditXp_When_JournalEntryThrows()
+    {
+        var session = AddActiveSession(PomodoroSessionType.Sprint, DateTime.UtcNow.AddMinutes(-25));
+        _fakeMediator.ThrowOnCreateEntry = true;
+
+        var result = await _sut.Handle(new CompleteSessionCommand());
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(10, result.XpAwarded);
+        var gain = Assert.Single(_xpGainRepository.Gains);
+        Assert.Equal(session.Id.Value, gain.SessionId);
+    }
+
     // ── XP credit (ADR-023) ────────────────────────────────────────────────
 
     [Fact]

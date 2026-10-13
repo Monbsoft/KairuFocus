@@ -58,15 +58,25 @@ public sealed class CompleteSessionCommandHandler : ICommandHandler<CompleteSess
             ? JournalEventType.SprintCompleted
             : JournalEventType.BreakCompleted;
 
-        // Generate journal entry
-        await _mediator.DispatchAsync<CreateEntryCommand, CreateEntryResult>(
-            new CreateEntryCommand(
-                eventType,
-                session.Id.Value,
-                DateTime.UtcNow,
-                userId,
-                session.JournalComment),
-            cancellationToken);
+        // Generate journal entry — the completion is already persisted, so a failing journal
+        // must NEVER fail the completion (ADR-023), hence log-only error handling.
+        try
+        {
+            // CancellationToken.None: the completion is persisted, so a client disconnect must not
+            // abort the journal entry (it would be lost with no automatic replay).
+            await _mediator.DispatchAsync<CreateEntryCommand, CreateEntryResult>(
+                new CreateEntryCommand(
+                    eventType,
+                    session.Id.Value,
+                    DateTime.UtcNow,
+                    userId,
+                    session.JournalComment),
+                CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Journal entry failed for session {SessionId}", session.Id.Value);
+        }
 
         // Credit sprint XP — the completion is already persisted; a failing credit
         // must NEVER fail the completion (ADR-023), hence log-only error handling.
