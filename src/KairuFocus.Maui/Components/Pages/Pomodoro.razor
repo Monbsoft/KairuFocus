@@ -238,6 +238,7 @@ else
     // ── Timer ─────────────────────────────────────────────────────────────
     private int _remainingSeconds;
     private int _totalSeconds;
+    private DateTime? _deadlineUtc; // StartedAt + planned duration, compared with the device clock
     private CancellationTokenSource? _timerCts;
 
     // ── Computed ──────────────────────────────────────────────────────────
@@ -483,17 +484,18 @@ else
     private void InitTimer(PomodoroSessionDto session)
     {
         _totalSeconds = session.PlannedDurationMinutes * 60;
-
-        if (session.StartedAt.HasValue)
-        {
-            var elapsed = (int)(DateTime.UtcNow - session.StartedAt.Value).TotalSeconds;
-            _remainingSeconds = Math.Max(0, _totalSeconds - elapsed);
-        }
-        else
-        {
-            _remainingSeconds = _totalSeconds;
-        }
+        // No StartedAt should not happen on an Active session: fall back to "starts now".
+        _deadlineUtc = (session.StartedAt ?? DateTime.UtcNow).AddSeconds(_totalSeconds);
+        _remainingSeconds = ComputeRemainingSeconds();
     }
+
+    // Recomputed from the deadline at every tick, so a late tick (suspended app) has no lasting effect.
+    // Ceiling: zero only once the deadline is really reached; clamp: a slow device clock never shows more than the total.
+    // Math.Max on the upper bound: Math.Clamp throws when max < min, and the duration comes from the server.
+    private int ComputeRemainingSeconds() =>
+        _deadlineUtc is { } deadline
+            ? Math.Clamp((int)Math.Ceiling((deadline - DateTime.UtcNow).TotalSeconds), 0, Math.Max(0, _totalSeconds))
+            : 0;
 
     private async Task StartTimerLoop()
     {
@@ -506,9 +508,10 @@ else
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
             try
             {
-                while (await timer.WaitForNextTickAsync(token))
+                // Check first, wait after: an already-expired session is completed right away.
+                do
                 {
-                    _remainingSeconds = Math.Max(0, _remainingSeconds - 1);
+                    _remainingSeconds = ComputeRemainingSeconds();
                     await InvokeAsync(StateHasChanged);
 
                     if (_remainingSeconds <= 0)
@@ -517,6 +520,7 @@ else
                         break;
                     }
                 }
+                while (await timer.WaitForNextTickAsync(token));
             }
             catch (OperationCanceledException) { }
         }, token);
