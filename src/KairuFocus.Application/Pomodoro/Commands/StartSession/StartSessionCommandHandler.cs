@@ -129,7 +129,7 @@ public sealed class StartSessionCommandHandler : ICommandHandler<StartSessionCom
                 new CreateEntryCommand(
                     eventType,
                     session.Id.Value,
-                    DateTime.UtcNow,
+                    startedAt,
                     userId),
                 CancellationToken.None);
         }

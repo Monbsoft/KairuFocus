@@ -109,4 +109,19 @@ public sealed class GetFocusStatsQueryHandlerTests
         var day = Assert.Single(result.Days);
         Assert.Equal(new DateOnly(2026, 6, 25), day.Date);
     }
+
+    [Fact]
+    public async Task Should_Report25Minutes_When_TimedSprintCompletedLate()
+    {
+        var start = FixedUtcNow.Date.AddHours(6);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25, FakeCurrentUserService.TestUserId);
+        session.Start(start);
+        session.Complete(start.AddMinutes(205)); // reported 3 hours late: retained at the scheduled end
+        _sessionRepository.Sessions.Add(session);
+
+        var result = await _sut.Handle(new GetFocusStatsQuery());
+
+        var day = Assert.Single(result.Days);
+        Assert.Equal(25, day.FocusMinutes);
+    }
 }

@@ -64,7 +64,7 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
             return Result.Failure(DomainErrors.Pomodoro.SessionNotActive);
 
         Status = PomodoroSessionStatus.Completed;
-        EndedAt = now;
+        EndedAt = ResolveEndedAt(now);
         return Result.Success();
     }
 
@@ -74,8 +74,27 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
             return Result.Failure(DomainErrors.Pomodoro.SessionNotActive);
 
         Status = PomodoroSessionStatus.Interrupted;
-        EndedAt = now;
+        EndedAt = ResolveEndedAt(now);
         return Result.Success();
+    }
+
+    /// <summary>Scheduled end of a timed session. Null for a free sprint
+    /// (PlannedDurationMinutes == 0) or a session that has not started.</summary>
+    private DateTime? ScheduledEndAt =>
+        PlannedDurationMinutes > 0 && StartedAt.HasValue
+            ? StartedAt.Value.AddMinutes(PlannedDurationMinutes)
+            : null;
+
+    /// <summary>End time retained for a completion or interruption observed at <paramref name="now"/>:
+    /// never before the start, never after the scheduled end of a timed session.</summary>
+    private DateTime ResolveEndedAt(DateTime now)
+    {
+        if (StartedAt.HasValue && now < StartedAt.Value)
+            return StartedAt.Value;
+
+        return ScheduledEndAt is { } scheduledEnd && now > scheduledEnd
+            ? scheduledEnd
+            : now;
     }
 
     public Result LinkTask(TaskId taskId)

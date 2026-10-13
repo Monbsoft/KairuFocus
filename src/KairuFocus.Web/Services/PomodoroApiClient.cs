@@ -70,18 +70,29 @@ public sealed class PomodoroApiClient
     /// so it must never let an exception escape — there is no <c>ErrorBoundary</c> in this app, and
     /// an unhandled exception here would replace the page's own error message with the global error
     /// UI.</summary>
-    public async Task<PomodoroSessionDto?> GetCurrentSessionAsync()
+    public async Task<PomodoroSessionDto?> GetCurrentSessionAsync() =>
+        (await LookupCurrentSessionAsync()).Session;
+
+    /// <summary>Same call as <see cref="GetCurrentSessionAsync"/>, but keeps "no active session"
+    /// (204) distinguishable from "the call failed" (non-2xx, network error, timeout, unparsable
+    /// body), and a 401 (expired token) from other failures. Never throws. Used by
+    /// <c>Pomodoro.razor</c> to decide, after a failed completion, whether the session is really
+    /// gone server-side or still active.</summary>
+    public async Task<CurrentSessionLookup> LookupCurrentSessionAsync()
     {
         try
         {
             var response = await _http.GetAsync("api/pomodoro/session");
-            if (response.StatusCode == HttpStatusCode.NoContent) return null;
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<PomodoroSessionDto>();
+            if (response.StatusCode == HttpStatusCode.NoContent) return new CurrentSessionLookup(null, true);
+            if (response.StatusCode == HttpStatusCode.Unauthorized) return new CurrentSessionLookup(null, false, true);
+            if (!response.IsSuccessStatusCode) return new CurrentSessionLookup(null, false);
+
+            var session = await response.Content.ReadFromJsonAsync<PomodoroSessionDto>();
+            return new CurrentSessionLookup(session, session is not null);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
         {
-            return null;
+            return new CurrentSessionLookup(null, false);
         }
     }
 
@@ -165,10 +176,21 @@ public sealed class PomodoroApiClient
     }
 
     /// <summary>Completes the current session. Returns null on failure, otherwise the XP
-    /// awarded for this completion (0 if the session wasn't XP-eligible).</summary>
+    /// awarded for this completion (0 if the session wasn't XP-eligible). Never throws on a
+    /// network error or timeout: those are reported as a failure (null) like a non-2xx status, so
+    /// callers can offer a retry instead of crashing on an unhandled exception.</summary>
     public async Task<int?> CompleteSessionAsync()
     {
-        var response = await _http.PatchAsync("api/pomodoro/session/complete", null);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _http.PatchAsync("api/pomodoro/session/complete", null);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            return null;
+        }
+
         if (!response.IsSuccessStatusCode) return null;
 
         try

@@ -104,6 +104,15 @@ else
             }
         </div>
 
+        <!-- Fin de session non enregistrée (consigne persistante) -->
+        @if (_completionStalled)
+        {
+            <div class="alert alert-danger" role="alert" style="max-width:480px">
+                Impossible de terminer la session pour le moment. Ton temps est écoulé : n'appuie pas sur « Interrompre », tu perdrais la session.
+                Vérifie ta connexion, puis ouvre une autre page (Journal, Tâches…) et reviens sur Pomodoro pour réessayer.
+            </div>
+        }
+
         <!-- Résultat après fin de session -->
         @if (_completedSessionType is not null)
         {
@@ -136,7 +145,7 @@ else
                                 </span>
                                 <span class="d-flex gap-2 align-items-center">
                                     <span class="badge @BadgeClass(task.Status)">@task.Status</span>
-                                    @if (task.Status == "Todo")
+                                    @if (task.Status == "Pending")
                                     {
                                         <button class="btn btn-sm btn-outline-primary"
                                                 @onclick="() => SetTaskInProgress(task.Id)">
@@ -225,6 +234,7 @@ else
     private List<TaskDto> _linkedTasks = [];
     private string? _errorMessage;
     private string? _infoMessage;
+    private bool _completionStalled; // the timer loop died while completing: the session is over locally, not on the server
     private bool _starting;
     private string _newTaskTitle = string.Empty;
     private string _selectedTaskIdToLink = string.Empty;
@@ -238,6 +248,7 @@ else
     // ── Timer ─────────────────────────────────────────────────────────────
     private int _remainingSeconds;
     private int _totalSeconds;
+    private DateTime? _deadlineUtc; // StartedAt + planned duration, compared with the device clock
     private CancellationTokenSource? _timerCts;
 
     // ── Computed ──────────────────────────────────────────────────────────
@@ -342,6 +353,7 @@ else
         _starting = true;
         _errorMessage = null;
         _infoMessage = null;
+        _completionStalled = false;
         _completedSessionType = null;
         _suggestedNextSessionType = null;
         StateHasChanged();
@@ -379,6 +391,7 @@ else
             return;
         }
 
+        _completionStalled = false;
         _session = await PomodoroApi.GetCurrentSessionAsync();
         RefreshLinkedTasks();
     }
@@ -395,14 +408,23 @@ else
         }
 
         _completedSessionType = completedType;
-        _session = await PomodoroApi.GetCurrentSessionAsync();
+
+        // The completion is recorded: a failed reload must end on a completed state, not reach the loop's catch.
+        // _session is only replaced once the reload is over, so "Démarrer" is not offered while it is pending.
+        PomodoroSessionDto? current = null;
+        try
+        {
+            current = await PomodoroApi.GetCurrentSessionAsync();
+
+            var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
+            _suggestedNextSessionType = suggested?.SuggestedType;
+            if (suggested is not null)
+                _selectedSessionType = suggested.SuggestedType;
+        }
+        catch (Exception) { }
+
+        _session = current;
         _remainingSeconds = 0;
-
-        var suggested = await PomodoroApi.GetSuggestedSessionTypeAsync();
-        _suggestedNextSessionType = suggested?.SuggestedType;
-        if (suggested is not null)
-            _selectedSessionType = suggested.SuggestedType;
-
         RefreshLinkedTasks();
         StateHasChanged();
     }
@@ -483,17 +505,18 @@ else
     private void InitTimer(PomodoroSessionDto session)
     {
         _totalSeconds = session.PlannedDurationMinutes * 60;
-
-        if (session.StartedAt.HasValue)
-        {
-            var elapsed = (int)(DateTime.UtcNow - session.StartedAt.Value).TotalSeconds;
-            _remainingSeconds = Math.Max(0, _totalSeconds - elapsed);
-        }
-        else
-        {
-            _remainingSeconds = _totalSeconds;
-        }
+        // No StartedAt should not happen on an Active session: fall back to "starts now".
+        _deadlineUtc = (session.StartedAt ?? DateTime.UtcNow).AddSeconds(_totalSeconds);
+        _remainingSeconds = ComputeRemainingSeconds();
     }
+
+    // Recomputed from the deadline at every tick, so a late tick (suspended app) has no lasting effect.
+    // Ceiling: zero only once the deadline is really reached; clamp: a slow device clock never shows more than the total.
+    // Math.Max on the upper bound: Math.Clamp throws when max < min, and the duration comes from the server.
+    private int ComputeRemainingSeconds() =>
+        _deadlineUtc is { } deadline
+            ? Math.Clamp((int)Math.Ceiling((deadline - DateTime.UtcNow).TotalSeconds), 0, Math.Max(0, _totalSeconds))
+            : 0;
 
     private async Task StartTimerLoop()
     {
@@ -506,9 +529,10 @@ else
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
             try
             {
-                while (await timer.WaitForNextTickAsync(token))
+                // Check first, wait after: an already-expired session is completed right away.
+                do
                 {
-                    _remainingSeconds = Math.Max(0, _remainingSeconds - 1);
+                    _remainingSeconds = ComputeRemainingSeconds();
                     await InvokeAsync(StateHasChanged);
 
                     if (_remainingSeconds <= 0)
@@ -517,8 +541,27 @@ else
                         break;
                     }
                 }
+                while (await timer.WaitForNextTickAsync(token));
             }
-            catch (OperationCanceledException) { }
+            catch (Exception) when (token.IsCancellationRequested)
+            {
+                // Mostly the ordinary cancellation of WaitForNextTickAsync, plus any late failure of a loop that
+                // StopTimer / DisposeAsync cancelled (the token stays readable once its source is disposed).
+                // Known limit: InterruptSession cancels before knowing its outcome, so if it fails, a failed
+                // completion request of this loop is swallowed too.
+            }
+            catch (Exception)
+            {
+                // Live loop: typically CompleteSessionAsync failing on the network when the app resumes with
+                // an expired deadline. An HttpClient timeout lands here too (TaskCanceledException, token not
+                // cancelled). The page stays at 00:00 while the task block remains usable, hence a dedicated
+                // flag rather than _errorMessage, which the task actions reset.
+                await InvokeAsync(() =>
+                {
+                    _completionStalled = true;
+                    StateHasChanged();
+                });
+            }
         }, token);
     }
 
