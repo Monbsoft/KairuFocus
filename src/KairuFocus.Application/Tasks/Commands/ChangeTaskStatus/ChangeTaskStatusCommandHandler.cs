@@ -44,8 +44,8 @@ public sealed class ChangeTaskStatusCommandHandler : ICommandHandler<ChangeTaskS
             return ChangeTaskStatusResult.NotFound();
         }
 
-        // Parse status string to enum
-        if (!Enum.TryParse<TaskStatus>(command.NewStatus, true, out var newStatus))
+        // Parse status string to enum — member names only (see EnumName)
+        if (!EnumName.TryParse<TaskStatus>(command.NewStatus, out var newStatus))
             return ChangeTaskStatusResult.Validation($"Invalid status: {command.NewStatus}");
 
         var changeResult = task.ChangeStatus(newStatus, DateTime.UtcNow);
