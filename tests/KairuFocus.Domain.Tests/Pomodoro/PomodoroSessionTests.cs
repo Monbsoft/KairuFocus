@@ -130,6 +130,170 @@ public sealed class PomodoroSessionTests
         Assert.Equal(PomodoroErrors.Pomodoro.SessionNotActive, result.Error);
     }
 
+    // ── Bounded end time ───────────────────────────────────────────────────
+
+    [Fact]
+    public void Should_SetEndedAtToRequestTime_When_TimedSprintCompletedBeforeScheduledEnd()
+    {
+        var session = CreateActive(25);
+
+        var result = session.Complete(Now.AddMinutes(22));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(Now.AddMinutes(22), session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_SetEndedAtToScheduledEnd_When_TimedSprintCompletedExactlyAtScheduledEnd()
+    {
+        var session = CreateActive(25);
+
+        session.Complete(Now.AddMinutes(25));
+
+        Assert.Equal(Now.AddMinutes(25), session.EndedAt);
+    }
+
+    [Theory]
+    [InlineData(10)]
+    [InlineData(10800)]
+    public void Should_SetEndedAtToScheduledEnd_When_TimedSprintCompletedAfterScheduledEnd(int secondsLate)
+    {
+        var session = CreateActive(25);
+
+        var result = session.Complete(Now.AddMinutes(25).AddSeconds(secondsLate));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(PomodoroSessionStatus.Completed, session.Status);
+        Assert.Equal(Now.AddMinutes(25), session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_SetEndedAtToScheduledEndOnNextDay_When_SprintSpansMidnightAndIsCompletedLate()
+    {
+        var start = new DateTime(2026, 1, 1, 23, 50, 0, DateTimeKind.Utc);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25, OwnerId);
+        session.Start(start);
+
+        session.Complete(new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Utc));
+
+        Assert.Equal(new DateTime(2026, 1, 2, 0, 15, 0, DateTimeKind.Utc), session.EndedAt);
+    }
+
+    [Theory]
+    [InlineData(PomodoroSessionType.ShortBreak, 5)]
+    [InlineData(PomodoroSessionType.LongBreak, 15)]
+    public void Should_SetEndedAtToScheduledEnd_When_BreakCompletedAfterScheduledEnd(
+        PomodoroSessionType type, int minutes)
+    {
+        var session = PomodoroSession.Create(type, minutes, OwnerId);
+        session.Start(Now);
+
+        session.Complete(Now.AddMinutes(minutes + 30));
+
+        Assert.Equal(Now.AddMinutes(minutes), session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_SetEndedAtToRequestTime_When_FreeSprintCompleted()
+    {
+        var session = CreateActive(0);
+        var requestTime = Now.AddHours(5);
+
+        session.Complete(requestTime);
+
+        Assert.Equal(requestTime, session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_ReturnFailureAndKeepEndedAt_When_CompletingAlreadyCompletedSession()
+    {
+        var session = CreateActive(25);
+        session.Complete(Now.AddMinutes(25));
+
+        var result = session.Complete(Now.AddMinutes(10));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PomodoroErrors.Pomodoro.SessionNotActive, result.Error);
+        Assert.Equal(Now.AddMinutes(25), session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_ReturnFailureAndKeepEndedAt_When_CompletingInterruptedSession()
+    {
+        var session = CreateActive(25);
+        session.Interrupt(Now.AddMinutes(10));
+
+        var result = session.Complete(Now.AddMinutes(20));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PomodoroSessionStatus.Interrupted, session.Status);
+        Assert.Equal(Now.AddMinutes(10), session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_SetEndedAtToRequestTime_When_TimedSprintInterruptedBeforeScheduledEnd()
+    {
+        var session = CreateActive(25);
+
+        var result = session.Interrupt(Now.AddMinutes(10));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(PomodoroSessionStatus.Interrupted, session.Status);
+        Assert.Equal(Now.AddMinutes(10), session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_StayInterruptedWithEndedAtAtScheduledEnd_When_InterruptedAfterScheduledEnd()
+    {
+        var session = CreateActive(25);
+
+        var result = session.Interrupt(Now.AddMinutes(25).AddHours(2));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(PomodoroSessionStatus.Interrupted, session.Status);
+        Assert.Equal(Now.AddMinutes(25), session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_SetEndedAtToRequestTime_When_FreeSprintInterrupted()
+    {
+        var session = CreateActive(0);
+        var requestTime = Now.AddHours(5);
+
+        session.Interrupt(requestTime);
+
+        Assert.Equal(requestTime, session.EndedAt);
+    }
+
+    [Fact]
+    public void Should_ReturnFailureAndKeepEndedAt_When_InterruptingAlreadyEndedSession()
+    {
+        var session = CreateActive(25);
+        session.Interrupt(Now.AddMinutes(10));
+
+        var result = session.Interrupt(Now.AddMinutes(20));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(PomodoroErrors.Pomodoro.SessionNotActive, result.Error);
+        Assert.Equal(Now.AddMinutes(10), session.EndedAt);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Should_SetEndedAtToStartedAt_When_RequestTimeIsBeforeStart(bool complete)
+    {
+        var session = CreateActive(25);
+        var earlier = Now.AddMinutes(-3);
+
+        if (complete)
+            session.Complete(earlier);
+        else
+            session.Interrupt(earlier);
+
+        Assert.Equal(Now, session.EndedAt);
+    }
+
     // ── LinkTask ───────────────────────────────────────────────────────────
 
     [Fact]
@@ -254,5 +418,16 @@ public sealed class PomodoroSessionTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(PomodoroErrors.Pomodoro.SessionNotActive, result.Error);
+    }
+
+    [Fact]
+    public void Should_NotBoundEndedAt_When_PlannedDurationIsNegative()
+    {
+        var session = CreateActive(-5);
+        var now = Now.AddMinutes(40);
+
+        session.Complete(now);
+
+        Assert.Equal(now, session.EndedAt);
     }
 }

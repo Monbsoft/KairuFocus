@@ -68,7 +68,7 @@ public sealed class CompleteSessionCommandHandler : ICommandHandler<CompleteSess
                 new CreateEntryCommand(
                     eventType,
                     session.Id.Value,
-                    DateTime.UtcNow,
+                    session.EndedAt!.Value,
                     userId,
                     session.JournalComment),
                 CancellationToken.None);

@@ -1,4 +1,5 @@
 using KairuFocus.Domain.Gamification;
+using KairuFocus.Domain.Identity;
 using KairuFocus.Domain.Pomodoro;
 
 namespace KairuFocus.Domain.Tests.Gamification;
@@ -83,6 +84,45 @@ public sealed class SprintXpPolicyTests
             Start.AddMinutes(25));
 
         Assert.Equal(0, amount);
+    }
+
+    // Policy evaluated on a real aggregate ended late: the bounded EndedAt drives the amount.
+    private static PomodoroSession EndedSession(int plannedMinutes, bool interrupt, TimeSpan observedAfterStart)
+    {
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, plannedMinutes, UserId.New());
+        session.Start(Start);
+        if (interrupt)
+            session.Interrupt(Start + observedAfterStart);
+        else
+            session.Complete(Start + observedAfterStart);
+        return session;
+    }
+
+    private static int EvaluateSession(PomodoroSession s) =>
+        SprintXpPolicy.Evaluate(s.SessionType, s.Status, s.StartedAt, s.EndedAt);
+
+    [Fact]
+    public void Should_ReturnZeroXp_When_OneMinuteSprintCompletedFiveMinutesLate()
+    {
+        var session = EndedSession(1, interrupt: false, TimeSpan.FromMinutes(6));
+
+        Assert.Equal(0, EvaluateSession(session));
+    }
+
+    [Fact]
+    public void Should_Return10Xp_When_FiveMinuteSprintCompletedOneHourLate()
+    {
+        var session = EndedSession(5, interrupt: false, TimeSpan.FromMinutes(65));
+
+        Assert.Equal(10, EvaluateSession(session));
+    }
+
+    [Fact]
+    public void Should_ReturnZeroXp_When_SprintInterruptedAfterScheduledEnd()
+    {
+        var session = EndedSession(25, interrupt: true, TimeSpan.FromHours(2));
+
+        Assert.Equal(0, EvaluateSession(session));
     }
 
     [Theory]

@@ -157,4 +157,20 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
         // Result should be a valid suggestion (Sprint since no sessions exist).
         Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
     }
+
+    [Fact]
+    public async Task Should_SuggestSprint_When_LateCompletedSprintEndedOnPreviousDay()
+    {
+        // Started two days ago, completion reported now: EndedAt is retained at the scheduled end
+        // (two days ago), so no sprint counts as completed today.
+        var start = DateTime.UtcNow.AddDays(-2);
+        var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25, FakeCurrentUserService.TestUserId);
+        session.Start(start);
+        session.Complete(DateTime.UtcNow);
+        _sessionRepository.Sessions.Add(session);
+
+        var result = await _sut.Handle(new GetSuggestedSessionTypeQuery());
+
+        Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
+    }
 }

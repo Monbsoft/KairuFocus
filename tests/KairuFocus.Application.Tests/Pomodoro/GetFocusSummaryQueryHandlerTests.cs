@@ -246,4 +246,34 @@ public sealed class GetFocusSummaryQueryHandlerTests
         Assert.Equal(0, result.FocusMinutesToday);
         Assert.Equal(0, result.Streak);
     }
+
+    // ── Bounded end time (ADR-025) ─────────────────────────────────────────
+
+    [Fact]
+    public async Task Should_Add25FocusMinutes_When_25MinuteSprintCompletedThreeHoursLate()
+    {
+        var start = FixedUtcNow.Date.AddHours(6);
+        // Completion reported 205 minutes after the start: retained at the scheduled end (25 min).
+        _sessionRepository.Sessions.Add(RegularSprintCompleted(start, plannedDurationMinutes: 25, actualDurationMinutes: 205));
+
+        var result = await _sut.Handle(new GetFocusSummaryQuery());
+
+        Assert.Equal(25, result.FocusMinutesToday);
+        Assert.Equal(1, result.SprintsToday);
+    }
+
+    [Fact]
+    public async Task Should_CountSprintOnScheduledEndDay_When_CompletedLateAfterMidnight()
+    {
+        // Started 23:50 on 2026-06-25, scheduled end 00:15 on 2026-06-26, reported 3 hours late:
+        // the sprint belongs to the day of its scheduled end.
+        var start = new DateTime(2026, 6, 25, 23, 50, 0, DateTimeKind.Utc);
+        _sessionRepository.Sessions.Add(RegularSprintCompleted(start, plannedDurationMinutes: 25, actualDurationMinutes: 205));
+
+        var result = await _sut.Handle(new GetFocusSummaryQuery());
+
+        Assert.Equal(1, result.SprintsToday);
+        // Ended at the scheduled end (00:15), clamped to the day window: 15 min (195 without the bound).
+        Assert.Equal(15, result.FocusMinutesToday);
+    }
 }
