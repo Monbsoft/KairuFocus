@@ -54,15 +54,25 @@ public sealed class InterruptSessionCommandHandler : ICommandHandler<InterruptSe
             ? JournalEventType.SprintInterrupted
             : JournalEventType.BreakInterrupted;
 
-        // Generate journal entry
-        await _mediator.DispatchAsync<CreateEntryCommand, CreateEntryResult>(
-            new CreateEntryCommand(
-                eventType,
-                session.Id.Value,
-                DateTime.UtcNow,
-                userId,
-                session.JournalComment),
-            cancellationToken);
+        // Generate journal entry — the interruption is already persisted, so a failing journal
+        // must NEVER fail it (ADR-023), hence log-only error handling.
+        try
+        {
+            // CancellationToken.None: the interruption is persisted, so a client disconnect must not
+            // abort the journal entry (it would be lost with no automatic replay).
+            await _mediator.DispatchAsync<CreateEntryCommand, CreateEntryResult>(
+                new CreateEntryCommand(
+                    eventType,
+                    session.Id.Value,
+                    session.EndedAt!.Value,
+                    userId,
+                    session.JournalComment),
+                CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Journal entry failed for session {SessionId}", session.Id.Value);
+        }
 
         return InterruptSessionResult.Success();
     }

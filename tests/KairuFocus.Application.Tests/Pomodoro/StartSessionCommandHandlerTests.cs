@@ -1,3 +1,4 @@
+using KairuFocus.Application.Pomodoro.Commands.CompleteSession;
 using KairuFocus.Application.Pomodoro.Commands.StartSession;
 using KairuFocus.Application.Tests.Common;
 using KairuFocus.Application.Tests.Journal;
@@ -278,5 +279,36 @@ public sealed class StartSessionCommandHandlerTests
         Assert.True(result.IsSuccess);
         Assert.Single(_journalRepository.Entries);
         Assert.Equal(JournalEventType.BreakStarted, _journalRepository.Entries[0].EventType);
+    }
+
+    // ── Journal dating (ADR-025) ───────────────────────────────────────────
+
+    [Fact]
+    public async Task Should_DateStartJournalEntryAtStartedAt_When_SessionStarted()
+    {
+        var result = await _sut.Handle(new StartSessionCommand("Sprint"));
+
+        Assert.True(result.IsSuccess);
+        var entry = Assert.Single(_journalRepository.Entries);
+        Assert.Equal(_sessionRepository.Sessions.Single().StartedAt, entry.OccurredAt);
+    }
+
+    [Fact]
+    public async Task Should_NotDateEndEntryBeforeStartEntry_When_SessionStartedThenCompleted()
+    {
+        // The start and end handlers share the same journal repository.
+        var completeHandler = new CompleteSessionCommandHandler(
+            _sessionRepository,
+            _settingsRepository,
+            _mediator,
+            new FakeCurrentUserService(),
+            NullLogger<CompleteSessionCommandHandler>.Instance);
+
+        await _sut.Handle(new StartSessionCommand("Sprint"));
+        await completeHandler.Handle(new CompleteSessionCommand());
+
+        var start = _journalRepository.Entries.Single(e => e.EventType == JournalEventType.SprintStarted);
+        var end = _journalRepository.Entries.Single(e => e.EventType == JournalEventType.SprintCompleted);
+        Assert.True(end.OccurredAt >= start.OccurredAt);
     }
 }
