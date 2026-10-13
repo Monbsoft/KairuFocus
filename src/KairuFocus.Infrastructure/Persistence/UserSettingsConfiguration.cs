@@ -23,15 +23,20 @@ internal sealed class UserSettingsConfiguration : IEntityTypeConfiguration<UserS
             .HasMaxLength(20)
             .IsRequired();
 
+        // RingtonePreference.None and a volume of 0 are valid user choices, but they are also the CLR defaults,
+        // which EF treats as "not set" for a column with a store default: it would omit the column on INSERT and
+        // let the database write its own default instead. An out-of-range sentinel makes EF always send the value.
         builder.Property(s => s.RingtonePreference)
             .HasConversion<string>()
             .HasColumnType("nvarchar(20)")
             .HasMaxLength(20)
             .IsRequired()
-            .HasDefaultValue(RingtonePreference.AlarmClock);
+            .HasDefaultValue(RingtonePreference.AlarmClock)
+            .HasSentinel((RingtonePreference)(-1));
 
         builder.Property(s => s.AlarmVolume)
             .HasDefaultValue(80)
+            .HasSentinel(-1)
             .IsRequired();
 
         builder.Property(s => s.JiraBaseUrl).HasColumnType("nvarchar(500)").HasMaxLength(500);

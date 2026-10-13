@@ -23,7 +23,11 @@ public sealed class SaveRingtonePreferenceCommandHandler : ICommandHandler<SaveR
 
     public async Task<SaveRingtonePreferenceResult> Handle(SaveRingtonePreferenceCommand command, CancellationToken cancellationToken = default)
     {
-        if (!Enum.TryParse<RingtonePreference>(command.RingtonePreference, ignoreCase: true, out var ringtonePreference))
+        // Enum.TryParse alone also accepts numeric strings ("7", "1"), comma-separated lists ("None,Bird")
+        // and surrounding whitespace (" Bird "). The contract is names only: accept a single member name,
+        // case-insensitively, and nothing else.
+        if (!Enum.TryParse<RingtonePreference>(command.RingtonePreference, ignoreCase: true, out var ringtonePreference)
+            || !Enum.GetNames<RingtonePreference>().Contains(command.RingtonePreference, StringComparer.OrdinalIgnoreCase))
         {
             return SaveRingtonePreferenceResult.Failure($"Invalid ringtone preference '{command.RingtonePreference}'. Valid values: None, AlarmClock, Bird.");
         }
