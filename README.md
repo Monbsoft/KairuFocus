@@ -4,6 +4,8 @@
 
 KairuFocus centralise en un seul endroit tout ce dont un développeur a besoin pour rester focus et organisé : todo list de micro-tâches, journal de bord, sessions Pomodoro et intégration avec les outils de ticketing (Jira).
 
+![Tableau de bord KairuFocus en thème sombre : tâche en cours, objectif de sprints du jour, temps et série de focus](docs/screenshots/tableau-de-bord-sombre.png)
+
 ---
 
 ## ✨ Fonctionnalités
