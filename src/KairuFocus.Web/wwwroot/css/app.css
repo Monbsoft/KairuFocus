@@ -445,6 +445,23 @@ code {
 @keyframes kf-shimmer { 100% { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) { .kf-skel::after { animation: none; } }
 
+/* ── Palette des tags (Helpers/TagColors.cs) ───────────────────────────────
+   Bootstrap 5.3 ne fournit pas text-bg-{purple,orange,teal,pink} : sans ces
+   règles, .badge rend un texte blanc sans fond (invisible en thème clair).
+   Fonds = tokens Bootstrap, identiques en clair et sombre comme bg-primary & co.
+   Texte choisi pour un contraste WCAG AA ≥ 4.5:1 (ratio en commentaire).
+   !important : même convention que les text-bg-* natifs de Bootstrap. */
+.text-bg-purple { color: #fff !important;                    background-color: var(--bs-purple) !important; } /* 6.5:1 */
+.text-bg-orange { color: rgb(var(--bs-dark-rgb)) !important; background-color: var(--bs-orange) !important; } /* 6.0:1 */
+.text-bg-teal   { color: rgb(var(--bs-dark-rgb)) !important; background-color: var(--bs-teal) !important; }   /* 7.3:1 */
+.text-bg-pink   { color: #fff !important;                    background-color: var(--bs-pink) !important; }   /* 4.5:1 */
+
+/* Croix de retrait (TaskEdit) : sombre sur les tags à fond clair, sinon
+   btn-close-white (et le thème sombre) la rendent blanche sur jaune/orange/cyan. */
+.badge.text-dark .btn-close,
+.badge.text-bg-orange .btn-close,
+.badge.text-bg-teal .btn-close { filter: none; }
+
 /* ── Journal Timeline */
 .timeline {
     padding-left: 0;
