@@ -1,0 +1,285 @@
+@page "/communaute"
+@attribute [Authorize]
+@implements IAsyncDisposable
+@inject GamificationApiClient Gamification
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject CommunityFormatter F
+
+<PageTitle>@F["Community.PageTitle"]</PageTitle>
+
+<div class="kf-community-page">
+    <div class="kf-community-page__head">
+        <div>
+            <h1 class="kf-community-page__title">@F["Community.Title"]</h1>
+            <p class="kf-community-page__sub">
+                @SubtitleText
+                <PresenceIndicator Presence="_presence" />
+            </p>
+        </div>
+        <PeriodSelector Value="_period" ValueChanged="SelectPeriod" />
+    </div>
+
+    <CommunityHero Place="_leaderboard" Xp="_progress" Period="_period"
+                   OnRetryPlace="() => LoadLeaderboardAsync(_period)"
+                   OnRetryXp="() => LoadProgressAsync(_period)" />
+
+    <CommunityProgress Zone="_progress" Period="_period"
+                       OnRetry="() => LoadProgressAsync(_period)" />
+
+    <CommunityRecap Zone="_recap" Period="_period"
+                    OnRetry="() => LoadRecapAsync(_period)" />
+
+    <CommunityBoard Zone="_leaderboard" Period="_period"
+                    OnRetry="() => LoadLeaderboardAsync(_period)" />
+</div>
+
+@* One polite live region, always mounted so that later changes are announced:
+   the first load, then "Classement du mois affiché" after a change of period.
+   The presence is deliberately not announced. *@
+<div class="visually-hidden" role="status" aria-live="polite">@LiveMessage</div>
+
+@code {
+    /// <summary>A reload that lasts longer than this replaces the previous content with a skeleton.</summary>
+    private static readonly TimeSpan SkeletonDelay = TimeSpan.FromMilliseconds(300);
+
+    private static readonly TimeSpan PresenceInterval = TimeSpan.FromSeconds(60);
+
+    // The three sections that depend on the period: independent states, loaded in parallel.
+    private readonly LoadZone<CommunityProgressDto> _progress = new();
+    private readonly LoadZone<CommunityLeaderboardDto> _leaderboard = new();
+    private readonly LoadZone<CommunityRecapDto> _recap = new();
+
+    private CommunityPeriod _period = CommunityPeriod.Week;
+    private bool _periodApplied;
+    private string? _announcement;
+
+    // Presence: independent of the period, refreshed every minute while the tab is visible.
+    private CommunityPresenceDto? _presence;
+    private CancellationTokenSource? _presenceCts;
+    private DotNetObjectReference<Community>? _selfReference;
+    private bool _disposed;
+
+    /// <summary>The period lives in the URL (<c>?periode=mois</c>) so that Back and a reload keep it.</summary>
+    [Parameter, SupplyParameterFromQuery(Name = "periode")]
+    public string? PeriodQuery { get; set; }
+
+    private string LiveMessage =>
+        _progress.IsInitialLoad || _leaderboard.IsInitialLoad || _recap.IsInitialLoad
+            ? F["Community.Loading"]
+            : _announcement ?? "";
+
+    private string SubtitleText => _period switch
+    {
+        CommunityPeriod.Week => F.Format("Community.Sub.Week", F.WeekdayDayMonth(CurrentWeekStart())),
+        CommunityPeriod.Month => MonthSubtitle(),
+        _ => GlobalSubtitle()
+    };
+
+    // ── Lifecycle ───────────────────────────────────────────────────────────
+
+    protected override void OnParametersSet()
+    {
+        var period = CommunityPeriodExtensions.FromUrlValue(PeriodQuery);
+        if (_periodApplied && period == _period) return;
+
+        var changed = _periodApplied;
+        _period = period;
+        _periodApplied = true;
+
+        // Started here rather than after the first render: the first render already shows the skeletons.
+        _ = LoadProgressAsync(period);
+        _ = LoadLeaderboardAsync(period, announce: changed);
+        _ = LoadRecapAsync(period);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        _selfReference = DotNetObjectReference.Create(this);
+        var hidden = false;
+        try
+        {
+            hidden = await JS.InvokeAsync<bool>("kairufocusCommunity.observeVisibility", _selfReference);
+        }
+        catch (JSException)
+        {
+            // Without the script the page still works: the presence just keeps refreshing while hidden.
+        }
+
+        if (!hidden && !_disposed) StartPresence();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        StopPresence();
+        _progress.Cancel();
+        _leaderboard.Cancel();
+        _recap.Cancel();
+
+        try
+        {
+            await JS.InvokeVoidAsync("kairufocusCommunity.unobserveVisibility");
+        }
+        catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+        {
+            // Page left while the runtime is going away: nothing to clean up.
+        }
+
+        _selfReference?.Dispose();
+    }
+
+    // ── Period ──────────────────────────────────────────────────────────────
+
+    /// <summary>A new history entry, so that Back returns to the previous period.</summary>
+    private void SelectPeriod(CommunityPeriod period)
+    {
+        if (period == _period) return;
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("periode", period.ToUrlValue()));
+    }
+
+    // ── Loading of the period sections ──────────────────────────────────────
+
+    private Task LoadProgressAsync(CommunityPeriod period) =>
+        RunAsync(_progress, ct => Gamification.GetCommunityProgressAsync(period, ct), period);
+
+    private Task LoadRecapAsync(CommunityPeriod period) =>
+        RunAsync(_recap, ct => Gamification.GetCommunityRecapAsync(period, ct), period);
+
+    private async Task LoadLeaderboardAsync(CommunityPeriod period, bool announce = false)
+    {
+        _announcement = null; // so that the next announcement is a change, even if it repeats the previous text
+        await RunAsync(_leaderboard, ct => Gamification.GetCommunityLeaderboardAsync(period, ct), period);
+
+        // Only when this very load ended with data (not superseded, not failed).
+        if (announce && !_disposed && !_leaderboard.Busy && _leaderboard.Period == period)
+        {
+            _announcement = F["Community.Announce." + period];
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    /// <summary>
+    /// Loads one section. The previous content stays displayed; the skeleton only takes over if the call is slow.
+    /// A newer load of the same section cancels this one, whose result is then dropped.
+    /// </summary>
+    private async Task RunAsync<T>(LoadZone<T> zone, Func<CancellationToken, Task<T?>> fetch, CommunityPeriod period)
+        where T : class
+    {
+        // The caller renders right after this first synchronous part (parameters set, or event handler yielding).
+        var ct = zone.Begin();
+        _ = RevealSkeletonLaterAsync(zone, ct);
+
+        T? result;
+        try
+        {
+            result = await fetch(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            // Whatever went wrong, this section shows its own error and the others carry on.
+            result = null;
+        }
+
+        if (ct.IsCancellationRequested || _disposed) return;
+
+        zone.Complete(result, period);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RevealSkeletonLaterAsync<T>(LoadZone<T> zone, CancellationToken ct) where T : class
+    {
+        try
+        {
+            await Task.Delay(SkeletonDelay, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (_disposed) return;
+
+        zone.MarkSlow(ct);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // ── Presence ────────────────────────────────────────────────────────────
+
+    /// <summary>Called by the browser when the tab is hidden or shown again.</summary>
+    [JSInvokable]
+    public void OnVisibilityChanged(bool hidden)
+    {
+        if (_disposed) return;
+
+        if (hidden) StopPresence();
+        else StartPresence(); // refreshes right away, then every minute
+    }
+
+    private void StartPresence()
+    {
+        StopPresence();
+        var cts = new CancellationTokenSource();
+        _presenceCts = cts;
+        _ = PresenceLoopAsync(cts.Token);
+    }
+
+    private void StopPresence()
+    {
+        _presenceCts?.Cancel();
+        _presenceCts = null;
+    }
+
+    private async Task PresenceLoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            await RefreshPresenceAsync(ct);
+
+            using var timer = new PeriodicTimer(PresenceInterval);
+            while (await timer.WaitForNextTickAsync(ct))
+                await RefreshPresenceAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // Tab hidden or page left.
+        }
+    }
+
+    private async Task RefreshPresenceAsync(CancellationToken ct)
+    {
+        var presence = await Gamification.GetCommunityPresenceAsync(ct);
+        if (ct.IsCancellationRequested) return;
+
+        // A failure hides the line: the presence is nice to have, not worth an error message.
+        _presence = presence;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // ── Subtitle ────────────────────────────────────────────────────────────
+    // The windows are UTC calendar weeks and months, like the server's. The week and the month are derived
+    // from the clock so that the subtitle follows the selector at once, whatever the sections are doing.
+
+    private static DateOnly CurrentWeekStart()
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        return today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+    }
+
+    private string MonthSubtitle()
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        return F.Format("Community.Sub.Month", CommunityFormatter.Capitalize(F.MonthName(today)), F.Number(today.Day));
+    }
+
+    private string GlobalSubtitle() =>
+        _progress.Period == CommunityPeriod.Global && _progress.Data?.WindowStart is { } first
+            ? F.Format("Community.Sub.Global", F.DayMonth(first))
+            : F["Community.Sub.GlobalNoGain"];
+}

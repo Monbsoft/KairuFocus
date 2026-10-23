@@ -1,0 +1,13 @@
+@* Compact error of a section that failed to load, with its own retry. *@
+@inject CommunityFormatter F
+
+<div class="kf-alert" role="alert">
+    <span>@Message</span>
+    <button type="button" class="kf-linkbtn" @onclick="OnRetry">@F["Community.Retry"]</button>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Message { get; set; } = "";
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+}

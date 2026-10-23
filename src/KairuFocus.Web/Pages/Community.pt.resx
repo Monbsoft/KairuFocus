@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+	<xsd:element name="root" msdata:IsDataSet="true">
+	  <xsd:complexType>
+		<xsd:choice maxOccurs="unbounded">
+		  <xsd:element name="metadata">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" use="required" type="xsd:string" />
+			  <xsd:attribute name="type" type="xsd:string" />
+			  <xsd:attribute name="mimetype" type="xsd:string" />
+			  <xsd:attribute ref="xml:space" />
+			</xsd:complexType>
+		  </xsd:element>
+		  <xsd:element name="data">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+				<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+			  <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+			  <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+			  <xsd:attribute ref="xml:space" />
+			</xsd:complexType>
+		  </xsd:element>
+		  <xsd:element name="resheader">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" type="xsd:string" use="required" />
+			</xsd:complexType>
+		  </xsd:element>
+		</xsd:choice>
+	  </xsd:complexType>
+	</xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+	<value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+	<value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+	<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+	<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Community.PageTitle" xml:space="preserve">
+	<value>Comunidade — KairuFocus</value>
+  </data>
+  <data name="Community.Title" xml:space="preserve">
+	<value>Comunidade</value>
+  </data>
+  <data name="Community.Loading" xml:space="preserve">
+	<value>Carregando a comunidade…</value>
+  </data>
+  <data name="Community.Retry" xml:space="preserve">
+	<value>Tentar novamente</value>
+  </data>
+  <data name="Community.Period.Aria" xml:space="preserve">
+	<value>Escolher o período</value>
+  </data>
+  <data name="Community.Period.Week" xml:space="preserve">
+	<value>Semana</value>
+  </data>
+  <data name="Community.Period.Month" xml:space="preserve">
+	<value>Mês</value>
+  </data>
+  <data name="Community.Period.Global" xml:space="preserve">
+	<value>Geral</value>
+  </data>
+  <data name="Community.Sub.Week" xml:space="preserve">
+	<value>Semana de {0}</value>
+  </data>
+  <data name="Community.Sub.Month" xml:space="preserve">
+	<value>{0}, de 1 a {1}</value>
+  </data>
+  <data name="Community.Sub.Global" xml:space="preserve">
+	<value>Desde o seu primeiro XP, em {0}</value>
+  </data>
+  <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
+	<value>Desde o seu primeiro XP</value>
+  </data>
+  <data name="Community.Announce.Week" xml:space="preserve">
+	<value>Ranking da semana exibido</value>
+  </data>
+  <data name="Community.Announce.Month" xml:space="preserve">
+	<value>Ranking do mês exibido</value>
+  </data>
+  <data name="Community.Announce.Global" xml:space="preserve">
+	<value>Ranking geral exibido</value>
+  </data>
+  <data name="Community.Presence.Now.One" xml:space="preserve">
+	<value>{0} membro em sprint agora</value>
+  </data>
+  <data name="Community.Presence.Now.Other" xml:space="preserve">
+	<value>{0} membros em sprint agora</value>
+  </data>
+  <data name="Community.Presence.Today.One" xml:space="preserve">
+	<value>Hoje, {0} membro já fez um sprint</value>
+  </data>
+  <data name="Community.Presence.Today.Other" xml:space="preserve">
+	<value>Hoje, {0} membros já fizeram um sprint</value>
+  </data>
+  <data name="Community.Place.Heading" xml:space="preserve">
+	<value>Minha posição na comunidade</value>
+  </data>
+  <data name="Community.Place.Period.Week" xml:space="preserve">
+	<value>esta semana</value>
+  </data>
+  <data name="Community.Place.Period.Month" xml:space="preserve">
+	<value>este mês</value>
+  </data>
+  <data name="Community.Place.Period.Global" xml:space="preserve">
+	<value>no geral</value>
+  </data>
+  <data name="Community.Place.Of.One" xml:space="preserve">
+	<value>de {0} membro classificado</value>
+  </data>
+  <data name="Community.Place.Of.Other" xml:space="preserve">
+	<value>de {0} membros classificados</value>
+  </data>
+  <data name="Community.Place.Tie" xml:space="preserve">
+	<value>empatado</value>
+  </data>
+  <data name="Community.Place.Sr.One" xml:space="preserve">
+	<value>Posição {0} de {1} membro classificado ({2}).</value>
+  </data>
+  <data name="Community.Place.Sr.Other" xml:space="preserve">
+	<value>Posição {0} de {1} membros classificados ({2}).</value>
+  </data>
+  <data name="Community.Place.TiedSr" xml:space="preserve">
+	<value>Empatado.</value>
+  </data>
+  <data name="Community.Place.Unranked.Week" xml:space="preserve">
+	<value>Ainda sem classificação esta semana</value>
+  </data>
+  <data name="Community.Place.Unranked.Month" xml:space="preserve">
+	<value>Ainda sem classificação neste mês</value>
+  </data>
+  <data name="Community.Place.Unranked.Global" xml:space="preserve">
+	<value>Ainda sem classificação no geral</value>
+  </data>
+  <data name="Community.Place.Join.Title" xml:space="preserve">
+	<value>Você ainda não tem uma posição.</value>
+  </data>
+  <data name="Community.Place.Join.Body" xml:space="preserve">
+	<value>Entre no ranking pelas suas configurações: você aparecerá com um pseudônimo gerado.</value>
+  </data>
+  <data name="Community.Place.Join.Link" xml:space="preserve">
+	<value>Entrar pelas configurações</value>
+  </data>
+  <data name="Community.Ordinal.One" xml:space="preserve">
+	<value>{0}º</value>
+  </data>
+  <data name="Community.Ordinal.Two" xml:space="preserve">
+	<value>{0}º</value>
+  </data>
+  <data name="Community.Ordinal.Few" xml:space="preserve">
+	<value>{0}º</value>
+  </data>
+  <data name="Community.Ordinal.Other" xml:space="preserve">
+	<value>{0}º</value>
+  </data>
+  <data name="Community.Xp.Heading.Week" xml:space="preserve">
+	<value>Meu XP esta semana</value>
+  </data>
+  <data name="Community.Xp.Heading.Month" xml:space="preserve">
+	<value>Meu XP neste mês</value>
+  </data>
+  <data name="Community.Xp.Heading.Global" xml:space="preserve">
+	<value>Meu XP desde o início</value>
+  </data>
+  <data name="Community.Xp.Activity.One" xml:space="preserve">
+	<value>{0} sprint · {1} de foco</value>
+  </data>
+  <data name="Community.Xp.Activity.Other" xml:space="preserve">
+	<value>{0} sprints · {1} de foco</value>
+  </data>
+  <data name="Community.Xp.Compare.Week" xml:space="preserve">
+	<value>em comparação com o mesmo momento da semana passada ({1} XP)</value>
+  </data>
+  <data name="Community.Xp.Compare.Month" xml:space="preserve">
+	<value>em comparação com {0} no mesmo horário ({1} XP)</value>
+  </data>
+  <data name="Community.Xp.Equal.Week" xml:space="preserve">
+	<value>Igual ao mesmo momento da semana passada ({1} XP)</value>
+  </data>
+  <data name="Community.Xp.Equal.Month" xml:space="preserve">
+	<value>Igual a {0} no mesmo horário ({1} XP)</value>
+  </data>
+  <data name="Community.Xp.Average" xml:space="preserve">
+	<value>Média semanal: {0} XP</value>
+  </data>
+  <data name="Community.Xp.Starting.Week" xml:space="preserve">
+	<value>A semana está começando.</value>
+  </data>
+  <data name="Community.Xp.Starting.Month" xml:space="preserve">
+	<value>O mês está começando.</value>
+  </data>
+  <data name="Community.Xp.Empty" xml:space="preserve">
+	<value>Conclua um sprint de pelo menos 5 minutos para ganhar seus primeiros XP.</value>
+  </data>
+  <data name="Community.Xp.Error" xml:space="preserve">
+	<value>Não foi possível carregar o seu progresso.</value>
+  </data>
+  <data name="Community.Trend.Up" xml:space="preserve">
+	<value>Aumento de {0} XP</value>
+  </data>
+  <data name="Community.Trend.Down" xml:space="preserve">
+	<value>Redução de {0} XP</value>
+  </data>
+  <data name="Community.Duration.Minutes" xml:space="preserve">
+	<value>{0} min</value>
+  </data>
+  <data name="Community.Duration.Hours" xml:space="preserve">
+	<value>{0} h</value>
+  </data>
+  <data name="Community.Duration.HoursMinutes" xml:space="preserve">
+	<value>{0} h {1}</value>
+  </data>
+  <data name="Community.Progress.Heading" xml:space="preserve">
+	<value>Meu progresso</value>
+  </data>
+  <data name="Community.Kpi.Record" xml:space="preserve">
+	<value>Recorde pessoal</value>
+  </data>
+  <data name="Community.Kpi.BestWeek" xml:space="preserve">
+	<value>Melhor semana</value>
+  </data>
+  <data name="Community.Kpi.BestMonth" xml:space="preserve">
+	<value>Melhor mês</value>
+  </data>
+  <data name="Community.Kpi.AllTime" xml:space="preserve">
+	<value>Desde o início</value>
+  </data>
+  <data name="Community.Kpi.WeekOf" xml:space="preserve">
+	<value>semana de {0}</value>
+  </data>
+  <data name="Community.Kpi.Since.One" xml:space="preserve">
+	<value>{0} sprint desde {1}</value>
+  </data>
+  <data name="Community.Kpi.Since.Other" xml:space="preserve">
+	<value>{0} sprints desde {1}</value>
+  </data>
+  <data name="Community.Chart.Title.Week" xml:space="preserve">
+	<value>Suas últimas 8 semanas</value>
+  </data>
+  <data name="Community.Chart.Title.Month" xml:space="preserve">
+	<value>Seus meses desde o primeiro XP</value>
+  </data>
+  <data name="Community.Chart.Title.Global" xml:space="preserve">
+	<value>Seu XP acumulado</value>
+  </data>
+  <data name="Community.Chart.Unit.Week" xml:space="preserve">
+	<value>XP por semana</value>
+  </data>
+  <data name="Community.Chart.Unit.Month" xml:space="preserve">
+	<value>XP por mês</value>
+  </data>
+  <data name="Community.Chart.Unit.Global" xml:space="preserve">
+	<value>no fim de cada mês</value>
+  </data>
+  <data name="Community.Chart.Current" xml:space="preserve">
+	<value>atual</value>
+  </data>
+  <data name="Community.Chart.Today" xml:space="preserve">
+	<value>hoje</value>
+  </data>
+  <data name="Community.Chart.MonthEnd" xml:space="preserve">
+	<value>fim de {0}</value>
+  </data>
+  <data name="Community.Chart.Record" xml:space="preserve">
+	<value>recorde · {0}</value>
+  </data>
+  <data name="Community.Chart.RecordMark" xml:space="preserve">
+	<value>recorde</value>
+  </data>
+  <data name="Community.Together.Heading" xml:space="preserve">
+	<value>Juntos</value>
+  </data>
+  <data name="Community.Together.Title.Week" xml:space="preserve">
+	<value>Esta semana, juntos</value>
+  </data>
+  <data name="Community.Together.Title.Month" xml:space="preserve">
+	<value>Este mês, juntos</value>
+  </data>
+  <data name="Community.Together.Title.Global" xml:space="preserve">
+	<value>Desde o início, juntos</value>
+  </data>
+  <data name="Community.Together.Sprints.One" xml:space="preserve">
+	<value>{0} sprint</value>
+  </data>
+  <data name="Community.Together.Sprints.Other" xml:space="preserve">
+	<value>{0} sprints</value>
+  </data>
+  <data name="Community.Together.Focus" xml:space="preserve">
+	<value>{0} de foco</value>
+  </data>
+  <data name="Community.Together.LessThanHour" xml:space="preserve">
+	<value>menos de 1 h</value>
+  </data>
+  <data name="Community.Together.Members.One" xml:space="preserve">
+	<value>{0} membro ativo</value>
+  </data>
+  <data name="Community.Together.Members.Other" xml:space="preserve">
+	<value>{0} membros ativos</value>
+  </data>
+  <data name="Community.Together.Mine.One" xml:space="preserve">
+	<value>dos quais {0} sprint seu</value>
+  </data>
+  <data name="Community.Together.Mine.Other" xml:space="preserve">
+	<value>dos quais {0} sprints seus</value>
+  </data>
+  <data name="Community.Together.Error" xml:space="preserve">
+	<value>Não foi possível carregar o balanço da comunidade.</value>
+  </data>
+  <data name="Community.Board.Title.Week" xml:space="preserve">
+	<value>Ranking da semana</value>
+  </data>
+  <data name="Community.Board.Title.Month" xml:space="preserve">
+	<value>Ranking do mês</value>
+  </data>
+  <data name="Community.Board.Title.Global" xml:space="preserve">
+	<value>Ranking geral</value>
+  </data>
+  <data name="Community.Board.Hint" xml:space="preserve">
+	<value>Os membros aparecem apenas com um pseudônimo</value>
+  </data>
+  <data name="Community.Board.You" xml:space="preserve">
+	<value>(você)</value>
+  </data>
+  <data name="Community.Board.Empty.Week" xml:space="preserve">
+	<value>Ninguém está classificado ainda nesta semana.</value>
+  </data>
+  <data name="Community.Board.Empty.Month" xml:space="preserve">
+	<value>Ninguém está classificado ainda neste mês.</value>
+  </data>
+  <data name="Community.Board.Empty.Global" xml:space="preserve">
+	<value>Ninguém está classificado ainda.</value>
+  </data>
+  <data name="Community.Board.Error" xml:space="preserve">
+	<value>Não foi possível carregar o ranking.</value>
+  </data>
+  <data name="Community.Format.DayMonth" xml:space="preserve">
+	<value>d 'de' MMMM</value>
+  </data>
+  <data name="Community.Format.DayMonthYear" xml:space="preserve">
+	<value>d 'de' MMMM 'de' yyyy</value>
+  </data>
+  <data name="Community.Format.WeekdayDayMonth" xml:space="preserve">
+	<value>dddd, d 'de' MMMM</value>
+  </data>
+  <data name="Community.Format.ShortDayMonth" xml:space="preserve">
+	<value>d/M</value>
+  </data>
+  <data name="Community.Format.Month" xml:space="preserve">
+	<value>MMMM</value>
+  </data>
+  <data name="Community.Format.MonthYear" xml:space="preserve">
+	<value>MMMM 'de' yyyy</value>
+  </data>
+  <data name="Settings.Leaderboard.Title" xml:space="preserve">
+	<value>Ranking da comunidade</value>
+  </data>
+  <data name="Settings.Leaderboard.Loading" xml:space="preserve">
+	<value>Carregando o status…</value>
+  </data>
+  <data name="Settings.Leaderboard.LoadError" xml:space="preserve">
+	<value>Não foi possível carregar o seu status no ranking. Atualize a página.</value>
+  </data>
+  <data name="Settings.Leaderboard.Out" xml:space="preserve">
+	<value>Você não aparece no ranking. Ainda assim, pode consultá-lo em Comunidade.</value>
+  </data>
+  <data name="Settings.Leaderboard.Out.Hint" xml:space="preserve">
+	<value>Você aparecerá com um pseudônimo gerado: apenas seu pseudônimo, sua posição e seu XP ficarão visíveis.</value>
+  </data>
+  <data name="Settings.Leaderboard.In" xml:space="preserve">
+	<value>Você aparece no ranking como “{0}”.</value>
+  </data>
+  <data name="Settings.Leaderboard.Reroll" xml:space="preserve">
+	<value>Sortear outro pseudônimo</value>
+  </data>
+  <data name="Settings.Leaderboard.Rerolling" xml:space="preserve">
+	<value>Sorteando…</value>
+  </data>
+  <data name="Settings.Leaderboard.Join" xml:space="preserve">
+	<value>Entrar no ranking</value>
+  </data>
+  <data name="Settings.Leaderboard.Joining" xml:space="preserve">
+	<value>Entrando…</value>
+  </data>
+  <data name="Settings.Leaderboard.Saved" xml:space="preserve">
+	<value>Novo pseudônimo: “{0}”.</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave" xml:space="preserve">
+	<value>Sair do ranking</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Title" xml:space="preserve">
+	<value>Sair do ranking?</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Body" xml:space="preserve">
+	<value>Você desaparece do ranking imediatamente. Seu XP é mantido. Se voltar, receberá um novo pseudônimo.</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Confirm" xml:space="preserve">
+	<value>Sair</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Cancel" xml:space="preserve">
+	<value>Cancelar</value>
+  </data>
+  <data name="Settings.Leaderboard.Left" xml:space="preserve">
+	<value>Você saiu do ranking. Seu XP é mantido.</value>
+  </data>
+  <data name="Settings.Leaderboard.Error.Pool" xml:space="preserve">
+	<value>Não foi possível gerar um pseudônimo agora. Tente novamente em instantes.</value>
+  </data>
+  <data name="Settings.Leaderboard.Error.Generic" xml:space="preserve">
+	<value>Algo deu errado. Tente novamente em instantes.</value>
+  </data>
+</root>

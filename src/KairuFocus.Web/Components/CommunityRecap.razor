@@ -1,0 +1,44 @@
+@* "Ensemble": what the whole community did over the period, and my part in it. Anonymous totals only:
+   no pseudonym, no row. No target, no gauge. *@
+@inject CommunityFormatter F
+
+<div class="kf-zone" aria-busy="@(Zone.Busy ? "true" : "false")">
+    <h2 class="kf-section-title">@F["Community.Together.Heading"]</h2>
+
+    @if (Zone.ShowSkeleton)
+    {
+        <div class="kf-skel kf-skel--recap" aria-hidden="true"></div>
+    }
+    else if (Zone.ShowError)
+    {
+        <ZoneAlert Message="@F["Community.Together.Error"]" OnRetry="OnRetry" />
+    }
+    else if (Zone.Data is { } recap)
+    {
+        var period = Zone.Period ?? Period;
+
+        <div class="kf-card kf-recap" role="group" aria-labelledby="community-recap-title">
+            <span class="kf-recap__title" id="community-recap-title">@F["Community.Together.Title." + period]</span>
+            <p class="kf-recap__stats">
+                <span>@F.BoldPlural("Community.Together.Sprints", recap.Sprints)</span>
+                <span class="kf-recap__sep" aria-hidden="true">·</span>
+                <span>@F.Bold(F["Community.Together.Focus"], F.RecapFocus(recap.FocusMinutes))</span>
+                <span class="kf-recap__sep" aria-hidden="true">·</span>
+                <span>@F.BoldPlural("Community.Together.Members", recap.ActiveMembers)</span>
+            </p>
+            @if (recap.MySprints > 0)
+            {
+                <p class="kf-recap__mine">@F.Plural("Community.Together.Mine", recap.MySprints, F.Number(recap.MySprints))</p>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public LoadZone<CommunityRecapDto> Zone { get; set; } = default!;
+
+    /// <summary>The selected period: used while the section has no data of its own yet.</summary>
+    [Parameter, EditorRequired] public CommunityPeriod Period { get; set; }
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+}

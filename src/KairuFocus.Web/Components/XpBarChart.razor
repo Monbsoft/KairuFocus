@@ -1,0 +1,82 @@
+@* XP history as bars (the .kf-bars pattern of the Statistics page).
+   Week: the last 8 weeks. Month: one bar per month since the first XP. Global: cumulative XP at each month end.
+   The bar of the period in progress is blue, the others gray (a landmark, not a verdict); the record carries a small tag.
+   The bars are decorative: the whole card is an image whose label reads out every value. *@
+@inject CommunityFormatter F
+
+@if (Progress.Bars.Count > 0)
+{
+    var bars = BuildBars();
+    <div class="kf-card kf-barcard" role="img" aria-label="@AriaSummary(bars)">
+        <div class="kf-barcard__head">
+            <span class="kf-barcard__title">@F["Community.Chart.Title." + Period]</span>
+            <span class="kf-barcard__unit">@F["Community.Chart.Unit." + Period]</span>
+        </div>
+        <div class="kf-bars @(bars.Count > 6 ? "kf-bars--dense" : "")" aria-hidden="true">
+            @foreach (var bar in bars)
+            {
+                <div class="kf-bars__col @(bar.IsCurrent ? "kf-bars__col--current" : "")" title="@bar.Title">
+                    <div class="kf-bars__top">
+                        @if (bar.IsRecord)
+                        {
+                            <span class="kf-bars__record">@F.Format("Community.Chart.Record", F.Number(bar.Xp))</span>
+                        }
+                        else if (bar.IsCurrent)
+                        {
+                            <span class="kf-bars__val">@F.Number(bar.Xp)</span>
+                        }
+                    </div>
+                    <div class="kf-bars__track">
+                        <div class="kf-bars__fill" style="height:@(bar.HeightPct)%"></div>
+                    </div>
+                    <span class="kf-bars__lbl">@bar.Label</span>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private sealed record BarView(string Label, string Title, int Xp, int HeightPct, bool IsCurrent, bool IsRecord);
+
+    [Parameter, EditorRequired] public CommunityProgressDto Progress { get; set; } = default!;
+
+    /// <summary>The period the progress was loaded for (it drives the labels).</summary>
+    [Parameter, EditorRequired] public CommunityPeriod Period { get; set; }
+
+    private List<BarView> BuildBars()
+    {
+        var max = Progress.Bars.Max(b => b.Xp);
+
+        return Progress.Bars
+            .Select(bar =>
+            {
+                var label = BarLabel(bar);
+                // Same scale for every bar, with some headroom for the tag above the tallest one.
+                var height = max <= 0 ? 3 : Math.Max(3, (int)Math.Round(bar.Xp / (max * 1.1) * 100));
+                return new BarView(label, $"{label} — {F.Xp(bar.Xp)}", bar.Xp, height, bar.IsCurrent, bar.IsRecord);
+            })
+            .ToList();
+    }
+
+    private string BarLabel(CommunityBarDto bar)
+    {
+        if (bar.IsCurrent)
+            return F[Period == CommunityPeriod.Global ? "Community.Chart.Today" : "Community.Chart.Current"];
+
+        return Period switch
+        {
+            CommunityPeriod.Week => F.ShortDayMonth(bar.PeriodStart),
+            CommunityPeriod.Month => F.MonthShort(bar.PeriodStart),
+            _ => F.Format("Community.Chart.MonthEnd", F.MonthShort(bar.PeriodStart))
+        };
+    }
+
+    private string AriaSummary(List<BarView> bars)
+    {
+        var items = bars.Select(bar =>
+            $"{bar.Label} {F.Xp(bar.Xp)}" + (bar.IsRecord ? $" ({F["Community.Chart.RecordMark"]})" : ""));
+
+        return $"{F["Community.Chart.Title." + Period]} ({F["Community.Chart.Unit." + Period]}). {string.Join(", ", items)}";
+    }
+}

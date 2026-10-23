@@ -597,3 +597,260 @@ code {
    sont définies globalement plus haut dans ce fichier (pas scopées à .kf-dash),
    donc le skeleton de chargement fonctionne ici sans duplication. */
 .kf-stats-page .kf-skelrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Communauté — page /communaute et section « Classement » des Paramètres (itération #42).
+   Tokens SCOPÉS à .kf-community-page (jumeaux de .kf-stats-page, plus les jetons du
+   design system absents d'app.css). Light = défaut ; dark sur [data-bs-theme="dark"].
+   Les composants .kf-card, .kf-kpi, .kf-bars, .kf-seg, .kf-skel sont ceux de Statistiques.
+   ════════════════════════════════════════════════════════════════════════ */
+.kf-community-page {
+    /* surfaces, bordures, textes */
+    --surface-card:    #ffffff;
+    --surface-sunken:  #f1f3f5;
+    --surface-hover:   #f1f3f5;
+    --border-subtle:   #e9ecef;
+    --border-default:  #dee2e6;
+    --text-primary:    #212529;
+    --text-secondary:  #495057;
+    --text-muted:      #6c757d;
+    /* primaire, statuts */
+    --primary:         #0d6efd;
+    --primary-subtle:  #e7f1ff;
+    --primary-border:  #9ec5fe;
+    --success:         #198754;
+    --danger-subtle:   #fbe9eb;
+    --danger-text:     #842029;
+    --warning-subtle:  #fff3cd;
+    --warning-text:    #664d03;
+    --focus-ring:      #2b7dff;
+    /* palette de marque */
+    --kf-blue-100:     #cfe2ff;
+    --kf-blue-400:     #4d94ff;
+    --kf-blue-600:     #0d6efd;
+    --kf-blue-800:     #0a58ca;
+    --kf-slate-200:    #e2e8f0;
+    --kf-slate-300:    #cbd5e1;
+    --kf-ink-850:      #1a1a2e;
+    --kf-ink-800:      #16213e;
+    --kf-ink-700:      #0f3460;
+    --kf-sidebar-top:  #052767;
+    --brand-hero:      linear-gradient(135deg, var(--kf-ink-850) 0%, var(--kf-ink-800) 50%, var(--kf-ink-700) 100%);
+    /* typographie */
+    --font-mono: "JetBrains Mono", "Cascadia Code", "Cascadia Mono", ui-monospace,
+                 "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --text-xs:   0.75rem;
+    --text-sm:   0.875rem;
+    --text-md:   1.125rem;
+    --text-lg:   1.375rem;
+    --text-2xl:  2.25rem;
+    --text-3xl:  3rem;
+    --tracking-tight: -0.02em;
+    --tracking-wide:  0.08em;
+    /* espacement (échelle de 4 px) */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --target-min: 44px;
+    --container-lg: 960px;
+    /* rayons, élévation, mouvement */
+    --radius-xs:   4px;
+    --radius-sm:   6px;
+    --radius-md:   8px;
+    --radius-lg:   12px;
+    --radius-pill: 999px;
+    --shadow-sm: 0 2px 12px rgba(16, 24, 40, 0.06);
+    --shadow-md: 0 4px 16px rgba(16, 24, 40, 0.10);
+    --duration-instant: 100ms;
+    --duration-base:    200ms;
+    --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+    /* jetons propres à la page (handoff §3) */
+    --hero-text:       #ffffff;
+    --hero-text-muted: var(--kf-slate-300);
+    --hero-eyebrow:    var(--kf-blue-100);
+    --hero-divider:    rgba(255, 255, 255, 0.18);
+    --trend-up-bg:     #e8f5ee;
+    --trend-up-text:   #0f5132;
+    --trend-down-bg:   #fff0e3;
+    --trend-down-text: #8a3a00;
+    --bar-past:        var(--text-muted);
+    /* Même bleu dans les deux thèmes : en sombre, --primary (#2b7dff) sous du texte blanc ne fait que 3,8:1. */
+    --seg-on-bg:       var(--kf-blue-600);
+    --current-text:    var(--kf-blue-600);
+    --me-rank:         var(--kf-blue-800);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: var(--container-lg);
+    padding: var(--space-6);
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .kf-community-page {
+    --surface-card:    #1e293b;
+    --surface-sunken:  #13131f;
+    --surface-hover:   #334155;
+    --border-subtle:   #334155;
+    --border-default:  #334155;
+    --text-primary:    #e2e8f0;
+    --text-secondary:  #cbd5e1;
+    --text-muted:      #94a3b8;
+    --primary:         #2b7dff;
+    --primary-subtle:  #0d1b3e;
+    --primary-border:  #1e3a6e;
+    --success:         #34c77b;
+    --danger-subtle:   #3a1418;
+    --danger-text:     #f6a6ae;
+    --warning-subtle:  #3a2e08;
+    --warning-text:    #ffd86b;
+    --focus-ring:      #4d94ff;
+    --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.50);
+    --current-text:    var(--kf-blue-400);
+    --me-rank:         var(--kf-blue-400);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kf-community-page { --duration-instant: 0ms; --duration-base: 0ms; }
+}
+
+/* :where() pour ne pas peser dans la spécificité : les marges des classes ci-dessous l'emportent. */
+.kf-community-page :where(h1, h2, p) { margin: 0; }
+.kf-community-page :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.kf-community-page .kf-card { box-shadow: var(--shadow-sm); }
+
+/* En-tête : titre, sous-titre (période + présence), sélecteur */
+.kf-community-page__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.kf-community-page__title { font-size: var(--text-2xl); font-weight: 700; line-height: 1.15; letter-spacing: var(--tracking-tight); }
+.kf-community-page__sub { margin-top: var(--space-1); color: var(--text-muted); }
+
+/* Sélecteur de période : le .kf-seg de Statistiques, avec un fond actif assez contrasté en sombre */
+.kf-community-page .kf-seg__btn { white-space: normal; }
+.kf-community-page .kf-seg__btn:hover:not(.kf-seg__btn--on) { background: var(--surface-hover); }
+.kf-community-page .kf-seg__btn--on { background: var(--seg-on-bg); color: #fff; }
+.kf-community-page button:active, .kf-community-page .kf-btn-light:active { transform: translateY(1px); }
+
+/* Présence en direct : point fixe (pas de pulsation, ça distrairait) */
+.kf-presence { display: inline-flex; align-items: center; gap: var(--space-2); }
+.kf-presence__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex: 0 0 auto; }
+.kf-presence b { color: var(--text-secondary); }
+
+/* Bloc de tête : un seul bloc, un seul style, deux moitiés */
+.kf-hero { display: flex; flex-wrap: wrap; gap: var(--space-6) var(--space-12); padding: var(--space-6) var(--space-8); border-radius: var(--radius-lg); background: var(--brand-hero); color: var(--hero-text); box-shadow: var(--shadow-md); }
+.kf-hero__half { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.kf-hero h2 { font-size: var(--text-xs); font-weight: 700; letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--hero-eyebrow); }
+.kf-hero__rankline { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3); }
+/* Seule exception à l'échelle typographique : c'est l'élément n°1 de la page. */
+.kf-hero__rank { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: clamp(var(--text-3xl), 8vw, 5rem); line-height: 1; letter-spacing: -0.03em; }
+.kf-hero__tie { font-size: var(--text-md); font-weight: 600; color: var(--hero-text-muted); }
+.kf-hero__period { font-size: var(--text-md); font-weight: 600; color: var(--kf-slate-200); }
+.kf-hero__meta { font-size: var(--text-sm); color: var(--hero-text-muted); }
+.kf-hero__unranked { font-size: var(--text-lg); font-weight: 700; }
+.kf-hero__text { font-size: var(--text-sm); line-height: 1.5; color: var(--hero-text-muted); max-width: 46ch; }
+.kf-hero__xp { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); }
+.kf-hero__xpval { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: clamp(2rem, 12vw, var(--text-3xl)); font-weight: 700; line-height: 1.15; letter-spacing: var(--tracking-tight); }
+.kf-hero__xpunit { font-size: var(--text-lg); font-weight: 600; color: var(--hero-text-muted); }
+.kf-hero__activity { font-size: var(--text-sm); color: var(--hero-text-muted); }
+.kf-hero__compare { margin-top: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--hero-divider); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); font-size: var(--text-sm); color: var(--hero-text-muted); }
+.kf-hero__skel { display: flex; flex-direction: column; gap: var(--space-3); }
+.kf-community-page .kf-hero .kf-skel { background: rgba(255, 255, 255, 0.12); }
+
+/* Pastille d'écart : ▲ vert, ▼ orange (une information, pas une alerte) ; mêmes valeurs dans les deux thèmes (posée sur le bloc de tête) */
+.kf-trend { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); font-size: var(--text-sm); font-weight: 700; }
+.kf-trend--up { background: var(--trend-up-bg); color: var(--trend-up-text); }
+.kf-trend--down { background: var(--trend-down-bg); color: var(--trend-down-text); }
+
+/* Boutons et liens */
+.kf-linkbtn { min-height: var(--target-min); padding: 0 var(--space-2); border: 0; background: transparent; color: inherit; font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 0.15em; cursor: pointer; }
+.kf-btn-light { align-self: flex-start; display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-5); border-radius: var(--radius-sm); background: #fff; color: var(--kf-sidebar-top); font-size: var(--text-sm); font-weight: 700; text-decoration: none; }
+.kf-btn-light:hover { color: var(--kf-sidebar-top); background: var(--kf-slate-200); }
+
+/* Sections et états */
+.kf-zone { display: flex; flex-direction: column; gap: var(--space-4); }
+.kf-section-title { margin-top: var(--space-4); font-size: var(--text-lg); font-weight: 700; line-height: 1.3; }
+.kf-section-hint { margin-top: calc(-1 * var(--space-3)); font-size: var(--text-sm); color: var(--text-muted); }
+.kf-alert { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--danger-subtle); color: var(--danger-text); font-size: var(--text-sm); }
+.kf-alert .kf-linkbtn { color: inherit; }
+.kf-hero .kf-alert { background: rgba(255, 255, 255, 0.1); color: var(--hero-text); }
+.kf-empty { padding: var(--space-6); text-align: center; color: var(--text-muted); }
+.kf-skel--rank { width: 9rem; height: 4.5rem; }
+.kf-skel--xp { width: 12rem; height: 3.25rem; }
+.kf-skel--line { width: 14rem; max-width: 100%; height: 1.25rem; }
+.kf-skel--kpi { height: 96px; }
+.kf-skel--chart { height: 200px; }
+.kf-skel--recap { height: 88px; }
+.kf-skel--row { height: 44px; border-radius: var(--radius-md); }
+.kf-skeleton-rows { display: flex; flex-direction: column; gap: var(--space-2); }
+
+/* KPI et graphe (surcharges locales de Statistiques) */
+.kf-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); }
+.kf-community-page .kf-kpi__value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.kf-community-page .kf-barcard { margin-bottom: 0; padding: var(--space-4) var(--space-5); }
+.kf-barcard__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-4); }
+.kf-barcard__head .kf-barcard__title { margin-bottom: 0; }
+.kf-barcard__unit { font-size: var(--text-xs); color: var(--text-muted); }
+.kf-community-page .kf-bars { align-items: stretch; height: 190px; gap: var(--space-2); }
+.kf-community-page .kf-bars__col { min-width: 0; height: auto; gap: var(--space-1); }
+.kf-bars__top { height: 20px; display: flex; align-items: flex-end; }
+.kf-community-page .kf-bars__fill { background: var(--bar-past); }
+.kf-community-page .kf-bars__col--current .kf-bars__fill { background: var(--primary); }
+.kf-bars__val { font-size: var(--text-xs); font-weight: 700; color: var(--current-text); white-space: nowrap; }
+.kf-bars__record { font-size: var(--text-xs); font-weight: 700; white-space: nowrap; padding: 0 6px; border-radius: var(--radius-xs); background: var(--warning-subtle); color: var(--warning-text); }
+.kf-community-page .kf-bars__lbl { font-size: var(--text-xs); white-space: nowrap; }
+.kf-community-page .kf-bars__col--current .kf-bars__lbl { color: var(--current-text); font-weight: 700; }
+
+/* Bilan « Ensemble » */
+.kf-recap { padding: var(--space-4) var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); }
+.kf-recap__title { font-size: var(--text-sm); font-weight: 600; }
+.kf-recap__stats { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); font-size: var(--text-sm); color: var(--text-secondary); }
+.kf-recap__stats b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--text-md); color: var(--text-primary); }
+.kf-recap__mine { font-size: var(--text-sm); color: var(--text-muted); }
+
+/* Classement : lignes non interactives, donc aucun effet de survol */
+.kf-board { padding: var(--space-2); }
+.kf-board ol { list-style: none; margin: 0; padding: 0; }
+.kf-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--target-min); padding: 0 var(--space-3); border-radius: var(--radius-md); }
+.kf-row__rank { flex: 0 0 3rem; min-width: 3rem; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.kf-row__pseudo { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--space-1); }
+.kf-row__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kf-row__xp { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap; }
+.kf-row--me { background: var(--primary-subtle); }
+.kf-row--me .kf-row__rank { color: var(--me-rank); font-weight: 700; }
+.kf-row--me .kf-row__pseudo, .kf-row--me .kf-row__xp { color: var(--text-primary); font-weight: 700; }
+.kf-row__you { flex: none; font-weight: 400; color: var(--text-secondary); white-space: nowrap; }
+.kf-row--gap { min-height: 32px; color: var(--text-muted); letter-spacing: 0.2em; }
+
+/* Responsive : le rail passe en barre à 641 px (MainLayout) */
+@media (max-width: 640.98px) {
+    .kf-community-page { padding: var(--space-4); }
+    .kf-community-page .kf-seg { width: 100%; }
+    .kf-community-page .kf-seg__btn { flex: 1; }
+    .kf-hero { padding: var(--space-5); }
+    .kf-presence-sep { display: none; }
+    .kf-presence { display: flex; margin-top: var(--space-1); }
+    .kf-recap__sep { display: none; }
+    .kf-recap__stats { flex-direction: column; align-items: flex-start; }
+    /* Téléphone : on garde la place au pseudo (colonne du rang et espaces resserrés). */
+    .kf-row { gap: var(--space-2); padding: 0 var(--space-2); }
+    .kf-row__rank { flex-basis: 2rem; min-width: 2rem; }
+    /* Au-delà de 6 barres, un libellé sur deux, en comptant depuis la dernière (« en cours » reste lisible). */
+    .kf-bars--dense .kf-bars__col:nth-last-child(even) .kf-bars__lbl { visibility: hidden; }
+}
+
+/* ── Paramètres : section « Classement de la communauté » ───────────────── */
+.kf-lb-section { scroll-margin-top: 5rem; }
+.kf-lb-section .btn, .kf-lb-modal .btn { min-height: 44px; }
+.kf-lb-danger { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--bs-border-color); }
+/* Bootstrap, thème sombre : le gris et le rouge des boutons « outline » restent sous 4,5:1 sur le fond sombre. */
+[data-bs-theme="dark"] .kf-lb-section .btn-outline-secondary,
+[data-bs-theme="dark"] .kf-lb-modal .btn-outline-secondary { --bs-btn-color: #adb5bd; --bs-btn-border-color: #adb5bd; --bs-btn-hover-color: #212529; --bs-btn-hover-bg: #adb5bd; --bs-btn-hover-border-color: #adb5bd; --bs-btn-active-color: #212529; --bs-btn-active-bg: #adb5bd; --bs-btn-active-border-color: #adb5bd; --bs-btn-disabled-color: #adb5bd; --bs-btn-disabled-border-color: #adb5bd; }
+[data-bs-theme="dark"] .kf-lb-section .btn-outline-danger { --bs-btn-color: #ea868f; --bs-btn-border-color: #ea868f; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #dc3545; --bs-btn-hover-border-color: #dc3545; --bs-btn-active-color: #fff; --bs-btn-active-bg: #dc3545; --bs-btn-active-border-color: #dc3545; --bs-btn-disabled-color: #ea868f; --bs-btn-disabled-border-color: #ea868f; }
+.kf-lb-modal { animation: kf-fade-in 150ms cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes kf-fade-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .kf-lb-modal { animation: none; } }

@@ -1,0 +1,142 @@
+@* The head block of the page: a single block, a single style, two halves.
+   "Ma place" comes from the leaderboard, "Mon XP" from the progression: two independent sections,
+   each with its own skeleton, error and retry. The block stays the only visually isolated element of the page. *@
+@inject CommunityFormatter F
+
+<div class="kf-hero" aria-busy="@(Place.Busy || Xp.Busy ? "true" : "false")">
+    <div class="kf-hero__half">
+        <h2>@F["Community.Place.Heading"]</h2>
+        @if (Place.ShowSkeleton)
+        {
+            <div class="kf-hero__skel" aria-hidden="true">
+                <div class="kf-skel kf-skel--rank"></div>
+                <div class="kf-skel kf-skel--line"></div>
+            </div>
+        }
+        else if (Place.ShowError)
+        {
+            <ZoneAlert Message="@F["Community.Board.Error"]" OnRetry="OnRetryPlace" />
+        }
+        else if (Place.Data is { } board)
+        {
+            var period = PeriodOf(Place);
+
+            if (!board.IsParticipant)
+            {
+                @* Not a member: a link to the settings, where all the management lives. A link, not an action. *@
+                <p class="kf-hero__unranked">@F["Community.Place.Join.Title"]</p>
+                <p class="kf-hero__text">@F["Community.Place.Join.Body"]</p>
+                <a href="settings#classement" class="kf-btn-light">@F["Community.Place.Join.Link"]</a>
+            }
+            else if (board.Me is not { } me)
+            {
+                <p class="kf-hero__unranked">@F["Community.Place.Unranked." + period]</p>
+            }
+            else
+            {
+                <div class="kf-hero__rankline">
+                    <span class="kf-hero__rank" aria-hidden="true">@F.Ordinal(me.Rank)</span>
+                    @if (me.IsTied)
+                    {
+                        <span class="kf-hero__tie" aria-hidden="true">@F["Community.Place.Tie"]</span>
+                    }
+                    <span class="kf-hero__period" aria-hidden="true">@F["Community.Place.Period." + period]</span>
+                </div>
+                <span class="visually-hidden">@RankForScreenReaders(me, board.RankedCount, period)</span>
+                <p class="kf-hero__meta" aria-hidden="true">@F.Plural("Community.Place.Of", board.RankedCount, F.Number(board.RankedCount))</p>
+            }
+        }
+    </div>
+
+    <div class="kf-hero__half">
+        <h2>@F["Community.Xp.Heading." + PeriodOf(Xp)]</h2>
+        @if (Xp.ShowSkeleton)
+        {
+            <div class="kf-hero__skel" aria-hidden="true">
+                <div class="kf-skel kf-skel--xp"></div>
+                <div class="kf-skel kf-skel--line"></div>
+            </div>
+        }
+        else if (Xp.ShowError)
+        {
+            <ZoneAlert Message="@F["Community.Xp.Error"]" OnRetry="OnRetryXp" />
+        }
+        else if (Xp.Data is { } progress)
+        {
+            var period = PeriodOf(Xp);
+
+            if (progress.AllTime.FirstGainAt is null)
+            {
+                @* Never earned any XP: say how to start rather than showing empty figures. *@
+                <div class="kf-hero__xp">
+                    <span class="kf-hero__xpval">0</span><span class="kf-hero__xpunit">XP</span>
+                </div>
+                <p class="kf-hero__text">@F["Community.Xp.Empty"]</p>
+            }
+            else
+            {
+                <div class="kf-hero__xp">
+                    <span class="kf-hero__xpval">@F.Number(progress.Xp)</span><span class="kf-hero__xpunit">XP</span>
+                </div>
+                <div class="kf-hero__activity">@F.Plural("Community.Xp.Activity", progress.Sprints, F.Number(progress.Sprints), F.Duration(progress.FocusMinutes))</div>
+
+                @if (progress.Comparison is { } comparison)
+                {
+                    <div class="kf-hero__compare">
+                        @if (progress.Xp == 0 && comparison.PreviousXp == 0)
+                        {
+                            @* Both at 0: the period has just begun, there is nothing to compare yet. *@
+                            <span>@F["Community.Xp.Starting." + period]</span>
+                        }
+                        else if (comparison.DeltaXp == 0)
+                        {
+                            <span>@F.Format("Community.Xp.Equal." + period, ComparedMoment(comparison, period), F.Number(comparison.PreviousXp))</span>
+                        }
+                        else
+                        {
+                            <TrendChip DeltaXp="comparison.DeltaXp" />
+                            <span>@F.Format("Community.Xp.Compare." + period, ComparedMoment(comparison, period), F.Number(comparison.PreviousXp))</span>
+                        }
+                    </div>
+                }
+                else if (progress.AverageWeeklyXp is { } average)
+                {
+                    @* Global: no previous period to compare with, so no arrow. *@
+                    <div class="kf-hero__compare">
+                        <span>@F.Format("Community.Xp.Average", F.Number(average))</span>
+                    </div>
+                }
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public LoadZone<CommunityLeaderboardDto> Place { get; set; } = default!;
+
+    [Parameter, EditorRequired] public LoadZone<CommunityProgressDto> Xp { get; set; } = default!;
+
+    /// <summary>The selected period: used while a section has no data of its own yet.</summary>
+    [Parameter, EditorRequired] public CommunityPeriod Period { get; set; }
+
+    [Parameter] public EventCallback OnRetryPlace { get; set; }
+
+    [Parameter] public EventCallback OnRetryXp { get; set; }
+
+    /// <summary>The period a section's data belongs to, so that labels never contradict the figures during a reload.</summary>
+    private CommunityPeriod PeriodOf<T>(LoadZone<T> zone) where T : class => zone.Period ?? Period;
+
+    /// <summary>The day (week) or the date (month) of the previous period that the gap is measured against.</summary>
+    private string ComparedMoment(CommunityComparisonDto comparison, CommunityPeriod period) =>
+        period == CommunityPeriod.Month
+            ? F.DayMonth(CommunityFormatter.LocalDate(comparison.PreviousCutoffAt))
+            : F.WeekdayName(comparison.PreviousCutoffAt);
+
+    private string RankForScreenReaders(CommunityStandingDto me, int rankedCount, CommunityPeriod period)
+    {
+        var text = F.Plural("Community.Place.Sr", rankedCount,
+            F.Number(me.Rank), F.Number(rankedCount), F["Community.Place.Period." + period]);
+
+        return me.IsTied ? $"{text} {F["Community.Place.TiedSr"]}" : text;
+    }
+}

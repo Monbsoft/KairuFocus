@@ -1,0 +1,91 @@
+@* "Ma progression": personal record, total since the start, and the history chart. One section, one data source
+   (the progression), one error with its retry. Facts to look back on, never targets. *@
+@inject CommunityFormatter F
+
+<div class="kf-zone" aria-busy="@(Zone.Busy ? "true" : "false")">
+    <h2 class="kf-section-title">@F["Community.Progress.Heading"]</h2>
+
+    @if (Zone.ShowSkeleton)
+    {
+        <div class="kf-kpis" aria-hidden="true">
+            <div class="kf-skel kf-skel--kpi"></div>
+            <div class="kf-skel kf-skel--kpi"></div>
+        </div>
+        <div class="kf-skel kf-skel--chart" aria-hidden="true"></div>
+    }
+    else if (Zone.ShowError)
+    {
+        <ZoneAlert Message="@F["Community.Xp.Error"]" OnRetry="OnRetry" />
+    }
+    else if (Zone.Data is { } progress)
+    {
+        var period = Zone.Period ?? Period;
+        var neverEarned = progress.AllTime.FirstGainAt is null;
+
+        <div class="kf-kpis">
+            @foreach (var kpi in BuildKpis(progress, period, neverEarned))
+            {
+                <KpiCard Label="@kpi.Label" Value="@kpi.Value" Hint="@kpi.Hint" />
+            }
+        </div>
+
+        @if (neverEarned)
+        {
+            <div class="kf-card kf-barcard">
+                <div class="kf-barcard__head">
+                    <span class="kf-barcard__title">@F["Community.Chart.Title." + period]</span>
+                </div>
+                <p class="kf-empty">@F["Community.Xp.Empty"]</p>
+            </div>
+        }
+        else
+        {
+            <XpBarChart Progress="progress" Period="period" />
+        }
+    }
+</div>
+
+@code {
+    private const string NoValue = "—";
+
+    private sealed record Kpi(string Label, string Value, string Hint);
+
+    [Parameter, EditorRequired] public LoadZone<CommunityProgressDto> Zone { get; set; } = default!;
+
+    /// <summary>The selected period: used while the section has no data of its own yet.</summary>
+    [Parameter, EditorRequired] public CommunityPeriod Period { get; set; }
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+
+    private IEnumerable<Kpi> BuildKpis(CommunityProgressDto progress, CommunityPeriod period, bool neverEarned)
+    {
+        var bestWeek = progress.BestWeek;
+        var bestMonth = progress.BestMonth;
+
+        string WeekRecord() => bestWeek is null ? NoValue : F.Xp(bestWeek.Xp);
+        string WeekHint() => bestWeek is null ? "" : F.Format("Community.Kpi.WeekOf", F.DayMonth(bestWeek.PeriodStart));
+        string MonthRecord() => bestMonth is null ? NoValue : F.Xp(bestMonth.Xp);
+        string MonthHint() => bestMonth is null ? "" : F.MonthName(bestMonth.PeriodStart);
+
+        string AllTimeHint() =>
+            progress.AllTime.FirstGainAt is { } first
+                ? F.Plural("Community.Kpi.Since", progress.AllTime.Sprints,
+                    F.Number(progress.AllTime.Sprints), F.DayMonth(CommunityFormatter.LocalDate(first)))
+                : "";
+
+        if (period == CommunityPeriod.Global)
+        {
+            yield return new Kpi(F["Community.Kpi.BestWeek"], WeekRecord(), WeekHint());
+            yield return new Kpi(F["Community.Kpi.BestMonth"], MonthRecord(), MonthHint());
+            yield break;
+        }
+
+        yield return period == CommunityPeriod.Week
+            ? new Kpi(F["Community.Kpi.Record"], WeekRecord(), WeekHint())
+            : new Kpi(F["Community.Kpi.Record"], MonthRecord(), MonthHint());
+
+        yield return neverEarned
+            ? new Kpi(F["Community.Kpi.AllTime"], NoValue, "")
+            : new Kpi(F["Community.Kpi.AllTime"], F.Xp(progress.AllTime.TotalXp), AllTimeHint());
+    }
+}

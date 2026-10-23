@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+	<xsd:element name="root" msdata:IsDataSet="true">
+	  <xsd:complexType>
+		<xsd:choice maxOccurs="unbounded">
+		  <xsd:element name="metadata">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" use="required" type="xsd:string" />
+			  <xsd:attribute name="type" type="xsd:string" />
+			  <xsd:attribute name="mimetype" type="xsd:string" />
+			  <xsd:attribute ref="xml:space" />
+			</xsd:complexType>
+		  </xsd:element>
+		  <xsd:element name="data">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+				<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+			  <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+			  <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+			  <xsd:attribute ref="xml:space" />
+			</xsd:complexType>
+		  </xsd:element>
+		  <xsd:element name="resheader">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" type="xsd:string" use="required" />
+			</xsd:complexType>
+		  </xsd:element>
+		</xsd:choice>
+	  </xsd:complexType>
+	</xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+	<value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+	<value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+	<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+	<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Community.PageTitle" xml:space="preserve">
+	<value>커뮤니티 — KairuFocus</value>
+  </data>
+  <data name="Community.Title" xml:space="preserve">
+	<value>커뮤니티</value>
+  </data>
+  <data name="Community.Loading" xml:space="preserve">
+	<value>커뮤니티를 불러오는 중…</value>
+  </data>
+  <data name="Community.Retry" xml:space="preserve">
+	<value>다시 시도</value>
+  </data>
+  <data name="Community.Period.Aria" xml:space="preserve">
+	<value>기간 선택</value>
+  </data>
+  <data name="Community.Period.Week" xml:space="preserve">
+	<value>주</value>
+  </data>
+  <data name="Community.Period.Month" xml:space="preserve">
+	<value>월</value>
+  </data>
+  <data name="Community.Period.Global" xml:space="preserve">
+	<value>전체</value>
+  </data>
+  <data name="Community.Sub.Week" xml:space="preserve">
+	<value>{0}부터 시작하는 주</value>
+  </data>
+  <data name="Community.Sub.Month" xml:space="preserve">
+	<value>{0}, 1일~{1}일</value>
+  </data>
+  <data name="Community.Sub.Global" xml:space="preserve">
+	<value>첫 XP부터 ({0})</value>
+  </data>
+  <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
+	<value>첫 XP부터</value>
+  </data>
+  <data name="Community.Announce.Week" xml:space="preserve">
+	<value>주간 랭킹을 표시했습니다</value>
+  </data>
+  <data name="Community.Announce.Month" xml:space="preserve">
+	<value>월간 랭킹을 표시했습니다</value>
+  </data>
+  <data name="Community.Announce.Global" xml:space="preserve">
+	<value>전체 랭킹을 표시했습니다</value>
+  </data>
+  <data name="Community.Presence.Now.One" xml:space="preserve">
+	<value>지금 {0}명이 스프린트 중</value>
+  </data>
+  <data name="Community.Presence.Now.Other" xml:space="preserve">
+	<value>지금 {0}명이 스프린트 중</value>
+  </data>
+  <data name="Community.Presence.Today.One" xml:space="preserve">
+	<value>오늘 이미 {0}명이 스프린트를 완료했습니다</value>
+  </data>
+  <data name="Community.Presence.Today.Other" xml:space="preserve">
+	<value>오늘 이미 {0}명이 스프린트를 완료했습니다</value>
+  </data>
+  <data name="Community.Place.Heading" xml:space="preserve">
+	<value>커뮤니티에서 내 순위</value>
+  </data>
+  <data name="Community.Place.Period.Week" xml:space="preserve">
+	<value>이번 주</value>
+  </data>
+  <data name="Community.Place.Period.Month" xml:space="preserve">
+	<value>이번 달</value>
+  </data>
+  <data name="Community.Place.Period.Global" xml:space="preserve">
+	<value>전체 기간</value>
+  </data>
+  <data name="Community.Place.Of.One" xml:space="preserve">
+	<value>순위권 {0}명 중</value>
+  </data>
+  <data name="Community.Place.Of.Other" xml:space="preserve">
+	<value>순위권 {0}명 중</value>
+  </data>
+  <data name="Community.Place.Tie" xml:space="preserve">
+	<value>공동 순위</value>
+  </data>
+  <data name="Community.Place.Sr.One" xml:space="preserve">
+	<value>순위권 {1}명 중 {0}위 ({2}).</value>
+  </data>
+  <data name="Community.Place.Sr.Other" xml:space="preserve">
+	<value>순위권 {1}명 중 {0}위 ({2}).</value>
+  </data>
+  <data name="Community.Place.TiedSr" xml:space="preserve">
+	<value>공동 순위입니다.</value>
+  </data>
+  <data name="Community.Place.Unranked.Week" xml:space="preserve">
+	<value>이번 주에는 아직 순위가 없습니다</value>
+  </data>
+  <data name="Community.Place.Unranked.Month" xml:space="preserve">
+	<value>이번 달에는 아직 순위가 없습니다</value>
+  </data>
+  <data name="Community.Place.Unranked.Global" xml:space="preserve">
+	<value>전체 기간으로는 아직 순위가 없습니다</value>
+  </data>
+  <data name="Community.Place.Join.Title" xml:space="preserve">
+	<value>아직 순위가 없습니다.</value>
+  </data>
+  <data name="Community.Place.Join.Body" xml:space="preserve">
+	<value>설정에서 랭킹에 참여하세요. 생성된 닉네임으로 표시됩니다.</value>
+  </data>
+  <data name="Community.Place.Join.Link" xml:space="preserve">
+	<value>설정에서 참여하기</value>
+  </data>
+  <data name="Community.Ordinal.One" xml:space="preserve">
+	<value>{0}위</value>
+  </data>
+  <data name="Community.Ordinal.Two" xml:space="preserve">
+	<value>{0}위</value>
+  </data>
+  <data name="Community.Ordinal.Few" xml:space="preserve">
+	<value>{0}위</value>
+  </data>
+  <data name="Community.Ordinal.Other" xml:space="preserve">
+	<value>{0}위</value>
+  </data>
+  <data name="Community.Xp.Heading.Week" xml:space="preserve">
+	<value>이번 주 내 XP</value>
+  </data>
+  <data name="Community.Xp.Heading.Month" xml:space="preserve">
+	<value>이번 달 내 XP</value>
+  </data>
+  <data name="Community.Xp.Heading.Global" xml:space="preserve">
+	<value>지금까지 내 XP</value>
+  </data>
+  <data name="Community.Xp.Activity.One" xml:space="preserve">
+	<value>스프린트 {0}회 · 집중 {1}</value>
+  </data>
+  <data name="Community.Xp.Activity.Other" xml:space="preserve">
+	<value>스프린트 {0}회 · 집중 {1}</value>
+  </data>
+  <data name="Community.Xp.Compare.Week" xml:space="preserve">
+	<value>지난주 {0} 같은 시각({1} XP)과 비교</value>
+  </data>
+  <data name="Community.Xp.Compare.Month" xml:space="preserve">
+	<value>{0} 같은 시각({1} XP)과 비교</value>
+  </data>
+  <data name="Community.Xp.Equal.Week" xml:space="preserve">
+	<value>지난주 {0} 같은 시각과 동일({1} XP)</value>
+  </data>
+  <data name="Community.Xp.Equal.Month" xml:space="preserve">
+	<value>{0} 같은 시각과 동일({1} XP)</value>
+  </data>
+  <data name="Community.Xp.Average" xml:space="preserve">
+	<value>주 평균: {0} XP</value>
+  </data>
+  <data name="Community.Xp.Starting.Week" xml:space="preserve">
+	<value>이번 주가 막 시작되었습니다.</value>
+  </data>
+  <data name="Community.Xp.Starting.Month" xml:space="preserve">
+	<value>이번 달이 막 시작되었습니다.</value>
+  </data>
+  <data name="Community.Xp.Empty" xml:space="preserve">
+	<value>5분 이상 스프린트를 완료하고 첫 XP를 얻어 보세요.</value>
+  </data>
+  <data name="Community.Xp.Error" xml:space="preserve">
+	<value>진행 상황을 불러오지 못했습니다.</value>
+  </data>
+  <data name="Community.Trend.Up" xml:space="preserve">
+	<value>{0} XP 증가</value>
+  </data>
+  <data name="Community.Trend.Down" xml:space="preserve">
+	<value>{0} XP 감소</value>
+  </data>
+  <data name="Community.Duration.Minutes" xml:space="preserve">
+	<value>{0}분</value>
+  </data>
+  <data name="Community.Duration.Hours" xml:space="preserve">
+	<value>{0}시간</value>
+  </data>
+  <data name="Community.Duration.HoursMinutes" xml:space="preserve">
+	<value>{0}시간 {1}분</value>
+  </data>
+  <data name="Community.Progress.Heading" xml:space="preserve">
+	<value>내 진행 상황</value>
+  </data>
+  <data name="Community.Kpi.Record" xml:space="preserve">
+	<value>개인 최고 기록</value>
+  </data>
+  <data name="Community.Kpi.BestWeek" xml:space="preserve">
+	<value>최고의 주</value>
+  </data>
+  <data name="Community.Kpi.BestMonth" xml:space="preserve">
+	<value>최고의 달</value>
+  </data>
+  <data name="Community.Kpi.AllTime" xml:space="preserve">
+	<value>지금까지 합계</value>
+  </data>
+  <data name="Community.Kpi.WeekOf" xml:space="preserve">
+	<value>{0} 시작 주</value>
+  </data>
+  <data name="Community.Kpi.Since.One" xml:space="preserve">
+	<value>{1}부터 스프린트 {0}회</value>
+  </data>
+  <data name="Community.Kpi.Since.Other" xml:space="preserve">
+	<value>{1}부터 스프린트 {0}회</value>
+  </data>
+  <data name="Community.Chart.Title.Week" xml:space="preserve">
+	<value>최근 8주</value>
+  </data>
+  <data name="Community.Chart.Title.Month" xml:space="preserve">
+	<value>첫 XP 이후 월별</value>
+  </data>
+  <data name="Community.Chart.Title.Global" xml:space="preserve">
+	<value>누적 XP</value>
+  </data>
+  <data name="Community.Chart.Unit.Week" xml:space="preserve">
+	<value>주별 XP</value>
+  </data>
+  <data name="Community.Chart.Unit.Month" xml:space="preserve">
+	<value>월별 XP</value>
+  </data>
+  <data name="Community.Chart.Unit.Global" xml:space="preserve">
+	<value>월말 기준</value>
+  </data>
+  <data name="Community.Chart.Current" xml:space="preserve">
+	<value>진행 중</value>
+  </data>
+  <data name="Community.Chart.Today" xml:space="preserve">
+	<value>오늘</value>
+  </data>
+  <data name="Community.Chart.MonthEnd" xml:space="preserve">
+	<value>{0} 말</value>
+  </data>
+  <data name="Community.Chart.Record" xml:space="preserve">
+	<value>최고 · {0}</value>
+  </data>
+  <data name="Community.Chart.RecordMark" xml:space="preserve">
+	<value>최고</value>
+  </data>
+  <data name="Community.Together.Heading" xml:space="preserve">
+	<value>함께</value>
+  </data>
+  <data name="Community.Together.Title.Week" xml:space="preserve">
+	<value>이번 주 함께한 기록</value>
+  </data>
+  <data name="Community.Together.Title.Month" xml:space="preserve">
+	<value>이번 달 함께한 기록</value>
+  </data>
+  <data name="Community.Together.Title.Global" xml:space="preserve">
+	<value>지금까지 함께한 기록</value>
+  </data>
+  <data name="Community.Together.Sprints.One" xml:space="preserve">
+	<value>스프린트 {0}회</value>
+  </data>
+  <data name="Community.Together.Sprints.Other" xml:space="preserve">
+	<value>스프린트 {0}회</value>
+  </data>
+  <data name="Community.Together.Focus" xml:space="preserve">
+	<value>집중 {0}</value>
+  </data>
+  <data name="Community.Together.LessThanHour" xml:space="preserve">
+	<value>1시간 미만</value>
+  </data>
+  <data name="Community.Together.Members.One" xml:space="preserve">
+	<value>활동 멤버 {0}명</value>
+  </data>
+  <data name="Community.Together.Members.Other" xml:space="preserve">
+	<value>활동 멤버 {0}명</value>
+  </data>
+  <data name="Community.Together.Mine.One" xml:space="preserve">
+	<value>그중 내 스프린트 {0}회</value>
+  </data>
+  <data name="Community.Together.Mine.Other" xml:space="preserve">
+	<value>그중 내 스프린트 {0}회</value>
+  </data>
+  <data name="Community.Together.Error" xml:space="preserve">
+	<value>커뮤니티 집계를 불러오지 못했습니다.</value>
+  </data>
+  <data name="Community.Board.Title.Week" xml:space="preserve">
+	<value>주간 랭킹</value>
+  </data>
+  <data name="Community.Board.Title.Month" xml:space="preserve">
+	<value>월간 랭킹</value>
+  </data>
+  <data name="Community.Board.Title.Global" xml:space="preserve">
+	<value>전체 랭킹</value>
+  </data>
+  <data name="Community.Board.Hint" xml:space="preserve">
+	<value>멤버는 닉네임으로만 표시됩니다</value>
+  </data>
+  <data name="Community.Board.You" xml:space="preserve">
+	<value>(나)</value>
+  </data>
+  <data name="Community.Board.Empty.Week" xml:space="preserve">
+	<value>이번 주에는 아직 순위에 오른 사람이 없습니다.</value>
+  </data>
+  <data name="Community.Board.Empty.Month" xml:space="preserve">
+	<value>이번 달에는 아직 순위에 오른 사람이 없습니다.</value>
+  </data>
+  <data name="Community.Board.Empty.Global" xml:space="preserve">
+	<value>아직 순위에 오른 사람이 없습니다.</value>
+  </data>
+  <data name="Community.Board.Error" xml:space="preserve">
+	<value>랭킹을 불러오지 못했습니다.</value>
+  </data>
+  <data name="Community.Format.DayMonth" xml:space="preserve">
+	<value>M월 d일</value>
+  </data>
+  <data name="Community.Format.DayMonthYear" xml:space="preserve">
+	<value>yyyy년 M월 d일</value>
+  </data>
+  <data name="Community.Format.WeekdayDayMonth" xml:space="preserve">
+	<value>M월 d일 dddd</value>
+  </data>
+  <data name="Community.Format.ShortDayMonth" xml:space="preserve">
+	<value>M'/'d</value>
+  </data>
+  <data name="Community.Format.Month" xml:space="preserve">
+	<value>M월</value>
+  </data>
+  <data name="Community.Format.MonthYear" xml:space="preserve">
+	<value>yyyy년 M월</value>
+  </data>
+  <data name="Settings.Leaderboard.Title" xml:space="preserve">
+	<value>커뮤니티 랭킹</value>
+  </data>
+  <data name="Settings.Leaderboard.Loading" xml:space="preserve">
+	<value>상태를 불러오는 중…</value>
+  </data>
+  <data name="Settings.Leaderboard.LoadError" xml:space="preserve">
+	<value>랭킹 참여 상태를 불러오지 못했습니다. 페이지를 새로 고치세요.</value>
+  </data>
+  <data name="Settings.Leaderboard.Out" xml:space="preserve">
+	<value>랭킹에 표시되지 않습니다. 커뮤니티 화면에서는 볼 수 있습니다.</value>
+  </data>
+  <data name="Settings.Leaderboard.Out.Hint" xml:space="preserve">
+	<value>생성된 닉네임으로 표시되며, 닉네임, 순위, XP만 공개됩니다.</value>
+  </data>
+  <data name="Settings.Leaderboard.In" xml:space="preserve">
+	<value>랭킹에 “{0}” 닉네임으로 표시됩니다.</value>
+  </data>
+  <data name="Settings.Leaderboard.Reroll" xml:space="preserve">
+	<value>다른 닉네임 뽑기</value>
+  </data>
+  <data name="Settings.Leaderboard.Rerolling" xml:space="preserve">
+	<value>뽑는 중…</value>
+  </data>
+  <data name="Settings.Leaderboard.Join" xml:space="preserve">
+	<value>랭킹 참여</value>
+  </data>
+  <data name="Settings.Leaderboard.Joining" xml:space="preserve">
+	<value>참여 중…</value>
+  </data>
+  <data name="Settings.Leaderboard.Saved" xml:space="preserve">
+	<value>새 닉네임: “{0}”.</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave" xml:space="preserve">
+	<value>랭킹에서 나가기</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Title" xml:space="preserve">
+	<value>랭킹에서 나갈까요?</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Body" xml:space="preserve">
+	<value>랭킹에서 바로 사라집니다. XP는 유지됩니다. 다시 참여하면 새 닉네임을 받게 됩니다.</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Confirm" xml:space="preserve">
+	<value>나가기</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Cancel" xml:space="preserve">
+	<value>취소</value>
+  </data>
+  <data name="Settings.Leaderboard.Left" xml:space="preserve">
+	<value>랭킹에서 나갔습니다. XP는 유지됩니다.</value>
+  </data>
+  <data name="Settings.Leaderboard.Error.Pool" xml:space="preserve">
+	<value>지금은 닉네임을 생성할 수 없습니다. 잠시 후 다시 시도하세요.</value>
+  </data>
+  <data name="Settings.Leaderboard.Error.Generic" xml:space="preserve">
+	<value>문제가 발생했습니다. 잠시 후 다시 시도하세요.</value>
+  </data>
+</root>

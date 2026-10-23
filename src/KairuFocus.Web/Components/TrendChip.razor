@@ -1,0 +1,18 @@
+@* Gap with the same moment of the previous period. Up: green arrow. Down: orange arrow (not red: a fact, not an alert).
+   The glyph and the amount are decorative; a visually hidden sentence carries the meaning for screen readers.
+   Nothing when the gap is 0: the caller shows the "same as" sentence instead. *@
+@inject CommunityFormatter F
+
+@if (DeltaXp != 0)
+{
+    var up = DeltaXp > 0;
+    var amount = F.Number(Math.Abs(DeltaXp));
+    <span class="kf-trend @(up ? "kf-trend--up" : "kf-trend--down")">
+        <span aria-hidden="true">@(up ? "▲ +" : "▼ −")@amount XP</span>
+        <span class="visually-hidden">@F.Format(up ? "Community.Trend.Up" : "Community.Trend.Down", amount)</span>
+    </span>
+}
+
+@code {
+    [Parameter, EditorRequired] public int DeltaXp { get; set; }
+}
