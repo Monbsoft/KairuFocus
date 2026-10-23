@@ -17,10 +17,34 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("KairuFocus.Domain.Gamification.LeaderboardProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UserId");
+
+                    b.Property<DateTime>("JoinedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Pseudonym")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.HasKey("Id")
+                        .HasName("PK_LeaderboardProfiles");
+
+                    b.HasIndex("Pseudonym")
+                        .IsUnique()
+                        .HasDatabaseName("IX_LeaderboardProfiles_Pseudonym");
+
+                    b.ToTable("LeaderboardProfiles", (string)null);
+                });
 
             modelBuilder.Entity("KairuFocus.Domain.Gamification.XpGain", b =>
                 {
@@ -313,6 +337,15 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("PomodoroSettings", (string)null);
+                });
+
+            modelBuilder.Entity("KairuFocus.Domain.Gamification.LeaderboardProfile", b =>
+                {
+                    b.HasOne("KairuFocus.Domain.Identity.User", null)
+                        .WithOne()
+                        .HasForeignKey("KairuFocus.Domain.Gamification.LeaderboardProfile", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("KairuFocus.Domain.Gamification.XpGain", b =>

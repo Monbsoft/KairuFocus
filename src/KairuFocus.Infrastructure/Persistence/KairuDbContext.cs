@@ -23,6 +23,7 @@ public sealed class KairuFocusDbContext : DbContext
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
     public DbSet<McpToken> McpTokens => Set<McpToken>();
     public DbSet<XpGain> XpGains => Set<XpGain>();
+    public DbSet<LeaderboardProfile> LeaderboardProfiles => Set<LeaderboardProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,5 +47,6 @@ public sealed class KairuFocusDbContext : DbContext
         modelBuilder.ApplyConfiguration(new UserSettingsConfiguration());
         modelBuilder.ApplyConfiguration(new McpTokenConfiguration());
         modelBuilder.ApplyConfiguration(new XpGainConfiguration());
+        modelBuilder.ApplyConfiguration(new LeaderboardProfileConfiguration());
     }
 }
