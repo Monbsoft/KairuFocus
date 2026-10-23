@@ -37,4 +37,11 @@ internal sealed class EfCoreXpGainRepository : IXpGainRepository
                         && g.EarnedAtUtc < endUtc)
             .Select(g => (int?)g.Amount)
             .SumAsync(cancellationToken) ?? 0;
+
+    public async Task<IReadOnlyList<XpEarning>> GetEarningsAsync(UserId userId, CancellationToken cancellationToken = default) =>
+        await _context.XpGains
+            .Where(g => g.OwnerId == userId)
+            .OrderBy(g => g.EarnedAtUtc)
+            .Select(g => new XpEarning(g.EarnedAtUtc, g.Amount))
+            .ToListAsync(cancellationToken);
 }
