@@ -1,6 +1,7 @@
 @page "/tasks/{Id:guid}/edit"
 @attribute [Authorize]
 @using KairuFocus.Web.Services
+@using KairuFocus.Web.Helpers
 @inject TaskApiClient Api
 @inject NavigationManager Nav
 @inject MarkdownService MarkdownSvc
@@ -97,25 +98,7 @@ else
 @code {
     private const int MaxTags = 5;
 
-    private static readonly string[] TagPalette =
-    [
-        "bg-primary",
-        "bg-success",
-        "bg-danger",
-        "bg-warning text-dark",
-        "bg-info text-dark",
-        "bg-secondary",
-        "text-bg-purple",
-        "text-bg-orange",
-        "text-bg-teal",
-        "text-bg-pink"
-    ];
-
-    private static string TagColorClass(string tag)
-    {
-        var hash = Math.Abs(tag.ToLowerInvariant().GetHashCode());
-        return TagPalette[hash % TagPalette.Length];
-    }
+    private static string TagColorClass(string tag) => TagColors.GetClass(tag);
 
     [Parameter] public Guid Id { get; set; }
 
