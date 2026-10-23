@@ -33,7 +33,12 @@ public sealed class LeaveLeaderboardCommandHandler : ICommandHandler<LeaveLeader
         if (profile is null)
             return LeaveLeaderboardResult.Failure(GamificationErrors.Gamification.NotParticipating);
 
-        await _profileRepository.RemoveAsync(profile, cancellationToken);
+        if (!await _profileRepository.TryRemoveAsync(profile, cancellationToken))
+        {
+            // A concurrent request (another tab) removed the profile between the read and the delete.
+            _logger.LogInformation("Concurrent leaderboard leave for user {UserId}", userId);
+            return LeaveLeaderboardResult.Failure(GamificationErrors.Gamification.NotParticipating);
+        }
 
         _logger.LogInformation("User {UserId} left the community leaderboard", userId);
 

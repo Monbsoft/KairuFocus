@@ -1,6 +1,5 @@
 using KairuFocus.Application.Common;
 using KairuFocus.Application.Gamification.Common;
-using KairuFocus.Application.Gamification.Queries.GetCommunityProgress;
 using KairuFocus.Domain.Gamification;
 using KairuFocus.Domain.Pomodoro;
 using Microsoft.Extensions.Logging;

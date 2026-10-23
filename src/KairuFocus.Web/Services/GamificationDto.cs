@@ -66,7 +66,4 @@ public enum MembershipOutcome
     Failed
 }
 
-public sealed record MembershipResult(MembershipOutcome Outcome, string? Pseudonym = null)
-{
-    public bool IsSuccess => Outcome == MembershipOutcome.Succeeded;
-}
+public sealed record MembershipResult(MembershipOutcome Outcome, string? Pseudonym = null);

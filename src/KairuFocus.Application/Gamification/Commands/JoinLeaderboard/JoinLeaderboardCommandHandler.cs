@@ -35,7 +35,8 @@ public sealed class JoinLeaderboardCommandHandler : ICommandHandler<JoinLeaderbo
         if (await _profileRepository.GetByUserIdAsync(userId, cancellationToken) is not null)
             return JoinLeaderboardResult.Failure(GamificationErrors.Gamification.AlreadyParticipating);
 
-        var pseudonym = await PseudonymAllocator.AllocateAsync(_profileRepository, Random.Shared, cancellationToken);
+        var pseudonym = await PseudonymAllocator.AllocateAsync(
+            _profileRepository, Random.Shared, excluded: null, cancellationToken);
         if (pseudonym is null)
         {
             _logger.LogError(

@@ -6,8 +6,10 @@ using KairuFocus.Infrastructure.Tests.Persistence.TestSupport;
 namespace KairuFocus.Infrastructure.Tests.Persistence.Gamification;
 
 /// <summary>
-/// Nominal paths only: InMemory enforces no unique index, so the TryAdd / TryUpdate conflicts are covered
-/// by the Application fakes.
+/// Nominal paths and concurrent deletions. InMemory enforces no unique index, so the TryAdd / TryUpdate
+/// uniqueness conflicts are covered by the Application fakes; it does reject an UPDATE / DELETE of a missing
+/// row with DbUpdateConcurrencyException, like SQL Server's "0 rows affected" check, so the concurrent
+/// deletions are reproduced here with two contexts (two simultaneous requests).
 /// </summary>
 public sealed class EfCoreLeaderboardProfileRepositoryTests
 {
@@ -76,9 +78,55 @@ public sealed class EfCoreLeaderboardProfileRepositoryTests
             var repository = new EfCoreLeaderboardProfileRepository(context);
             var profile = (await repository.GetByUserIdAsync(userId))!;
 
-            await repository.RemoveAsync(profile);
+            Assert.True(await repository.TryRemoveAsync(profile));
         }
 
+        Assert.Null(await GetAsync(userId));
+    }
+
+    [Fact]
+    public async Task Should_ReturnFalse_When_ProfileWasRemovedConcurrently()
+    {
+        var userId = UserId.New();
+        await _database.SeedAsync(LeaderboardProfile.Join(userId, PseudonymOf("LoutreTenace"), JoinedAtUtc));
+
+        await using var firstContext = _database.CreateContext();
+        await using var secondContext = _database.CreateContext();
+        var first = new EfCoreLeaderboardProfileRepository(firstContext);
+        var second = new EfCoreLeaderboardProfileRepository(secondContext);
+
+        // Two simultaneous leaves: both read the profile before either deletes it.
+        var firstProfile = (await first.GetByUserIdAsync(userId))!;
+        var secondProfile = (await second.GetByUserIdAsync(userId))!;
+
+        Assert.True(await first.TryRemoveAsync(firstProfile));
+        Assert.False(await second.TryRemoveAsync(secondProfile));
+
+        // The rejected entity is detached: the context stays usable and answers from the database.
+        Assert.Null(await second.GetByUserIdAsync(userId));
+    }
+
+    [Fact]
+    public async Task Should_ReturnFalse_When_UpdatedProfileWasRemovedConcurrently()
+    {
+        var userId = UserId.New();
+        await _database.SeedAsync(LeaderboardProfile.Join(userId, PseudonymOf("LoutreTenace"), JoinedAtUtc));
+
+        await using var rerollContext = _database.CreateContext();
+        await using var leaveContext = _database.CreateContext();
+        var reroll = new EfCoreLeaderboardProfileRepository(rerollContext);
+        var leave = new EfCoreLeaderboardProfileRepository(leaveContext);
+
+        // A reroll reads the profile, then a leave from another tab deletes it before the update.
+        var profile = (await reroll.GetByUserIdAsync(userId))!;
+        Assert.True(await leave.TryRemoveAsync((await leave.GetByUserIdAsync(userId))!));
+
+        profile.ChangePseudonym(PseudonymOf("HibouCalme"));
+
+        Assert.False(await reroll.TryUpdateAsync(profile));
+
+        // The rejected entity is detached: the re-read of the handler hits the database.
+        Assert.Null(await reroll.GetByUserIdAsync(userId));
         Assert.Null(await GetAsync(userId));
     }
 

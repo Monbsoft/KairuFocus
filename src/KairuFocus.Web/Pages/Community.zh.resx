@@ -85,6 +85,9 @@
 	<value>自你的第一笔 XP 起（{0}）</value>
   </data>
   <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
+	<value>你的第一笔 XP 将在你首次完成至少 5 分钟的冲刺后获得</value>
+  </data>
+  <data name="Community.Sub.GlobalSince" xml:space="preserve">
 	<value>自你的第一笔 XP 起</value>
   </data>
   <data name="Community.Announce.Week" xml:space="preserve">
@@ -203,6 +206,12 @@
   </data>
   <data name="Community.Xp.Starting.Month" xml:space="preserve">
 	<value>本月刚开始。</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Week" xml:space="preserve">
+	<value>本周还没有 XP。</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Month" xml:space="preserve">
+	<value>本月还没有 XP。</value>
   </data>
   <data name="Community.Xp.Empty" xml:space="preserve">
 	<value>完成一次至少 5 分钟的冲刺，获得你的第一笔 XP。</value>

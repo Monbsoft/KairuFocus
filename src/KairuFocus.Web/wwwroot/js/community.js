@@ -43,15 +43,22 @@ window.kairufocusCommunity = (function () {
         'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
     // Keeps Tab and Shift+Tab inside the container. The listener dies with the element.
+    // The container itself must be focusable (tabindex="-1"): it holds the focus when nothing inside can,
+    // e.g. while its buttons are disabled during a request.
     function trapFocus(container) {
         if (!container) { return; }
         container.addEventListener('keydown', function (event) {
             if (event.key !== 'Tab') { return; }
             var items = container.querySelectorAll(FOCUSABLE);
-            if (!items.length) { return; }
+            if (!items.length) {
+                // Nothing focusable inside right now: the focus stays on the container instead of leaving it.
+                event.preventDefault();
+                container.focus();
+                return;
+            }
             var first = items[0];
             var last = items[items.length - 1];
-            if (event.shiftKey && document.activeElement === first) {
+            if (event.shiftKey && (document.activeElement === first || document.activeElement === container)) {
                 event.preventDefault();
                 last.focus();
             } else if (!event.shiftKey && document.activeElement === last) {

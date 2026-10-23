@@ -6,12 +6,26 @@ namespace KairuFocus.Application.Tests.Gamification;
 
 public sealed class PseudonymAllocatorTests
 {
+    private const int Seed = 42;
     private static readonly Regex NumericSuffix = new(@"[0-9]{1,2}\z", RegexOptions.CultureInvariant);
 
     private readonly FakeLeaderboardProfileRepository _repository = new();
 
-    private Task<Pseudonym?> AllocateAsync() =>
-        PseudonymAllocator.AllocateAsync(_repository, new Random(42), CancellationToken.None);
+    private Task<Pseudonym?> AllocateAsync(Pseudonym? excluded = null) =>
+        PseudonymAllocator.AllocateAsync(_repository, new Random(Seed), excluded, CancellationToken.None);
+
+    [Fact]
+    public async Task Should_SkipExcludedPseudonym_When_ItIsDrawnAndReportedFree()
+    {
+        // The first draw of the seeded random is the excluded pseudonym; the store reports it free.
+        var excluded = PseudonymGenerator.Generate(new Random(Seed));
+
+        var pseudonym = await AllocateAsync(excluded);
+
+        Assert.NotNull(pseudonym);
+        Assert.NotEqual(excluded, pseudonym);
+        Assert.DoesNotContain(excluded, _repository.CheckedCandidates);
+    }
 
     [Fact]
     public async Task Should_ReturnFirstCandidate_When_ItIsFree()

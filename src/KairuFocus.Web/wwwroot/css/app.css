@@ -731,9 +731,11 @@ code {
 .kf-community-page__sub { margin-top: var(--space-1); color: var(--text-muted); }
 
 /* Sélecteur de période : le .kf-seg de Statistiques, avec un fond actif assez contrasté en sombre */
-.kf-community-page .kf-seg__btn { white-space: normal; }
+.kf-community-page .kf-seg__btn { white-space: normal; transition: background var(--duration-base) var(--ease-standard), transform var(--duration-instant) var(--ease-standard); }
 .kf-community-page .kf-seg__btn:hover:not(.kf-seg__btn--on) { background: var(--surface-hover); }
 .kf-community-page .kf-seg__btn--on { background: var(--seg-on-bg); color: #fff; }
+/* Appui : 1 px vers le bas en 100 ms (handoff §8). La transition est posée sur l'état de repos, pour aller et retour. */
+.kf-community-page .kf-linkbtn, .kf-community-page .kf-btn-light { transition: transform var(--duration-instant) var(--ease-standard); }
 .kf-community-page button:active, .kf-community-page .kf-btn-light:active { transform: translateY(1px); }
 
 /* Présence en direct : point fixe (pas de pulsation, ça distrairait) */
@@ -816,7 +818,7 @@ code {
 .kf-board { padding: var(--space-2); }
 .kf-board ol { list-style: none; margin: 0; padding: 0; }
 .kf-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--target-min); padding: 0 var(--space-3); border-radius: var(--radius-md); }
-.kf-row__rank { flex: 0 0 3rem; min-width: 3rem; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.kf-row__rank { flex: 0 0 auto; min-width: 3rem; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
 .kf-row__pseudo { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--space-1); }
 .kf-row__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kf-row__xp { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap; }
@@ -838,7 +840,11 @@ code {
     .kf-recap__stats { flex-direction: column; align-items: flex-start; }
     /* Téléphone : on garde la place au pseudo (colonne du rang et espaces resserrés). */
     .kf-row { gap: var(--space-2); padding: 0 var(--space-2); }
-    .kf-row__rank { flex-basis: 2rem; min-width: 2rem; }
+    .kf-row__rank { min-width: 2rem; }
+    /* « (toi) » passe sous le pseudo quand les deux ne tiennent pas côte à côte : le pseudo garde toute la largeur
+       (ellipse au-delà, pseudo complet dans title). Petit corps et interligne serré : la ligne reste à 44 px. */
+    .kf-row__pseudo { flex-wrap: wrap; row-gap: 0; }
+    .kf-row__you { font-size: var(--text-sm); line-height: 1.25; }
     /* Au-delà de 6 barres, un libellé sur deux, en comptant depuis la dernière (« en cours » reste lisible). */
     .kf-bars--dense .kf-bars__col:nth-last-child(even) .kf-bars__lbl { visibility: hidden; }
 }

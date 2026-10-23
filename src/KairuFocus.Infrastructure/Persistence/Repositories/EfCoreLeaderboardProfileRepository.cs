@@ -54,19 +54,37 @@ internal sealed class EfCoreLeaderboardProfileRepository : ILeaderboardProfileRe
             await _context.SaveChangesAsync(cancellationToken);
             return true;
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The UPDATE affected no row: the profile was deleted concurrently (the user left from another
+            // tab). Detach the rejected change so the scoped DbContext stays usable: the caller re-reads the
+            // profile by UserId right after, and FindAsync must hit the database, not this rejected entity.
+            _context.Entry(profile).State = EntityState.Detached;
+            return false;
+        }
         catch (DbUpdateException ex) when (IsUniquenessViolation(ex, LeaderboardProfileConfiguration.PseudonymIndexName))
         {
-            // The drawn pseudonym was taken concurrently. Detach the rejected change so the scoped
-            // DbContext stays usable.
+            // The drawn pseudonym was taken concurrently. Detach the rejected change (same reason as above).
             _context.Entry(profile).State = EntityState.Detached;
             return false;
         }
     }
 
-    public async Task RemoveAsync(LeaderboardProfile profile, CancellationToken cancellationToken = default)
+    public async Task<bool> TryRemoveAsync(LeaderboardProfile profile, CancellationToken cancellationToken = default)
     {
         _context.LeaderboardProfiles.Remove(profile);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // The DELETE affected no row: a concurrent request (another tab) already removed the profile.
+            // Detach the rejected change so the scoped DbContext stays usable.
+            _context.Entry(profile).State = EntityState.Detached;
+            return false;
+        }
     }
 
     // Restricted to the named constraints: any other unique constraint added later on this table must

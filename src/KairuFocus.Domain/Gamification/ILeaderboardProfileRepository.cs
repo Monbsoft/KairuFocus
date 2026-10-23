@@ -12,8 +12,12 @@ public interface ILeaderboardProfileRepository
     /// <summary>false if a uniqueness constraint rejected the insert (UserId key or pseudonym).</summary>
     Task<bool> TryAddAsync(LeaderboardProfile profile, CancellationToken cancellationToken = default);
 
-    /// <summary>false if the unique pseudonym index rejected the update.</summary>
+    /// <summary>
+    /// false if the update was rejected: the unique pseudonym index refused the new pseudonym, or the
+    /// profile was deleted concurrently. The caller tells them apart by re-reading the profile.
+    /// </summary>
     Task<bool> TryUpdateAsync(LeaderboardProfile profile, CancellationToken cancellationToken = default);
 
-    Task RemoveAsync(LeaderboardProfile profile, CancellationToken cancellationToken = default);
+    /// <summary>false if the profile was already deleted concurrently (nothing left to remove).</summary>
+    Task<bool> TryRemoveAsync(LeaderboardProfile profile, CancellationToken cancellationToken = default);
 }

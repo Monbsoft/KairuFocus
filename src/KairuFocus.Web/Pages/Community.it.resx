@@ -85,6 +85,9 @@
 	<value>Dal tuo primo XP, il {0}</value>
   </data>
   <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
+	<value>Il tuo primo XP arriverà con il tuo primo sprint di almeno 5 minuti</value>
+  </data>
+  <data name="Community.Sub.GlobalSince" xml:space="preserve">
 	<value>Dal tuo primo XP</value>
   </data>
   <data name="Community.Announce.Week" xml:space="preserve">
@@ -203,6 +206,12 @@
   </data>
   <data name="Community.Xp.Starting.Month" xml:space="preserve">
 	<value>Il mese è appena iniziato.</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Week" xml:space="preserve">
+	<value>Ancora nessun XP questa settimana.</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Month" xml:space="preserve">
+	<value>Ancora nessun XP questo mese.</value>
   </data>
   <data name="Community.Xp.Empty" xml:space="preserve">
 	<value>Completa uno sprint di almeno 5 minuti per guadagnare i tuoi primi XP.</value>

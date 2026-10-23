@@ -37,9 +37,16 @@ public sealed class LeaderboardProfile : AggregateRoot<UserId>
         return new LeaderboardProfile(userId, pseudonym, joinedAtUtc);
     }
 
+    /// <summary>
+    /// Replaces the pseudonym. Guards throw: the reroll use case explicitly excludes the current pseudonym
+    /// from the draw (the store alone cannot, a concurrent reroll or leave may have freed it), so receiving
+    /// it again is a programmer error, never a concurrency outcome.
+    /// </summary>
     public void ChangePseudonym(Pseudonym newPseudonym)
     {
         ArgumentNullException.ThrowIfNull(newPseudonym);
+        if (newPseudonym == Pseudonym)
+            throw new ArgumentException("The new pseudonym must differ from the current one.", nameof(newPseudonym));
 
         Pseudonym = newPseudonym;
     }

@@ -31,7 +31,7 @@ public sealed class LeaveLeaderboardCommandHandlerTests
         Assert.True(result.IsSuccess);
         Assert.Null(result.Error);
         Assert.Empty(_repository.Stored);
-        Assert.Equal(1, _repository.RemoveCallCount);
+        Assert.Equal(1, _repository.TryRemoveCallCount);
     }
 
     [Fact]
@@ -54,6 +54,21 @@ public sealed class LeaveLeaderboardCommandHandlerTests
 
         Assert.False(result.IsSuccess);
         Assert.Equal(GamificationErrors.Gamification.NotParticipating, result.Error);
-        Assert.Equal(0, _repository.RemoveCallCount);
+        Assert.Equal(0, _repository.TryRemoveCallCount);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotParticipating_When_ProfileWasRemovedConcurrently()
+    {
+        // Two simultaneous leaves (two tabs): both read the profile, the other one deletes it first.
+        _repository.Seed(FakeCurrentUserService.TestUserId, "LoutreTenace", JoinedAtUtc);
+        _repository.OnTryRemove = profile => _repository.Delete(profile.Id);
+
+        var result = await _sut.Handle(new LeaveLeaderboardCommand());
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(GamificationErrors.Gamification.NotParticipating, result.Error);
+        Assert.Equal(1, _repository.TryRemoveCallCount);
+        Assert.Empty(_repository.Stored);
     }
 }

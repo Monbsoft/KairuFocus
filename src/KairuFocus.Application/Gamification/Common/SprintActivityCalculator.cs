@@ -1,11 +1,11 @@
-using KairuFocus.Application.Gamification.Common;
 using KairuFocus.Domain.Gamification;
 using KairuFocus.Domain.Pomodoro;
 
-namespace KairuFocus.Application.Gamification.Queries.GetCommunityProgress;
+namespace KairuFocus.Application.Gamification.Common;
 
 /// <summary>
-/// Pure computation (no I/O) of the sprint figures of the community page. A sprint counts when its
+/// Pure computation (no I/O) of the sprint figures of the community page, shared by the progress and
+/// recap slices (so that neither depends on the other). A sprint counts when its
 /// EndedAt falls within the window, standard or free, without the 5-minute XP floor; its focus is
 /// capped by <see cref="CommunityRules.CountedFocus"/>. Same source and rule as FocusStatsAggregator
 /// (EndedAt − StartedAt), but capped per sprint and rounded once on the sum: the Statistics page is unchanged.

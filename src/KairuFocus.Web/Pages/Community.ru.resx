@@ -85,6 +85,9 @@
 	<value>С твоего первого XP, {0}</value>
   </data>
   <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
+	<value>Твой первый XP появится после первого спринта длительностью не менее 5 минут</value>
+  </data>
+  <data name="Community.Sub.GlobalSince" xml:space="preserve">
 	<value>С твоего первого XP</value>
   </data>
   <data name="Community.Announce.Week" xml:space="preserve">
@@ -203,6 +206,12 @@
   </data>
   <data name="Community.Xp.Starting.Month" xml:space="preserve">
 	<value>Месяц только начался.</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Week" xml:space="preserve">
+	<value>На этой неделе пока нет XP.</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Month" xml:space="preserve">
+	<value>В этом месяце пока нет XP.</value>
   </data>
   <data name="Community.Xp.Empty" xml:space="preserve">
 	<value>Заверши спринт длительностью не менее 5 минут, чтобы получить первые XP.</value>

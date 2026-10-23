@@ -2,6 +2,7 @@
    "Ma place" comes from the leaderboard, "Mon XP" from the progression: two independent sections,
    each with its own skeleton, error and retry. The block stays the only visually isolated element of the page. *@
 @inject CommunityFormatter F
+@inject TimeProvider Clock
 
 <div class="kf-hero" aria-busy="@(Place.Busy || Xp.Busy ? "true" : "false")">
     <div class="kf-hero__half">
@@ -15,7 +16,8 @@
         }
         else if (Place.ShowError)
         {
-            <ZoneAlert Message="@F["Community.Board.Error"]" OnRetry="OnRetryPlace" />
+            @* Same failure as the leaderboard section below, which announces it (role="alert"): here it is visual only. *@
+            <ZoneAlert Message="@F["Community.Board.Error"]" OnRetry="OnRetryPlace" Announce="false" />
         }
         else if (Place.Data is { } board)
         {
@@ -59,7 +61,8 @@
         }
         else if (Xp.ShowError)
         {
-            <ZoneAlert Message="@F["Community.Xp.Error"]" OnRetry="OnRetryXp" />
+            @* Same failure as the progression section below, which announces it (role="alert"): here it is visual only. *@
+            <ZoneAlert Message="@F["Community.Xp.Error"]" OnRetry="OnRetryXp" Announce="false" />
         }
         else if (Xp.Data is { } progress)
         {
@@ -85,8 +88,9 @@
                     <div class="kf-hero__compare">
                         @if (progress.Xp == 0 && comparison.PreviousXp == 0)
                         {
-                            @* Both at 0: the period has just begun, there is nothing to compare yet. *@
-                            <span>@F["Community.Xp.Starting." + period]</span>
+                            @* Both at 0, nothing to compare. "Just begun" is true only on the first UTC day of the period
+                               (the server's windows are UTC); later it would be wrong, so we state the fact instead. *@
+                            <span>@F[(period.IsFirstDay(TodayUtc) ? "Community.Xp.Starting." : "Community.Xp.NoneYet.") + period]</span>
                         }
                         else if (comparison.DeltaXp == 0)
                         {
@@ -122,6 +126,8 @@
     [Parameter] public EventCallback OnRetryPlace { get; set; }
 
     [Parameter] public EventCallback OnRetryXp { get; set; }
+
+    private DateOnly TodayUtc => DateOnly.FromDateTime(Clock.GetUtcNow().UtcDateTime);
 
     /// <summary>The period a section's data belongs to, so that labels never contradict the figures during a reload.</summary>
     private CommunityPeriod PeriodOf<T>(LoadZone<T> zone) where T : class => zone.Period ?? Period;

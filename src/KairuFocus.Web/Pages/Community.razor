@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject CommunityFormatter F
+@inject TimeProvider Clock
 
 <PageTitle>@F["Community.PageTitle"]</PageTitle>
 
@@ -127,8 +128,11 @@
         {
             // Page left while the runtime is going away: nothing to clean up.
         }
-
-        _selfReference?.Dispose();
+        finally
+        {
+            // Whatever the script did, the reference must be released.
+            _selfReference?.Dispose();
+        }
     }
 
     // ── Period ──────────────────────────────────────────────────────────────
@@ -266,20 +270,32 @@
     // The windows are UTC calendar weeks and months, like the server's. The week and the month are derived
     // from the clock so that the subtitle follows the selector at once, whatever the sections are doing.
 
-    private static DateOnly CurrentWeekStart()
+    private DateOnly TodayUtc => DateOnly.FromDateTime(Clock.GetUtcNow().UtcDateTime);
+
+    private DateOnly CurrentWeekStart()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = TodayUtc;
         return today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
     }
 
     private string MonthSubtitle()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = TodayUtc;
         return F.Format("Community.Sub.Month", CommunityFormatter.Capitalize(F.MonthName(today)), F.Number(today.Day));
     }
 
-    private string GlobalSubtitle() =>
-        _progress.Period == CommunityPeriod.Global && _progress.Data?.WindowStart is { } first
-            ? F.Format("Community.Sub.Global", F.DayMonth(first))
+    /// <summary>
+    /// The date is the local date of the very first XP, the one the progression section shows too (same fact, same date).
+    /// "No XP yet" is only said once the global progression is loaded and says so; before that (or if it failed)
+    /// we do not know, so the line stays neutral.
+    /// </summary>
+    private string GlobalSubtitle()
+    {
+        if (_progress.Period != CommunityPeriod.Global || _progress.Data is not { } progress)
+            return F["Community.Sub.GlobalSince"];
+
+        return progress.AllTime.FirstGainAt is { } first
+            ? F.Format("Community.Sub.Global", F.DayMonth(CommunityFormatter.LocalDate(first)))
             : F["Community.Sub.GlobalNoGain"];
+    }
 }

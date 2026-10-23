@@ -26,6 +26,17 @@ public static class CommunityPeriodExtensions
         _ => "semaine"
     };
 
+    /// <summary>
+    /// Whether <paramref name="todayUtc"/> is the first UTC day of the period: Monday for the week, the 1st for the month.
+    /// Never for the global period, which has no start to wait for. The server's windows are UTC calendar weeks and months.
+    /// </summary>
+    public static bool IsFirstDay(this CommunityPeriod period, DateOnly todayUtc) => period switch
+    {
+        CommunityPeriod.Week => todayUtc.DayOfWeek == DayOfWeek.Monday,
+        CommunityPeriod.Month => todayUtc.Day == 1,
+        _ => false
+    };
+
     /// <summary>Parses the page URL value; anything unknown or missing falls back to the week.</summary>
     public static CommunityPeriod FromUrlValue(string? value) => value?.ToLowerInvariant() switch
     {

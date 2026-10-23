@@ -1,5 +1,4 @@
 using KairuFocus.Application.Gamification.Common;
-using KairuFocus.Application.Gamification.Queries.GetCommunityProgress;
 using KairuFocus.Domain.Pomodoro;
 
 namespace KairuFocus.Application.Tests.Gamification;

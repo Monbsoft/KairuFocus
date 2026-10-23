@@ -85,6 +85,9 @@
 	<value>最初のXP（{0}）から</value>
   </data>
   <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
+	<value>最初のXPは、5分以上のスプリントを初めて完了したときに手に入ります</value>
+  </data>
+  <data name="Community.Sub.GlobalSince" xml:space="preserve">
 	<value>最初のXPから</value>
   </data>
   <data name="Community.Announce.Week" xml:space="preserve">
@@ -203,6 +206,12 @@
   </data>
   <data name="Community.Xp.Starting.Month" xml:space="preserve">
 	<value>今月は始まったばかりです。</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Week" xml:space="preserve">
+	<value>今週はまだXPがありません。</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Month" xml:space="preserve">
+	<value>今月はまだXPがありません。</value>
   </data>
   <data name="Community.Xp.Empty" xml:space="preserve">
 	<value>5分以上のスプリントを完了して、最初のXPを獲得しましょう。</value>

@@ -34,6 +34,15 @@ public sealed class LeaderboardProfileTests
     }
 
     [Fact]
+    public void Should_Throw_When_NewPseudonymEqualsCurrent()
+    {
+        var profile = LeaderboardProfile.Join(User, Pseudonym.Create("LoutreTenace").Value, JoinedAtUtc);
+        var samePseudonym = Pseudonym.Create("LoutreTenace").Value;
+
+        Assert.Throws<ArgumentException>(() => profile.ChangePseudonym(samePseudonym));
+    }
+
+    [Fact]
     public void Should_Throw_When_JoinDateIsDefault()
     {
         var pseudonym = Pseudonym.Create("LoutreTenace").Value;
