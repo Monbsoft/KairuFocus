@@ -2,7 +2,7 @@
 
 > Application de gestion d'activité quotidienne pour développeurs.
 
-KairuFocus centralise en un seul endroit tout ce dont un développeur a besoin pour rester focus et organisé : todo list de micro-tâches, journal de bord, sessions Pomodoro et intégration avec les outils de ticketing (Jira).
+KairuFocus centralise en un seul endroit tout ce dont un développeur a besoin pour rester focus et organisé : todo list de micro-tâches, journal de bord, sessions Pomodoro, statistiques de focus, XP et page Communauté, et pilotage des tâches par une IA via MCP.
 
 ![Tableau de bord KairuFocus en thème sombre : tâche en cours, objectif de sprints du jour, temps et série de focus](docs/screenshots/tableau-de-bord-sombre.png)
 
@@ -12,12 +12,17 @@ KairuFocus centralise en un seul endroit tout ce dont un développeur a besoin p
 
 | Module | Description |
 |--------|-------------|
-| ☑️ **Tasks** | Micro-tâches quotidiennes — ajout, modification, statut, lien Jira |
-| 🍅 **Pomodoro** | Sessions de focus (sprint / pause courte / pause longue) avec chronomètre circulaire |
+| ☑️ **Tasks** | Micro-tâches quotidiennes — ajout, modification, statut, tags, description Markdown |
+| 🍅 **Pomodoro** | Sessions de focus (sprint / pause courte / pause longue) et sprint libre à durée variable, objectif quotidien et série |
 | 📖 **Journal** | Timeline d'activité quotidienne générée automatiquement + commentaires personnels |
-| 🎫 **Tickets** | Intégration Jira Cloud — liste des tickets assignés, liaison avec les tâches |
-| ⚙️ **Settings** | Thème clair/sombre/système, durées Pomodoro, credentials Jira |
+| 📊 **Statistiques** | Temps de focus et sprints par semaine / mois, heatmap annuelle, XP totale et de la semaine |
+| 🏆 **Communauté** | Ma place au classement (semaine, mois, général) sous pseudo généré, ma progression d'XP comparée au même moment de la période précédente, membres en sprint en ce moment et bilan collectif anonymes. Participation (opt-in) gérée dans les paramètres |
+| 🤖 **MCP** | Serveur MCP (`/mcp`) : une IA crée, liste, modifie, complète et supprime les tâches, authentifiée par un token personnel |
+| ⚙️ **Settings** | Thème clair/sombre/système, durées et objectif Pomodoro, sonnerie et volume, classement de la communauté, token MCP |
 | 🔐 **Auth** | Connexion via GitHub OAuth 2.0, JWT HS256, multi-utilisateurs |
+| 🎫 **Tickets** | Intégration Jira Cloud — conservée côté serveur, désactivée dans l'interface depuis l'itération #19 |
+
+**XP** : +10 XP par sprint complété d'au moins 5 minutes. Le classement de la page Communauté n'affiche que des pseudos générés et des totaux ; l'XP gagnée reste visible même sans participer.
 
 ---
 
@@ -27,22 +32,22 @@ KairuFocus centralise en un seul endroit tout ce dont un développeur a besoin p
 - **API** : ASP.NET Core Web API
 - **Web** : Blazor WebAssembly
 - **Mobile/Desktop** : .NET MAUI (Blazor Hybrid) — Windows, Android, iOS, macOS
-- **Orchestration** : .NET Aspire 13.1
-- **Base de données** : SQLite + EF Core 10
-- **Auth** : GitHub OAuth 2.0 + JWT HS256
-- **Tests** : xUnit — 192 tests (Domain + Application)
+- **Orchestration** : .NET Aspire 13.6
+- **Base de données** : SQL Server (LocalDB en local, Azure SQL en production) + EF Core 10
+- **Auth** : GitHub OAuth 2.0 + JWT HS256 (Web), token personnel (MCP)
+- **Tests** : xUnit — 804 tests (Domain, Application, Infrastructure, Api)
 
 ---
 
 ## 🏛️ Architecture
 
-Clean Architecture (Uncle Bob) + DDD, avec CQRS sans MediatR.
+Clean Architecture (Uncle Bob) + DDD, avec CQRS via BrilliantMediator (handlers source-générés).
 
 ```
 Domain          →  Entités, Value Objects, règles métier
 Application     →  Commands / Queries / Handlers (CQRS)
-Infrastructure  →  EF Core, SQLite, Jira API client
-Api             →  Controllers ASP.NET Core, Auth JWT
+Infrastructure  →  EF Core, SQL Server, Jira API client
+Api             →  Controllers ASP.NET Core, Auth JWT, serveur MCP
 Web / Maui      →  UI Blazor (WASM + Hybrid)
 ```
 
@@ -50,10 +55,10 @@ Web / Maui      →  UI Blazor (WASM + Hybrid)
 
 ```
 src/
-├── KairuFocus.Domain/          # 🧠 Bounded Contexts : Tasks, Pomodoro, Journal, Settings, Identity
-├── KairuFocus.Application/     # ⚡ 30 use cases CQRS
+├── KairuFocus.Domain/          # 🧠 Bounded Contexts : Tasks, Pomodoro, Journal, Settings, Identity, Tickets, Gamification
+├── KairuFocus.Application/     # ⚡ 42 use cases CQRS
 ├── KairuFocus.Infrastructure/  # 🗄️ EF Core + migrations + repositories
-├── KairuFocus.Api/             # 🌐 REST API + GitHub OAuth + JWT
+├── KairuFocus.Api/             # 🌐 REST API + GitHub OAuth + JWT + MCP
 ├── KairuFocus.Web/             # 💻 Blazor WASM
 ├── KairuFocus.Maui/            # 📱 .NET MAUI Blazor Hybrid
 ├── KairuFocus.AppHost/         # 🔭 Aspire orchestration
@@ -61,10 +66,10 @@ src/
 tests/
 ├── KairuFocus.Domain.Tests/
 ├── KairuFocus.Application.Tests/
-└── KairuFocus.Infrastructure.Tests/
+├── KairuFocus.Infrastructure.Tests/
+└── KairuFocus.Api.Tests/
 docs/
-├── spec.md                   # 📋 Spécification complète + ADR
-└── project-state.md          # 📍 État de l'itération courante
+└── screenshots/              # 🖼️ Captures de l'application
 ```
 
 ---
@@ -74,6 +79,7 @@ docs/
 ### Prérequis
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- SQL Server LocalDB (instance `(localdb)\mssqllocaldb`, base `kairufocus` : l'API applique les migrations au démarrage)
 - Une [GitHub OAuth App](https://github.com/settings/developers) (voir ci-dessous)
 
 ### 1️⃣ Configurer GitHub OAuth
@@ -134,27 +140,22 @@ dotnet test
 ```
 
 ```
-✅ Réussi! — 192 tests, 0 échec
+✅ Réussi! — 804 tests, 0 échec
 ```
+
+> 💡 Avec Aspire, le redémarrage d'une ressource ne recompile pas le projet : après une modification du Web, recompile-le puis redémarre la ressource, ou relance l'AppHost. Une compilation du projet Web pendant que l'AppHost tourne casse l'instance en cours jusqu'à ce redémarrage.
 
 ---
 
-## 🎫 Intégration Jira (optionnel)
+## 🎫 Intégration Jira
 
-Dans l'application → **⚙️ Paramètres** → section Jira :
-
-| Champ | Exemple |
-|-------|---------|
-| Base URL | `https://ton-domaine.atlassian.net` |
-| Email | `ton@email.com` |
-| API Token | Généré sur [id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens) |
+Le bounded context Tickets (client Jira Cloud) est conservé côté serveur, mais l'intégration est **désactivée dans l'interface** depuis l'itération #19 : plus de page Tickets ni de configuration Jira dans les paramètres.
 
 ---
 
 ## 📚 Documentation
 
-- [`docs/spec.md`](docs/spec.md) — 📋 Spécification complète, use cases, diagrammes, ADR
-- [`docs/project-state.md`](docs/project-state.md) — 📍 État de l'itération courante et historique
+La spécification (`spec.md` : use cases, diagrammes, ADR), l'état du projet (`project-state.md`) et les plans de fonctionnalités sont tenus dans un dépôt séparé et privé, **kairu-specs**.
 
 ---
 
