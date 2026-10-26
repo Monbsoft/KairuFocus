@@ -806,6 +806,14 @@ code {
 .kf-bars__record { font-size: var(--text-xs); font-weight: 700; white-space: nowrap; padding: 0 6px; border-radius: var(--radius-xs); background: var(--warning-subtle); color: var(--warning-text); }
 .kf-community-page .kf-bars__lbl { font-size: var(--text-xs); white-space: nowrap; }
 .kf-community-page .kf-bars__col--current .kf-bars__lbl { color: var(--current-text); font-weight: 700; }
+/* Libellés trop proches : XpBarChart n'en garde qu'un sur N (N calculé pour la plage de largeur du graphe, d'après le nombre
+   de barres et la longueur des libellés) et marque les autres ; ils sont masqués sans quitter la mise en page.
+   Le conteneur est .kf-bars. Plages alignées sur RangeWidths de XpBarChart.razor : < 230, 230-309, 310-519, >= 520 px. */
+.kf-community-page .kf-bars { container-type: inline-size; }
+@container (max-width: 229.98px) { .kf-bars__col--lbl-off0 .kf-bars__lbl { visibility: hidden; } }
+@container (min-width: 230px) and (max-width: 309.98px) { .kf-bars__col--lbl-off1 .kf-bars__lbl { visibility: hidden; } }
+@container (min-width: 310px) and (max-width: 519.98px) { .kf-bars__col--lbl-off2 .kf-bars__lbl { visibility: hidden; } }
+@container (min-width: 520px) { .kf-bars__col--lbl-off3 .kf-bars__lbl { visibility: hidden; } }
 
 /* Bilan « Ensemble » */
 .kf-recap { padding: var(--space-4) var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); }
@@ -845,8 +853,6 @@ code {
        (ellipse au-delà, pseudo complet dans title). Petit corps et interligne serré : la ligne reste à 44 px. */
     .kf-row__pseudo { flex-wrap: wrap; row-gap: 0; }
     .kf-row__you { font-size: var(--text-sm); line-height: 1.25; }
-    /* Au-delà de 6 barres, un libellé sur deux, en comptant depuis la dernière (« en cours » reste lisible). */
-    .kf-bars--dense .kf-bars__col:nth-last-child(even) .kf-bars__lbl { visibility: hidden; }
 }
 
 /* ── Paramètres : section « Classement de la communauté » ───────────────── */

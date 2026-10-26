@@ -22,7 +22,7 @@ else
                 else
                 {
                     <li class="kf-row @(row.IsMe ? "kf-row--me" : "")" aria-current="@(row.IsMe ? "true" : null)">
-                        <span class="kf-row__rank">@row.Rank</span>
+                        <span class="kf-row__rank">@F.Number(row.Rank)</span>
                         <span class="kf-row__pseudo">
                             <span class="kf-row__name" title="@row.Pseudonym">@row.Pseudonym</span>
                             @if (row.IsMe)

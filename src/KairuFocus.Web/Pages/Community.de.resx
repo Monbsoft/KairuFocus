@@ -375,6 +375,9 @@
   <data name="Community.Format.MonthYear" xml:space="preserve">
 	<value>MMMM yyyy</value>
   </data>
+  <data name="Community.Format.MonthShortYear" xml:space="preserve">
+	<value>MMM yyyy</value>
+  </data>
   <data name="Settings.Leaderboard.Title" xml:space="preserve">
 	<value>Community-Rangliste</value>
   </data>

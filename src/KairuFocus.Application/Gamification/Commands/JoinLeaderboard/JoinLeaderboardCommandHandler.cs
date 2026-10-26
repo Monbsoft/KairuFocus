@@ -13,17 +13,33 @@ public sealed class JoinLeaderboardCommandHandler : ICommandHandler<JoinLeaderbo
     private readonly ICurrentUserService _currentUserService;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<JoinLeaderboardCommandHandler> _logger;
+    private readonly Random _random;
 
     public JoinLeaderboardCommandHandler(
         ILeaderboardProfileRepository profileRepository,
         ICurrentUserService currentUserService,
         TimeProvider timeProvider,
         ILogger<JoinLeaderboardCommandHandler> logger)
+        : this(profileRepository, currentUserService, timeProvider, logger, Random.Shared)
+    {
+    }
+
+    /// <summary>
+    /// Test seam: a seeded <see cref="Random"/> makes the draws deterministic. Dependency injection only
+    /// sees the public constructor.
+    /// </summary>
+    internal JoinLeaderboardCommandHandler(
+        ILeaderboardProfileRepository profileRepository,
+        ICurrentUserService currentUserService,
+        TimeProvider timeProvider,
+        ILogger<JoinLeaderboardCommandHandler> logger,
+        Random random)
     {
         _profileRepository = profileRepository;
         _currentUserService = currentUserService;
         _timeProvider = timeProvider;
         _logger = logger;
+        _random = random;
     }
 
     public async Task<JoinLeaderboardResult> Handle(
@@ -36,7 +52,7 @@ public sealed class JoinLeaderboardCommandHandler : ICommandHandler<JoinLeaderbo
             return JoinLeaderboardResult.Failure(GamificationErrors.Gamification.AlreadyParticipating);
 
         var pseudonym = await PseudonymAllocator.AllocateAsync(
-            _profileRepository, Random.Shared, excluded: null, cancellationToken);
+            _profileRepository, _random, excluded: null, cancellationToken);
         if (pseudonym is null)
         {
             _logger.LogError(

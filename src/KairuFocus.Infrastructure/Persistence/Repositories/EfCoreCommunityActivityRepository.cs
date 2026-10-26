@@ -25,6 +25,10 @@ internal sealed class EfCoreCommunityActivityRepository : ICommunityActivityRepo
 
     public async Task<int> CountSprintsInProgressAsync(DateTime nowUtc, CancellationToken cancellationToken = default)
     {
+        // Counts sessions, read as "members in sprint": the two only match because the filtered unique index
+        // PomodoroSessionConfiguration.ActiveSessionIndexName allows at most one Active session per non-null owner.
+        // Dropping that index would count a member once per active sprint.
+        //
         // Plain comparison pre-filter: a sprint is never present for more than 4 h after its start,
         // so StartedAt > now − 4 h is a necessary condition. The exact deadline is CommunityRules'.
         var earliestStart = nowUtc - CommunityRules.MaxCountedSprintDuration;

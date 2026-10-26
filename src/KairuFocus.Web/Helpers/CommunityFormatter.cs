@@ -18,8 +18,13 @@ namespace KairuFocus.Web.Helpers;
 public sealed class CommunityFormatter
 {
     private readonly IStringLocalizer<Community> _localizer;
+    private readonly TimeProvider _clock;
 
-    public CommunityFormatter(IStringLocalizer<Community> localizer) => _localizer = localizer;
+    public CommunityFormatter(IStringLocalizer<Community> localizer, TimeProvider clock)
+    {
+        _localizer = localizer;
+        _clock = clock;
+    }
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
@@ -112,7 +117,8 @@ public sealed class CommunityFormatter
     // ── Dates ───────────────────────────────────────────────────────────────
     // A date shows its year only when it is not the current one.
 
-    private static int CurrentYear => DateTime.UtcNow.Year;
+    // Same clock as the page and the hero (UTC): a label never contradicts the dates they compute.
+    private int CurrentYear => _clock.GetUtcNow().Year;
 
     /// <summary>« 21 septembre » (with the year when it is not the current one).</summary>
     public string DayMonth(DateOnly date) =>
@@ -128,8 +134,9 @@ public sealed class CommunityFormatter
     public string MonthName(DateOnly date) =>
         date.ToString(this[date.Year == CurrentYear ? "Community.Format.Month" : "Community.Format.MonthYear"], Culture);
 
-    /// <summary>« juil. ».</summary>
-    public string MonthShort(DateOnly date) => date.ToString("MMM", Culture);
+    /// <summary>« juil. » (with the year when it is not the current one: « juil. 2026 »).</summary>
+    public string MonthShort(DateOnly date) =>
+        date.Year == CurrentYear ? date.ToString("MMM", Culture) : date.ToString(this["Community.Format.MonthShortYear"], Culture);
 
     /// <summary>The weekday of an instant, in local time (« vendredi »).</summary>
     public string WeekdayName(DateTimeOffset instant) =>
