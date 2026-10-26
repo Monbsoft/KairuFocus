@@ -8,7 +8,8 @@ namespace KairuFocus.Api.Tests.Auth;
 /// <summary>
 /// Configurable mediator stub for integration tests.
 /// Set <see cref="DispatchResult"/> to control what DispatchAsync returns
-/// for any command with a typed response.
+/// for any command with a typed response, and <see cref="SendResult"/> to control
+/// what SendAsync returns for any query.
 /// </summary>
 public sealed class TestMediator : IMediator
 {
@@ -17,6 +18,12 @@ public sealed class TestMediator : IMediator
     /// Return the boxed TResponse value.
     /// </summary>
     public Func<object, object>? DispatchResult { get; set; }
+
+    /// <summary>
+    /// Factory function called for each SendAsync&lt;TQuery, TResponse&gt; call,
+    /// with the query as argument. Return the boxed TResponse value.
+    /// </summary>
+    public Func<object, object>? SendResult { get; set; }
 
     public Task DispatchAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default)
         where TCommand : ICommand
@@ -39,7 +46,14 @@ public sealed class TestMediator : IMediator
         TQuery query,
         CancellationToken cancellationToken = default)
         where TQuery : IQuery<TResponse>
-        => throw new NotSupportedException($"TestMediator does not support query {typeof(TQuery).Name}");
+    {
+        if (SendResult is null)
+            throw new InvalidOperationException(
+                $"TestMediator.SendResult is not configured for query {typeof(TQuery).Name}.");
+
+        var result = SendResult(query);
+        return Task.FromResult((TResponse)result);
+    }
 
     public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : IEvent

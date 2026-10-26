@@ -1,4 +1,5 @@
 using KairuFocus.Web.Auth;
+using KairuFocus.Web.Helpers;
 using KairuFocus.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -37,6 +38,8 @@ builder.Services.AddScoped<PomodoroApiClient>();
 builder.Services.AddScoped<JournalApiClient>();
 builder.Services.AddScoped<SettingsApiClient>();
 builder.Services.AddScoped<GamificationApiClient>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<CommunityFormatter>();
 builder.Services.AddScoped<McpTokenService>();
 builder.Services.AddScoped<ISoundService, SoundService>();
 builder.Services.AddSingleton<MarkdownService>();

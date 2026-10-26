@@ -1,0 +1,124 @@
+@* XP history as bars (the .kf-bars pattern of the Statistics page).
+   Week: the last 8 weeks. Month: one bar per month since the first XP. Global: cumulative XP at each month end.
+   The bar of the period in progress is blue, the others gray (a landmark, not a verdict); the record carries a small tag.
+   The bars are decorative: the whole card is an image whose label reads out every value.
+   Labels: only every Nth one is shown when they would touch (see "Labels" in the code block). *@
+@inject CommunityFormatter F
+
+@if (Progress.Bars.Count > 0)
+{
+    var bars = BuildBars();
+    <div class="kf-card kf-barcard" role="img" aria-label="@AriaSummary(bars)">
+        <div class="kf-barcard__head">
+            <span class="kf-barcard__title">@F["Community.Chart.Title." + Period]</span>
+            <span class="kf-barcard__unit">@F["Community.Chart.Unit." + Period]</span>
+        </div>
+        <div class="kf-bars" aria-hidden="true">
+            @foreach (var bar in bars)
+            {
+                <div class="kf-bars__col @(bar.IsCurrent ? "kf-bars__col--current" : "") @bar.HiddenLabels" title="@bar.Title">
+                    <div class="kf-bars__top">
+                        @if (bar.IsRecord)
+                        {
+                            <span class="kf-bars__record">@F.Format("Community.Chart.Record", F.Number(bar.Xp))</span>
+                        }
+                        else if (bar.IsCurrent)
+                        {
+                            <span class="kf-bars__val">@F.Number(bar.Xp)</span>
+                        }
+                    </div>
+                    <div class="kf-bars__track">
+                        <div class="kf-bars__fill" style="height:@(bar.HeightPct)%"></div>
+                    </div>
+                    <span class="kf-bars__lbl">@bar.Label</span>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private sealed record BarView(string Label, string Title, int Xp, int HeightPct, bool IsCurrent, bool IsRecord, string HiddenLabels);
+
+    [Parameter, EditorRequired] public CommunityProgressDto Progress { get; set; } = default!;
+
+    /// <summary>The period the progress was loaded for (it drives the labels).</summary>
+    [Parameter, EditorRequired] public CommunityPeriod Period { get; set; }
+
+    private List<BarView> BuildBars()
+    {
+        var max = Progress.Bars.Max(b => b.Xp);
+        var labels = Progress.Bars.Select(BarLabel).ToList();
+        var steps = RangeWidths.Select(width => LabelStep(labels, width)).ToArray();
+
+        return Progress.Bars
+            .Select((bar, i) =>
+            {
+                var label = labels[i];
+                // Same scale for every bar, with some headroom for the tag above the tallest one.
+                var height = max <= 0 ? 3 : Math.Max(3, (int)Math.Round(bar.Xp / (max * 1.1) * 100));
+                return new BarView(label, $"{label} — {F.Xp(bar.Xp)}", bar.Xp, height, bar.IsCurrent, bar.IsRecord,
+                    HiddenLabels(labels.Count - 1 - i, steps));
+            })
+            .ToList();
+    }
+
+    private string BarLabel(CommunityBarDto bar)
+    {
+        if (bar.IsCurrent)
+            return F[Period == CommunityPeriod.Global ? "Community.Chart.Today" : "Community.Chart.Current"];
+
+        return Period switch
+        {
+            CommunityPeriod.Week => F.ShortDayMonth(bar.PeriodStart),
+            CommunityPeriod.Month => F.MonthShort(bar.PeriodStart),
+            _ => F.Format("Community.Chart.MonthEnd", F.MonthShort(bar.PeriodStart))
+        };
+    }
+
+    // ── Labels ──────────────────────────────────────────────────────────────
+    // A label is centered under its bar and never wraps: past a few bars, or with long labels (« fin sept. 2026 »),
+    // neighbours would touch. So only every Nth label is shown, counting from the last bar (« en cours » always stays),
+    // N being the smallest step that leaves room for the labels kept. The room depends on the width of the chart, which
+    // only the browser knows: a step is computed for the narrowest chart of each width range, and app.css hides the
+    // other labels with a container query on .kf-bars, range by range (classes kf-bars__col--lbl-off0..3).
+    // The width of a text is an estimate (12 px font): 5.5 px per character, 6.5 per digit, 12 per East Asian character.
+
+    /// <summary>Narrowest chart width (px) of each range: under 230, 230 to 309, 310 to 519, 520 and more. Keep in sync with app.css.</summary>
+    private static readonly int[] RangeWidths = [190, 230, 310, 520];
+
+    private const double BarGapPx = 8;    // between two bars (--space-2)
+    private const double LabelGapPx = 4;  // wanted between two labels shown
+
+    /// <summary>Smallest step (1 = every label) at which the labels kept do not touch on a chart of this width.</summary>
+    private static int LabelStep(IReadOnlyList<string> labels, double chartWidth)
+    {
+        var pitch = (chartWidth + BarGapPx) / labels.Count;   // from the center of a bar to the next one
+
+        for (var step = 1; step < labels.Count; step++)
+        {
+            var fits = true;
+            for (var last = labels.Count - 1; last >= step && fits; last -= step)
+                fits = (TextWidth(labels[last]) + TextWidth(labels[last - step])) / 2 + LabelGapPx <= step * pitch;
+
+            if (fits) return step;
+        }
+
+        return labels.Count;   // only the last label
+    }
+
+    private static double TextWidth(string text) =>
+        text.Sum(c => char.IsDigit(c) ? 6.5 : c >= '\u2E80' ? 12 : 5.5);
+
+    /// <summary>The classes that hide the label of a bar (<paramref name="fromLast"/>: 0 for the last bar) in the ranges where it is not kept.</summary>
+    private static string HiddenLabels(int fromLast, int[] steps) =>
+        string.Join(' ', steps.Select((step, range) => fromLast % step == 0 ? null : $"kf-bars__col--lbl-off{range}").OfType<string>());
+
+    private string AriaSummary(List<BarView> bars)
+    {
+        var items = bars.Select(bar =>
+            $"{bar.Label} {F.Xp(bar.Xp)}" + (bar.IsRecord ? $" ({F["Community.Chart.RecordMark"]})" : ""));
+
+        return $"{F["Community.Chart.Title." + Period]} ({F["Community.Chart.Unit." + Period]}). {string.Join(", ", items)}";
+    }
+}

@@ -1,0 +1,38 @@
+@* "Classement de la semaine / du mois / général": top 10 under pseudonyms, plus my row when I am further down.
+   No management action here: joining, leaving and changing pseudonym all live in the settings. *@
+@inject CommunityFormatter F
+
+<div class="kf-zone" aria-busy="@(Zone.Busy ? "true" : "false")">
+    @{
+        var period = Zone.Period ?? Period;
+    }
+    <h2 class="kf-section-title" id="community-board-title">@F["Community.Board.Title." + period]</h2>
+    <p class="kf-section-hint">@F["Community.Board.Hint"]</p>
+
+    @if (Zone.ShowSkeleton)
+    {
+        <div class="kf-skeleton-rows" aria-hidden="true">
+            @for (var i = 0; i < 6; i++)
+            {
+                <div class="kf-skel kf-skel--row"></div>
+            }
+        </div>
+    }
+    else if (Zone.ShowError)
+    {
+        <ZoneAlert Message="@F["Community.Board.Error"]" OnRetry="OnRetry" />
+    }
+    else if (Zone.Data is { } board)
+    {
+        <LeaderboardList Board="board" Period="period" LabelledBy="community-board-title" />
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public LoadZone<CommunityLeaderboardDto> Zone { get; set; } = default!;
+
+    /// <summary>The selected period: used while the section has no data of its own yet.</summary>
+    [Parameter, EditorRequired] public CommunityPeriod Period { get; set; }
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+}

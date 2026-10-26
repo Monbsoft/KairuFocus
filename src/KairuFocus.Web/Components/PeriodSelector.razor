@@ -1,0 +1,21 @@
+@* Segmented control Semaine / Mois / Global. Same markup as the one of the Statistics page (.kf-seg). *@
+@inject CommunityFormatter F
+
+<div class="kf-seg" role="group" aria-label="@F["Community.Period.Aria"]">
+    @foreach (var period in Periods)
+    {
+        var selected = period == Value;
+        <button type="button"
+                class="kf-seg__btn @(selected ? "kf-seg__btn--on" : "")"
+                aria-pressed="@(selected ? "true" : "false")"
+                @onclick="() => ValueChanged.InvokeAsync(period)">@F["Community.Period." + period]</button>
+    }
+</div>
+
+@code {
+    private static readonly CommunityPeriod[] Periods = [CommunityPeriod.Week, CommunityPeriod.Month, CommunityPeriod.Global];
+
+    [Parameter, EditorRequired] public CommunityPeriod Value { get; set; }
+
+    [Parameter] public EventCallback<CommunityPeriod> ValueChanged { get; set; }
+}

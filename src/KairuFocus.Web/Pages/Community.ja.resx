@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+	<xsd:element name="root" msdata:IsDataSet="true">
+	  <xsd:complexType>
+		<xsd:choice maxOccurs="unbounded">
+		  <xsd:element name="metadata">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" use="required" type="xsd:string" />
+			  <xsd:attribute name="type" type="xsd:string" />
+			  <xsd:attribute name="mimetype" type="xsd:string" />
+			  <xsd:attribute ref="xml:space" />
+			</xsd:complexType>
+		  </xsd:element>
+		  <xsd:element name="data">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+				<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+			  <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+			  <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+			  <xsd:attribute ref="xml:space" />
+			</xsd:complexType>
+		  </xsd:element>
+		  <xsd:element name="resheader">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" type="xsd:string" use="required" />
+			</xsd:complexType>
+		  </xsd:element>
+		</xsd:choice>
+	  </xsd:complexType>
+	</xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+	<value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+	<value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+	<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+	<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Community.PageTitle" xml:space="preserve">
+	<value>コミュニティ — KairuFocus</value>
+  </data>
+  <data name="Community.Title" xml:space="preserve">
+	<value>コミュニティ</value>
+  </data>
+  <data name="Community.Loading" xml:space="preserve">
+	<value>コミュニティを読み込み中…</value>
+  </data>
+  <data name="Community.Retry" xml:space="preserve">
+	<value>再試行</value>
+  </data>
+  <data name="Community.Period.Aria" xml:space="preserve">
+	<value>期間を選択</value>
+  </data>
+  <data name="Community.Period.Week" xml:space="preserve">
+	<value>週</value>
+  </data>
+  <data name="Community.Period.Month" xml:space="preserve">
+	<value>月</value>
+  </data>
+  <data name="Community.Period.Global" xml:space="preserve">
+	<value>全期間</value>
+  </data>
+  <data name="Community.Sub.Week" xml:space="preserve">
+	<value>{0}の週</value>
+  </data>
+  <data name="Community.Sub.Month" xml:space="preserve">
+	<value>{0}、1日〜{1}日</value>
+  </data>
+  <data name="Community.Sub.Global" xml:space="preserve">
+	<value>最初のXP（{0}）から</value>
+  </data>
+  <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
+	<value>最初のXPは、5分以上のスプリントを初めて完了したときに手に入ります</value>
+  </data>
+  <data name="Community.Sub.GlobalSince" xml:space="preserve">
+	<value>最初のXPから</value>
+  </data>
+  <data name="Community.Announce.Week" xml:space="preserve">
+	<value>週間ランキングを表示しました</value>
+  </data>
+  <data name="Community.Announce.Month" xml:space="preserve">
+	<value>月間ランキングを表示しました</value>
+  </data>
+  <data name="Community.Announce.Global" xml:space="preserve">
+	<value>総合ランキングを表示しました</value>
+  </data>
+  <data name="Community.Presence.Now.One" xml:space="preserve">
+	<value>現在{0}人のメンバーがスプリント中</value>
+  </data>
+  <data name="Community.Presence.Now.Other" xml:space="preserve">
+	<value>現在{0}人のメンバーがスプリント中</value>
+  </data>
+  <data name="Community.Presence.Today.One" xml:space="preserve">
+	<value>今日、すでに{0}人のメンバーがスプリントを完了</value>
+  </data>
+  <data name="Community.Presence.Today.Other" xml:space="preserve">
+	<value>今日、すでに{0}人のメンバーがスプリントを完了</value>
+  </data>
+  <data name="Community.Place.Heading" xml:space="preserve">
+	<value>コミュニティでの順位</value>
+  </data>
+  <data name="Community.Place.Period.Week" xml:space="preserve">
+	<value>今週</value>
+  </data>
+  <data name="Community.Place.Period.Month" xml:space="preserve">
+	<value>今月</value>
+  </data>
+  <data name="Community.Place.Period.Global" xml:space="preserve">
+	<value>通算</value>
+  </data>
+  <data name="Community.Place.Of.One" xml:space="preserve">
+	<value>ランク入り{0}人中</value>
+  </data>
+  <data name="Community.Place.Of.Other" xml:space="preserve">
+	<value>ランク入り{0}人中</value>
+  </data>
+  <data name="Community.Place.Tie" xml:space="preserve">
+	<value>同順位</value>
+  </data>
+  <data name="Community.Place.Sr.One" xml:space="preserve">
+	<value>ランク入り{1}人中{0}位（{2}）。</value>
+  </data>
+  <data name="Community.Place.Sr.Other" xml:space="preserve">
+	<value>ランク入り{1}人中{0}位（{2}）。</value>
+  </data>
+  <data name="Community.Place.TiedSr" xml:space="preserve">
+	<value>同順位です。</value>
+  </data>
+  <data name="Community.Place.Unranked.Week" xml:space="preserve">
+	<value>今週はまだランク外</value>
+  </data>
+  <data name="Community.Place.Unranked.Month" xml:space="preserve">
+	<value>今月はまだランク外</value>
+  </data>
+  <data name="Community.Place.Unranked.Global" xml:space="preserve">
+	<value>通算ではまだランク外</value>
+  </data>
+  <data name="Community.Place.Join.Title" xml:space="preserve">
+	<value>まだ順位がありません。</value>
+  </data>
+  <data name="Community.Place.Join.Body" xml:space="preserve">
+	<value>設定からランキングに参加しましょう。自動生成されたニックネームで表示されます。</value>
+  </data>
+  <data name="Community.Place.Join.Link" xml:space="preserve">
+	<value>設定で参加する</value>
+  </data>
+  <data name="Community.Ordinal.One" xml:space="preserve">
+	<value>{0}位</value>
+  </data>
+  <data name="Community.Ordinal.Two" xml:space="preserve">
+	<value>{0}位</value>
+  </data>
+  <data name="Community.Ordinal.Few" xml:space="preserve">
+	<value>{0}位</value>
+  </data>
+  <data name="Community.Ordinal.Other" xml:space="preserve">
+	<value>{0}位</value>
+  </data>
+  <data name="Community.Xp.Heading.Week" xml:space="preserve">
+	<value>今週の自分のXP</value>
+  </data>
+  <data name="Community.Xp.Heading.Month" xml:space="preserve">
+	<value>今月の自分のXP</value>
+  </data>
+  <data name="Community.Xp.Heading.Global" xml:space="preserve">
+	<value>これまでの自分のXP</value>
+  </data>
+  <data name="Community.Xp.Activity.One" xml:space="preserve">
+	<value>{0}スプリント · フォーカス{1}</value>
+  </data>
+  <data name="Community.Xp.Activity.Other" xml:space="preserve">
+	<value>{0}スプリント · フォーカス{1}</value>
+  </data>
+  <data name="Community.Xp.Compare.Week" xml:space="preserve">
+	<value>先週の{0}の同じ時刻（{1} XP）と比較</value>
+  </data>
+  <data name="Community.Xp.Compare.Month" xml:space="preserve">
+	<value>{0}の同じ時刻（{1} XP）と比較</value>
+  </data>
+  <data name="Community.Xp.Equal.Week" xml:space="preserve">
+	<value>先週の{0}の同じ時刻と同じ（{1} XP）</value>
+  </data>
+  <data name="Community.Xp.Equal.Month" xml:space="preserve">
+	<value>{0}の同じ時刻と同じ（{1} XP）</value>
+  </data>
+  <data name="Community.Xp.Average" xml:space="preserve">
+	<value>週あたりの平均: {0} XP</value>
+  </data>
+  <data name="Community.Xp.Starting.Week" xml:space="preserve">
+	<value>今週は始まったばかりです。</value>
+  </data>
+  <data name="Community.Xp.Starting.Month" xml:space="preserve">
+	<value>今月は始まったばかりです。</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Week" xml:space="preserve">
+	<value>今週はまだXPがありません。</value>
+  </data>
+  <data name="Community.Xp.NoneYet.Month" xml:space="preserve">
+	<value>今月はまだXPがありません。</value>
+  </data>
+  <data name="Community.Xp.Empty" xml:space="preserve">
+	<value>5分以上のスプリントを完了して、最初のXPを獲得しましょう。</value>
+  </data>
+  <data name="Community.Xp.Error" xml:space="preserve">
+	<value>進捗を読み込めませんでした。</value>
+  </data>
+  <data name="Community.Trend.Up" xml:space="preserve">
+	<value>{0} XP 増加</value>
+  </data>
+  <data name="Community.Trend.Down" xml:space="preserve">
+	<value>{0} XP 減少</value>
+  </data>
+  <data name="Community.Duration.Minutes" xml:space="preserve">
+	<value>{0}分</value>
+  </data>
+  <data name="Community.Duration.Hours" xml:space="preserve">
+	<value>{0}時間</value>
+  </data>
+  <data name="Community.Duration.HoursMinutes" xml:space="preserve">
+	<value>{0}時間{1}分</value>
+  </data>
+  <data name="Community.Progress.Heading" xml:space="preserve">
+	<value>自分の進捗</value>
+  </data>
+  <data name="Community.Kpi.Record" xml:space="preserve">
+	<value>自己ベスト</value>
+  </data>
+  <data name="Community.Kpi.BestWeek" xml:space="preserve">
+	<value>最高の週</value>
+  </data>
+  <data name="Community.Kpi.BestMonth" xml:space="preserve">
+	<value>最高の月</value>
+  </data>
+  <data name="Community.Kpi.AllTime" xml:space="preserve">
+	<value>これまでの合計</value>
+  </data>
+  <data name="Community.Kpi.WeekOf" xml:space="preserve">
+	<value>{0}の週</value>
+  </data>
+  <data name="Community.Kpi.Since.One" xml:space="preserve">
+	<value>{1}から{0}スプリント</value>
+  </data>
+  <data name="Community.Kpi.Since.Other" xml:space="preserve">
+	<value>{1}から{0}スプリント</value>
+  </data>
+  <data name="Community.Chart.Title.Week" xml:space="preserve">
+	<value>直近8週間</value>
+  </data>
+  <data name="Community.Chart.Title.Month" xml:space="preserve">
+	<value>最初のXPからの月別</value>
+  </data>
+  <data name="Community.Chart.Title.Global" xml:space="preserve">
+	<value>累計XP</value>
+  </data>
+  <data name="Community.Chart.Unit.Week" xml:space="preserve">
+	<value>週ごとのXP</value>
+  </data>
+  <data name="Community.Chart.Unit.Month" xml:space="preserve">
+	<value>月ごとのXP</value>
+  </data>
+  <data name="Community.Chart.Unit.Global" xml:space="preserve">
+	<value>各月末時点</value>
+  </data>
+  <data name="Community.Chart.Current" xml:space="preserve">
+	<value>今</value>
+  </data>
+  <data name="Community.Chart.Today" xml:space="preserve">
+	<value>今日</value>
+  </data>
+  <data name="Community.Chart.MonthEnd" xml:space="preserve">
+	<value>{0}末</value>
+  </data>
+  <data name="Community.Chart.Record" xml:space="preserve">
+	<value>最高 · {0}</value>
+  </data>
+  <data name="Community.Chart.RecordMark" xml:space="preserve">
+	<value>最高</value>
+  </data>
+  <data name="Community.Together.Heading" xml:space="preserve">
+	<value>みんなで</value>
+  </data>
+  <data name="Community.Together.Title.Week" xml:space="preserve">
+	<value>今週のみんなの記録</value>
+  </data>
+  <data name="Community.Together.Title.Month" xml:space="preserve">
+	<value>今月のみんなの記録</value>
+  </data>
+  <data name="Community.Together.Title.Global" xml:space="preserve">
+	<value>これまでのみんなの記録</value>
+  </data>
+  <data name="Community.Together.Sprints.One" xml:space="preserve">
+	<value>{0}スプリント</value>
+  </data>
+  <data name="Community.Together.Sprints.Other" xml:space="preserve">
+	<value>{0}スプリント</value>
+  </data>
+  <data name="Community.Together.Focus" xml:space="preserve">
+	<value>フォーカス{0}</value>
+  </data>
+  <data name="Community.Together.LessThanHour" xml:space="preserve">
+	<value>1時間未満</value>
+  </data>
+  <data name="Community.Together.Members.One" xml:space="preserve">
+	<value>アクティブメンバー{0}人</value>
+  </data>
+  <data name="Community.Together.Members.Other" xml:space="preserve">
+	<value>アクティブメンバー{0}人</value>
+  </data>
+  <data name="Community.Together.Mine.One" xml:space="preserve">
+	<value>うち自分は{0}スプリント</value>
+  </data>
+  <data name="Community.Together.Mine.Other" xml:space="preserve">
+	<value>うち自分は{0}スプリント</value>
+  </data>
+  <data name="Community.Together.Error" xml:space="preserve">
+	<value>コミュニティの集計を読み込めませんでした。</value>
+  </data>
+  <data name="Community.Board.Title.Week" xml:space="preserve">
+	<value>週間ランキング</value>
+  </data>
+  <data name="Community.Board.Title.Month" xml:space="preserve">
+	<value>月間ランキング</value>
+  </data>
+  <data name="Community.Board.Title.Global" xml:space="preserve">
+	<value>総合ランキング</value>
+  </data>
+  <data name="Community.Board.Hint" xml:space="preserve">
+	<value>メンバーはニックネームのみで表示されます</value>
+  </data>
+  <data name="Community.Board.You" xml:space="preserve">
+	<value>（あなた）</value>
+  </data>
+  <data name="Community.Board.Empty.Week" xml:space="preserve">
+	<value>今週はまだ誰もランク入りしていません。</value>
+  </data>
+  <data name="Community.Board.Empty.Month" xml:space="preserve">
+	<value>今月はまだ誰もランク入りしていません。</value>
+  </data>
+  <data name="Community.Board.Empty.Global" xml:space="preserve">
+	<value>まだ誰もランク入りしていません。</value>
+  </data>
+  <data name="Community.Board.Error" xml:space="preserve">
+	<value>ランキングを読み込めませんでした。</value>
+  </data>
+  <data name="Community.Format.DayMonth" xml:space="preserve">
+	<value>M月d日</value>
+  </data>
+  <data name="Community.Format.DayMonthYear" xml:space="preserve">
+	<value>yyyy年M月d日</value>
+  </data>
+  <data name="Community.Format.WeekdayDayMonth" xml:space="preserve">
+	<value>M月d日 (dddd)</value>
+  </data>
+  <data name="Community.Format.ShortDayMonth" xml:space="preserve">
+	<value>M/d</value>
+  </data>
+  <data name="Community.Format.Month" xml:space="preserve">
+	<value>M月</value>
+  </data>
+  <data name="Community.Format.MonthYear" xml:space="preserve">
+	<value>yyyy年M月</value>
+  </data>
+  <data name="Community.Format.MonthShortYear" xml:space="preserve">
+	<value>yyyy年M月</value>
+  </data>
+  <data name="Settings.Leaderboard.Title" xml:space="preserve">
+	<value>コミュニティランキング</value>
+  </data>
+  <data name="Settings.Leaderboard.Loading" xml:space="preserve">
+	<value>ステータスを読み込み中…</value>
+  </data>
+  <data name="Settings.Leaderboard.LoadError" xml:space="preserve">
+	<value>ランキングでの状態を読み込めませんでした。ページを再読み込みしてください。</value>
+  </data>
+  <data name="Settings.Leaderboard.Out" xml:space="preserve">
+	<value>ランキングには表示されていません。コミュニティ画面では閲覧できます。</value>
+  </data>
+  <data name="Settings.Leaderboard.Out.Hint" xml:space="preserve">
+	<value>自動生成されたニックネームで表示されます。表示されるのはニックネーム、順位、XPのみです。</value>
+  </data>
+  <data name="Settings.Leaderboard.In" xml:space="preserve">
+	<value>ランキングには「{0}」として表示されています。</value>
+  </data>
+  <data name="Settings.Leaderboard.Reroll" xml:space="preserve">
+	<value>別のニックネームを引く</value>
+  </data>
+  <data name="Settings.Leaderboard.Rerolling" xml:space="preserve">
+	<value>抽選中…</value>
+  </data>
+  <data name="Settings.Leaderboard.Join" xml:space="preserve">
+	<value>ランキングに参加</value>
+  </data>
+  <data name="Settings.Leaderboard.Joining" xml:space="preserve">
+	<value>参加中…</value>
+  </data>
+  <data name="Settings.Leaderboard.Saved" xml:space="preserve">
+	<value>新しいニックネーム:「{0}」。</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave" xml:space="preserve">
+	<value>ランキングから退出</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Title" xml:space="preserve">
+	<value>ランキングから退出しますか？</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Body" xml:space="preserve">
+	<value>ランキングからすぐに表示されなくなります。XPは保持されます。再参加すると新しいニックネームが付きます。</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Confirm" xml:space="preserve">
+	<value>退出</value>
+  </data>
+  <data name="Settings.Leaderboard.Leave.Cancel" xml:space="preserve">
+	<value>キャンセル</value>
+  </data>
+  <data name="Settings.Leaderboard.Left" xml:space="preserve">
+	<value>ランキングから退出しました。XPは保持されます。</value>
+  </data>
+  <data name="Settings.Leaderboard.Error.Pool" xml:space="preserve">
+	<value>現在ニックネームを生成できません。しばらくしてからもう一度お試しください。</value>
+  </data>
+  <data name="Settings.Leaderboard.Error.Generic" xml:space="preserve">
+	<value>問題が発生しました。しばらくしてからもう一度お試しください。</value>
+  </data>
+</root>

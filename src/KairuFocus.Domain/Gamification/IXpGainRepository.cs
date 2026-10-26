@@ -16,4 +16,7 @@ public interface IXpGainRepository
     /// Uses UTC range comparison (provider-safe: no date bucketing in SQL, ADR-020/021).
     /// </summary>
     Task<int> GetXpBetweenAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Gains of the user, sorted by EarnedAtUtc ascending.</summary>
+    Task<IReadOnlyList<XpEarning>> GetEarningsAsync(UserId userId, CancellationToken cancellationToken = default);
 }

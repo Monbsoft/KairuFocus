@@ -27,4 +27,11 @@ internal sealed class FakeXpGainRepository : IXpGainRepository
                         && g.EarnedAtUtc >= startUtc
                         && g.EarnedAtUtc < endUtc)
             .Sum(g => g.Amount));
+
+    public Task<IReadOnlyList<XpEarning>> GetEarningsAsync(UserId userId, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<XpEarning>>(Gains
+            .Where(g => g.OwnerId == userId)
+            .OrderBy(g => g.EarnedAtUtc)
+            .Select(g => new XpEarning(g.EarnedAtUtc, g.Amount))
+            .ToList());
 }

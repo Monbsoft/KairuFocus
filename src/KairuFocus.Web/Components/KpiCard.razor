@@ -1,0 +1,15 @@
+@* Statistics-style KPI tile (.kf-card .kf-kpi). *@
+
+<section class="kf-card kf-kpi">
+    <div class="kf-kpi__label">@Label</div>
+    <div class="kf-kpi__value">@Value</div>
+    <div class="kf-kpi__hint">@Hint</div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+
+    [Parameter] public string? Hint { get; set; }
+}

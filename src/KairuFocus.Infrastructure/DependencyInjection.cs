@@ -42,6 +42,10 @@ public static class DependencyInjection
         services.AddScoped<IUserSettingsRepository, EfCoreUserSettingsRepository>();
         services.AddScoped<IMcpTokenRepository, EfCoreMcpTokenRepository>();
         services.AddScoped<IXpGainRepository, EfCoreXpGainRepository>();
+        services.AddScoped<ILeaderboardProfileRepository, EfCoreLeaderboardProfileRepository>();
+        // Cross-user reads (ADR-024): the only repositories without a UserId filter.
+        services.AddScoped<ILeaderboardStandingsRepository, EfCoreLeaderboardStandingsRepository>();
+        services.AddScoped<ICommunityActivityRepository, EfCoreCommunityActivityRepository>();
 
         services.AddSingleton<IMcpTokenGenerator, McpTokenGenerator>();
         services.AddHttpClient<IJiraTicketService, JiraApiClient>();

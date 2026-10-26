@@ -1,0 +1,70 @@
+@* Top 10 of the period, plus my own row when I am further down (after a "···" gap if at least one member ranked above me is not shown).
+   Only pseudonyms and XP are shown: nothing that identifies a member. The rows are not interactive.
+   My row is marked three ways (tint, bold + "(toi)", aria-current): color is never the only cue. *@
+@inject CommunityFormatter F
+
+@if (Board.Top.Count == 0)
+{
+    <div class="kf-card">
+        <p class="kf-empty">@F["Community.Board.Empty." + Period]</p>
+    </div>
+}
+else
+{
+    <div class="kf-card kf-board">
+        <ol aria-labelledby="@LabelledBy">
+            @foreach (var row in BuildRows())
+            {
+                if (row.IsGap)
+                {
+                    <li class="kf-row kf-row--gap" aria-hidden="true">···</li>
+                }
+                else
+                {
+                    <li class="kf-row @(row.IsMe ? "kf-row--me" : "")" aria-current="@(row.IsMe ? "true" : null)">
+                        <span class="kf-row__rank">@F.Number(row.Rank)</span>
+                        <span class="kf-row__pseudo">
+                            <span class="kf-row__name" title="@row.Pseudonym">@row.Pseudonym</span>
+                            @if (row.IsMe)
+                            {
+                                @* Leading space: it keeps "RenardAgile (toi)" readable for assistive technologies. *@
+                                <span class="kf-row__you">@($" {F["Community.Board.You"]}")</span>
+                            }
+                        </span>
+                        <span class="kf-row__xp">@F.Xp(row.Xp)</span>
+                    </li>
+                }
+            }
+        </ol>
+    </div>
+}
+
+@code {
+    private sealed record RowView(int Rank, string Pseudonym, int Xp, bool IsMe, bool IsGap = false);
+
+    [Parameter, EditorRequired] public CommunityLeaderboardDto Board { get; set; } = default!;
+
+    [Parameter, EditorRequired] public CommunityPeriod Period { get; set; }
+
+    /// <summary>Id of the heading that names the list.</summary>
+    [Parameter, EditorRequired] public string LabelledBy { get; set; } = "";
+
+    private IEnumerable<RowView> BuildRows()
+    {
+        foreach (var row in Board.Top)
+            yield return new RowView(row.Rank, row.Pseudonym, row.Xp, row.IsMe);
+
+        // Not in the top: my row comes last (a position people remember). The gap says "members ranked above me are
+        // hidden", so it appears only when there is at least one. Ranking is "standard competition" (1, 2, 2, 4):
+        // the Top.Count rows shown are the best ones, so my row directly follows them when my rank is Top.Count + 1
+        // (nobody hidden) or lower (tied with the last lines, or with ties further down that share my rank).
+        // Only a rank beyond Top.Count + 1 means someone better than me is not displayed.
+        if (Board.Me is { IsInTop: false } me)
+        {
+            if (me.Rank > Board.Top.Count + 1)
+                yield return new RowView(0, "", 0, false, IsGap: true);
+
+            yield return new RowView(me.Rank, me.Pseudonym, me.Xp, IsMe: true);
+        }
+    }
+}

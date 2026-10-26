@@ -1,0 +1,18 @@
+@* Compact error of a section that failed to load, with its own retry.
+   One failure can be shown in two places (the head block and its detailed section): only one of them
+   announces it to assistive technologies (role="alert"), the other is visual only (Announce="false"). *@
+@inject CommunityFormatter F
+
+<div class="kf-alert" role="@(Announce ? "alert" : null)">
+    <span>@Message</span>
+    <button type="button" class="kf-linkbtn" @onclick="OnRetry">@F["Community.Retry"]</button>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Message { get; set; } = "";
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+
+    /// <summary>Whether the error is announced as an alert. Turn it off when the same error is announced elsewhere.</summary>
+    [Parameter] public bool Announce { get; set; } = true;
+}
