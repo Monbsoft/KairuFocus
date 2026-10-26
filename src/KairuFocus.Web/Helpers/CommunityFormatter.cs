@@ -70,8 +70,22 @@ public sealed class CommunityFormatter
 
     // ── Ordinals ────────────────────────────────────────────────────────────
 
-    /// <summary>Localized ordinal: « 1ᵉʳ », « 4ᵉ », « 1st », « 2nd », « 11th », « 4. », « 第4名 »…</summary>
-    public string Ordinal(int value) => Format($"Community.Ordinal.{OrdinalCategory(value)}", Number(value));
+    /// <summary>
+    /// Localized ordinal (« 1er », « 4e », « 1st », « 11th », « 4. », « 4.º », « 4-й », « 4位 », « 第4名 »…), in three parts.
+    /// The number is formatted on its own and the marker is what the resource carries around <c>{0}</c>: the page can then
+    /// set the figure in its large monospace face and the marker in a small proportional one, instead of letting every
+    /// letter of the marker take a monospace cell.
+    /// </summary>
+    public OrdinalParts Ordinal(int value)
+    {
+        var template = this[$"Community.Ordinal.{OrdinalCategory(value)}"];
+        var at = template.IndexOf("{0}", StringComparison.Ordinal);
+
+        // No placeholder (resource missing: the localizer returns the key): the bare number is still right.
+        return at < 0
+            ? new OrdinalParts("", Number(value), "")
+            : new OrdinalParts(template[..at], Number(value), template[(at + 3)..]);
+    }
 
     private static string OrdinalCategory(int value)
     {
@@ -92,7 +106,8 @@ public sealed class CommunityFormatter
 
     // ── Durations ───────────────────────────────────────────────────────────
 
-    /// <summary>« 45 min », « 5 h », « 13 h 20 ».</summary>
+    /// <summary>« 45 min », « 5 h », « 13 h 20 » (fr) / « 13 h 20 min » (en). The minutes are passed as a number: whether
+    /// they are zero-padded (« 1 h 05 ») is the resource's business (<c>{1:00}</c> or <c>{1}</c>), as it depends on the language.</summary>
     public string Duration(int minutes)
     {
         if (minutes < 60) return Format("Community.Duration.Minutes", Number(minutes));
@@ -101,7 +116,7 @@ public sealed class CommunityFormatter
         var rest = minutes % 60;
         return rest == 0
             ? Format("Community.Duration.Hours", Number(hours))
-            : Format("Community.Duration.HoursMinutes", Number(hours), rest.ToString("D2", Culture));
+            : Format("Community.Duration.HoursMinutes", Number(hours), rest);
     }
 
     /// <summary>Focus time of the collective recap: rounded to the hour, « moins d'1 h » under an hour, « 0 h » for none.</summary>
@@ -147,4 +162,26 @@ public sealed class CommunityFormatter
 
     public static string Capitalize(string text) =>
         text.Length == 0 ? text : char.ToUpper(text[0], Culture) + text[1..];
+}
+
+/// <summary>An ordinal cut at the number: what the resource puts before it (« 第 »), the formatted number, and what follows (« er », « th », « 位 »).</summary>
+public readonly record struct OrdinalParts(string Prefix, string Number, string Suffix)
+{
+    /// <summary>How typography sets the marker, deduced from its characters (so a resource never has to say it).</summary>
+    public OrdinalMarkerStyle MarkerStyle =>
+        Suffix.Length > 0 && Suffix.All(char.IsAsciiLetter) ? OrdinalMarkerStyle.Raised
+        : Suffix.Length > 0 && Suffix.All(c => c is '.' or 'º' or 'ª') ? OrdinalMarkerStyle.FigureSized
+        : OrdinalMarkerStyle.Small;
+}
+
+public enum OrdinalMarkerStyle
+{
+    /// <summary>Plain letters (« er », « e », « st », « th »): small and raised, like a superscript.</summary>
+    Raised,
+
+    /// <summary>Marks drawn to stand next to a figure at its own size (« . », « º », « .º »): not shrunk. « º » is already a raised glyph, and a raised bare period would be wrong.</summary>
+    FigureSized,
+
+    /// <summary>Anything else (« -й », « 位 », « 위 », « 第 », « 名 »): small, on the baseline, as these scripts write it.</summary>
+    Small
 }

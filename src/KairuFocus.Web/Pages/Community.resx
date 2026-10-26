@@ -160,16 +160,16 @@
 	<value>Rejoindre dans les paramètres</value>
   </data>
   <data name="Community.Ordinal.One" xml:space="preserve">
-	<value>{0}ᵉʳ</value>
+	<value>{0}er</value>
   </data>
   <data name="Community.Ordinal.Two" xml:space="preserve">
-	<value>{0}ᵉ</value>
+	<value>{0}e</value>
   </data>
   <data name="Community.Ordinal.Few" xml:space="preserve">
-	<value>{0}ᵉ</value>
+	<value>{0}e</value>
   </data>
   <data name="Community.Ordinal.Other" xml:space="preserve">
-	<value>{0}ᵉ</value>
+	<value>{0}e</value>
   </data>
   <data name="Community.Xp.Heading.Week" xml:space="preserve">
 	<value>Mon XP cette semaine</value>
@@ -232,7 +232,7 @@
 	<value>{0} h</value>
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
-	<value>{0} h {1}</value>
+	<value>{0} h {1:00}</value>
   </data>
   <data name="Community.Progress.Heading" xml:space="preserve">
 	<value>Ma progression</value>

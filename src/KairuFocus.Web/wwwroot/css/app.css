@@ -749,7 +749,13 @@ code {
 .kf-hero h2 { font-size: var(--text-xs); font-weight: 700; letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--hero-eyebrow); }
 .kf-hero__rankline { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3); }
 /* Seule exception à l'échelle typographique : c'est l'élément n°1 de la page. */
-.kf-hero__rank { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: clamp(var(--text-3xl), 8vw, 5rem); line-height: 1; letter-spacing: -0.03em; }
+.kf-hero__rank { font-weight: 700; font-size: clamp(var(--text-3xl), 8vw, 5rem); line-height: 1; letter-spacing: -0.03em; }
+/* Le chiffre est en monospace ; son marqueur ordinal (er, th, º, 位…) reste dans la police du texte : en monospace chaque lettre prendrait une cellule entière.
+   Par défaut petit, sur la ligne de base (-й, 位, 위, 第, 名) ; --raised : lettres en exposant (er, e, st, th) ; --figure : « . » et « º » gardent la taille du chiffre (º est déjà un glyphe en exposant). */
+.kf-hero__fig { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.kf-hero__ord { font-size: 0.45em; letter-spacing: 0; }
+.kf-hero__ord--raised { position: relative; top: -0.9em; }
+.kf-hero__ord--figure { font-size: 1em; }
 .kf-hero__tie { font-size: var(--text-md); font-weight: 600; color: var(--hero-text-muted); }
 .kf-hero__period { font-size: var(--text-md); font-weight: 600; color: var(--kf-slate-200); }
 .kf-hero__meta { font-size: var(--text-sm); color: var(--hero-text-muted); }

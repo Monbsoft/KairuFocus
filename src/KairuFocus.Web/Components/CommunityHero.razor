@@ -36,8 +36,11 @@
             }
             else
             {
+                var ordinal = F.Ordinal(me.Rank);
+
                 <div class="kf-hero__rankline">
-                    <span class="kf-hero__rank" aria-hidden="true">@F.Ordinal(me.Rank)</span>
+                    @* The figure is monospace, its marker (er, th, 位...) a small proportional span: no whitespace between the spans. *@
+                    <span class="kf-hero__rank" aria-hidden="true">@if (ordinal.Prefix.Length > 0) {<span class="kf-hero__ord">@ordinal.Prefix</span>}<span class="kf-hero__fig">@ordinal.Number</span>@if (ordinal.Suffix.Length > 0) {<span class="kf-hero__ord@(MarkerModifier(ordinal.MarkerStyle))">@ordinal.Suffix</span>}</span>
                     @if (me.IsTied)
                     {
                         <span class="kf-hero__tie" aria-hidden="true">@F["Community.Place.Tie"]</span>
@@ -131,6 +134,14 @@
 
     /// <summary>The period a section's data belongs to, so that labels never contradict the figures during a reload.</summary>
     private CommunityPeriod PeriodOf<T>(LoadZone<T> zone) where T : class => zone.Period ?? Period;
+
+    /// <summary>The CSS modifier of the ordinal marker (the base class is always <c>kf-hero__ord</c>).</summary>
+    private static string MarkerModifier(OrdinalMarkerStyle style) => style switch
+    {
+        OrdinalMarkerStyle.Raised => " kf-hero__ord--raised",
+        OrdinalMarkerStyle.FigureSized => " kf-hero__ord--figure",
+        _ => ""
+    };
 
     /// <summary>The day (week) or the date (month) of the previous period that the gap is measured against.</summary>
     private string ComparedMoment(CommunityComparisonDto comparison, CommunityPeriod period) =>
