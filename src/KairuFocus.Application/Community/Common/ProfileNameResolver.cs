@@ -67,8 +67,10 @@ internal sealed class ProfileNameResolver
                 if (nameResult.IsFailure)
                     return ProfileNameResolution.Failure(nameResult.Error);
 
-                // Anti-impersonation: a chosen name cannot be the GitHub login of another user.
-                if (await _userRepository.IsLoginUsedByOtherAsync(nameResult.Value.Value, user.Id, cancellationToken))
+                // Anti-impersonation: a chosen name cannot be the GitHub login of another user. The name the
+                // member already holds is exempt: someone may have signed up with that login since.
+                if (nameResult.Value.Key != ownNameKey
+                    && await _userRepository.IsLoginUsedByOtherAsync(nameResult.Value.Value, user.Id, cancellationToken))
                     return ProfileNameResolution.Failure(DomainErrors.Community.LoginOfAnotherUser);
 
                 if (await IsTakenByOtherAsync(nameResult.Value, ownNameKey, cancellationToken))

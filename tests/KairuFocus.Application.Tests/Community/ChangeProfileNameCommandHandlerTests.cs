@@ -84,6 +84,56 @@ public sealed class ChangeProfileNameCommandHandlerTests
     }
 
     [Fact]
+    public async Task Should_SucceedWithoutWrite_When_OwnChosenNameBecameAnotherUsersLogin()
+    {
+        _profiles.Seed(_me.Id, "alice");
+        _users.Users.Add(User.Create("gh-9", "alice", "Alice", null));
+
+        var result = await _sut.Handle(new ChangeProfileNameCommand(ProfileNameSource.Chosen, "alice"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Error);
+        Assert.Equal(0, _profiles.TryUpdateCallCount);
+    }
+
+    [Fact]
+    public async Task Should_AllowCaseOnlyChange_When_OwnChosenNameBecameAnotherUsersLogin()
+    {
+        _profiles.Seed(_me.Id, "alice");
+        _users.Users.Add(User.Create("gh-9", "alice", "Alice", null));
+
+        var result = await _sut.Handle(new ChangeProfileNameCommand(ProfileNameSource.Chosen, "Alice"));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Alice", Assert.Single(_profiles.Stored, p => p.UserId == _me.Id).Name.Value);
+        Assert.Equal(1, _profiles.TryUpdateCallCount);
+    }
+
+    [Fact]
+    public async Task Should_RefreshAvatar_When_SameGitHubNameIsSavedAgain()
+    {
+        _profiles.Seed(_me.Id, "octocat", ProfileNameSource.GitHub, null);
+
+        var result = await _sut.Handle(new ChangeProfileNameCommand(ProfileNameSource.GitHub, null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(MembershipTestData.AvatarUrl, Assert.Single(_profiles.Stored).AvatarUrl);
+        Assert.Equal(MembershipTestData.AvatarUrl, result.Membership!.AvatarUrl);
+        Assert.Equal(1, _profiles.TryUpdateCallCount);
+    }
+
+    [Fact]
+    public async Task Should_SucceedWithoutWrite_When_SameGitHubNameAndSameAvatar()
+    {
+        _profiles.Seed(_me.Id, "octocat", ProfileNameSource.GitHub, MembershipTestData.AvatarUrl);
+
+        var result = await _sut.Handle(new ChangeProfileNameCommand(ProfileNameSource.GitHub, null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(0, _profiles.TryUpdateCallCount);
+    }
+
+    [Fact]
     public async Task Should_AllowOwnLogin_When_SourceIsChosen()
     {
         _profiles.Seed(_me.Id, "bobby");

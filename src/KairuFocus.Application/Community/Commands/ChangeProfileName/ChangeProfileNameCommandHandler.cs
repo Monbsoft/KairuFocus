@@ -49,7 +49,10 @@ public sealed class ChangeProfileNameCommandHandler : ICommandHandler<ChangeProf
             return ChangeProfileNameResult.Failure(resolution.Error!);
 
         var name = resolution.Name!;
-        var unchanged = name.Value == profile.Name.Value && command.Source == profile.NameSource;
+        // Saving the GitHub name again is the explicit gesture that refreshes the avatar (no automatic sync).
+        var unchanged = name.Value == profile.Name.Value
+            && command.Source == profile.NameSource
+            && resolution.AvatarUrl == profile.AvatarUrl;
 
         if (!unchanged)
         {

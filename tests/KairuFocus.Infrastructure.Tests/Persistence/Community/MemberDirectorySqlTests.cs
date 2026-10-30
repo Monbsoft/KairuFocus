@@ -20,7 +20,7 @@ public sealed class MemberDirectorySqlTests
     [Theory]
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
-    public async Task Should_NotReferenceUsersEmailOrDisplayName(string method)
+    public async Task Should_NotReferenceUsersEmailOrDisplayName_When_Queried(string method)
     {
         var command = await CaptureAsync(method);
 
@@ -32,7 +32,7 @@ public sealed class MemberDirectorySqlTests
     [Theory]
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
-    public async Task Should_NotProjectOwnerOrUserId(string method)
+    public async Task Should_NotProjectOwnerOrUserId_When_Queried(string method)
     {
         var command = await CaptureAsync(method);
 
@@ -77,7 +77,7 @@ public sealed class MemberDirectorySqlTests
     // (uniqueidentifier): a cast added by a provider or a mapping change would not go unnoticed. The two
     // identifiers appear nowhere else in the statement.
     [Fact]
-    public async Task Should_JoinMemberProfilesOnOwner()
+    public async Task Should_JoinMemberProfilesOnOwner_When_Queried()
     {
         var command = await CaptureAsync(GetActivity);
 
@@ -91,7 +91,7 @@ public sealed class MemberDirectorySqlTests
     [Theory]
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
-    public async Task Should_FilterOnNormalizedKey(string method)
+    public async Task Should_FilterOnNormalizedKey_When_Queried(string method)
     {
         var command = await CaptureAsync(method);
 
