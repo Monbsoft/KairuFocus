@@ -1,0 +1,354 @@
+@page "/profil"
+@page "/membres/{Name}"
+@attribute [Authorize]
+@implements IDisposable
+@inject CommunityApiClient CommunityClient
+@inject PomodoroApiClient Pomodoro
+@inject CommunityFormatter F
+@inject TimeProvider Clock
+
+<PageTitle>@PageTitleText</PageTitle>
+
+<div class="kf-profile-page" aria-busy="@(Loading ? "true" : "false")">
+    @if (Loading)
+    {
+        <div class="kf-profile__skeleton" aria-hidden="true">
+            <div class="kf-skel kf-profile__skel-hero"></div>
+            <div class="kf-kpis">
+                <div class="kf-skel kf-skel--kpi"></div>
+                <div class="kf-skel kf-skel--kpi"></div>
+                <div class="kf-skel kf-skel--kpi"></div>
+                <div class="kf-skel kf-skel--kpi"></div>
+            </div>
+            <div class="kf-skel kf-skel--chart"></div>
+        </div>
+    }
+    else if (ShowNotFound)
+    {
+        @* The same page whatever the cause (unknown name, member who has not joined, renamed member): it never tells which. *@
+        <section class="kf-card kf-profile__empty">
+            <h1 class="kf-profile__empty-title">@F["Profile.NotFound.Title"]</h1>
+            <p class="kf-profile__empty-text">@F["Profile.NotFound.Body"]</p>
+            <a class="kf-profile__link" href="communaute">@F["Profile.NotFound.Link"]</a>
+        </section>
+    }
+    else
+    {
+        @if (ShowLoadError)
+        {
+            <ZoneAlert Message="@F["Profile.LoadError"]" OnRetry="ReloadAsync" />
+        }
+
+        @if (_member.Data is { } profile)
+        {
+            <ProfileHero Profile="profile" OnReload="ReloadAsync" />
+
+            <div class="kf-kpis" role="group" aria-label="@F["Profile.Kpi.Aria"]">
+                @if (profile.Standing is { } standing)
+                {
+                    <KpiCard Label="@F["Profile.Kpi.Xp"]" Value="@F.Xp(standing.Xp)" Hint="@F["Profile.Kpi.Xp.Hint"]" />
+                    @if (standing.Rank is { } rank)
+                    {
+                        <KpiCard Label="@F["Profile.Kpi.Rank"]" Value="@OrdinalText(rank)" Hint="@F["Profile.Kpi.Rank.Hint"]" />
+                    }
+                    else
+                    {
+                        @* Not ranked yet: a dash as the figure, the reason as its caption. *@
+                        <KpiCard Label="@F["Profile.Kpi.Rank"]" Value="—" Hint="@F["Profile.Kpi.Rank.None"]" />
+                    }
+                }
+                else
+                {
+                    <div class="kf-profile__zone">
+                        <ZoneAlert Message="@F["Profile.Standing.Error"]" OnRetry="ReloadAsync" />
+                    </div>
+                }
+
+                @if (profile.Activity is { } activity)
+                {
+                    <KpiCard Label="@F["Profile.Kpi.Sprints"]" Value="@F.Number(activity.Sprints)"
+                             Hint="@F.Format("Profile.Kpi.Sprints.Hint", F.Duration(activity.FocusMinutes))" />
+                    <KpiCard Label="@F["Profile.Kpi.Together"]" Value="@F.Number(activity.SprintsTogether)" Hint="@F["Profile.Kpi.Together.Hint"]" />
+                }
+                else
+                {
+                    <div class="kf-profile__zone">
+                        <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="ReloadAsync" />
+                    </div>
+                }
+            </div>
+
+            @if (IsOwnPage)
+            {
+                @* My own page: my local days, from the statistics read once for the whole page. *@
+                @LocalHeatmap("Profile.Activity")
+            }
+            else if (profile.Activity is not null)
+            {
+                <FocusHeatmap SprintCounts="_memberCounts" Today="TodayUtc" ShowUtcNote="true" />
+            }
+            else
+            {
+                <div class="kf-card kf-profile__zone-card">
+                    <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="ReloadAsync" />
+                </div>
+            }
+        }
+
+        @if (IsOwnPage)
+        {
+            <MyStatsSection Stats="_stats" Loading="_statsLoading" Today="_localToday" AsPageTitle="@(_member.Data is null)" />
+
+            @if (_member.Data is null)
+            {
+                @* Not a member (or the membership could not be read): the local heatmap still has its place. *@
+                @LocalHeatmap("MyStats.Heatmap")
+            }
+
+            @if (_membership.Data is { IsMember: false })
+            {
+                <section class="kf-card kf-profile__invite" aria-labelledby="kf-invite-title">
+                    <h2 id="kf-invite-title" class="kf-profile__invite-title">@F["Profile.Invite.Title"]</h2>
+                    <p class="kf-profile__invite-text">@F["Profile.Invite.Body"]</p>
+                    <ul class="kf-profile__invite-list">
+                        <li>@F["Profile.Invite.Item.Name"]</li>
+                        <li>@F["Profile.Invite.Item.Xp"]</li>
+                        <li>@F["Profile.Invite.Item.Activity"]</li>
+                        <li>@F["Profile.Invite.Item.Sprint"]</li>
+                    </ul>
+                    <a class="kf-profile__invite-link" href="settings#communaute">@F["Profile.Invite.Link"]</a>
+                </section>
+            }
+        }
+    }
+</div>
+
+@* One polite live region, always mounted: it says that the profile is loading, nothing more.
+   A sprint opening or ending is deliberately never announced. *@
+<div class="visually-hidden" role="status" aria-live="polite">@(Loading ? F["Profile.Loading"] : "")</div>
+
+@code {
+    /// <summary>The member's name on <c>/membres/{Name}</c>; null on <c>/profil</c> (my own page).</summary>
+    [Parameter] public string? Name { get; set; }
+
+    private bool IsOwnPage => Name is null;
+
+    // The membership is read first on my own page; the member zone then reads my own public profile.
+    private LoadZone<CommunityMembershipDto> _membership = new();
+    private LoadZone<MemberProfileDto> _member = new();
+    private bool _notFound;
+    private IReadOnlyDictionary<DateOnly, int> _memberCounts = new Dictionary<DateOnly, int>();
+
+    // My own statistics (local days), read once for "Mes statistiques" and for the heatmap.
+    private FocusStatsDto? _stats;
+    private bool _statsLoading;
+    private bool _statsFailed;
+    private int _statsVersion;
+    private DateOnly _localToday;
+    private IReadOnlyDictionary<DateOnly, int> _localCounts = new Dictionary<DateOnly, int>();
+
+    private string? _loadedFor;
+    private bool _disposed;
+
+    private DateOnly TodayUtc => DateOnly.FromDateTime(Clock.GetUtcNow().UtcDateTime);
+
+    private string PageTitleText =>
+        _member.Data is { } profile ? F.Format("Profile.PageTitle.Member", profile.Name) : F["Profile.PageTitle"];
+
+    /// <summary>Nothing to show yet: the membership (my page) or the profile is still being read.</summary>
+    private bool Loading =>
+        IsOwnPage
+            ? (_membership.Data is null && !_membership.Failed)
+              || (_membership.Data is { IsMember: true } && MemberPending)
+            : MemberPending;
+
+    private bool MemberPending => _member.Data is null && !_member.Failed;
+
+    /// <summary>Another member's page when the server answered 404. On my own page a 404 is a failure, not "not found".</summary>
+    private bool ShowNotFound => !IsOwnPage && _notFound;
+
+    /// <summary>My membership could not be read, or my own profile could not be (the statistics stay visible), or another profile failed.</summary>
+    private bool ShowLoadError =>
+        IsOwnPage
+            ? _membership.Failed || (_membership.Data is { IsMember: true } && _member.Failed)
+            : _member.Failed;
+
+    // ── Lifecycle ───────────────────────────────────────────────────────────
+
+    protected override void OnParametersSet()
+    {
+        var key = Name ?? "";
+        if (_loadedFor == key) return;
+
+        // Another profile under the same component: nothing of the previous one may stay on screen.
+        if (_loadedFor is not null) Reset();
+        _loadedFor = key;
+
+        // Started here rather than after the first render: the first render already shows the skeleton.
+        _ = LoadAsync();
+        if (IsOwnPage) _ = LoadStatsAsync();
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _membership.Cancel();
+        _member.Cancel();
+        _statsVersion++;
+    }
+
+    private void Reset()
+    {
+        _membership.Cancel();
+        _member.Cancel();
+        _membership = new LoadZone<CommunityMembershipDto>();
+        _member = new LoadZone<MemberProfileDto>();
+        _notFound = false;
+        _memberCounts = new Dictionary<DateOnly, int>();
+
+        _statsVersion++; // an answer still on its way is dropped
+        _stats = null;
+        _statsLoading = false;
+        _statsFailed = false;
+        _localCounts = new Dictionary<DateOnly, int>();
+    }
+
+    // ── Loading ─────────────────────────────────────────────────────────────
+
+    private async Task LoadAsync()
+    {
+        if (!IsOwnPage)
+        {
+            await LoadMemberAsync(Name!);
+            return;
+        }
+
+        var ct = _membership.Begin();
+        CommunityMembershipDto? membership;
+        try
+        {
+            membership = await CommunityClient.GetMembershipAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            membership = null;
+        }
+
+        if (ct.IsCancellationRequested || _disposed) return;
+
+        _membership.Complete(membership);
+
+        if (membership is { IsMember: true, Name: { } own })
+        {
+            // The member zone begins its load before anything is rendered: the skeleton stays up, with no flash of the invitation.
+            await LoadMemberAsync(own);
+            return;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Reads a public profile. A reload keeps the previous profile on screen until the answer comes.</summary>
+    private async Task LoadMemberAsync(string name)
+    {
+        var ct = _member.Begin();
+        _notFound = false;
+
+        MemberProfileLookup lookup;
+        try
+        {
+            lookup = await CommunityClient.GetMemberAsync(name, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            lookup = new MemberProfileLookup(MemberLookupStatus.Failed);
+        }
+
+        if (ct.IsCancellationRequested || _disposed) return;
+
+        var profile = lookup.Status == MemberLookupStatus.Found ? lookup.Profile : null;
+        _notFound = lookup.Status == MemberLookupStatus.NotFound;
+        _memberCounts = profile?.Activity is { } activity
+            ? activity.Days.ToDictionary(d => d.Date, d => d.Sprints)
+            : new Dictionary<DateOnly, int>();
+        _member.Complete(profile);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>My local statistics: read once, then handed to "Mes statistiques" and to the heatmap.</summary>
+    private async Task LoadStatsAsync()
+    {
+        var version = ++_statsVersion;
+        _statsLoading = true;
+        _statsFailed = false;
+        _localToday = DateOnly.FromDateTime(Clock.GetLocalNow().DateTime);
+
+        FocusStatsDto? stats;
+        try
+        {
+            stats = await Pomodoro.GetFocusStatsAsync();
+        }
+        catch (Exception)
+        {
+            stats = null;
+        }
+
+        if (version != _statsVersion || _disposed) return;
+
+        var counts = new Dictionary<DateOnly, int>();
+        foreach (var day in stats?.Days ?? [])
+            counts[day.Date] = day.SprintCount;
+
+        _stats = stats;
+        _statsFailed = stats is null;
+        _localCounts = counts;
+        _statsLoading = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Retry of any zone, and refresh after a sprint that can no longer be joined: reloads the profile (and my statistics if they failed).</summary>
+    private Task ReloadAsync()
+    {
+        if (IsOwnPage && _statsFailed) _ = LoadStatsAsync();
+
+        // My page without a known membership: start again from the membership. Otherwise only the profile is read again.
+        if (!IsOwnPage) return LoadMemberAsync(Name!);
+        return _membership.Data is { IsMember: true, Name: { } own } ? LoadMemberAsync(own) : LoadAsync();
+    }
+
+    // ── Rendering helpers ───────────────────────────────────────────────────
+
+    private string OrdinalText(int rank)
+    {
+        var ordinal = F.Ordinal(rank);
+        return $"{ordinal.Prefix}{ordinal.Number}{ordinal.Suffix}";
+    }
+
+    /// <summary>The heatmap of my own days, with its skeleton and its error. The prefix chooses the texts of its title.</summary>
+    private RenderFragment LocalHeatmap(string textPrefix) => @<text>
+        @if (_statsLoading)
+        {
+            <div class="kf-skel kf-skel--chart" aria-hidden="true"></div>
+        }
+        else if (_statsFailed)
+        {
+            <div class="kf-card kf-profile__zone-card">
+                <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="ReloadAsync" />
+            </div>
+        }
+        else
+        {
+            <FocusHeatmap SprintCounts="_localCounts" Today="_localToday" TextPrefix="@textPrefix" />
+        }
+    </text>;
+}

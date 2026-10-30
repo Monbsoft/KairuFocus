@@ -1,0 +1,72 @@
+@* The status panel of a profile: in an open sprint (time left, who is in it, a way to join), or "no open sprint".
+   The wording never says "not in a sprint": that would be false for a closed sprint, a free sprint or a break.
+   Nothing here is live: the panel is not announced, and the only moving part is the countdown. *@
+@inject CommunityFormatter F
+
+<section class="kf-status" aria-label="@F["Profile.Status.Aria"]">
+    @if (Profile.OpenSprintFailed)
+    {
+        <ZoneAlert Message="@F["Profile.Status.Error"]" OnRetry="OnReload" />
+    }
+    else if (Profile.OpenSprint is { } sprint)
+    {
+        <span class="kf-status__pill">@_openBefore<SprintCountdown EndsAt="sprint.EndsAt" />@_openAfter</span>
+
+        @if (sprint.Others.Count > 0)
+        {
+            <div class="kf-status__with">
+                <AvatarStack Members="sprint.Others" MaxShown="3" Size="32" />
+                <span class="kf-status__names">@WithText(sprint.Others)</span>
+            </div>
+        }
+
+        @if (sprint.IncludesViewer)
+        {
+            @if (!Profile.IsMe)
+            {
+                <p class="kf-status__note">@F["Profile.Status.IncludesViewer"]</p>
+            }
+        }
+        else
+        {
+            <JoinSprintButton TargetName="@Profile.Name" EndsAt="sprint.EndsAt"
+                              ViewerIsMember="Profile.ViewerIsMember" OnNoLongerOpen="OnReload" />
+        }
+    }
+    else
+    {
+        <strong class="kf-status__closed">@F["Profile.Status.Closed"]</strong>
+
+        @if (!Profile.ActivityFailed && Profile.Activity is { } activity)
+        {
+            <p class="kf-status__note">@F.Plural("Profile.Status.Together", activity.SprintsTogether, F.Number(activity.SprintsTogether))</p>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public MemberProfileDto Profile { get; set; } = default!;
+
+    /// <summary>Reloads the profile: retry of the status zone, and refresh once a sprint can no longer be joined.</summary>
+    [Parameter] public EventCallback OnReload { get; set; }
+
+    // "En sprint · encore {0}": the template is cut around the placeholder so that the live countdown
+    // takes the place of {0}, whatever the word order of the language.
+    private string _openBefore = "";
+    private string _openAfter = "";
+
+    protected override void OnParametersSet()
+    {
+        var template = F["Profile.Status.Open"];
+        var at = template.IndexOf("{0}", StringComparison.Ordinal);
+        (_openBefore, _openAfter) = at < 0
+            ? (template, "")
+            : (template[..at], template[(at + 3)..]);
+    }
+
+    /// <summary>« avec tomtom » / « avec tomtom et 2 autres »: the first name, then how many others.</summary>
+    private string WithText(IReadOnlyList<SprintMemberDto> others) =>
+        others.Count == 1
+            ? F.Format("Profile.With.One", others[0].Name)
+            : F.Plural("Profile.With.Many", others.Count - 1, others[0].Name, F.Number(others.Count - 1));
+}

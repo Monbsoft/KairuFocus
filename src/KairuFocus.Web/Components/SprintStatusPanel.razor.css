@@ -1,0 +1,57 @@
+/* Sits on the dark hero (the same in both themes): its colours are fixed, like the hero's. */
+.kf-status {
+    --kf-avatar-ring: #1a2a4f;
+    flex: 0 1 340px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--hero-text, #fff);
+}
+
+.kf-status__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: fit-content;
+    max-width: 100%;
+    padding: 2px var(--space-3);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    background: rgba(52, 199, 123, 0.18);
+    color: #75d6a3;
+}
+
+/* A fixed dot, in the colour of the text: the status does not blink (it would distract from the focus). */
+.kf-status__pill::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.kf-status__with {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.kf-status__names,
+.kf-status__note {
+    min-width: 0;
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--kf-blue-100, #cfe2ff);
+    overflow-wrap: anywhere;
+}
+
+.kf-status__closed {
+    font-weight: 700;
+}

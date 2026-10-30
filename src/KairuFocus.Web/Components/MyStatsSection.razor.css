@@ -1,0 +1,43 @@
+/* The KPI grid, bars, period selector and empty state are the shared classes of app.css (Statistics). Only the section frame is specific. */
+.kf-mystats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.kf-mystats__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.kf-mystats__title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: var(--tracking-tight);
+}
+
+/* Alone at the top of the page (no hero above it): the size of the other page titles. */
+.kf-mystats__title--page {
+    font-size: var(--text-2xl);
+}
+
+.kf-mystats__sub {
+    margin: var(--space-1) 0 0;
+    color: var(--text-muted);
+}
+
+.kf-mystats__private {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+/* The page already spaces its blocks: no extra margin under the empty state. */
+.kf-mystats .kf-stats-page__empty {
+    margin-bottom: 0;
+}

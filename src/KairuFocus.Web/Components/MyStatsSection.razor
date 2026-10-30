@@ -1,0 +1,186 @@
+@* "Mes statistiques": the private part of the profile, only for the visitor. Period selector (week / month), focus time and
+   sprints of the period, XP cards and focus per day. The statistics are loaded once by the page and handed in; the XP summary
+   is this section's own, so that a failure of the XP never blocks the rest. *@
+@using System.Globalization
+@inject GamificationApiClient Gamification
+@inject CommunityFormatter F
+
+<section class="kf-mystats" aria-labelledby="kf-mystats-title" aria-busy="@(Loading ? "true" : "false")">
+    <div class="kf-mystats__head">
+        <div>
+            @if (AsPageTitle)
+            {
+                <h1 id="kf-mystats-title" class="kf-mystats__title kf-mystats__title--page">@F["MyStats.Heading"]</h1>
+            }
+            else
+            {
+                <h2 id="kf-mystats-title" class="kf-mystats__title">@F["MyStats.Heading"]</h2>
+            }
+            <p class="kf-mystats__sub">@F["MyStats.Sub"]</p>
+            <p class="kf-mystats__private"><span aria-hidden="true">&#128274;</span> @F["MyStats.Private"]</p>
+        </div>
+        <div class="kf-seg" role="group" aria-label="@F["MyStats.Period.Aria"]">
+            <button type="button" class="kf-seg__btn @(_period == Period.Week ? "kf-seg__btn--on" : "")"
+                    aria-pressed="@(_period == Period.Week ? "true" : "false")"
+                    @onclick="() => SetPeriod(Period.Week)">@F["MyStats.Period.Week"]</button>
+            <button type="button" class="kf-seg__btn @(_period == Period.Month ? "kf-seg__btn--on" : "")"
+                    aria-pressed="@(_period == Period.Month ? "true" : "false")"
+                    @onclick="() => SetPeriod(Period.Month)">@F["MyStats.Period.Month"]</button>
+        </div>
+    </div>
+
+    @if (Loading)
+    {
+        <span class="visually-hidden" role="status">@F["MyStats.Loading"]</span>
+        <div class="kf-kpis" aria-hidden="true">
+            <div class="kf-skel kf-skel--kpi"></div>
+            <div class="kf-skel kf-skel--kpi"></div>
+            <div class="kf-skel kf-skel--kpi"></div>
+            <div class="kf-skel kf-skel--kpi"></div>
+        </div>
+        <div class="kf-skel kf-skel--chart" aria-hidden="true"></div>
+    }
+    else
+    {
+        @if (!_hasAnyData)
+        {
+            <div class="kf-card kf-stats-page__empty">
+                <span class="kf-stats-page__empty-icon" aria-hidden="true">&#127813;</span>
+                <p class="kf-stats-page__empty-text">@F["MyStats.Empty"]</p>
+            </div>
+        }
+
+        <div class="kf-kpis">
+            <KpiCard Label="@F["MyStats.Kpi.Focus"]" Value="@_focusTimeLabel" Hint="@_rangeLabel" />
+            <KpiCard Label="@F["MyStats.Kpi.Sprints"]" Value="@F.Number(_kpiSprints)" Hint="@_rangeLabel" />
+            @if (!_xpFailed)
+            {
+                <KpiCard Label="@F["MyStats.Kpi.TotalXp"]" Value="@F.Xp(_totalXp)"
+                         Hint="@F[_totalXp == 0 ? "MyStats.Kpi.TotalXp.None" : "MyStats.Kpi.TotalXp.Hint"]" />
+                <KpiCard Label="@F["MyStats.Kpi.WeekXp"]" Value="@F.Xp(_weekXp)" Hint="@F["MyStats.Kpi.WeekXp.Hint"]" />
+            }
+        </div>
+
+        <div class="kf-card kf-barcard">
+            <h3 class="kf-barcard__title">@F.Format("MyStats.Bars.Title", _rangeLabel.ToLower(CultureInfo.CurrentCulture))</h3>
+            <div class="kf-bars" role="img" aria-label="@_barsAriaLabel">
+                @foreach (var bar in _bars)
+                {
+                    <div class="kf-bars__col" title="@bar.Title">
+                        <div class="kf-bars__track">
+                            <div class="kf-bars__fill" style="height:@(bar.HeightPct)%"></div>
+                        </div>
+                        <span class="kf-bars__lbl">@bar.Label</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private enum Period { Week, Month }
+
+    private static readonly string[] DayKeys =
+        ["MyStats.Day.Sun", "MyStats.Day.Mon", "MyStats.Day.Tue", "MyStats.Day.Wed", "MyStats.Day.Thu", "MyStats.Day.Fri", "MyStats.Day.Sat"];
+
+    /// <summary>The statistics read by the page (local days). Null while loading or when the read failed: the section then shows zeros.</summary>
+    [Parameter] public FocusStatsDto? Stats { get; set; }
+
+    /// <summary>The statistics are still being read: a skeleton replaces the figures.</summary>
+    [Parameter] public bool Loading { get; set; }
+
+    /// <summary>The visitor's local date: the last day of the period.</summary>
+    [Parameter, EditorRequired] public DateOnly Today { get; set; }
+
+    /// <summary>The section is the only heading of the page (no hero above it): its title is then the h1.</summary>
+    [Parameter] public bool AsPageTitle { get; set; }
+
+    private sealed record Bar(string Label, string Title, int HeightPct);
+
+    private Period _period = Period.Week;
+    private FocusStatsDto? _builtFor;
+    private DateOnly _builtToday;
+    private Dictionary<DateOnly, FocusDayDto> _byDate = [];
+    private bool _hasAnyData;
+
+    private int _kpiSprints;
+    private string _focusTimeLabel = "";
+    private string _rangeLabel = "";
+    private string _barsAriaLabel = "";
+    private List<Bar> _bars = [];
+
+    // The XP is read apart: a failure here must never hide the focus figures.
+    private int _totalXp;
+    private int _weekXp;
+    private bool _xpFailed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var xp = await Gamification.GetXpSummaryAsync();
+            if (xp is null)
+            {
+                _xpFailed = true;
+                return;
+            }
+
+            _totalXp = xp.TotalXp;
+            _weekXp = xp.WeekXp;
+        }
+        catch (Exception)
+        {
+            _xpFailed = true;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_builtFor, Stats) && _builtToday == Today && _rangeLabel.Length > 0) return;
+
+        _builtFor = Stats;
+        _builtToday = Today;
+        _byDate = [];
+        foreach (var day in Stats?.Days ?? [])
+            _byDate[day.Date] = day;
+        _hasAnyData = _byDate.Values.Sum(d => d.SprintCount) > 0;
+        Recompute();
+    }
+
+    private void SetPeriod(Period period)
+    {
+        if (_period == period) return;
+        _period = period;
+        Recompute();
+    }
+
+    private void Recompute()
+    {
+        var periodDays = _period == Period.Week ? 7 : 30;
+        _rangeLabel = F[_period == Period.Week ? "MyStats.Range.Week" : "MyStats.Range.Month"];
+
+        var start = Today.AddDays(-(periodDays - 1));
+        var slice = new List<(DateOnly Date, int Count, int Minutes)>(periodDays);
+        for (var i = 0; i < periodDays; i++)
+        {
+            var date = start.AddDays(i);
+            _byDate.TryGetValue(date, out var stat);
+            slice.Add((date, stat?.SprintCount ?? 0, stat?.FocusMinutes ?? 0));
+        }
+
+        _kpiSprints = slice.Sum(s => s.Count);
+        _focusTimeLabel = F.Duration(slice.Sum(s => s.Minutes));
+
+        var maxMinutes = Math.Max(1, slice.Max(s => s.Minutes));
+        _bars = slice.Select(s =>
+        {
+            var height = (int)Math.Round(s.Minutes * 100.0 / maxMinutes);
+            var label = _period == Period.Week ? F[DayKeys[(int)s.Date.DayOfWeek]] : "";
+            var title = F.Format("MyStats.Bars.Item", F.WeekdayDayMonth(s.Date), F.Duration(s.Minutes));
+            return new Bar(label, title, height);
+        }).ToList();
+
+        _barsAriaLabel = F.Format("MyStats.Bars.Aria", F.Number(periodDays), _focusTimeLabel);
+    }
+}
