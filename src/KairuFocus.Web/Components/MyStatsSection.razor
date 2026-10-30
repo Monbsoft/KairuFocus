@@ -40,6 +40,11 @@
         </div>
         <div class="kf-skel kf-skel--chart" aria-hidden="true"></div>
     }
+    else if (Failed)
+    {
+        @* The read failed: an error, never zeros or the "first sprint" empty state. *@
+        <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="OnRetry" />
+    }
     else
     {
         @if (!_hasAnyData)
@@ -84,11 +89,17 @@
     private static readonly string[] DayKeys =
         ["MyStats.Day.Sun", "MyStats.Day.Mon", "MyStats.Day.Tue", "MyStats.Day.Wed", "MyStats.Day.Thu", "MyStats.Day.Fri", "MyStats.Day.Sat"];
 
-    /// <summary>The statistics read by the page (local days). Null while loading or when the read failed: the section then shows zeros.</summary>
+    /// <summary>The statistics read by the page (local days). Null while loading or when the read failed.</summary>
     [Parameter] public FocusStatsDto? Stats { get; set; }
 
     /// <summary>The statistics are still being read: a skeleton replaces the figures.</summary>
     [Parameter] public bool Loading { get; set; }
+
+    /// <summary>The read failed: an error with a retry replaces the figures and the empty state.</summary>
+    [Parameter] public bool Failed { get; set; }
+
+    /// <summary>Retry of the failed read.</summary>
+    [Parameter] public EventCallback OnRetry { get; set; }
 
     /// <summary>The visitor's local date: the last day of the period.</summary>
     [Parameter, EditorRequired] public DateOnly Today { get; set; }

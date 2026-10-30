@@ -54,7 +54,7 @@
                             <span class="kf-open__name">@group.Name</span>
                         </a>
                         <p class="kf-open__meta">
-                            <span>@before<SprintCountdown EndsAt="group.EndsAt" />@after</span>
+                            <span>@before<SprintCountdown EndsAt="group.EndsAt" OnElapsed="OnChanged" />@after</span>
                             <span class="kf-open__dot" aria-hidden="true">·</span>
                             <span>@F.Plural("OpenSprints.Participants", group.ParticipantCount, F.Number(group.ParticipantCount))</span>
                         </p>
@@ -65,7 +65,7 @@
                             }
                             else
                             {
-                                <JoinSprintButton TargetName="@group.Name" EndsAt="group.EndsAt"
+                                <JoinSprintButton @key="group.EndsAt" TargetName="@group.Name" EndsAt="group.EndsAt"
                                                   ViewerIsMember="Data.ViewerIsMember" Compact="true"
                                                   OnNoLongerOpen="HandleNoLongerOpenAsync" />
                             }

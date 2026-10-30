@@ -1,6 +1,10 @@
 @* "Join this sprint" for the open sprint of TargetName. A visitor outside the community gets a link to the settings.
-   The button is disabled from the click on, so a second click cannot start a second session.
+   During the call the button is aria-disabled (not disabled, so the keyboard focus stays on it) and the handler ignores
+   a second click: it cannot start a second session. Once the answer is in, the button is usable again (except for a
+   closed sprint, where it is hidden): a refusal can be retried, the server refuses again if nothing changed.
+   Under five minutes left, a warning says the sprint will not earn XP; a single render is scheduled for that instant.
    Nothing here announces an arrival to the people already in the sprint. *@
+@implements IDisposable
 @inject CommunityApiClient Community
 @inject CommunityFormatter F
 @inject NavigationManager Nav
@@ -29,7 +33,7 @@
 
         @if (_outcome != JoinSprintOutcome.SprintClosed)
         {
-            <button type="button" class="kf-join__btn" disabled="@_busy" aria-busy="@(_busy ? "true" : null)"
+            <button type="button" class="kf-join__btn" aria-disabled="@(_busy ? "true" : null)" aria-busy="@(_busy ? "true" : null)"
                     aria-label="@F.Format("Join.Button.Aria", TargetName)" @onclick="JoinAsync">
                 @F[_busy ? "Join.Joining" : "Join.Button"]
             </button>
@@ -76,7 +80,42 @@
     private bool _busy;
     private JoinSprintOutcome? _outcome;
 
+    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource? _warningCts;
+    private DateTimeOffset _warningScheduledFor;
+
     private bool ShortOnTime => EndsAt - Clock.GetUtcNow() < XpThreshold;
+
+    protected override void OnParametersSet()
+    {
+        // Recomputed when the end time changes (another sprint under the same component).
+        if (_warningScheduledFor == EndsAt) return;
+        _warningScheduledFor = EndsAt;
+        _warningCts?.Cancel();
+        _warningCts?.Dispose();
+        _warningCts = null;
+
+        var wait = EndsAt - XpThreshold - Clock.GetUtcNow();
+        if (wait <= TimeSpan.Zero) return;
+
+        _warningCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
+        _ = RenderAtXpThresholdAsync(wait, _warningCts.Token);
+    }
+
+    /// <summary>One render at "five minutes left", so that the warning appears without the page doing anything.</summary>
+    private async Task RenderAtXpThresholdAsync(TimeSpan wait, CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(wait, Clock, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
 
     private async Task JoinAsync()
     {
@@ -84,22 +123,35 @@
         _busy = true;
         _outcome = null;
 
-        var result = await Community.JoinSprintAsync(TargetName);
+        JoinSprintResult result;
+        try
+        {
+            result = await Community.JoinSprintAsync(TargetName);
+        }
+        finally
+        {
+            // Busy only during the call: a refusal leaves the button usable again.
+            _busy = false;
+        }
 
         if (result.Outcome == JoinSprintOutcome.Succeeded)
         {
-            // Stays disabled: the page changes.
+            // Busy again: the page changes, a second click must do nothing meanwhile.
+            _busy = true;
             Nav.NavigateTo("/pomodoro");
             return;
         }
 
         _outcome = result.Outcome;
-        // A generic failure can be retried; the other outcomes explain why it cannot (or lead elsewhere).
-        _busy = result.Outcome == JoinSprintOutcome.SprintActive
-            || result.Outcome == JoinSprintOutcome.OwnSprint
-            || result.Outcome == JoinSprintOutcome.SprintClosed;
 
         if (result.Outcome == JoinSprintOutcome.SprintClosed)
             await OnNoLongerOpen.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        _warningCts?.Dispose();
     }
 }

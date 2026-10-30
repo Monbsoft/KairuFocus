@@ -26,12 +26,12 @@
     transition: transform 100ms ease;
 }
 
-.kf-join__btn:hover:not(:disabled) {
+.kf-join__btn:hover:not([aria-disabled="true"]) {
     background: #0a58ca;
     color: #fff;
 }
 
-.kf-join__btn:active:not(:disabled) {
+.kf-join__btn:active:not([aria-disabled="true"]) {
     transform: translateY(1px);
 }
 
@@ -40,7 +40,8 @@
     outline-offset: 2px;
 }
 
-.kf-join__btn:disabled {
+/* Busy during the call: aria-disabled rather than disabled, so that the keyboard focus stays on the button. */
+.kf-join__btn[aria-disabled="true"] {
     opacity: 0.65;
     cursor: not-allowed;
 }

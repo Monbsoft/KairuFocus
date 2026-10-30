@@ -89,15 +89,17 @@
             }
             else
             {
+                @* The same failure is already announced by the activity figures above: this one is visual only. *@
                 <div class="kf-card kf-profile__zone-card">
-                    <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="ReloadAsync" />
+                    <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="ReloadAsync" Announce="false" />
                 </div>
             }
         }
 
         @if (IsOwnPage)
         {
-            <MyStatsSection Stats="_stats" Loading="_statsLoading" Today="_localToday" AsPageTitle="@(_member.Data is null)" />
+            <MyStatsSection Stats="_stats" Loading="_statsLoading" Failed="_statsFailed" OnRetry="LoadStatsAsync"
+                            Today="_localToday" AsPageTitle="@(_member.Data is null)" />
 
             @if (_member.Data is null)
             {
@@ -342,8 +344,9 @@
         }
         else if (_statsFailed)
         {
+            @* "Mes statistiques" announces the same failure: this one is visual only. *@
             <div class="kf-card kf-profile__zone-card">
-                <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="ReloadAsync" />
+                <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="ReloadAsync" Announce="false" />
             </div>
         }
         else

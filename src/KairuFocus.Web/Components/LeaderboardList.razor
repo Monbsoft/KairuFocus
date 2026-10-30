@@ -24,7 +24,7 @@ else
                 {
                     <li class="kf-row @(row.IsMe ? "kf-row--me" : "")" aria-current="@(row.IsMe ? "true" : null)">
                         <span class="kf-row__rank">@F.Number(row.Rank)</span>
-                        <span class="kf-row__pseudo">
+                        <span class="kf-row__who">
                             <a class="kf-row__link" href="@ProfileHref(row.Name)" title="@row.Name">
                                 <MemberAvatar Name="@row.Name" AvatarUrl="@row.AvatarUrl" Size="28" />
                                 <span class="kf-row__name">@row.Name</span>

@@ -7,7 +7,11 @@
 @code {
     [Parameter, EditorRequired] public DateTimeOffset EndsAt { get; set; }
 
+    /// <summary>Raised once, when the time left reaches zero: the parent can read its data again (the sprint is over).</summary>
+    [Parameter] public EventCallback OnElapsed { get; set; }
+
     private readonly CancellationTokenSource _cts = new();
+    private DateTimeOffset _elapsedRaisedFor;
 
     private string Label
     {
@@ -30,7 +34,16 @@
         try
         {
             while (await timer.WaitForNextTickAsync(ct))
+            {
                 await InvokeAsync(StateHasChanged);
+
+                // Once per end time: a new EndsAt (the sprint was replaced) can raise it again.
+                if (Clock.GetUtcNow() >= EndsAt && _elapsedRaisedFor != EndsAt)
+                {
+                    _elapsedRaisedFor = EndsAt;
+                    await InvokeAsync(() => OnElapsed.InvokeAsync());
+                }
+            }
         }
         catch (OperationCanceledException)
         {

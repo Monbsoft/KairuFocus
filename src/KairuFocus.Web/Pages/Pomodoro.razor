@@ -121,9 +121,10 @@ else
         @if (CanManageGroup)
         {
             <div class="d-flex flex-column align-items-center gap-1 text-center" style="max-width:480px">
-                <button type="button" class="btn btn-sm btn-outline-secondary"
+                @* aria-disabled rather than disabled during the call: the keyboard focus stays on the button (the handler ignores a second click). *@
+                <button type="button" class="btn btn-sm btn-outline-secondary @(_closingGroup ? "disabled" : "")"
                         aria-describedby="group-closed-hint"
-                        disabled="@_closingGroup"
+                        aria-disabled="@(_closingGroup ? "true" : null)"
                         @onclick="ToggleGroupClosed">
                     @F[_session!.IsClosedToJoin ? "Participants.Reopen" : "Participants.Close"]
                 </button>

@@ -52,6 +52,11 @@
     overflow-wrap: anywhere;
 }
 
+/* The status zone is always mounted: while empty it must not add a gap to the column. */
+.kf-status > [role="status"]:empty {
+    margin-top: calc(-1 * var(--space-2));
+}
+
 .kf-status__closed {
     font-weight: 700;
 }

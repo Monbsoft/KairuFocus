@@ -1,6 +1,8 @@
 @* The status panel of a profile: in an open sprint (time left, who is in it, a way to join), or "no open sprint".
    The wording never says "not in a sprint": that would be false for a closed sprint, a free sprint or a break.
-   Nothing here is live: the panel is not announced, and the only moving part is the countdown. *@
+   The only live part is the "this sprint is no longer open" message after a refused join: a status zone, always mounted.
+   Otherwise the panel is not announced, and the only moving part is the countdown. *@
+@implements IDisposable
 @inject CommunityFormatter F
 
 <section class="kf-status" aria-label="@F["Profile.Status.Aria"]">
@@ -10,7 +12,7 @@
     }
     else if (Profile.OpenSprint is { } sprint)
     {
-        <span class="kf-status__pill">@_openBefore<SprintCountdown EndsAt="sprint.EndsAt" />@_openAfter</span>
+        <span class="kf-status__pill">@_openBefore<SprintCountdown EndsAt="sprint.EndsAt" OnElapsed="OnReload" />@_openAfter</span>
 
         @if (sprint.Others.Count > 0)
         {
@@ -29,8 +31,8 @@
         }
         else
         {
-            <JoinSprintButton TargetName="@Profile.Name" EndsAt="sprint.EndsAt"
-                              ViewerIsMember="Profile.ViewerIsMember" OnNoLongerOpen="OnReload" />
+            <JoinSprintButton @key="sprint.EndsAt" TargetName="@Profile.Name" EndsAt="sprint.EndsAt"
+                              ViewerIsMember="Profile.ViewerIsMember" OnNoLongerOpen="HandleNoLongerOpenAsync" />
         }
     }
     else
@@ -42,6 +44,14 @@
             <p class="kf-status__note">@F.Plural("Profile.Status.Together", activity.SprintsTogether, F.Number(activity.SprintsTogether))</p>
         }
     }
+
+    @* Always mounted so that the message is announced when it appears, and it outlives the join button it comes from. *@
+    <div role="status">
+        @if (_showClosedNotice)
+        {
+            <p class="kf-status__note">@F["Join.Closed"]</p>
+        }
+    </div>
 </section>
 
 @code {
@@ -54,6 +64,36 @@
     // takes the place of {0}, whatever the word order of the language.
     private string _openBefore = "";
     private string _openAfter = "";
+
+    private static readonly TimeSpan NoticeDuration = TimeSpan.FromSeconds(10);
+
+    private readonly CancellationTokenSource _cts = new();
+    private bool _showClosedNotice;
+
+    /// <summary>The sprint just closed or ended (410): say it, read the profile again, and let the message fade after a while.</summary>
+    private async Task HandleNoLongerOpenAsync()
+    {
+        _showClosedNotice = true;
+        _ = HideNoticeLaterAsync();
+        await OnReload.InvokeAsync();
+    }
+
+    private async Task HideNoticeLaterAsync()
+    {
+        try
+        {
+            await Task.Delay(NoticeDuration, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        _showClosedNotice = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => _cts.Cancel();
 
     protected override void OnParametersSet()
     {
