@@ -1,4 +1,5 @@
-// JS interop of the Community page and of the leaderboard section of the settings.
+// JS interop of the Community page (leaderboard included), of the community section of the settings and of the
+// participants line of the Pomodoro page (visibility only).
 // Three things Blazor cannot do on its own:
 //   - know when the tab is hidden (to pause the presence polling);
 //   - scroll to and focus a section reached through an anchor, once the section has loaded;

@@ -1,0 +1,84 @@
+@* "En sprint maintenant": one row per open group, with the time left, the number of participants and a way in.
+   The data comes from the page (it refreshes them with its presence loop); this component only shows them.
+   Nothing here is announced: rows come and go quietly, and the countdowns have no live region.
+   Independent of the period selector. *@
+@inject CommunityFormatter F
+
+<section class="kf-zone" aria-labelledby="open-sprints-title" aria-busy="@(Data is null && !Failed ? "true" : "false")">
+    <h2 class="kf-section-title" id="open-sprints-title">@F["OpenSprints.Title"]</h2>
+    <p class="kf-open__sub">@F["OpenSprints.Sub"]</p>
+
+    @if (Failed)
+    {
+        <ZoneAlert Message="@F["OpenSprints.Error"]" OnRetry="OnRetry" />
+    }
+    else if (Data is null)
+    {
+        <div class="kf-card">
+            <p class="kf-empty">@F["OpenSprints.Loading"]</p>
+        </div>
+    }
+    else if (Data.Groups.Count == 0)
+    {
+        <div class="kf-card">
+            <p class="kf-empty">@F["OpenSprints.Empty"]</p>
+        </div>
+    }
+    else
+    {
+        var (before, after) = SplitRemaining();
+
+        <div class="kf-card">
+            <ul class="kf-open__list">
+                @foreach (var group in Data.Groups)
+                {
+                    <li class="kf-open__row" @key="group.Name">
+                        <a class="kf-open__who" href="@ProfileHref(group.Name)" aria-label="@F.Format("OpenSprints.Profile.Aria", group.Name)">
+                            <MemberAvatar Name="@group.Name" AvatarUrl="@group.AvatarUrl" Size="32" />
+                            <span class="kf-open__name">@group.Name</span>
+                        </a>
+                        <p class="kf-open__meta">
+                            <span>@before<SprintCountdown EndsAt="group.EndsAt" />@after</span>
+                            <span class="kf-open__dot" aria-hidden="true">·</span>
+                            <span>@F.Plural("OpenSprints.Participants", group.ParticipantCount, F.Number(group.ParticipantCount))</span>
+                        </p>
+                        <div class="kf-open__action">
+                            @if (group.IsMine)
+                            {
+                                <span class="kf-open__mine">@F["OpenSprints.Mine"]</span>
+                            }
+                            else
+                            {
+                                <JoinSprintButton TargetName="@group.Name" EndsAt="group.EndsAt"
+                                                  ViewerIsMember="Data.ViewerIsMember" OnNoLongerOpen="OnChanged" />
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</section>
+
+@code {
+    /// <summary>The last successful read; null while the first one is pending (or failed).</summary>
+    [Parameter] public OpenSprintsDto? Data { get; set; }
+
+    /// <summary>The read failed and there is nothing to show yet.</summary>
+    [Parameter] public bool Failed { get; set; }
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+
+    /// <summary>A sprint turned out to be no longer open (410): the page reads the list again.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private static string ProfileHref(string name) => $"/membres/{Uri.EscapeDataString(name)}";
+
+    /// <summary>The "encore {0}" template cut around its placeholder, so that the countdown can take its place.</summary>
+    private (string Before, string After) SplitRemaining()
+    {
+        var template = F["OpenSprints.Remaining"];
+        var at = template.IndexOf("{0}", StringComparison.Ordinal);
+        return at < 0 ? (template + " ", "") : (template[..at], template[(at + 3)..]);
+    }
+}

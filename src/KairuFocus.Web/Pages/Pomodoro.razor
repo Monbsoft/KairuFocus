@@ -4,6 +4,8 @@
 @inject PomodoroApiClient PomodoroApi
 @inject TaskApiClient TaskApi
 @inject SettingsApiClient SettingsApi
+@inject CommunityApiClient CommunityApi
+@inject CommunityFormatter F
 @inject ISoundService SoundService
 @inject NavigationManager Nav
 @implements IAsyncDisposable
@@ -109,6 +111,27 @@ else
                 </button>
             }
         </div>
+
+        <!-- Sprint partagé : avec qui je suis, et ouverture du groupe (sprint minuté actif d'un membre de la communauté) -->
+        @if (_isMember && _session is { Status: "Active", SessionType: "Sprint" })
+        {
+            <SprintParticipants />
+        }
+
+        @if (CanManageGroup)
+        {
+            <div class="d-flex flex-column align-items-center gap-1 text-center" style="max-width:480px">
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        aria-describedby="group-closed-hint"
+                        disabled="@_closingGroup"
+                        @onclick="ToggleGroupClosed">
+                    @F[_session!.IsClosedToJoin ? "Participants.Reopen" : "Participants.Close"]
+                </button>
+                <small id="group-closed-hint" class="text-body-secondary">
+                    @F[_session!.IsClosedToJoin ? "Participants.Reopen.Hint" : "Participants.Close.Hint"]
+                </small>
+            </div>
+        }
 
         <!-- Résultat après fin de session -->
         @if (_completedSessionType is not null)
@@ -256,6 +279,16 @@ else
     private string _selectedTaskIdToLink = string.Empty;
     private XpToast? _xpToast;
 
+    // ── Shared sprint (community) ─────────────────────────────────────────
+    private bool _isMember;      // read once, without blocking the page; a failure means "not a member" (no button)
+    private bool _closingGroup;  // a close/reopen request is in flight
+    private bool _disposed;
+
+    /// <summary>"Fermer / Rouvrir ce sprint": only the host of a timed sprint, and only when a community member.
+    /// A free sprint never reaches <c>_session</c> (see <see cref="TryAdoptTimedSession"/>), so it never shows it.</summary>
+    private bool CanManageGroup =>
+        _isMember && _session is { Status: "Active", SessionType: "Sprint", IsGroupHost: true };
+
     // ── Session type selection ────────────────────────────────────────────
     private string _selectedSessionType = "Sprint";
     private int _sprintDuration = 25;
@@ -323,6 +356,9 @@ else
     // ── Lifecycle ─────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
+        // Started first and not awaited: it must never delay the page (see LoadMembershipAsync).
+        _ = LoadMembershipAsync();
+
         // None of the secondary loads below may keep the page on "Chargement…" or prevent a running
         // session from being resumed: each failure is absorbed and falls back to the field defaults.
         try
@@ -373,6 +409,8 @@ else
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
+
         if (_timerCts is not null)
         {
             await _timerCts.CancelAsync();
@@ -380,7 +418,58 @@ else
         }
     }
 
+    /// <summary>Reads whether I am a community member. Any failure leaves <c>_isMember</c> false: no button, no list.</summary>
+    private async Task LoadMembershipAsync()
+    {
+        try
+        {
+            var membership = await CommunityApi.GetMembershipAsync();
+            if (_disposed) return;
+
+            _isMember = membership?.IsMember == true;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception)
+        {
+            // Accessory: the page works without it.
+        }
+    }
+
     // ── Actions ───────────────────────────────────────────────────────────
+    /// <summary>Closes or reopens my group to new arrivals. The countdown is left alone: only the session
+    /// flag changes, so the page reads the session again without touching the timer.</summary>
+    private async Task ToggleGroupClosed()
+    {
+        if (_closingGroup || _session is not { } current) return;
+        _closingGroup = true;
+        _errorMessage = null;
+
+        try
+        {
+            var close = !current.IsClosedToJoin;
+            if (!await CommunityApi.SetSprintClosedAsync(close))
+            {
+                _errorMessage = F["Participants.Close.Error"];
+                return;
+            }
+
+            // Reload the session; if the read fails the server did accept the change, so apply it locally
+            // rather than wipe the running session from the screen.
+            var fresh = await PomodoroApi.GetCurrentSessionAsync();
+            _session = fresh is { Status: "Active" }
+                ? fresh
+                : current with { IsClosedToJoin = close };
+        }
+        catch (Exception)
+        {
+            _errorMessage = F["Participants.Close.Error"];
+        }
+        finally
+        {
+            _closingGroup = false;
+        }
+    }
+
     private void SelectSessionType(string sessionType)
     {
         _selectedSessionType = sessionType;
@@ -656,9 +745,20 @@ else
     // ── Timer internals ───────────────────────────────────────────────────
     private void InitTimer(PomodoroSessionDto session)
     {
-        _totalSeconds = session.PlannedDurationMinutes * 60;
-        // No StartedAt should not happen on an Active session: fall back to "starts now".
-        _deadlineUtc = (session.StartedAt ?? DateTime.UtcNow).AddSeconds(_totalSeconds);
+        if (session.SharedEndAt is { } sharedEnd)
+        {
+            // A sprint joined from a group: everyone ends at the same instant, so the deadline is the shared end and
+            // the total is what remained when this session started (at least 1: the ring divides by it).
+            _deadlineUtc = sharedEnd;
+            _totalSeconds = Math.Max(1, (int)Math.Ceiling((sharedEnd - (session.StartedAt ?? DateTime.UtcNow)).TotalSeconds));
+        }
+        else
+        {
+            _totalSeconds = session.PlannedDurationMinutes * 60;
+            // No StartedAt should not happen on an Active session: fall back to "starts now".
+            _deadlineUtc = (session.StartedAt ?? DateTime.UtcNow).AddSeconds(_totalSeconds);
+        }
+
         _remainingSeconds = ComputeRemainingSeconds();
     }
 

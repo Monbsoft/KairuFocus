@@ -1,0 +1,10 @@
+/* Shown on the Pomodoro page, outside the community pages: Bootstrap variables only, no page token.
+   Quiet by design: muted text, no motion. */
+.kf-participants {
+    max-width: 480px;
+    margin: 0;
+    text-align: center;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.9375rem;
+    overflow-wrap: anywhere;
+}
