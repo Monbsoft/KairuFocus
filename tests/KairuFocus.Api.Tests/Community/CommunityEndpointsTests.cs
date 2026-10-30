@@ -9,6 +9,7 @@ using KairuFocus.Application.Community.Commands.JoinCommunity;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
+using KairuFocus.Application.Community.Commands.StartGroupBreak;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
@@ -36,6 +37,7 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     private const string JoinUrl = "api/community/open-sprints/LoutreTenace/join";
     private const string ParticipantsUrl = "api/community/current-sprint/participants";
     private const string ClosedUrl = "api/community/current-sprint/closed";
+    private const string BreakUrl = "api/community/current-sprint/break";
     private const string SessionUrl = "api/pomodoro/session";
 
     private const string NameUnavailableText = "This name is not available.";
@@ -75,6 +77,7 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [InlineData("POST", JoinUrl)]
     [InlineData("GET", ParticipantsUrl)]
     [InlineData("PUT", ClosedUrl)]
+    [InlineData("POST", BreakUrl)]
     public async Task Should_Return401_When_CommunityEndpointIsCalledAnonymously(string method, string url)
     {
         var response = await _anonymousClient.SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
@@ -414,6 +417,49 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
         var response = await PutJsonAsync(ClosedUrl, "{}");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // ── Group break (UC-CO-10) ─────────────────────────────────────────────
+
+    [Fact]
+    public async Task Should_Return201WithSharedEnd_When_GroupBreakStarts()
+    {
+        StartGroupBreakCommand? sent = null;
+        _mediator.DispatchResult = command =>
+        {
+            sent = (StartGroupBreakCommand)command;
+            return StartGroupBreakResult.Success(SharedEnd);
+        };
+
+        var response = await _client.PostAsync(BreakUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(new StartGroupBreakCommand(), sent);
+        await AssertJsonAsync("""{ "sharedEndAt": "2026-10-30T14:25:00+00:00" }""", response);
+    }
+
+    [Fact]
+    public async Task Should_Return204_When_NoGroupBreakApplies()
+    {
+        _mediator.DispatchResult = _ => StartGroupBreakResult.NoBreak();
+
+        var response = await _client.PostAsync(BreakUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Empty(await response.Content.ReadAsStringAsync());
+    }
+
+    [Theory]
+    [InlineData(PomodoroErrors.Pomodoro.SessionAlreadyActive)]
+    [InlineData(PomodoroErrors.Pomodoro.ConcurrentSessionStart)]
+    public async Task Should_Return409SprintActive_When_GroupBreakFails(string error)
+    {
+        _mediator.DispatchResult = _ => StartGroupBreakResult.Failure(error);
+
+        var response = await _client.PostAsync(BreakUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        await AssertCodeAsync("sprint-active", response);
     }
 
     // ── Pomodoro session contract ──────────────────────────────────────────

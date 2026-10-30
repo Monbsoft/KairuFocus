@@ -7,7 +7,8 @@ namespace KairuFocus.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// CROSS-USERS read (ADR-026): the active timed sprints of community members only (inner join), with
 /// their public name and avatar. The Users table is never read, and <c>OwnerId</c> only appears in the
-/// join condition: no user identifier leaves the query.
+/// join condition: no user identifier leaves the query. <see cref="FindGroupBreakAsync"/> reads the host's
+/// identifier to find their settings, and keeps it inside the method: nothing identifying crosses the port.
 /// <para>
 /// The deadline of a session is computed in memory: no DATEADD / DATEDIFF on a column, so a single
 /// definition and identical results under SQL Server and InMemory (ADR-024). Nothing closes an expired
@@ -17,6 +18,9 @@ namespace KairuFocus.Infrastructure.Persistence.Repositories;
 /// </summary>
 internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
 {
+    // A group break needs a group: two members at least.
+    private const int MinGroupBreakParticipants = 2;
+
     private readonly KairuFocusDbContext _context;
 
     public EfCoreOpenSprintReadRepository(KairuFocusDbContext context)
@@ -71,6 +75,44 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
             .ThenBy(r => r.Name.Value, StringComparer.Ordinal)
             .Select(r => new SprintMember(r.Name, r.AvatarUrl))
             .ToList();
+    }
+
+    public async Task<GroupBreakRules?> FindGroupBreakAsync(Guid rootSessionId, CancellationToken ct = default)
+    {
+        var rootId = PomodoroSessionId.From(rootSessionId);
+
+        // Counted in SQL, per owner: a member who took part twice counts once. Whatever the status or the
+        // deadline of the session, as long as it was not interrupted; breaks of the group are not sprints.
+        var participants = await (
+                from s in _context.PomodoroSessions.AsNoTracking()
+                join p in _context.MemberProfiles.AsNoTracking() on s.OwnerId equals p.Id
+                where (s.Id == rootId || s.SharedSprintId == rootId)
+                      && s.SessionType == PomodoroSessionType.Sprint
+                      && s.Status != PomodoroSessionStatus.Interrupted
+                select p.Id)
+            .Distinct()
+            .CountAsync(ct);
+        if (participants < MinGroupBreakParticipants)
+            return null;
+
+        // The host's identifier only feeds the settings lookup below: it stays in this method.
+        var root = await _context.PomodoroSessions
+            .AsNoTracking()
+            .Where(s => s.Id == rootId)
+            .Select(s => new { s.OwnerId })
+            .FirstOrDefaultAsync(ct);
+        if (root is null)
+            return null;
+
+        // The break lasts as long as the host set it, like the host's own breaks (default without a row).
+        var hostKey = root.OwnerId?.Value.ToString();
+        var shortBreakMinutes = await _context.PomodoroSettings
+            .AsNoTracking()
+            .Where(s => s.UserId == hostKey)
+            .Select(s => (int?)s.ShortBreakDurationMinutes)
+            .FirstOrDefaultAsync(ct);
+
+        return new GroupBreakRules(shortBreakMinutes ?? PomodoroSettings.Default.ShortBreakDurationMinutes);
     }
 
     private IQueryable<MemberSprint> ActiveMemberSprints() =>

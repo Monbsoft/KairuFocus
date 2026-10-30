@@ -49,9 +49,11 @@ internal sealed class EfCoreMemberDirectoryReadRepository : IMemberDirectoryRead
                     StartedAt = s.StartedAt!.Value,
                     EndedAt = s.EndedAt!.Value,
                     // Part of a group of at least two sessions: it joined one, or another session joined it.
-                    // The status of the other session does not matter.
+                    // The status of the other session does not matter, but it must be a sprint: the break of a
+                    // group carries the same root without having been a sprint done together.
                     IsTogether = s.SharedSprintId != null
-                                 || _context.PomodoroSessions.Any(other => other.SharedSprintId == s.Id),
+                                 || _context.PomodoroSessions.Any(other =>
+                                     other.SharedSprintId == s.Id && other.SessionType == PomodoroSessionType.Sprint),
                 })
             .AsAsyncEnumerable()
             .WithCancellation(ct);

@@ -4,6 +4,7 @@ using KairuFocus.Application.Community.Commands.JoinCommunity;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
+using KairuFocus.Application.Community.Commands.StartGroupBreak;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
@@ -125,6 +126,21 @@ public sealed class CommunityController : ControllerBase
         var result = await _mediator.SendAsync<GetSprintParticipantsQuery, GetSprintParticipantsResult>(
             new GetSprintParticipantsQuery(), ct);
         return Ok(result);
+    }
+
+    /// <summary>UC-CO-10 — 201 with the end of the group break, 204 when no break applies to the member.</summary>
+    [HttpPost("current-sprint/break")]
+    public async Task<IActionResult> StartGroupBreak(CancellationToken ct)
+    {
+        var result = await _mediator.DispatchAsync<StartGroupBreakCommand, StartGroupBreakResult>(
+            new StartGroupBreakCommand(), ct);
+
+        if (!result.IsSuccess)
+            return ErrorResponse(result.Error!);
+
+        return result.SharedEndAt is { } sharedEndAt
+            ? StatusCode(StatusCodes.Status201Created, new { sharedEndAt })
+            : NoContent();
     }
 
     [HttpPut("current-sprint/closed")]

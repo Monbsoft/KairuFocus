@@ -39,7 +39,7 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
     /// <summary>Root session of the shared sprint this session joined. Null for a host or a solo session.</summary>
     public PomodoroSessionId? SharedSprintId => _sharedSprintId;
 
-    /// <summary>Exact end of the shared sprint this session joined: <see cref="PlannedDurationMinutes"/>,
+    /// <summary>Exact end of the shared sprint or break this session joined:<see cref="PlannedDurationMinutes"/>,
     /// a whole number of minutes rounded up, cannot end to the second. Null unless joined.</summary>
     public DateTime? SharedEndAt { get; private set; }
 
@@ -72,6 +72,25 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
         UserId ownerId,
         PomodoroSessionId rootId,
         DateTime sharedEndAt,
+        DateTime now) =>
+        CreateShared(PomodoroSessionType.Sprint, ownerId, rootId, sharedEndAt, now);
+
+    /// <summary>
+    /// Creates the short break that follows a shared sprint, not started yet. It keeps the group's
+    /// <paramref name="rootId"/> and ends at <paramref name="sharedEndAt"/>, the same instant for every member.
+    /// </summary>
+    public static Result<PomodoroSession> CreateJoinedBreak(
+        UserId ownerId,
+        PomodoroSessionId rootId,
+        DateTime sharedEndAt,
+        DateTime now) =>
+        CreateShared(PomodoroSessionType.ShortBreak, ownerId, rootId, sharedEndAt, now);
+
+    private static Result<PomodoroSession> CreateShared(
+        PomodoroSessionType sessionType,
+        UserId ownerId,
+        PomodoroSessionId rootId,
+        DateTime sharedEndAt,
         DateTime now)
     {
         ArgumentNullException.ThrowIfNull(rootId);
@@ -82,7 +101,7 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
         var remainingMinutes = (int)Math.Ceiling((sharedEndAt - now).TotalMinutes);
 
         return Result.Success(
-            new PomodoroSession(PomodoroSessionId.New(), ownerId, PomodoroSessionType.Sprint, remainingMinutes, journalComment: null)
+            new PomodoroSession(PomodoroSessionId.New(), ownerId, sessionType, remainingMinutes, journalComment: null)
             {
                 _sharedSprintId = rootId,
                 SharedEndAt = sharedEndAt,
@@ -148,7 +167,7 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
     /// <summary>Scheduled end of a timed session: the exact end of the group for a joined session,
     /// otherwise start + planned duration. Null for a free sprint (PlannedDurationMinutes == 0)
     /// or a session that has not started.</summary>
-    private DateTime? ScheduledEndAt =>
+    public DateTime? ScheduledEndAt =>
         SharedEndAt ?? (PlannedDurationMinutes > 0 && StartedAt.HasValue
             ? StartedAt.Value.AddMinutes(PlannedDurationMinutes)
             : null);
