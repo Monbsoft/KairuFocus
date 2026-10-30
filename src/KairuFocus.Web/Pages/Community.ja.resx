@@ -154,7 +154,7 @@
 	<value>まだ順位がありません。</value>
   </data>
   <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>設定からランキングに参加しましょう。自動生成されたニックネームで表示されます。</value>
+	<value>設定からコミュニティに参加しましょう。他のメンバーにあなたの名前、XP、順位が表示されます。</value>
   </data>
   <data name="Community.Place.Join.Link" xml:space="preserve">
 	<value>設定で参加する</value>
@@ -339,9 +339,6 @@
   <data name="Community.Board.Title.Global" xml:space="preserve">
 	<value>総合ランキング</value>
   </data>
-  <data name="Community.Board.Hint" xml:space="preserve">
-	<value>メンバーはニックネームのみで表示されます</value>
-  </data>
   <data name="Community.Board.You" xml:space="preserve">
 	<value>（あなた）</value>
   </data>
@@ -378,61 +375,445 @@
   <data name="Community.Format.MonthShortYear" xml:space="preserve">
 	<value>yyyy年M月</value>
   </data>
-  <data name="Settings.Leaderboard.Title" xml:space="preserve">
-	<value>コミュニティランキング</value>
+  <data name="Nav.Profile" xml:space="preserve">
+	<value>プロフィール</value>
   </data>
-  <data name="Settings.Leaderboard.Loading" xml:space="preserve">
-	<value>ステータスを読み込み中…</value>
+  <data name="Profile.PageTitle" xml:space="preserve">
+	<value>プロフィール — KairuFocus</value>
   </data>
-  <data name="Settings.Leaderboard.LoadError" xml:space="preserve">
-	<value>ランキングでの状態を読み込めませんでした。ページを再読み込みしてください。</value>
+  <data name="Profile.PageTitle.Member" xml:space="preserve">
+	<value>{0} · プロフィール — KairuFocus</value>
   </data>
-  <data name="Settings.Leaderboard.Out" xml:space="preserve">
-	<value>ランキングには表示されていません。コミュニティ画面では閲覧できます。</value>
+  <data name="Profile.Loading" xml:space="preserve">
+	<value>プロフィールを読み込み中…</value>
   </data>
-  <data name="Settings.Leaderboard.Out.Hint" xml:space="preserve">
-	<value>自動生成されたニックネームで表示されます。表示されるのはニックネーム、順位、XPのみです。</value>
+  <data name="Profile.LoadError" xml:space="preserve">
+	<value>現在このプロフィールを読み込めません。</value>
   </data>
-  <data name="Settings.Leaderboard.In" xml:space="preserve">
-	<value>ランキングには「{0}」として表示されています。</value>
+  <data name="Profile.NotFound.Title" xml:space="preserve">
+	<value>プロフィールが見つかりません</value>
   </data>
-  <data name="Settings.Leaderboard.Reroll" xml:space="preserve">
-	<value>別のニックネームを引く</value>
+  <data name="Profile.NotFound.Body" xml:space="preserve">
+	<value>このメンバーは存在しないか、コミュニティに参加していないか、名前を変更しました。</value>
   </data>
-  <data name="Settings.Leaderboard.Rerolling" xml:space="preserve">
-	<value>抽選中…</value>
+  <data name="Profile.NotFound.Link" xml:space="preserve">
+	<value>コミュニティを見る</value>
   </data>
-  <data name="Settings.Leaderboard.Join" xml:space="preserve">
-	<value>ランキングに参加</value>
+  <data name="Profile.GitHub.Link" xml:space="preserve">
+	<value>{0}のGitHubアカウント</value>
   </data>
-  <data name="Settings.Leaderboard.Joining" xml:space="preserve">
-	<value>参加中…</value>
+  <data name="Profile.JoinedSince" xml:space="preserve">
+	<value>{0}からコミュニティに参加</value>
   </data>
-  <data name="Settings.Leaderboard.Saved" xml:space="preserve">
-	<value>新しいニックネーム:「{0}」。</value>
+  <data name="Profile.EditName" xml:space="preserve">
+	<value>名前を変更</value>
   </data>
-  <data name="Settings.Leaderboard.Leave" xml:space="preserve">
-	<value>ランキングから退出</value>
+  <data name="Profile.Status.Aria" xml:space="preserve">
+	<value>開いているスプリント</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Title" xml:space="preserve">
-	<value>ランキングから退出しますか？</value>
+  <data name="Profile.Status.Open" xml:space="preserve">
+	<value>スプリント中 · 残り{0}</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Body" xml:space="preserve">
-	<value>ランキングからすぐに表示されなくなります。XPは保持されます。再参加すると新しいニックネームが付きます。</value>
+  <data name="Profile.Status.Closed" xml:space="preserve">
+	<value>現在、開いているスプリントはありません</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Confirm" xml:space="preserve">
-	<value>退出</value>
+  <data name="Profile.Status.IncludesViewer" xml:space="preserve">
+	<value>あなたはこのスプリントに参加しています。</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Cancel" xml:space="preserve">
+  <data name="Profile.Status.Error" xml:space="preserve">
+	<value>現在、開いているスプリントを読み込めません。</value>
+  </data>
+  <data name="Profile.Status.Together.One" xml:space="preserve">
+	<value>一緒に{0}スプリント完了</value>
+  </data>
+  <data name="Profile.Status.Together.Other" xml:space="preserve">
+	<value>一緒に{0}スプリント完了</value>
+  </data>
+  <data name="Profile.With.One" xml:space="preserve">
+	<value>{0}さんと</value>
+  </data>
+  <data name="Profile.With.Many.One" xml:space="preserve">
+	<value>{0}さんほか{1}人と</value>
+  </data>
+  <data name="Profile.With.Many.Other" xml:space="preserve">
+	<value>{0}さんほか{1}人と</value>
+  </data>
+  <data name="Profile.Kpi.Aria" xml:space="preserve">
+	<value>主な数値</value>
+  </data>
+  <data name="Profile.Kpi.Xp" xml:space="preserve">
+	<value>累計XP</value>
+  </data>
+  <data name="Profile.Kpi.Xp.Hint" xml:space="preserve">
+	<value>開始以来</value>
+  </data>
+  <data name="Profile.Kpi.Rank" xml:space="preserve">
+	<value>順位</value>
+  </data>
+  <data name="Profile.Kpi.Rank.Hint" xml:space="preserve">
+	<value>総合</value>
+  </data>
+  <data name="Profile.Kpi.Rank.None" xml:space="preserve">
+	<value>まだランク外</value>
+  </data>
+  <data name="Profile.Kpi.Sprints" xml:space="preserve">
+	<value>スプリント</value>
+  </data>
+  <data name="Profile.Kpi.Sprints.Hint" xml:space="preserve">
+	<value>フォーカス{0}</value>
+  </data>
+  <data name="Profile.Kpi.Together" xml:space="preserve">
+	<value>一緒に完了</value>
+  </data>
+  <data name="Profile.Kpi.Together.Hint" xml:space="preserve">
+	<value>グループでのスプリント</value>
+  </data>
+  <data name="Profile.Standing.Error" xml:space="preserve">
+	<value>現在、数値を読み込めません。</value>
+  </data>
+  <data name="Profile.Activity.Title" xml:space="preserve">
+	<value>アクティビティ · 過去12か月</value>
+  </data>
+  <data name="Profile.Activity.Total.One" xml:space="preserve">
+	<value>{0}スプリント</value>
+  </data>
+  <data name="Profile.Activity.Total.Other" xml:space="preserve">
+	<value>{0}スプリント</value>
+  </data>
+  <data name="Profile.Activity.Aria.One" xml:space="preserve">
+	<value>過去12か月のアクティビティマップ：合計{0}スプリント。</value>
+  </data>
+  <data name="Profile.Activity.Aria.Other" xml:space="preserve">
+	<value>過去12か月のアクティビティマップ：合計{0}スプリント。</value>
+  </data>
+  <data name="Profile.Activity.Cell.One" xml:space="preserve">
+	<value>{0} — {1}スプリント</value>
+  </data>
+  <data name="Profile.Activity.Cell.Other" xml:space="preserve">
+	<value>{0} — {1}スプリント</value>
+  </data>
+  <data name="Profile.Activity.Less" xml:space="preserve">
+	<value>少ない</value>
+  </data>
+  <data name="Profile.Activity.More" xml:space="preserve">
+	<value>多い</value>
+  </data>
+  <data name="Profile.Activity.Utc" xml:space="preserve">
+	<value>日付はUTC基準です。マスがあなたのカレンダーと1日ずれる場合があります。</value>
+  </data>
+  <data name="Profile.Activity.Error" xml:space="preserve">
+	<value>現在、アクティビティを読み込めません。</value>
+  </data>
+  <data name="Profile.Invite.Title" xml:space="preserve">
+	<value>コミュニティに参加しましょう</value>
+  </data>
+  <data name="Profile.Invite.Body" xml:space="preserve">
+	<value>コミュニティに参加すると、ログイン中のすべてのメンバーに次の情報が表示されます：</value>
+  </data>
+  <data name="Profile.Invite.Item.Name" xml:space="preserve">
+	<value>あなたの名前とアバター</value>
+  </data>
+  <data name="Profile.Invite.Item.Xp" xml:space="preserve">
+	<value>あなたのXPと順位</value>
+  </data>
+  <data name="Profile.Invite.Item.Activity" xml:space="preserve">
+	<value>日ごとのアクティビティマップ</value>
+  </data>
+  <data name="Profile.Invite.Item.Sprint" xml:space="preserve">
+	<value>スプリントが開いているときのステータス</value>
+  </data>
+  <data name="Profile.Invite.Link" xml:space="preserve">
+	<value>コミュニティに参加する</value>
+  </data>
+  <data name="MyStats.Heading" xml:space="preserve">
+	<value>自分の統計</value>
+  </data>
+  <data name="MyStats.Sub" xml:space="preserve">
+	<value>時間の経過に伴うあなたの集中の記録</value>
+  </data>
+  <data name="MyStats.Private" xml:space="preserve">
+	<value>あなただけに表示されます。</value>
+  </data>
+  <data name="MyStats.Loading" xml:space="preserve">
+	<value>統計を読み込み中…</value>
+  </data>
+  <data name="MyStats.Period.Aria" xml:space="preserve">
+	<value>期間を選択</value>
+  </data>
+  <data name="MyStats.Period.Week" xml:space="preserve">
+	<value>週</value>
+  </data>
+  <data name="MyStats.Period.Month" xml:space="preserve">
+	<value>月</value>
+  </data>
+  <data name="MyStats.Range.Week" xml:space="preserve">
+	<value>過去7日間</value>
+  </data>
+  <data name="MyStats.Range.Month" xml:space="preserve">
+	<value>過去30日間</value>
+  </data>
+  <data name="MyStats.Empty" xml:space="preserve">
+	<value>最初のスプリントを始めると、ここに統計が表示されていきます。</value>
+  </data>
+  <data name="MyStats.Kpi.Focus" xml:space="preserve">
+	<value>フォーカス時間</value>
+  </data>
+  <data name="MyStats.Kpi.Sprints" xml:space="preserve">
+	<value>完了したスプリント</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp" xml:space="preserve">
+	<value>累計XP</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp.Hint" xml:space="preserve">
+	<value>開始以来の合計</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp.None" xml:space="preserve">
+	<value>5分以上のスプリントを完了するとXPを獲得できます。</value>
+  </data>
+  <data name="MyStats.Kpi.WeekXp" xml:space="preserve">
+	<value>今週のXP</value>
+  </data>
+  <data name="MyStats.Kpi.WeekXp.Hint" xml:space="preserve">
+	<value>今週</value>
+  </data>
+  <data name="MyStats.Bars.Title" xml:space="preserve">
+	<value>日別フォーカス — {0}</value>
+  </data>
+  <data name="MyStats.Bars.Aria" xml:space="preserve">
+	<value>過去{0}日間の日別フォーカス時間、合計{1}。</value>
+  </data>
+  <data name="MyStats.Bars.Item" xml:space="preserve">
+	<value>{0} — {1}</value>
+  </data>
+  <data name="MyStats.Day.Sun" xml:space="preserve">
+	<value>日</value>
+  </data>
+  <data name="MyStats.Day.Mon" xml:space="preserve">
+	<value>月</value>
+  </data>
+  <data name="MyStats.Day.Tue" xml:space="preserve">
+	<value>火</value>
+  </data>
+  <data name="MyStats.Day.Wed" xml:space="preserve">
+	<value>水</value>
+  </data>
+  <data name="MyStats.Day.Thu" xml:space="preserve">
+	<value>木</value>
+  </data>
+  <data name="MyStats.Day.Fri" xml:space="preserve">
+	<value>金</value>
+  </data>
+  <data name="MyStats.Day.Sat" xml:space="preserve">
+	<value>土</value>
+  </data>
+  <data name="MyStats.Heatmap.Title" xml:space="preserve">
+	<value>フォーカスアクティビティ — 過去12か月</value>
+  </data>
+  <data name="MyStats.Heatmap.Total.One" xml:space="preserve">
+	<value>年間{0}スプリント</value>
+  </data>
+  <data name="MyStats.Heatmap.Total.Other" xml:space="preserve">
+	<value>年間{0}スプリント</value>
+  </data>
+  <data name="Settings.Community.Title" xml:space="preserve">
+	<value>コミュニティ</value>
+  </data>
+  <data name="Settings.Community.Loading" xml:space="preserve">
+	<value>コミュニティの設定を読み込み中…</value>
+  </data>
+  <data name="Settings.Community.LoadError" xml:space="preserve">
+	<value>コミュニティの設定を読み込めません。</value>
+  </data>
+  <data name="Settings.Community.Intro" xml:space="preserve">
+	<value>名前を決めて、ランキング、プロフィール、開いているスプリントで他のメンバーとつながりましょう。</value>
+  </data>
+  <data name="Settings.Community.Visible.Heading" xml:space="preserve">
+	<value>参加すると、ログイン中のすべてのメンバーに次の情報が表示されます：</value>
+  </data>
+  <data name="Settings.Community.Visible.Name" xml:space="preserve">
+	<value>あなたの名前とアバター</value>
+  </data>
+  <data name="Settings.Community.Visible.Xp" xml:space="preserve">
+	<value>あなたのXPと順位</value>
+  </data>
+  <data name="Settings.Community.Visible.Activity" xml:space="preserve">
+	<value>日ごとのアクティビティマップ</value>
+  </data>
+  <data name="Settings.Community.Visible.Sprint" xml:space="preserve">
+	<value>スプリントが開いているときのステータス</value>
+  </data>
+  <data name="Settings.Community.Source.Heading" xml:space="preserve">
+	<value>あなたの名前</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub" xml:space="preserve">
+	<value>GitHubログイン: {0}</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub.Hint" xml:space="preserve">
+	<value>GitHubのアバターとアカウントへのリンクが表示されます。</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub.Unavailable" xml:space="preserve">
+	<value>GitHubのログイン名は名前として使えません（ルールに合わないか、すでに使われています）。名前を選んでください。</value>
+  </data>
+  <data name="Settings.Community.Source.Chosen" xml:space="preserve">
+	<value>自分で選ぶ名前</value>
+  </data>
+  <data name="Settings.Community.Source.Chosen.Hint" xml:space="preserve">
+	<value>アバターはイニシャルになり、GitHubアカウントは表示されません。</value>
+  </data>
+  <data name="Settings.Community.Name.Label" xml:space="preserve">
+	<value>名前</value>
+  </data>
+  <data name="Settings.Community.Name.Rules" xml:space="preserve">
+	<value>3〜39文字：アクセント記号のない英字、数字、ハイフン、アンダースコア。先頭は英字か数字にしてください。</value>
+  </data>
+  <data name="Settings.Community.Error.Invalid" xml:space="preserve">
+	<value>この名前はルールに合いません。3〜39文字で、アクセント記号のない英字、数字、ハイフン、アンダースコアを使い、先頭は英字か数字にしてください。</value>
+  </data>
+  <data name="Settings.Community.Error.Unavailable" xml:space="preserve">
+	<value>この名前は使えません</value>
+  </data>
+  <data name="Settings.Community.Error.Generic" xml:space="preserve">
+	<value>エラーが発生しました。しばらくしてからもう一度お試しください。</value>
+  </data>
+  <data name="Settings.Community.Join" xml:space="preserve">
+	<value>コミュニティに参加する</value>
+  </data>
+  <data name="Settings.Community.Joining" xml:space="preserve">
+	<value>有効にしています…</value>
+  </data>
+  <data name="Settings.Community.Member.Name" xml:space="preserve">
+	<value>あなたの名前：{0}</value>
+  </data>
+  <data name="Settings.Community.Member.Profile" xml:space="preserve">
+	<value>プロフィールを見る</value>
+  </data>
+  <data name="Settings.Community.Member.Change" xml:space="preserve">
+	<value>名前を変更</value>
+  </data>
+  <data name="Settings.Community.Member.Save" xml:space="preserve">
+	<value>保存</value>
+  </data>
+  <data name="Settings.Community.Member.Saving" xml:space="preserve">
+	<value>保存中…</value>
+  </data>
+  <data name="Settings.Community.Member.Cancel" xml:space="preserve">
 	<value>キャンセル</value>
   </data>
-  <data name="Settings.Leaderboard.Left" xml:space="preserve">
-	<value>ランキングから退出しました。XPは保持されます。</value>
+  <data name="Settings.Community.Member.Changed" xml:space="preserve">
+	<value>名前を「{0}」に変更しました。</value>
   </data>
-  <data name="Settings.Leaderboard.Error.Pool" xml:space="preserve">
-	<value>現在ニックネームを生成できません。しばらくしてからもう一度お試しください。</value>
+  <data name="Settings.Community.Leave" xml:space="preserve">
+	<value>退会</value>
   </data>
-  <data name="Settings.Leaderboard.Error.Generic" xml:space="preserve">
-	<value>問題が発生しました。しばらくしてからもう一度お試しください。</value>
+  <data name="Settings.Community.Leave.Title" xml:space="preserve">
+	<value>コミュニティを退会しますか？</value>
+  </data>
+  <data name="Settings.Community.Leave.Body" xml:space="preserve">
+	<value>プロフィールはすぐに非表示になり、名前は解放されます。XPは保持されます。</value>
+  </data>
+  <data name="Settings.Community.Leave.Confirm" xml:space="preserve">
+	<value>コミュニティを退会する</value>
+  </data>
+  <data name="Settings.Community.Leave.Cancel" xml:space="preserve">
+	<value>キャンセル</value>
+  </data>
+  <data name="Settings.Community.Left" xml:space="preserve">
+	<value>コミュニティを退会しました。</value>
+  </data>
+  <data name="OpenSprints.Title" xml:space="preserve">
+	<value>今スプリント中</value>
+  </data>
+  <data name="OpenSprints.Sub" xml:space="preserve">
+	<value>すでに始まっているスプリントに参加しましょう。同じ時刻に一緒に終わります。</value>
+  </data>
+  <data name="OpenSprints.Loading" xml:space="preserve">
+	<value>開いているスプリントを読み込み中…</value>
+  </data>
+  <data name="OpenSprints.Empty" xml:space="preserve">
+	<value>現在、開いているスプリントを持つ人はいません。自分で始めれば、他の人が参加できます。</value>
+  </data>
+  <data name="OpenSprints.Error" xml:space="preserve">
+	<value>現在、開いているスプリントを読み込めません。</value>
+  </data>
+  <data name="OpenSprints.Remaining" xml:space="preserve">
+	<value>残り{0}</value>
+  </data>
+  <data name="OpenSprints.Participants.One" xml:space="preserve">
+	<value>{0}人が参加</value>
+  </data>
+  <data name="OpenSprints.Participants.Other" xml:space="preserve">
+	<value>{0}人が参加</value>
+  </data>
+  <data name="OpenSprints.Mine" xml:space="preserve">
+	<value>あなたのスプリント</value>
+  </data>
+  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
+	<value>{0}さんのプロフィール</value>
+  </data>
+  <data name="Participants.Aria" xml:space="preserve">
+	<value>一緒にスプリント中のメンバー</value>
+  </data>
+  <data name="Participants.With.One" xml:space="preserve">
+	<value>{0}さんと</value>
+  </data>
+  <data name="Participants.With.Two" xml:space="preserve">
+	<value>{0}さん、{1}さんと</value>
+  </data>
+  <data name="Participants.With.Three" xml:space="preserve">
+	<value>{0}さん、{1}さん、{2}さんと</value>
+  </data>
+  <data name="Participants.With.Many.One" xml:space="preserve">
+	<value>{0}さん、{1}さん、{2}さんほか{3}人と</value>
+  </data>
+  <data name="Participants.With.Many.Other" xml:space="preserve">
+	<value>{0}さん、{1}さん、{2}さんほか{3}人と</value>
+  </data>
+  <data name="Participants.Close" xml:space="preserve">
+	<value>このスプリントを閉じる</value>
+  </data>
+  <data name="Participants.Reopen" xml:space="preserve">
+	<value>このスプリントを再び開く</value>
+  </data>
+  <data name="Participants.Close.Hint" xml:space="preserve">
+	<value>誰も参加できなくなります。すでに参加している人はそのままです。</value>
+  </data>
+  <data name="Participants.Reopen.Hint" xml:space="preserve">
+	<value>このスプリントは閉じています。誰も参加できません。</value>
+  </data>
+  <data name="Participants.Close.Error" xml:space="preserve">
+	<value>スプリントの受け付け状態を変更できません。</value>
+  </data>
+  <data name="Join.Button" xml:space="preserve">
+	<value>このスプリントに参加</value>
+  </data>
+  <data name="Join.Button.Aria" xml:space="preserve">
+	<value>{0}さんのこのスプリントに参加</value>
+  </data>
+  <data name="Join.Joining" xml:space="preserve">
+	<value>スプリントに接続中…</value>
+  </data>
+  <data name="Join.NeedMember.Body" xml:space="preserve">
+	<value>スプリントに参加するには、先にコミュニティに参加してください。</value>
+  </data>
+  <data name="Join.NeedMember.Link" xml:space="preserve">
+	<value>コミュニティに参加する</value>
+  </data>
+  <data name="Join.ShortWarning" xml:space="preserve">
+	<value>残り5分未満：このスプリントではXPは獲得できません。</value>
+  </data>
+  <data name="Join.SprintActive" xml:space="preserve">
+	<value>すでにスプリントが進行中です。</value>
+  </data>
+  <data name="Join.SprintActive.Link" xml:space="preserve">
+	<value>自分のスプリントへ</value>
+  </data>
+  <data name="Join.OwnSprint" xml:space="preserve">
+	<value>これはあなた自身のスプリントです。</value>
+  </data>
+  <data name="Join.Closed" xml:space="preserve">
+	<value>このスプリントは受け付けを終了しました</value>
+  </data>
+  <data name="Join.Error" xml:space="preserve">
+	<value>現在このスプリントに参加できません。しばらくしてからもう一度お試しください。</value>
   </data>
 </root>

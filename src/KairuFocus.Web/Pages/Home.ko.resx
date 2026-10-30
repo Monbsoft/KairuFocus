@@ -58,7 +58,7 @@
 	<value>집중력을 유지하는 워크스페이스</value>
   </data>
   <data name="Description" xml:space="preserve">
-	<value>작업, 포모도로 스프린트, 활동 저널 — 모든 워크플로를 한 곳에서. MCP 프로토콜로 좋아하는 AI를 연결하고 작업 관리를 맡기세요.</value>
+	<value>작업, 포모도로 스프린트, 활동 저널 — 모든 워크플로를 한 곳에서, 그리고 그룹으로 함께 집중할 수도 있습니다. MCP 프로토콜로 좋아하는 AI를 연결하고 작업 관리를 맡기세요.</value>
   </data>
   <data name="LoginButton" xml:space="preserve">
 	<value>GitHub으로 로그인</value>
@@ -86,5 +86,11 @@
   </data>
   <data name="FeatureAIDesc" xml:space="preserve">
 	<value>내장 MCP 서버: AI가 작업을 직접 생성, 목록 조회, 완료합니다.</value>
+  </data>
+  <data name="FeatureGroup" xml:space="preserve">
+	<value>그룹 스프린트</value>
+  </data>
+  <data name="FeatureGroupDesc" xml:space="preserve">
+	<value>한 번의 클릭으로 다른 멤버의 스프린트에 참여해 메시지나 방해 없이 함께 집중하세요.</value>
   </data>
 </root>
