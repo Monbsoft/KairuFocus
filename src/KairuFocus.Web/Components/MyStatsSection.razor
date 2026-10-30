@@ -40,14 +40,14 @@
         </div>
         <div class="kf-skel kf-skel--chart" aria-hidden="true"></div>
     }
-    else if (Failed)
-    {
-        @* The read failed: an error, never zeros or the "first sprint" empty state. *@
-        <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="OnRetry" />
-    }
     else
     {
-        @if (!_hasAnyData)
+        @if (Failed)
+        {
+            @* The focus read failed: an error, never zeros or the "first sprint" empty state. The XP has its own read and stays. *@
+            <ZoneAlert Message="@F["Profile.Activity.Error"]" OnRetry="OnRetry" />
+        }
+        else if (!_hasAnyData)
         {
             <div class="kf-card kf-stats-page__empty">
                 <span class="kf-stats-page__empty-icon" aria-hidden="true">&#127813;</span>
@@ -55,9 +55,14 @@
             </div>
         }
 
+        @if (!Failed || !_xpFailed)
+        {
         <div class="kf-kpis">
-            <KpiCard Label="@F["MyStats.Kpi.Focus"]" Value="@_focusTimeLabel" Hint="@_rangeLabel" />
-            <KpiCard Label="@F["MyStats.Kpi.Sprints"]" Value="@F.Number(_kpiSprints)" Hint="@_rangeLabel" />
+            @if (!Failed)
+            {
+                <KpiCard Label="@F["MyStats.Kpi.Focus"]" Value="@_focusTimeLabel" Hint="@_rangeLabel" />
+                <KpiCard Label="@F["MyStats.Kpi.Sprints"]" Value="@F.Number(_kpiSprints)" Hint="@_rangeLabel" />
+            }
             @if (!_xpFailed)
             {
                 <KpiCard Label="@F["MyStats.Kpi.TotalXp"]" Value="@F.Xp(_totalXp)"
@@ -65,7 +70,10 @@
                 <KpiCard Label="@F["MyStats.Kpi.WeekXp"]" Value="@F.Xp(_weekXp)" Hint="@F["MyStats.Kpi.WeekXp.Hint"]" />
             }
         </div>
+        }
 
+        @if (!Failed)
+        {
         <div class="kf-card kf-barcard">
             <h3 class="kf-barcard__title">@F.Format("MyStats.Bars.Title", _rangeLabel.ToLower(CultureInfo.CurrentCulture))</h3>
             <div class="kf-bars" role="img" aria-label="@_barsAriaLabel">
@@ -80,6 +88,7 @@
                 }
             </div>
         </div>
+        }
     }
 </section>
 
