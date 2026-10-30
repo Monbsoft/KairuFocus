@@ -1,0 +1,30 @@
+@* Overlapping avatars of the others in a sprint, with a "+N" bubble for the rest. Decorative: the names are written next to it. *@
+
+<span class="kf-avatar-stack" aria-hidden="true">
+    @foreach (var member in Shown)
+    {
+        <MemberAvatar Name="@member.Name" AvatarUrl="@member.AvatarUrl" Size="@Size" />
+    }
+    @if (Hidden > 0)
+    {
+        <span class="kf-avatar-stack__more" style="@MoreStyle">+@Hidden</span>
+    }
+</span>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<SprintMemberDto> Members { get; set; } = [];
+
+    /// <summary>Number of people the stack stands for, when it is greater than the list (rows only carry a count). Defaults to the list length.</summary>
+    [Parameter] public int? Total { get; set; }
+
+    [Parameter] public int MaxShown { get; set; } = 3;
+
+    /// <summary>Side of each avatar in pixels.</summary>
+    [Parameter] public int Size { get; set; } = 32;
+
+    private IEnumerable<SprintMemberDto> Shown => Members.Take(Math.Max(0, MaxShown));
+
+    private int Hidden => Math.Max(0, (Total ?? Members.Count) - Shown.Count());
+
+    private string MoreStyle => FormattableString.Invariant($"width:{Size}px;height:{Size}px;font-size:{Size * 0.38:0.#}px");
+}

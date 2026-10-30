@@ -34,9 +34,9 @@ public sealed record CommunityLeaderboardDto(
     CommunityStandingDto? Me,
     IReadOnlyList<CommunityRowDto> Top);
 
-public sealed record CommunityStandingDto(int Rank, bool IsTied, int Xp, string Pseudonym, bool IsInTop);
+public sealed record CommunityStandingDto(int Rank, bool IsTied, int Xp, string Name, string? AvatarUrl, bool IsInTop);
 
-public sealed record CommunityRowDto(int Rank, string Pseudonym, int Xp, bool IsMe);
+public sealed record CommunityRowDto(int Rank, string Name, string? AvatarUrl, int Xp, bool IsMe);
 
 /// <summary>GET community/recap: four numbers, no identifier.</summary>
 public sealed record CommunityRecapDto(int Sprints, int FocusMinutes, int ActiveMembers, int MySprints);
