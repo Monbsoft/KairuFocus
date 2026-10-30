@@ -802,10 +802,10 @@
 	<value>Restam menos de 5 minutos: este sprint não renderá XP.</value>
   </data>
   <data name="Join.SprintActive" xml:space="preserve">
-	<value>Você já tem um sprint em andamento.</value>
+	<value>Você já tem uma sessão em andamento.</value>
   </data>
   <data name="Join.SprintActive.Link" xml:space="preserve">
-	<value>Ir para meu sprint</value>
+	<value>Ir para minha sessão</value>
   </data>
   <data name="Join.OwnSprint" xml:space="preserve">
 	<value>Este é o seu próprio sprint.</value>

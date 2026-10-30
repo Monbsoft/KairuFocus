@@ -802,10 +802,10 @@
 	<value>残り5分未満：このスプリントではXPは獲得できません。</value>
   </data>
   <data name="Join.SprintActive" xml:space="preserve">
-	<value>すでにスプリントが進行中です。</value>
+	<value>すでに進行中のセッションがあります。</value>
   </data>
   <data name="Join.SprintActive.Link" xml:space="preserve">
-	<value>自分のスプリントへ</value>
+	<value>自分のセッションへ</value>
   </data>
   <data name="Join.OwnSprint" xml:space="preserve">
 	<value>これはあなた自身のスプリントです。</value>
