@@ -47,6 +47,8 @@ public static class DependencyInjection
         // Cross-user reads (ADR-024): the only repositories without a UserId filter.
         services.AddScoped<ILeaderboardStandingsRepository, EfCoreLeaderboardStandingsRepository>();
         services.AddScoped<ICommunityActivityRepository, EfCoreCommunityActivityRepository>();
+        services.AddScoped<IMemberDirectoryReadRepository, EfCoreMemberDirectoryReadRepository>();
+        services.AddScoped<IOpenSprintReadRepository, EfCoreOpenSprintReadRepository>();
 
         services.AddSingleton<IMcpTokenGenerator, McpTokenGenerator>();
         services.AddHttpClient<IJiraTicketService, JiraApiClient>();
