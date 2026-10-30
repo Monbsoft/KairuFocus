@@ -2,16 +2,11 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
 using KairuFocus.Api.Tests.Auth;
-using KairuFocus.Application.Gamification.Commands.JoinLeaderboard;
-using KairuFocus.Application.Gamification.Commands.LeaveLeaderboard;
-using KairuFocus.Application.Gamification.Commands.RerollPseudonym;
 using KairuFocus.Application.Gamification.Common;
 using KairuFocus.Application.Gamification.Queries.GetCommunityLeaderboard;
 using KairuFocus.Application.Gamification.Queries.GetCommunityPresence;
 using KairuFocus.Application.Gamification.Queries.GetCommunityProgress;
 using KairuFocus.Application.Gamification.Queries.GetCommunityRecap;
-using KairuFocus.Application.Gamification.Queries.GetLeaderboardMembership;
-using GamificationErrors = KairuFocus.Domain.Gamification.DomainErrors;
 
 namespace KairuFocus.Api.Tests.Gamification;
 
@@ -25,8 +20,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     private const string LeaderboardUrl = "api/gamification/community/leaderboard";
     private const string RecapUrl = "api/gamification/community/recap";
     private const string PresenceUrl = "api/gamification/community/presence";
-    private const string MembershipUrl = "api/gamification/leaderboard/membership";
-    private const string RerollUrl = "api/gamification/leaderboard/membership/reroll";
 
     private readonly TestMediator _mediator;
     private readonly HttpClient _client;
@@ -53,15 +46,21 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [InlineData("GET", LeaderboardUrl)]
     [InlineData("GET", RecapUrl)]
     [InlineData("GET", PresenceUrl)]
-    [InlineData("GET", MembershipUrl)]
-    [InlineData("POST", MembershipUrl)]
-    [InlineData("POST", RerollUrl)]
-    [InlineData("DELETE", MembershipUrl)]
     public async Task Should_Return401_When_CommunityEndpointIsCalledAnonymously(string method, string url)
     {
         var response = await _anonymousClient.SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // The generated alias is gone: the old membership endpoints no longer exist.
+    // (Only GET is asserted: the other verbs answer 405 on an unknown route because of the host's fallback.)
+    [Fact]
+    public async Task Should_Return404_When_RemovedMembershipEndpointIsCalled()
+    {
+        var response = await _client.GetAsync("api/gamification/leaderboard/membership");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     // ── Period parsing ─────────────────────────────────────────────────────
@@ -146,8 +145,8 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
         await AssertJsonAsync("""
             {
               "isParticipant": true, "rankedCount": 23,
-              "me": { "rank": 4, "isTied": false, "xp": 120, "pseudonym": "RenardAgile", "isInTop": true },
-              "top": [ { "rank": 1, "pseudonym": "LoutreTenace", "xp": 210, "isMe": false } ]
+              "me": { "rank": 4, "isTied": false, "xp": 120, "name": "RenardAgile", "avatarUrl": null, "isInTop": true },
+              "top": [ { "rank": 1, "name": "LoutreTenace", "avatarUrl": "https://avatars.githubusercontent.com/u/1", "xp": 210, "isMe": false } ]
             }
             """, response);
     }
@@ -178,118 +177,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
         await AssertJsonAsync("""{ "inSprintNow": 12, "sprintedToday": 37 }""", response);
     }
 
-    [Theory]
-    [InlineData(true, "LoutreTenace", """{ "isParticipant": true, "pseudonym": "LoutreTenace" }""")]
-    [InlineData(false, null, """{ "isParticipant": false, "pseudonym": null }""")]
-    public async Task Should_ReturnMembershipContract_When_MembershipIsRequested(
-        bool isParticipant, string? pseudonym, string expectedJson)
-    {
-        _mediator.SendResult = query => query is GetLeaderboardMembershipQuery
-            ? new GetLeaderboardMembershipResult(isParticipant, pseudonym)
-            : throw new InvalidOperationException($"Unexpected query {query.GetType().Name}.");
-
-        var response = await _client.GetAsync(MembershipUrl);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        await AssertJsonAsync(expectedJson, response);
-    }
-
-    // ── Join (UC-XP-03) ────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task Should_Return201WithPseudonym_When_JoinSucceeds()
-    {
-        _mediator.DispatchResult = _ => JoinLeaderboardResult.Success("LoutreTenace");
-
-        var response = await _client.PostAsync(MembershipUrl, content: null);
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        Assert.NotNull(response.Headers.Location);
-        Assert.EndsWith("/" + MembershipUrl, response.Headers.Location!.ToString());
-        await AssertJsonAsync("""{ "pseudonym": "LoutreTenace" }""", response);
-    }
-
-    [Fact]
-    public async Task Should_Return409_When_UserAlreadyParticipates()
-    {
-        _mediator.DispatchResult = _ =>
-            JoinLeaderboardResult.Failure(GamificationErrors.Gamification.AlreadyParticipating);
-
-        var response = await _client.PostAsync(MembershipUrl, content: null);
-
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        await AssertErrorAsync(GamificationErrors.Gamification.AlreadyParticipating, response);
-    }
-
-    [Theory]
-    [InlineData(MembershipUrl)]
-    [InlineData(RerollUrl)]
-    public async Task Should_Return503_When_PseudonymPoolIsExhausted(string url)
-    {
-        const string error = GamificationErrors.Gamification.PseudonymPoolExhausted;
-        _mediator.DispatchResult = command => command switch
-        {
-            JoinLeaderboardCommand => JoinLeaderboardResult.Failure(error),
-            RerollPseudonymCommand => RerollPseudonymResult.Failure(error),
-            _ => throw new InvalidOperationException($"Unexpected command {command.GetType().Name}.")
-        };
-
-        var response = await _client.PostAsync(url, content: null);
-
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
-        await AssertErrorAsync(error, response);
-    }
-
-    // ── Reroll (UC-XP-04) ──────────────────────────────────────────────────
-
-    [Fact]
-    public async Task Should_Return200WithPseudonym_When_RerollSucceeds()
-    {
-        _mediator.DispatchResult = _ => RerollPseudonymResult.Success("RenardAgile");
-
-        var response = await _client.PostAsync(RerollUrl, content: null);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        await AssertJsonAsync("""{ "pseudonym": "RenardAgile" }""", response);
-    }
-
-    [Fact]
-    public async Task Should_Return404_When_RerollingWithoutProfile()
-    {
-        _mediator.DispatchResult = _ =>
-            RerollPseudonymResult.Failure(GamificationErrors.Gamification.NotParticipating);
-
-        var response = await _client.PostAsync(RerollUrl, content: null);
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertErrorAsync(GamificationErrors.Gamification.NotParticipating, response);
-    }
-
-    // ── Leave (UC-XP-05) ───────────────────────────────────────────────────
-
-    [Fact]
-    public async Task Should_Return204_When_LeaveSucceeds()
-    {
-        _mediator.DispatchResult = _ => LeaveLeaderboardResult.Success();
-
-        var response = await _client.DeleteAsync(MembershipUrl);
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Empty(await response.Content.ReadAsStringAsync());
-    }
-
-    [Fact]
-    public async Task Should_Return404_When_LeavingWithoutProfile()
-    {
-        _mediator.DispatchResult = _ =>
-            LeaveLeaderboardResult.Failure(GamificationErrors.Gamification.NotParticipating);
-
-        var response = await _client.DeleteAsync(MembershipUrl);
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertErrorAsync(GamificationErrors.Gamification.NotParticipating, response);
-    }
-
     // ── Helpers ────────────────────────────────────────────────────────────
 
     private static readonly GetCommunityProgressResult SampleProgress = new(
@@ -313,8 +200,8 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     private static readonly GetCommunityLeaderboardResult SampleLeaderboard = new(
         IsParticipant: true,
         RankedCount: 23,
-        Me: new MyStandingViewModel(Rank: 4, IsTied: false, Xp: 120, Pseudonym: "RenardAgile", IsInTop: true),
-        Top: [new LeaderboardRowViewModel(Rank: 1, Pseudonym: "LoutreTenace", Xp: 210, IsMe: false)]);
+        Me: new MyStandingViewModel(Rank: 4, IsTied: false, Xp: 120, Name: "RenardAgile", AvatarUrl: null, IsInTop: true),
+        Top: [new LeaderboardRowViewModel(Rank: 1, Name: "LoutreTenace", AvatarUrl: "https://avatars.githubusercontent.com/u/1", Xp: 210, IsMe: false)]);
 
     private static readonly GetCommunityRecapResult SampleRecap = new(
         Sprints: 1240, FocusMinutes: 31200, ActiveMembers: 48, MySprints: 12);

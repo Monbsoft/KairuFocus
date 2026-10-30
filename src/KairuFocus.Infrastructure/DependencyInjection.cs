@@ -1,5 +1,6 @@
 using KairuFocus.Application.Identity;
 using KairuFocus.Application.Tickets;
+using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Gamification;
 using KairuFocus.Domain.Identity;
 using KairuFocus.Domain.Journal;
@@ -42,7 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IUserSettingsRepository, EfCoreUserSettingsRepository>();
         services.AddScoped<IMcpTokenRepository, EfCoreMcpTokenRepository>();
         services.AddScoped<IXpGainRepository, EfCoreXpGainRepository>();
-        services.AddScoped<ILeaderboardProfileRepository, EfCoreLeaderboardProfileRepository>();
+        services.AddScoped<IMemberProfileRepository, EfCoreMemberProfileRepository>();
         // Cross-user reads (ADR-024): the only repositories without a UserId filter.
         services.AddScoped<ILeaderboardStandingsRepository, EfCoreLeaderboardStandingsRepository>();
         services.AddScoped<ICommunityActivityRepository, EfCoreCommunityActivityRepository>();
