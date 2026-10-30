@@ -783,6 +783,9 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>No se pudo modificar la apertura del sprint por ahora.</value>
   </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>Pausa en grupo: termina al mismo tiempo para todo el grupo.</value>
+  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>Unirme a este sprint</value>
   </data>

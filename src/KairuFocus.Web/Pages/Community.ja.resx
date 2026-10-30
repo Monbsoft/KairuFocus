@@ -783,6 +783,9 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>スプリントの受け付け状態を変更できません。</value>
   </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>グループ休憩：全員同時に終了します。</value>
+  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>このスプリントに参加</value>
   </data>

@@ -783,6 +783,9 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>Сейчас не удаётся изменить доступность спринта.</value>
   </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>Общий перерыв: он заканчивается одновременно для всей группы.</value>
+  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>Присоединиться к спринту</value>
   </data>

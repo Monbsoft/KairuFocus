@@ -783,6 +783,9 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>暂时无法修改冲刺的开放状态。</value>
   </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>小组休息：所有人同时结束。</value>
+  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>加入此冲刺</value>
   </data>

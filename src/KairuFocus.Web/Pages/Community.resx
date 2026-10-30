@@ -789,6 +789,9 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>Impossible de modifier l'ouverture du sprint pour le moment.</value>
   </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>Pause commune : elle se termine au même moment pour tout le groupe.</value>
+  </data>
   <!-- T9 (shared components, used by T10 T12) Join.* -->
   <data name="Join.Button" xml:space="preserve">
 	<value>Rejoindre ce sprint</value>

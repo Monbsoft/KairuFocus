@@ -134,6 +134,25 @@ public sealed class CommunityApiClient
         }
     }
 
+    /// <summary>Asks for the group break after a timed sprint. True on 201 (a break was created or is already running);
+    /// 204, 409, 401, any other status and any network failure mean "no break": the sprint is already recorded.</summary>
+    public async Task<bool> StartGroupBreakAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var response = await _http.PostAsync($"{Route}/current-sprint/break", content: null, ct);
+            return response.StatusCode == HttpStatusCode.Created;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsApiCallFailure(ex))
+        {
+            return false;
+        }
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────────
 
     private async Task<T?> GetOrNullAsync<T>(string url, CancellationToken ct) where T : class

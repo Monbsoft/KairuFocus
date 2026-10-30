@@ -783,6 +783,9 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>지금은 스프린트 공개 상태를 변경할 수 없습니다.</value>
   </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>그룹 휴식: 모두 같은 시각에 끝납니다.</value>
+  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>이 스프린트에 참여</value>
   </data>
