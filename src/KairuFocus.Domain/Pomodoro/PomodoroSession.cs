@@ -39,7 +39,7 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
     /// <summary>Root session of the shared sprint this session joined. Null for a host or a solo session.</summary>
     public PomodoroSessionId? SharedSprintId => _sharedSprintId;
 
-    /// <summary>Exact end of the shared sprint or break this session joined:<see cref="PlannedDurationMinutes"/>,
+    /// <summary>Exact end of the shared sprint or break this session joined: <see cref="PlannedDurationMinutes"/>,
     /// a whole number of minutes rounded up, cannot end to the second. Null unless joined.</summary>
     public DateTime? SharedEndAt { get; private set; }
 

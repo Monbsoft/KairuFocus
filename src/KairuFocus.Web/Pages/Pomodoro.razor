@@ -591,7 +591,7 @@ else
         try
         {
             var completedType = _session?.SessionType;
-            var xpAwarded = await PomodoroApi.CompleteSessionAsync();
+            var xpAwarded = await PomodoroApi.CompleteSessionAsync(_session?.Id);
             if (xpAwarded is null)
             {
                 await RecoverFromFailedCompletionAsync();
@@ -664,6 +664,24 @@ else
     private async Task RecoverFromFailedCompletionAsync()
     {
         var lookup = await PomodoroApi.LookupCurrentSessionAsync();
+
+        // Another session took over while this tab was still counting down (a group break started from
+        // another tab, for instance): the server refused to end it, and this tab follows it.
+        if (lookup.Session is { Status: "Active" } current && current.Id != _session?.Id)
+        {
+            _completionFailed = false;
+            _completedSessionType = null;
+            _suggestedNextSessionType = null;
+
+            if (TryAdoptTimedSession(current))
+            {
+                _selectedSessionType = current.SessionType;
+                RefreshLinkedTasks();
+                await StartTimerLoop();
+            }
+
+            return;
+        }
 
         if (lookup.Succeeded && lookup.Session is null)
         {
