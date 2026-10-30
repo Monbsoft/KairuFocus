@@ -9,8 +9,16 @@
 <div class="kf-join">
     @if (!ViewerIsMember || _outcome == JoinSprintOutcome.NotMember)
     {
-        <p class="kf-join__text">@F["Join.NeedMember.Body"]</p>
-        <a class="kf-join__btn" href="settings#communaute">@F["Join.NeedMember.Link"]</a>
+        if (Compact)
+        {
+            @* In a list: only the way in, the explanation is given once by the list. *@
+            <a class="kf-join__btn" href="settings#communaute">@F["Join.Button"]</a>
+        }
+        else
+        {
+            <p class="kf-join__text">@F["Join.NeedMember.Body"]</p>
+            <a class="kf-join__btn" href="settings#communaute">@F["Join.NeedMember.Link"]</a>
+        }
     }
     else
     {
@@ -56,6 +64,9 @@
     [Parameter, EditorRequired] public DateTimeOffset EndsAt { get; set; }
 
     [Parameter] public bool ViewerIsMember { get; set; }
+
+    /// <summary>For a list of sprints: a visitor outside the community only gets the link (no explanatory text).</summary>
+    [Parameter] public bool Compact { get; set; }
 
     /// <summary>The sprint was closed, elapsed or finished (410): the parent refreshes its data.</summary>
     [Parameter] public EventCallback OnNoLongerOpen { get; set; }

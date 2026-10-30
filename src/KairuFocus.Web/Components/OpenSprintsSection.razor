@@ -2,11 +2,21 @@
    The data comes from the page (it refreshes them with its presence loop); this component only shows them.
    Nothing here is announced: rows come and go quietly, and the countdowns have no live region.
    Independent of the period selector. *@
+@implements IDisposable
 @inject CommunityFormatter F
 
 <section class="kf-zone" aria-labelledby="open-sprints-title" aria-busy="@(Data is null && !Failed ? "true" : "false")">
     <h2 class="kf-section-title" id="open-sprints-title">@F["OpenSprints.Title"]</h2>
-    <p class="kf-open__sub">@F["OpenSprints.Sub"]</p>
+    <div>
+        <p class="kf-open__sub">@F["OpenSprints.Sub"]</p>
+        @* Always mounted so that the message is announced when it appears. *@
+        <div role="status">
+            @if (_showClosedNotice)
+            {
+                <p class="kf-open__notice">@F["Join.Closed"]</p>
+            }
+        </div>
+    </div>
 
     @if (Failed)
     {
@@ -27,6 +37,12 @@
     else
     {
         var (before, after) = SplitRemaining();
+
+        if (!Data.ViewerIsMember)
+        {
+            @* Said once for the whole list; each row only carries its link. *@
+            <p class="kf-open__sub">@F["Join.NeedMember.Body"]</p>
+        }
 
         <div class="kf-card">
             <ul class="kf-open__list">
@@ -50,7 +66,8 @@
                             else
                             {
                                 <JoinSprintButton TargetName="@group.Name" EndsAt="group.EndsAt"
-                                                  ViewerIsMember="Data.ViewerIsMember" OnNoLongerOpen="OnChanged" />
+                                                  ViewerIsMember="Data.ViewerIsMember" Compact="true"
+                                                  OnNoLongerOpen="HandleNoLongerOpenAsync" />
                             }
                         </div>
                     </li>
@@ -71,6 +88,36 @@
 
     /// <summary>A sprint turned out to be no longer open (410): the page reads the list again.</summary>
     [Parameter] public EventCallback OnChanged { get; set; }
+
+    private static readonly TimeSpan NoticeDuration = TimeSpan.FromSeconds(10);
+
+    private readonly CancellationTokenSource _cts = new();
+    private bool _showClosedNotice;
+
+    /// <summary>The sprint just closed or ended (410): say it, read the list again, and let the message fade after a while.</summary>
+    private async Task HandleNoLongerOpenAsync()
+    {
+        _showClosedNotice = true;
+        _ = HideNoticeLaterAsync();
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task HideNoticeLaterAsync()
+    {
+        try
+        {
+            await Task.Delay(NoticeDuration, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        _showClosedNotice = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => _cts.Cancel();
 
     private static string ProfileHref(string name) => $"/membres/{Uri.EscapeDataString(name)}";
 
