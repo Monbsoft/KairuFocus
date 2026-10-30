@@ -68,7 +68,7 @@ public sealed class GetMemberProfileQueryHandler
         // name, and a ProfileName compares on its exact value.
         var (standing, standingFailed) = await LoadZoneAsync(nameof(MemberProfileViewModel.Standing), () => ReadStandingAsync(member.Name, cancellationToken));
         var (activity, activityFailed) = await LoadZoneAsync(nameof(MemberProfileViewModel.Activity), () => ReadActivityAsync(member.Name, now, cancellationToken));
-        var (openSprint, openSprintFailed) = await LoadZoneAsync(nameof(MemberProfileViewModel.OpenSprint), () => ReadOpenSprintAsync(member.Name, now, cancellationToken));
+        var (openSprint, openSprintFailed) = await LoadZoneAsync(nameof(MemberProfileViewModel.OpenSprint), () => ReadOpenSprintAsync(member.Name, viewer?.Name, now, cancellationToken));
 
         return new GetMemberProfileResult(true, new MemberProfileViewModel(
             member.Name.Value,
@@ -106,7 +106,7 @@ public sealed class GetMemberProfileQueryHandler
             activity.Days.Select(d => new ActivityDayViewModel(d.DateUtc, d.Sprints)).ToList());
     }
 
-    private async Task<OpenSprintStatusViewModel?> ReadOpenSprintAsync(ProfileName name, DateTime now, CancellationToken cancellationToken)
+    private async Task<OpenSprintStatusViewModel?> ReadOpenSprintAsync(ProfileName name, ProfileName? viewerName, DateTime now, CancellationToken cancellationToken)
     {
         var sprint = await _openSprintRepository.FindJoinableAsync(name, now, cancellationToken);
         if (sprint is null)
@@ -119,9 +119,10 @@ public sealed class GetMemberProfileQueryHandler
         return new OpenSprintStatusViewModel(
             new DateTimeOffset(DateTime.SpecifyKind(sprint.EndsAtUtc, DateTimeKind.Utc)),
             participants
-                .Where(p => p.Name.Key != name.Key)
+                .Where(p => p.Name.Key != name.Key && p.Name.Key != viewerName?.Key)
                 .Select(p => new SprintMemberViewModel(p.Name.Value, p.AvatarUrl))
-                .ToList());
+                .ToList(),
+            IncludesViewer: participants.Any(p => p.Name.Key == viewerName?.Key));
     }
 
     private async Task<(T? Value, bool Failed)> LoadZoneAsync<T>(string zone, Func<Task<T>> read)

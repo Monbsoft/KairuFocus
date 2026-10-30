@@ -295,6 +295,54 @@ public sealed class GetMemberProfileQueryHandlerTests
         Assert.False(result.Profile.IsMe);
     }
 
+    [Fact]
+    public async Task Should_FlagViewerAndExcludeItFromOthers_When_ViewerIsInGroup()
+    {
+        SeedOpenSprint(Participant(Target), Participant("viewer"), Participant("tomtom"));
+        _profiles.Seed(FakeCurrentUserService.TestUserId, "viewer");
+
+        var sprint = (await Query()).Profile!.OpenSprint!;
+
+        Assert.True(sprint.IncludesViewer);
+        Assert.Equal(["tomtom"], sprint.Others.Select(o => o.Name));
+    }
+
+    [Fact]
+    public async Task Should_FlagViewer_When_ViewerIsTarget()
+    {
+        SeedOpenSprint(Participant(Target), Participant("tomtom"));
+        _profiles.Seed(FakeCurrentUserService.TestUserId, Target);
+
+        var profile = (await Query()).Profile!;
+
+        Assert.True(profile.IsMe);
+        Assert.True(profile.OpenSprint!.IncludesViewer);
+        Assert.Equal(["tomtom"], profile.OpenSprint.Others.Select(o => o.Name));
+    }
+
+    [Fact]
+    public async Task Should_NotFlagViewer_When_ViewerIsNotInGroup()
+    {
+        SeedOpenSprint(Participant(Target), Participant("tomtom"));
+        _profiles.Seed(FakeCurrentUserService.TestUserId, "viewer");
+
+        var sprint = (await Query()).Profile!.OpenSprint!;
+
+        Assert.False(sprint.IncludesViewer);
+        Assert.Equal(["tomtom"], sprint.Others.Select(o => o.Name));
+    }
+
+    [Fact]
+    public async Task Should_NotFlagViewer_When_ViewerHasNoProfile()
+    {
+        SeedOpenSprint(Participant(Target), Participant("tomtom"));
+
+        var sprint = (await Query()).Profile!.OpenSprint!;
+
+        Assert.False(sprint.IncludesViewer);
+        Assert.Equal(["tomtom"], sprint.Others.Select(o => o.Name));
+    }
+
     // --- Zones ----------------------------------------------------------------------------------
 
     [Fact]
@@ -360,6 +408,14 @@ public sealed class GetMemberProfileQueryHandlerTests
 
         var thrown = await Assert.ThrowsAsync<OperationCanceledException>(() => query);
         Assert.Same(cancelled, thrown);
+    }
+
+    private void SeedOpenSprint(params SprintMember[] participants)
+    {
+        var rootId = Guid.NewGuid();
+        _directory.Seed(PublicProfile());
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18)));
+        _openSprints.SeedParticipants(rootId, participants);
     }
 
     private void SeedAllZones()
