@@ -375,63 +375,6 @@
   <data name="Community.Format.MonthShortYear" xml:space="preserve">
 	<value>MMM yyyy</value>
   </data>
-  <data name="Settings.Leaderboard.Title" xml:space="preserve">
-	<value>Classement de la communauté</value>
-  </data>
-  <data name="Settings.Leaderboard.Loading" xml:space="preserve">
-	<value>Chargement du statut…</value>
-  </data>
-  <data name="Settings.Leaderboard.LoadError" xml:space="preserve">
-	<value>Impossible de charger ton statut dans le classement. Rafraîchis la page.</value>
-  </data>
-  <data name="Settings.Leaderboard.Out" xml:space="preserve">
-	<value>Tu n'apparais pas dans le classement. Tu peux quand même le consulter dans Communauté.</value>
-  </data>
-  <data name="Settings.Leaderboard.Out.Hint" xml:space="preserve">
-	<value>Tu y apparaîtras sous un pseudo généré : seuls ton pseudo, ton rang et ton XP seront visibles.</value>
-  </data>
-  <data name="Settings.Leaderboard.In" xml:space="preserve">
-	<value>Tu apparais dans le classement sous « {0} ».</value>
-  </data>
-  <data name="Settings.Leaderboard.Reroll" xml:space="preserve">
-	<value>Tirer un autre pseudo</value>
-  </data>
-  <data name="Settings.Leaderboard.Rerolling" xml:space="preserve">
-	<value>Tirage…</value>
-  </data>
-  <data name="Settings.Leaderboard.Join" xml:space="preserve">
-	<value>Rejoindre le classement</value>
-  </data>
-  <data name="Settings.Leaderboard.Joining" xml:space="preserve">
-	<value>Inscription…</value>
-  </data>
-  <data name="Settings.Leaderboard.Saved" xml:space="preserve">
-	<value>Nouveau pseudo : « {0} ».</value>
-  </data>
-  <data name="Settings.Leaderboard.Leave" xml:space="preserve">
-	<value>Quitter le classement</value>
-  </data>
-  <data name="Settings.Leaderboard.Leave.Title" xml:space="preserve">
-	<value>Quitter le classement ?</value>
-  </data>
-  <data name="Settings.Leaderboard.Leave.Body" xml:space="preserve">
-	<value>Tu disparais du classement tout de suite. Ton XP est conservée. Si tu reviens, tu recevras un nouveau pseudo.</value>
-  </data>
-  <data name="Settings.Leaderboard.Leave.Confirm" xml:space="preserve">
-	<value>Quitter</value>
-  </data>
-  <data name="Settings.Leaderboard.Leave.Cancel" xml:space="preserve">
-	<value>Annuler</value>
-  </data>
-  <data name="Settings.Leaderboard.Left" xml:space="preserve">
-	<value>Tu as quitté le classement. Ton XP est conservée.</value>
-  </data>
-  <data name="Settings.Leaderboard.Error.Pool" xml:space="preserve">
-	<value>Impossible de générer un pseudo pour le moment. Réessaie dans un instant.</value>
-  </data>
-  <data name="Settings.Leaderboard.Error.Generic" xml:space="preserve">
-	<value>Une erreur est survenue. Réessaie dans un instant.</value>
-  </data>
   <!-- T10 Nav.Profile -->
   <data name="Nav.Profile" xml:space="preserve">
 	<value>Profil</value>
@@ -685,9 +628,6 @@
   <data name="Settings.Community.LoadError" xml:space="preserve">
 	<value>Impossible de charger tes réglages de communauté pour le moment.</value>
   </data>
-  <data name="Settings.Community.Toggle" xml:space="preserve">
-	<value>Rejoindre la communauté</value>
-  </data>
   <data name="Settings.Community.Intro" xml:space="preserve">
 	<value>Choisis un nom et retrouve les autres membres : classement, profils et sprints ouverts.</value>
   </data>
@@ -744,9 +684,6 @@
   </data>
   <data name="Settings.Community.Joining" xml:space="preserve">
 	<value>Activation…</value>
-  </data>
-  <data name="Settings.Community.Joined" xml:space="preserve">
-	<value>Tu fais partie de la communauté.</value>
   </data>
   <data name="Settings.Community.Member.Name" xml:space="preserve">
 	<value>Ton nom : {0}</value>
@@ -836,9 +773,6 @@
   </data>
   <data name="Participants.With.Many.Other" xml:space="preserve">
 	<value>Avec {0}, {1}, {2} et {3} autres</value>
-  </data>
-  <data name="Participants.More" xml:space="preserve">
-	<value>+{0}</value>
   </data>
   <data name="Participants.Close" xml:space="preserve">
 	<value>Fermer ce sprint</value>
