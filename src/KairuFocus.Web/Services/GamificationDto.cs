@@ -44,26 +44,3 @@ public sealed record CommunityRecapDto(int Sprints, int FocusMinutes, int Active
 /// <summary>GET community/presence: anonymous counts.</summary>
 public sealed record CommunityPresenceDto(int InSprintNow, int SprintedToday);
 
-// ── Leaderboard membership ──────────────────────────────────────────────────
-
-/// <summary>GET leaderboard/membership. Pseudonym is null (present) for a non-participant.</summary>
-public sealed record LeaderboardMembershipDto(bool IsParticipant, string? Pseudonym);
-
-/// <summary>Body of the 201 (join) and 200 (reroll) responses.</summary>
-public sealed record PseudonymDto(string Pseudonym);
-
-/// <summary>What a membership action ended with. Each case has its own reaction in the settings section.</summary>
-public enum MembershipOutcome
-{
-    Succeeded,
-    /// <summary>409: already a participant.</summary>
-    Conflict,
-    /// <summary>404: not a participant.</summary>
-    NotFound,
-    /// <summary>503: no pseudonym available right now.</summary>
-    Unavailable,
-    /// <summary>Any other failure (server error, network, unreadable body).</summary>
-    Failed
-}
-
-public sealed record MembershipResult(MembershipOutcome Outcome, string? Pseudonym = null);
