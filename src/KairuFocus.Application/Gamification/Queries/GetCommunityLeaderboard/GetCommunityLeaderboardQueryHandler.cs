@@ -1,5 +1,6 @@
 using KairuFocus.Application.Common;
 using KairuFocus.Application.Gamification.Common;
+using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Gamification;
 using Microsoft.Extensions.Logging;
 using Monbsoft.BrilliantMediator.Abstractions.Queries;
@@ -9,14 +10,14 @@ namespace KairuFocus.Application.Gamification.Queries.GetCommunityLeaderboard;
 public sealed class GetCommunityLeaderboardQueryHandler
     : IQueryHandler<GetCommunityLeaderboardQuery, GetCommunityLeaderboardResult>
 {
-    private readonly ILeaderboardProfileRepository _profileRepository;
+    private readonly IMemberProfileRepository _profileRepository;
     private readonly ILeaderboardStandingsRepository _standingsRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<GetCommunityLeaderboardQueryHandler> _logger;
 
     public GetCommunityLeaderboardQueryHandler(
-        ILeaderboardProfileRepository profileRepository,
+        IMemberProfileRepository profileRepository,
         ILeaderboardStandingsRepository standingsRepository,
         ICurrentUserService currentUserService,
         TimeProvider timeProvider,
@@ -49,9 +50,9 @@ public sealed class GetCommunityLeaderboardQueryHandler
             standings = await _standingsRepository.GetStandingsBetweenAsync(window.StartUtc, window.EndUtc, cancellationToken);
         }
 
-        var result = LeaderboardRanker.Rank(standings, profile?.Pseudonym, isParticipant: profile is not null);
+        var result = LeaderboardRanker.Rank(standings, profile?.Name, isParticipant: profile is not null);
 
-        // Other members' pseudonyms are never logged.
+        // Other members' names are never logged.
         _logger.LogDebug(
             "Community leaderboard for user {UserId} ({Period}): {RankedCount} ranked members",
             userId, query.Period, result.RankedCount);

@@ -54,6 +54,26 @@ internal sealed class PomodoroSessionConfiguration : IEntityTypeConfiguration<Po
         builder.Property(s => s.StartedAt).HasColumnType("datetime2");
         builder.Property(s => s.EndedAt).HasColumnType("datetime2");
 
+        // Shared sprint (iteration #44). SharedSprintId has no setter: it is read and written through
+        // the private _sharedSprintId field, found by convention. No foreign key on purpose: the root
+        // session may be deleted on its own, and a joined session then keeps a dangling reference
+        // that the read side simply ignores.
+        builder.Property(s => s.SharedSprintId)
+            .HasConversion(
+                id => id!.Value,
+                value => PomodoroSessionId.From(value))
+            .HasColumnType("uniqueidentifier")
+            .IsRequired(false);
+
+        builder.HasIndex(s => s.SharedSprintId)
+            .HasDatabaseName("IX_PomodoroSessions_SharedSprintId");
+
+        builder.Property(s => s.SharedEndAt).HasColumnType("datetime2");
+
+        builder.Property(s => s.IsClosedToJoin)
+            .HasColumnType("bit")
+            .HasDefaultValue(false);
+
         builder.Property(s => s.JournalComment)
             .HasColumnType("nvarchar(500)")
             .HasMaxLength(500)

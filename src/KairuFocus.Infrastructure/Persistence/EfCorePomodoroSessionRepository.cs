@@ -62,6 +62,12 @@ internal sealed class EfCorePomodoroSessionRepository : IPomodoroSessionReposito
                 s => s.Status == PomodoroSessionStatus.Active && s.OwnerId == userId,
                 cancellationToken);
 
+    public async Task<PomodoroSession?> GetLatestEndedAsync(UserId userId, CancellationToken cancellationToken = default) =>
+        await _context.PomodoroSessions
+            .Where(s => s.OwnerId == userId && s.EndedAt.HasValue)
+            .OrderByDescending(s => s.EndedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task UpdateAsync(PomodoroSession session, CancellationToken cancellationToken = default)
     {
         _context.PomodoroSessions.Update(session);

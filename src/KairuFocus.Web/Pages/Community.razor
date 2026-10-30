@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @implements IAsyncDisposable
 @inject GamificationApiClient Gamification
+@inject CommunityApiClient CommunityApi
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject CommunityFormatter F
@@ -24,6 +25,10 @@
     <CommunityHero Place="_leaderboard" Xp="_progress" Period="_period"
                    OnRetryPlace="() => LoadLeaderboardAsync(_period)"
                    OnRetryXp="() => LoadProgressAsync(_period)" />
+
+    @* Open sprints: independent of the period, and of the other sections (its failure shows its own error). *@
+    <OpenSprintsSection Data="_openSprints" Failed="_openSprintsFailed"
+                        OnRetry="RetryOpenSprintsAsync" OnChanged="LoadOpenSprintsAsync" />
 
     <CommunityProgress Zone="_progress" Period="_period"
                        OnRetry="() => LoadProgressAsync(_period)" />
@@ -61,6 +66,14 @@
     private DotNetObjectReference<Community>? _selfReference;
     private bool _disposed;
 
+    // Open sprints: independent of the period, read at the first render and then with the presence loop.
+    // A failed refresh keeps the last list; the error only shows when there is nothing to keep.
+    private static readonly TimeSpan OpenSprintsFreshness = TimeSpan.FromSeconds(5);
+    private OpenSprintsDto? _openSprints;
+    private bool _openSprintsFailed;
+    private CancellationTokenSource? _openSprintsCts;
+    private DateTimeOffset _openSprintsRequestedAt = DateTimeOffset.MinValue;
+
     /// <summary>The period lives in the URL (<c>?periode=mois</c>) so that Back and a reload keep it.</summary>
     [Parameter, SupplyParameterFromQuery(Name = "periode")]
     public string? PeriodQuery { get; set; }
@@ -94,6 +107,12 @@
         _ = LoadRecapAsync(period);
     }
 
+    protected override void OnInitialized()
+    {
+        // Not tied to the period: read once here, then refreshed by the presence loop.
+        _ = LoadOpenSprintsAsync();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -119,6 +138,7 @@
         _progress.Cancel();
         _leaderboard.Cancel();
         _recap.Cancel();
+        _openSprintsCts?.Cancel();
 
         try
         {
@@ -258,11 +278,62 @@
 
     private async Task RefreshPresenceAsync(CancellationToken ct)
     {
+        // The open sprints ride on the same loop (same pace, same stop when the tab is hidden). They are not awaited
+        // here: a slow or failing read must not delay the presence. The first read of the page just started: no second one.
+        if (Clock.GetUtcNow() - _openSprintsRequestedAt >= OpenSprintsFreshness)
+            _ = LoadOpenSprintsAsync();
+
         var presence = await Gamification.GetCommunityPresenceAsync(ct);
         if (ct.IsCancellationRequested) return;
 
         // A failure hides the line: the presence is nice to have, not worth an error message.
         _presence = presence;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // ── Open sprints ────────────────────────────────────────────────────────
+
+    private Task RetryOpenSprintsAsync()
+    {
+        _openSprintsFailed = false; // back to "Chargement…" while the new read runs
+        return LoadOpenSprintsAsync();
+    }
+
+    /// <summary>Reads the open sprints. A newer read cancels the one in flight, whose result is then dropped.</summary>
+    private async Task LoadOpenSprintsAsync()
+    {
+        _openSprintsCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _openSprintsCts = cts;
+        _openSprintsRequestedAt = Clock.GetUtcNow();
+
+        OpenSprintsDto? result;
+        try
+        {
+            result = await CommunityApi.GetOpenSprintsAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            // Whatever went wrong, this section shows its own error and the others carry on.
+            result = null;
+        }
+
+        if (cts.IsCancellationRequested || _disposed) return;
+
+        if (result is not null)
+        {
+            _openSprints = result;
+            _openSprintsFailed = false;
+        }
+        else if (_openSprints is null)
+        {
+            _openSprintsFailed = true;
+        }
+
         await InvokeAsync(StateHasChanged);
     }
 

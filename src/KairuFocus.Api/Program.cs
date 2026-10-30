@@ -157,6 +157,7 @@ builder.Services
         options.ClaimActions.MapJsonKey(ClaimTypes.Name, "name");
         options.ClaimActions.MapJsonKey("urn:github:login", "login");
         options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+        options.ClaimActions.MapJsonKey("urn:github:avatar", "avatar_url");
         options.Events = new Microsoft.AspNetCore.Authentication.OAuth.OAuthEvents
         {
             OnCreatingTicket = async context =>

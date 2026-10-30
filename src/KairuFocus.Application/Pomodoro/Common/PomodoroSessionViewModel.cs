@@ -10,7 +10,10 @@ public sealed record PomodoroSessionViewModel(
     DateTime? StartedAt,
     DateTime? EndedAt,
     IReadOnlyList<Guid> LinkedTaskIds,
-    double? DurationSeconds)
+    double? DurationSeconds,
+    DateTime? SharedEndAt,
+    bool IsGroupHost,
+    bool IsClosedToJoin)
 {
     public static PomodoroSessionViewModel From(PomodoroSession session)
     {
@@ -26,6 +29,11 @@ public sealed record PomodoroSessionViewModel(
             session.StartedAt,
             session.EndedAt,
             session.LinkedTaskIds.Select(t => t.Value).ToList().AsReadOnly(),
-            duration);
+            duration,
+            session.SharedEndAt,
+            session.SharedSprintId is null
+                && session.SessionType == PomodoroSessionType.Sprint
+                && session.PlannedDurationMinutes > 0,
+            session.IsClosedToJoin);
     }
 }

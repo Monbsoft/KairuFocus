@@ -27,10 +27,15 @@ public sealed class GetOrCreateUserCommandHandler : ICommandHandler<GetOrCreateU
         if (existing is not null)
         {
             _logger.LogDebug("Existing user {UserId} found for GitHub ID {GitHubId}", existing.Id, command.GitHubId);
+
+            var login = command.LoginIsFromGitHub ? command.Login : existing.Login;
+            if (existing.RefreshGitHubProfile(login, command.AvatarUrl))
+                await _userRepository.UpdateAsync(existing, ct);
+
             return Result.Success(new GetOrCreateUserResult(existing.Id, existing.Login, existing.DisplayName));
         }
 
-        var user = User.Create(command.GitHubId, command.Login, command.DisplayName, command.Email);
+        var user = User.Create(command.GitHubId, command.Login, command.DisplayName, command.Email, command.AvatarUrl);
         await _userRepository.AddAsync(user, ct);
         _logger.LogInformation("New user {UserId} created for GitHub ID {GitHubId} with login {Login}", user.Id, command.GitHubId, command.Login);
         return Result.Success(new GetOrCreateUserResult(user.Id, user.Login, user.DisplayName));

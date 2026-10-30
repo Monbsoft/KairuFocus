@@ -1,0 +1,449 @@
+@* Section "Communauté" of the settings: the only place where one joins the community, changes the profile name
+   or leaves. A single setting. Nothing is sent before the click on "Join": that click is the one and only activation.
+   Reached from other pages through the anchor `settings#communaute`: once the section has loaded, the page
+   scrolls to it and the focus moves to its title. *@
+@inject CommunityApiClient Community
+@inject IJSRuntime JS
+@inject CommunityFormatter F
+
+<div class="mb-5 kf-lb-section" id="communaute">
+    <h4 id="communaute-title" tabindex="-1"><span aria-hidden="true">🌍</span> @F["Settings.Community.Title"]</h4>
+
+    @if (_loading)
+    {
+        <p class="text-muted">@F["Settings.Community.Loading"]</p>
+    }
+    else if (_loadFailed)
+    {
+        <p class="text-danger mb-2" role="alert">@F["Settings.Community.LoadError"]</p>
+    }
+    else if (!IsMember)
+    {
+        <p class="mb-2">@F["Settings.Community.Intro"]</p>
+        <p class="mb-1">@F["Settings.Community.Visible.Heading"]</p>
+        <ul class="mb-3">
+            <li>@F["Settings.Community.Visible.Name"]</li>
+            <li>@F["Settings.Community.Visible.Xp"]</li>
+            <li>@F["Settings.Community.Visible.Activity"]</li>
+            <li>@F["Settings.Community.Visible.Sprint"]</li>
+        </ul>
+
+        <form @onsubmit="SubmitAsync">
+            @NameChoice
+            <button type="submit" class="btn btn-primary mt-3" @ref="_joinButton" disabled="@Busy">
+                @(_operation == Operation.Join ? F["Settings.Community.Joining"] : F["Settings.Community.Join"])
+            </button>
+        </form>
+    }
+    else if (_editing)
+    {
+        <form @onsubmit="SubmitAsync">
+            @NameChoice
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <button type="submit" class="btn btn-primary" disabled="@Busy">
+                    @(_operation == Operation.Save ? F["Settings.Community.Member.Saving"] : F["Settings.Community.Member.Save"])
+                </button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="CancelEdit" disabled="@Busy">
+                    @F["Settings.Community.Member.Cancel"]
+                </button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <MemberAvatar Name="@(_membership!.Name ?? "")" AvatarUrl="@(_membership.NameSource == GitHubSource ? _membership.AvatarUrl : null)" Size="32" />
+            <p class="mb-0" tabindex="-1" @ref="_stateText">@F.Bold(F["Settings.Community.Member.Name"], _membership.Name ?? "")</p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            <a href="profil" class="btn btn-outline-primary">@F["Settings.Community.Member.Profile"]</a>
+            <button type="button" class="btn btn-outline-secondary" @ref="_changeButton" @onclick="StartEdit" disabled="@Busy">
+                @F["Settings.Community.Member.Change"]
+            </button>
+        </div>
+
+        <div class="kf-lb-danger">
+            <button type="button" class="btn btn-outline-danger" @ref="_leaveButton" @onclick="OpenLeave" disabled="@Busy">
+                @F["Settings.Community.Leave"]
+            </button>
+        </div>
+    }
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger mt-3" role="alert">@_error</div>
+    }
+
+    @* Always mounted, so that what is added later is announced. *@
+    <div class="visually-hidden" role="status" aria-live="polite">@_announcement</div>
+</div>
+
+@if (_leaveOpen)
+{
+    <div class="modal d-block kf-lb-modal" @ref="_modal" tabindex="-1" style="background:rgba(0,0,0,.5);"
+         role="dialog" aria-modal="true" aria-labelledby="communaute-leave-title" aria-describedby="communaute-leave-body"
+         aria-busy="@(_operation == Operation.Leave ? "true" : null)"
+         @onkeydown="OnModalKeyDown">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="communaute-leave-title">@F["Settings.Community.Leave.Title"]</h5>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0" id="communaute-leave-body">@F["Settings.Community.Leave.Body"]</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @ref="_cancelButton" @onclick="CancelLeave"
+                            disabled="@(_operation == Operation.Leave)">@F["Settings.Community.Leave.Cancel"]</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmLeaveAsync"
+                            disabled="@(_operation == Operation.Leave)">@F["Settings.Community.Leave.Confirm"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private const string GitHubSource = "GitHub";
+    private const string ChosenSource = "Chosen";
+
+    private enum Operation { None, Join, Save, Leave }
+
+    /// <summary>Where the focus goes after the next render (a button that was just disabled or removed loses it).</summary>
+    private enum FocusTarget { None, Join, State, Change, Leave, Choice, NameInput, ModalCancel, Modal }
+
+    private ElementReference _joinButton;
+    private ElementReference _stateText;
+    private ElementReference _changeButton;
+    private ElementReference _leaveButton;
+    private ElementReference _cancelButton;
+    private ElementReference _modal;
+    private ElementReference _githubRadio;
+    private ElementReference _chosenRadio;
+    private ElementReference _nameInput;
+
+    private bool _loading = true;
+    private bool _loadFailed;
+    private CommunityMembershipDto? _membership;
+
+    // Name choice (join, or change of name on the spot)
+    private bool _editing;
+    private string _source = ChosenSource;
+    private string _name = "";
+    private string? _nameError;
+
+    private Operation _operation;
+    private bool _leaveOpen;
+    private string? _error;
+    private string? _announcement;
+
+    private FocusTarget _pendingFocus;
+    private bool _anchorPending = true;
+
+    private bool IsMember => _membership is { IsMember: true };
+    private bool Busy => _operation != Operation.None;
+    private bool GitHubAvailable => _membership?.GitHubLoginAvailable == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatusAsync();
+        ResetChoice();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_pendingFocus != FocusTarget.None)
+        {
+            var target = _pendingFocus;
+            _pendingFocus = FocusTarget.None;
+            await FocusAsync(target);
+        }
+
+        // Arrival through settings#communaute: only once the section has loaded, since it changes shape.
+        if (_anchorPending && !_loading)
+        {
+            _anchorPending = false;
+            try
+            {
+                await JS.InvokeAsync<bool>("kairufocusCommunity.focusSectionIfRequested", "communaute", "communaute-title");
+            }
+            catch (JSException)
+            {
+                // Without the script the section simply is not scrolled into view.
+            }
+        }
+    }
+
+    private async Task LoadStatusAsync()
+    {
+        var membership = await Community.GetMembershipAsync();
+        if (membership is null)
+        {
+            _loadFailed = true;
+        }
+        else
+        {
+            _loadFailed = false;
+            _membership = membership;
+        }
+
+        _loading = false;
+    }
+
+    /// <summary>Default choice: the GitHub login when it can serve as a name, a chosen name otherwise.</summary>
+    private void ResetChoice()
+    {
+        _editing = false;
+        _nameError = null;
+        _name = "";
+        _source = GitHubAvailable ? GitHubSource : ChosenSource;
+    }
+
+    // ── Name choice ─────────────────────────────────────────────────────────
+
+    private RenderFragment NameChoice => __builder =>
+    {
+        var rulesId = "communaute-name-rules";
+        var errorId = "communaute-name-error";
+        var githubHintId = "communaute-source-github-hint";
+        var chosenHintId = "communaute-source-chosen-hint";
+        var chosen = _source == ChosenSource;
+
+        <fieldset class="mb-0">
+            <legend class="fs-6 fw-semibold">@F["Settings.Community.Source.Heading"]</legend>
+
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="communaute-source" id="communaute-source-github"
+                       @ref="_githubRadio" checked="@(!chosen)" disabled="@(!GitHubAvailable || Busy)"
+                       aria-describedby="@githubHintId" @onchange="@(() => SelectSource(GitHubSource))" />
+                <label class="form-check-label" for="communaute-source-github">
+                    @F.Format("Settings.Community.Source.GitHub", _membership?.GitHubLogin ?? "")
+                </label>
+                <div class="form-text" id="@githubHintId">
+                    @(GitHubAvailable ? F["Settings.Community.Source.GitHub.Hint"] : F["Settings.Community.Source.GitHub.Unavailable"])
+                </div>
+            </div>
+
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="communaute-source" id="communaute-source-chosen"
+                       @ref="_chosenRadio" checked="@chosen" disabled="@Busy"
+                       aria-describedby="@chosenHintId" @onchange="@(() => SelectSource(ChosenSource))" />
+                <label class="form-check-label" for="communaute-source-chosen">@F["Settings.Community.Source.Chosen"]</label>
+                <div class="form-text" id="@chosenHintId">@F["Settings.Community.Source.Chosen.Hint"]</div>
+            </div>
+        </fieldset>
+
+        @if (chosen)
+        {
+            <div class="mb-0">
+                <label class="form-label" for="communaute-name">@F["Settings.Community.Name.Label"]</label>
+                <input type="text" class="form-control @(_nameError is null ? "" : "is-invalid")" id="communaute-name"
+                       @ref="_nameInput" @bind="_name" @bind:event="oninput"
+                       maxlength="39" autocomplete="off" autocapitalize="off" spellcheck="false"
+                       disabled="@Busy"
+                       aria-invalid="@(_nameError is null ? null : "true")"
+                       aria-describedby="@(_nameError is null ? rulesId : $"{rulesId} {errorId}")" />
+                <div class="form-text" id="@rulesId">@F["Settings.Community.Name.Rules"]</div>
+                @if (_nameError is not null)
+                {
+                    <div class="invalid-feedback d-block" id="@errorId">@_nameError</div>
+                }
+            </div>
+        }
+    };
+
+    private void SelectSource(string source)
+    {
+        _source = source;
+        _nameError = null;
+    }
+
+    // ── Actions ─────────────────────────────────────────────────────────────
+
+    private void StartEdit()
+    {
+        if (Busy) return;
+        _editing = true;
+        _error = null;
+        _announcement = null;
+        _nameError = null;
+        _source = _membership?.NameSource == GitHubSource && GitHubAvailable ? GitHubSource : ChosenSource;
+        _name = _source == ChosenSource ? _membership?.Name ?? "" : "";
+        _pendingFocus = FocusTarget.Choice;
+    }
+
+    private void CancelEdit()
+    {
+        if (Busy) return;
+        ResetChoice();
+        _error = null;
+        _pendingFocus = FocusTarget.Change;
+    }
+
+    /// <summary>Join (non-member) or save the new name (member): the same choice, the same errors.</summary>
+    private async Task SubmitAsync()
+    {
+        if (Busy) return;
+        var joining = !IsMember;
+        _operation = joining ? Operation.Join : Operation.Save;
+        _error = null;
+        _nameError = null;
+        _announcement = null;
+
+        var name = _source == ChosenSource ? _name.Trim() : null;
+        var result = joining
+            ? await Community.JoinAsync(_source, name)
+            : await Community.ChangeNameAsync(_source, name);
+        _operation = Operation.None;
+
+        switch (result.Outcome)
+        {
+            case NameChangeOutcome.Succeeded:
+                // A success without a readable membership: read it again rather than guess.
+                if (result.Membership is { IsMember: true })
+                    _membership = result.Membership;
+                else
+                    await LoadStatusAsync();
+
+                ResetChoice();
+                if (IsMember)
+                {
+                    // Joining: the focus moves onto the sentence that states the name, which is what gets read out
+                    // (a live-region message with the same text would be heard twice).
+                    if (joining)
+                    {
+                        _pendingFocus = FocusTarget.State;
+                    }
+                    else
+                    {
+                        _announcement = F.Format("Settings.Community.Member.Changed", _membership?.Name ?? "");
+                        _pendingFocus = FocusTarget.Change;
+                    }
+                }
+                else
+                {
+                    _pendingFocus = FocusTarget.Join;
+                }
+                break;
+
+            case NameChangeOutcome.InvalidName:
+                ShowNameError(F["Settings.Community.Error.Invalid"]);
+                break;
+
+            case NameChangeOutcome.NameUnavailable:
+                // Never says why: the name is reserved, taken or someone else's login.
+                ShowNameError(F["Settings.Community.Error.Unavailable"]);
+                break;
+
+            case NameChangeOutcome.AlreadyMember:
+            case NameChangeOutcome.NotMember:
+                // Another tab, a double click: show the real state.
+                await LoadStatusAsync();
+                ResetChoice();
+                _pendingFocus = IsMember ? FocusTarget.State : FocusTarget.Join;
+                break;
+
+            default:
+                _error = F["Settings.Community.Error.Generic"];
+                _pendingFocus = joining ? FocusTarget.Join : FocusTarget.Choice;
+                break;
+        }
+    }
+
+    /// <summary>The error sits under the name field: a rejected GitHub login sends the user to the field.</summary>
+    private void ShowNameError(string message)
+    {
+        if (_source == GitHubSource)
+        {
+            _source = ChosenSource;
+            _name = "";
+        }
+
+        _nameError = message;
+        _pendingFocus = FocusTarget.NameInput;
+    }
+
+    private void OpenLeave()
+    {
+        if (Busy) return;
+        _leaveOpen = true;
+        _pendingFocus = FocusTarget.ModalCancel;
+    }
+
+    private void CancelLeave()
+    {
+        if (_operation == Operation.Leave) return;
+        _leaveOpen = false;
+        _pendingFocus = FocusTarget.Leave;
+    }
+
+    private async Task ConfirmLeaveAsync()
+    {
+        if (Busy) return;
+        _operation = Operation.Leave;
+        _error = null;
+        // Both buttons are disabled while the request runs and would drop the focus: park it on the dialog itself,
+        // so that Tab and Shift+Tab stay inside (see trapFocus). The dialog is marked aria-busy meanwhile, so that
+        // a screen reader does not read it all out again when it receives the focus.
+        _pendingFocus = FocusTarget.Modal;
+
+        var outcome = await Community.LeaveAsync();
+        _operation = Operation.None;
+        _leaveOpen = false;
+
+        // NotMember means the profile is already gone: the outcome is the one the user asked for.
+        if (outcome is CommunityOutcome.Succeeded or CommunityOutcome.NotMember)
+        {
+            await LoadStatusAsync();
+            if (_membership is null || _membership.IsMember)
+            {
+                // The state could not be read again: show the plain non-member state, GitHub left unavailable.
+                _membership = new CommunityMembershipDto(false, null, null, null, null, false);
+                _loadFailed = false;
+            }
+
+            ResetChoice();
+            _announcement = F["Settings.Community.Left"];
+            _pendingFocus = FocusTarget.Join;
+        }
+        else
+        {
+            _error = F["Settings.Community.Error.Generic"];
+            _pendingFocus = FocusTarget.Leave;
+        }
+    }
+
+    private void OnModalKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") CancelLeave();
+    }
+
+    // ── Focus ───────────────────────────────────────────────────────────────
+
+    private async Task FocusAsync(FocusTarget target)
+    {
+        try
+        {
+            switch (target)
+            {
+                case FocusTarget.Join: await _joinButton.FocusAsync(); break;
+                case FocusTarget.State: await _stateText.FocusAsync(); break;
+                case FocusTarget.Change: await _changeButton.FocusAsync(); break;
+                case FocusTarget.Leave: await _leaveButton.FocusAsync(); break;
+                case FocusTarget.Choice:
+                    await (GitHubAvailable && _source == GitHubSource ? _githubRadio : _chosenRadio).FocusAsync();
+                    break;
+                case FocusTarget.NameInput: await _nameInput.FocusAsync(); break;
+                case FocusTarget.ModalCancel:
+                    await _cancelButton.FocusAsync();
+                    await JS.InvokeVoidAsync("kairufocusCommunity.trapFocus", _modal);
+                    break;
+                case FocusTarget.Modal: await _modal.FocusAsync(); break;
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or JSException)
+        {
+            // The target is not on screen any more (the state changed meanwhile): leave the focus where it is.
+        }
+    }
+}

@@ -49,6 +49,70 @@ public sealed class GetOrCreateUserCommandHandlerTests
         Assert.Equal("Dev User", result.Value!.DisplayName);
     }
 
+    private const string Avatar = "https://avatars.githubusercontent.com/u/1?v=4";
+    private const string OtherAvatar = "https://avatars.githubusercontent.com/u/2?v=4";
+
+    [Fact]
+    public async Task Should_SaveAvatar_When_UserIsNew()
+    {
+        var command = new GetOrCreateUserCommand("gh-1", "octocat", "The Octocat", null, Avatar);
+
+        await _sut.Handle(command);
+
+        Assert.Equal(Avatar, Assert.Single(_repository.Users).AvatarUrl);
+    }
+
+    [Fact]
+    public async Task Should_RefreshLoginAndAvatar_When_ExistingUserChanged()
+    {
+        var existing = User.Create("gh-1", "octocat", "The Octocat", null, Avatar);
+        _repository.Users.Add(existing);
+
+        var result = await _sut.Handle(new GetOrCreateUserCommand("gh-1", "renamed", "The Octocat", null, OtherAvatar));
+
+        Assert.Equal("renamed", existing.Login);
+        Assert.Equal(OtherAvatar, existing.AvatarUrl);
+        Assert.Equal("renamed", result.Value!.Login);
+        Assert.Equal(1, _repository.UpdateCount);
+    }
+
+    [Fact]
+    public async Task Should_NotWrite_When_ProfileIsUnchanged()
+    {
+        _repository.Users.Add(User.Create("gh-1", "octocat", "The Octocat", null, Avatar));
+
+        await _sut.Handle(new GetOrCreateUserCommand("gh-1", "octocat", "The Octocat", null, Avatar));
+
+        Assert.Equal(0, _repository.UpdateCount);
+    }
+
+    [Fact]
+    public async Task Should_ClearAvatar_When_UrlIsNotGitHubs()
+    {
+        var existing = User.Create("gh-1", "octocat", "The Octocat", null, Avatar);
+        _repository.Users.Add(existing);
+
+        await _sut.Handle(new GetOrCreateUserCommand("gh-1", "octocat", "The Octocat", null, "https://evil.example/a.png"));
+
+        Assert.Null(existing.AvatarUrl);
+        Assert.Equal(1, _repository.UpdateCount);
+    }
+
+    [Fact]
+    public async Task Should_KeepLogin_When_LoginClaimIsMissing()
+    {
+        var existing = User.Create("gh-1", "octocat", "The Octocat", null, Avatar);
+        _repository.Users.Add(existing);
+
+        var result = await _sut.Handle(new GetOrCreateUserCommand(
+            "gh-1", "The Octocat", "The Octocat", null, OtherAvatar, LoginIsFromGitHub: false));
+
+        Assert.Equal("octocat", existing.Login);
+        Assert.Equal("octocat", result.Value!.Login);
+        Assert.Equal(OtherAvatar, existing.AvatarUrl);
+        Assert.Equal(1, _repository.UpdateCount);
+    }
+
     [Fact]
     public async Task Should_NotCreateDuplicate_When_CalledTwice()
     {

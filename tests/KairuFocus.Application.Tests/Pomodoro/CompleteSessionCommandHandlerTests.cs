@@ -56,6 +56,30 @@ public sealed class CompleteSessionCommandHandlerTests
     }
 
     [Fact]
+    public async Task Should_LeaveActiveSessionRunning_When_ExpectedSessionIsAnotherOne()
+    {
+        var groupBreak = AddActiveSession(PomodoroSessionType.ShortBreak, plannedDurationMinutes: 5);
+
+        var result = await _sut.Handle(new CompleteSessionCommand(Guid.NewGuid()));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(PomodoroErrors.Pomodoro.NoActiveSession, result.Error);
+        Assert.Equal(PomodoroSessionStatus.Active, groupBreak.Status);
+        Assert.Empty(_journalRepository.Entries);
+    }
+
+    [Fact]
+    public async Task Should_CompleteSession_When_ExpectedSessionIsTheActiveOne()
+    {
+        var sprint = AddActiveSession(PomodoroSessionType.Sprint);
+
+        var result = await _sut.Handle(new CompleteSessionCommand(sprint.Id.Value));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(PomodoroSessionStatus.Completed, sprint.Status);
+    }
+
+    [Fact]
     public async Task Should_LogSprintCompleted_When_SprintSessionCompleted()
     {
         AddActiveSession(PomodoroSessionType.Sprint);

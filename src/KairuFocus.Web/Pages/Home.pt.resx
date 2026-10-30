@@ -58,7 +58,7 @@
 	<value>O espaço de trabalho para manter o foco</value>
   </data>
   <data name="Description" xml:space="preserve">
-	<value>Tarefas, sprints Pomodoro, diário de atividades — todo o seu fluxo de trabalho em um só lugar. Conecte sua IA favorita pelo protocolo MCP e deixe-a gerenciar suas tarefas por você.</value>
+	<value>Tarefas, sprints Pomodoro, diário de atividades — todo o seu fluxo de trabalho em um só lugar, e a possibilidade de se concentrar em grupo. Conecte sua IA favorita pelo protocolo MCP e deixe-a gerenciar suas tarefas por você.</value>
   </data>
   <data name="LoginButton" xml:space="preserve">
 	<value>Entrar com GitHub</value>
@@ -86,5 +86,11 @@
   </data>
   <data name="FeatureAIDesc" xml:space="preserve">
 	<value>Servidor MCP integrado: sua IA cria, lista e conclui suas tarefas diretamente.</value>
+  </data>
+  <data name="FeatureGroup" xml:space="preserve">
+	<value>Sprints em grupo</value>
+  </data>
+  <data name="FeatureGroupDesc" xml:space="preserve">
+	<value>Entre com um clique no sprint de outro membro e concentre-se junto, sem mensagens nem distrações.</value>
   </data>
 </root>

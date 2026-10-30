@@ -13,14 +13,6 @@ namespace KairuFocus.Application.Pomodoro.Commands.StartSession;
 
 public sealed class StartSessionCommandHandler : ICommandHandler<StartSessionCommand, StartSessionResult>
 {
-    /// <summary>
-    /// Time window during which a start request for the very same session type is treated as a
-    /// re-submission of the same user action (double-click, retry after a slow response) instead
-    /// of a conflict. Kept deliberately short: beyond it, an already active session is a genuine
-    /// conflict, not a duplicate click.
-    /// </summary>
-    private static readonly TimeSpan IdempotencyWindow = TimeSpan.FromSeconds(5);
-
     private readonly IPomodoroSessionRepository _sessionRepository;
     private readonly IPomodoroSettingsRepository _settingsRepository;
     private readonly IMediator _mediator;
@@ -195,12 +187,7 @@ public sealed class StartSessionCommandHandler : ICommandHandler<StartSessionCom
         if ((active.PlannedDurationMinutes == 0) != isFreeSession)
             return false;
 
-        if (!active.StartedAt.HasValue)
-            return false;
-
-        // Lower bound: with clock drift between instances, a StartedAt in the future would
-        // otherwise always look like a re-submission, whatever its age.
-        var elapsed = now - active.StartedAt.Value;
-        return elapsed >= TimeSpan.Zero && elapsed <= IdempotencyWindow;
+        return active.StartedAt.HasValue
+            && SessionStartIdempotency.IsResubmission(active.StartedAt.Value, now);
     }
 }

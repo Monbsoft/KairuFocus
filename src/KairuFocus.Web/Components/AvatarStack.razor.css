@@ -1,0 +1,26 @@
+.kf-avatar-stack {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Ring in the colour of the background, so that the overlap reads on light, dark and the dark hero. */
+.kf-avatar-stack ::deep .kf-avatar,
+.kf-avatar-stack__more {
+    box-shadow: 0 0 0 2px var(--kf-avatar-ring, var(--bs-body-bg, #fff));
+}
+
+.kf-avatar-stack ::deep .kf-avatar + .kf-avatar,
+.kf-avatar-stack ::deep .kf-avatar + .kf-avatar-stack__more {
+    margin-left: -8px;
+}
+
+.kf-avatar-stack__more {
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 50%;
+    font-weight: 700;
+    line-height: 1;
+    background: var(--bs-secondary-bg, #e9ecef);
+    color: var(--bs-secondary-color, #495057);
+}

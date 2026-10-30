@@ -1,0 +1,76 @@
+/* Used inside and outside the community pages (settings, Pomodoro): Bootstrap variables with fallbacks, no page token. */
+.kf-join {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.kf-join__text {
+    margin: 0;
+}
+
+.kf-join__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 1.25rem;
+    border: 0;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    color: #fff;
+    background: #0d6efd;
+    transition: transform 100ms ease;
+}
+
+.kf-join__btn:hover:not([aria-disabled="true"]) {
+    background: #0a58ca;
+    color: #fff;
+}
+
+.kf-join__btn:active:not([aria-disabled="true"]) {
+    transform: translateY(1px);
+}
+
+.kf-join__btn:focus-visible {
+    outline: 2px solid #4d94ff;
+    outline-offset: 2px;
+}
+
+/* Busy during the call: aria-disabled rather than disabled, so that the keyboard focus stays on the button. */
+.kf-join__btn[aria-disabled="true"] {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.kf-join__note {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.kf-join__note--warning {
+    background: var(--bs-warning-bg-subtle, #fff3cd);
+    color: var(--bs-warning-text-emphasis, #664d03);
+}
+
+.kf-join__note--error {
+    background: var(--bs-danger-bg-subtle, #f8d7da);
+    color: var(--bs-danger-text-emphasis, #58151c);
+}
+
+.kf-join__note a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kf-join__btn {
+        transition: none;
+    }
+}
