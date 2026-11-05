@@ -46,7 +46,7 @@
 
 .kf-sprint__clock {
     color: #fff;
-    font-size: var(--text-xl, 1.75rem);
+    font-size: var(--text-xl);
     font-weight: 700;
     line-height: 1.2;
 }

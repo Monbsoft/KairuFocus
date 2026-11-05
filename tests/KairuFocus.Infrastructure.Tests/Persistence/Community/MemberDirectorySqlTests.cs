@@ -128,10 +128,12 @@ public sealed class MemberDirectorySqlTests
     }
 
     // Per-row rules stay in CommunityRules (ADR-024).
-    [Fact]
-    public async Task Should_KeepRowRulesOutOfSql_When_GettingActivity()
+    [Theory]
+    [InlineData(GetActivity)]
+    [InlineData(GetActive)]
+    public async Task Should_KeepRowRulesOutOfSql_When_Queried(string method)
     {
-        var command = await CaptureAsync(GetActivity);
+        var command = await CaptureAsync(method);
 
         Assert.DoesNotContain("DATEADD", command.Text, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("DATEDIFF", command.Text, StringComparison.OrdinalIgnoreCase);

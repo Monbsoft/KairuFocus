@@ -35,9 +35,23 @@
         <div class="kf-live__empty">
             <div class="kf-live__emptytext">
                 <p class="kf-live__emptytitle">@F["OpenSprints.Empty.Title"]</p>
-                <p class="kf-live__sub">@F["OpenSprints.Empty.Body"]</p>
+                @if (Data.ViewerIsMember)
+                {
+                    <p class="kf-live__sub">@F["OpenSprints.Empty.Body"]</p>
+                }
+                else
+                {
+                    @* A non-member's sprint is never listed: no invitation to start one, only the way to join. *@
+                    <p class="kf-live__notice">
+                        <span>@F["Join.NeedMember.Body"]</span>
+                        <a href="settings#communaute">@F["Join.NeedMember.Link"]</a>
+                    </p>
+                }
             </div>
-            <a class="kf-btn-light" href="pomodoro?type=sprint">@F["OpenSprints.Empty.Cta"]</a>
+            @if (Data.ViewerIsMember)
+            {
+                <a class="kf-btn-light" href="pomodoro?type=sprint">@F["OpenSprints.Empty.Cta"]</a>
+            }
         </div>
     }
     else
@@ -109,7 +123,7 @@
     {
         if (Data is not { } data || data.Groups.Count > VisibleCards) return;
 
-        if (_expanded && _moreFocused) _focusTitle = true;
+        if (_moreFocused) _focusTitle = true;
         _expanded = false;
         _moreFocused = false;
     }

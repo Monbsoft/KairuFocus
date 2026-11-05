@@ -317,6 +317,7 @@ code {
     --text-sm:  0.875rem;
     --text-md:  1.125rem;
     --text-lg:  1.375rem;
+    --text-xl:  1.75rem;
     --text-2xl: 2.25rem;
     --tracking-wide: 0.08em;
     /* radius */
@@ -583,6 +584,7 @@ code {
     --text-sm:   0.875rem;
     --text-md:   1.125rem;
     --text-lg:   1.375rem;
+    --text-xl:   1.75rem;
     --text-2xl:  2.25rem;
     --text-3xl:  3rem;
     --tracking-tight: -0.02em;
@@ -666,7 +668,7 @@ code {
 }
 
 /* :where() pour ne pas peser dans la spécificité : les marges des classes ci-dessous l'emportent. */
-.kf-community-page :where(h1, h2, p), .kf-profile-page :where(h1, h2, p) { margin: 0; }
+.kf-community-page :where(h1, h2, h3, p), .kf-profile-page :where(h1, h2, h3, p) { margin: 0; }
 .kf-community-page :focus-visible, .kf-profile-page :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .kf-community-page .kf-card, .kf-profile-page .kf-card { box-shadow: var(--shadow-sm); }
 

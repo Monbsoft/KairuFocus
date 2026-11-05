@@ -81,11 +81,14 @@
 
     [Parameter] public EventCallback<CommunityPeriod> PeriodChanged { get; set; }
 
+    /// <summary>The rank half is for members only: a non-member never sees it, not even while loading.</summary>
+    [Parameter] public bool IsMember { get; set; }
+
     /// <summary>The XP figures are shown unless they failed: the progression below then carries the one error.</summary>
     private bool ShowXpHalf => !_xp.ShowError;
 
     /// <summary>The rank is read from the leaderboard: week and month only (the global rank is a key figure of the profile), and members only.</summary>
-    private bool ShowRankHalf => Period != CommunityPeriod.Global && _place.Data is not { IsParticipant: false };
+    private bool ShowRankHalf => Period != CommunityPeriod.Global && IsMember;
 
     private bool ShowSummary => ShowXpHalf || ShowRankHalf;
 

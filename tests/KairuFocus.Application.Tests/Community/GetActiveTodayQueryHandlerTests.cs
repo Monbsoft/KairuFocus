@@ -61,6 +61,30 @@ public sealed class GetActiveTodayQueryHandlerTests
     }
 
     [Fact]
+    public async Task Should_FlagNobody_When_ViewerIsMemberButNotListed()
+    {
+        _profiles.Seed(FakeCurrentUserService.TestUserId, "nora");
+        _directory.SeedActive(new ActiveMembers(2, [Member("lea_dev"), Member("alpha")]));
+        var sut = CreateSut(new DateTimeOffset(2026, 11, 5, 12, 0, 0, TimeSpan.Zero));
+
+        var result = await sut.Handle(new GetActiveTodayQuery());
+
+        Assert.All(result.Members, m => Assert.False(m.IsMe));
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmpty_When_NobodyFinishedASprint()
+    {
+        _directory.SeedActive(new ActiveMembers(0, []));
+        var sut = CreateSut(new DateTimeOffset(2026, 11, 5, 12, 0, 0, TimeSpan.Zero));
+
+        var result = await sut.Handle(new GetActiveTodayQuery());
+
+        Assert.Equal(0, result.Total);
+        Assert.Empty(result.Members);
+    }
+
+    [Fact]
     public async Task Should_KeepTotal_When_MoreMembersThanReturned()
     {
         var members = new[] { "alpha", "bravo", "charlie", "delta", "echo" }.Select(n => Member(n)).ToList();
