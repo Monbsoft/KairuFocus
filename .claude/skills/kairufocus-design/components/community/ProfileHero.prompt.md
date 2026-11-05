@@ -4,7 +4,7 @@
 
 **AvatarStack** — overlapping avatars with a "+N" bubble. Decorative (`aria-hidden`): always write the names next to it. Set `ringColor` to the surface behind the stack.
 
-**OpenSprintRow** — one row of "En sprint maintenant", one per open group (host, time left, participants, button). Put the rows in a `Card`. No live region: rows come and go quietly.
+**OpenSprintRow** — one row of "En sprint maintenant", one per open group (host, time left, participants, button). Put the rows in a `Card`. No live region: rows come and go quietly. Since iteration 45 the Community page uses `OpenSprintCard` on the live strip instead; the row is no longer used by the app.
 
 ```jsx
 <ProfileHero name="lea_dev" src={ghAvatar} githubLogin="lea_dev" since="Dans la communauté depuis octobre 2026">

@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x820" name="Community" subtitle="ProfileHero · SprintStatus · AvatarStack · OpenSprintRow" -->
+<!-- @dsCard group="Components" viewport="700x1480" name="Community" subtitle="ProfileHero · SprintStatus · AvatarStack · OpenSprintRow · OpenSprintCard · ActiveTodayStrip" -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -14,6 +14,11 @@
   .cap { font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); }
   .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
   .card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--space-2); }
+  /* The live strip of the Community page (iteration 45): brand hero, cards grid, then "Actifs aujourd'hui". */
+  .live { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6); border-radius: var(--radius-lg); background: var(--brand-hero); color: var(--kf-white); }
+  .live h2 { margin: 0; font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--kf-blue-100); }
+  .live__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+  .live__notice { margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.1); font-size: var(--text-sm); }
 </style>
 </head>
 <body>
@@ -21,7 +26,7 @@
 <script type="text/babel">
   // Fictitious data only: no real member, no real avatar.
   const DS = window.KairuFocusDesignSystem_0d3740;
-  const { ProfileHero, SprintStatus, AvatarStack, OpenSprintRow } = DS;
+  const { ProfileHero, SprintStatus, AvatarStack, OpenSprintRow, OpenSprintCard, ActiveTodayStrip } = DS;
 
   function Pane({ theme, children }) {
     return <div className="pane" data-bs-theme={theme}>{children}</div>;
@@ -32,8 +37,39 @@
       return <p className="cap" style={{ padding: 20 }}>Composants « community » absents du bundle : lancer /design-sync pour le recompiler.</p>;
     }
     const others = [{ name: "tomtom" }, { name: "ada_l" }, { name: "linus" }];
+    const today = [{ name: "lea_dev" }, { name: "nora", isMe: true }, { name: "tomtom" }, { name: "ada_l" }, { name: "linus" }];
+    const live = OpenSprintCard && ActiveTodayStrip;
     return (
       <>
+        {live ? (
+          <>
+            <Pane theme="light">
+              <span className="cap">Bandeau en direct (#45) — membre : cartes, ma carte, « Actifs aujourd'hui »</span>
+              <section className="live">
+                <h2>En sprint maintenant</h2>
+                <ul className="live__grid">
+                  <OpenSprintCard name="lea_dev" timeLeft="18:24" participantsText="3 participants" onJoin={() => {}} />
+                  <OpenSprintCard name="tomtom" timeLeft="09:02" mine />
+                  <OpenSprintCard name="un_nom_de_trente_neuf_caracteres_xxxxxx" timeLeft="21:40" />
+                </ul>
+                <ActiveTodayStrip members={today} total={7} />
+              </section>
+            </Pane>
+            <Pane theme="dark">
+              <span className="cap">Bandeau en direct (#45) — visiteur hors communauté : une notice, aucun bouton ; personne d'actif</span>
+              <section className="live">
+                <h2>En sprint maintenant</h2>
+                <p className="live__notice">Active la communauté pour rejoindre un sprint. <a href="#" style={{ color: "inherit", fontWeight: 600 }}>Activer la communauté</a></p>
+                <ul className="live__grid">
+                  <OpenSprintCard name="lea_dev" timeLeft="18:24" participantsText="3 participants" canJoin={false} />
+                </ul>
+                <ActiveTodayStrip members={[]} />
+              </section>
+            </Pane>
+          </>
+        ) : (
+          <p className="cap" style={{ padding: 20 }}>OpenSprintCard et ActiveTodayStrip absents du bundle : lancer /design-sync pour le recompiler.</p>
+        )}
         <Pane theme="light">
           <span className="cap">Clair — bandeau avec sprint ouvert</span>
           <ProfileHero name="lea_dev" githubLogin="lea_dev" since="Dans la communauté depuis octobre 2026">
