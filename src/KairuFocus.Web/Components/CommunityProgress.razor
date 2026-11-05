@@ -1,10 +1,8 @@
-@* "Ma progression": personal record, total since the start, and the history chart. One section, one data source
-   (the progression), one error with its retry. Facts to look back on, never targets. *@
+@* Personal record, total since the start, and the history chart: the lower part of "Ma progression", which carries the
+   title. One data source (the progression), one error with its retry. Facts to look back on, never targets. *@
 @inject CommunityFormatter F
 
 <div class="kf-zone" aria-busy="@(Zone.Busy ? "true" : "false")">
-    <h2 class="kf-section-title">@F["Community.Progress.Heading"]</h2>
-
     @if (Zone.ShowSkeleton)
     {
         <div class="kf-kpis" aria-hidden="true">
