@@ -1,12 +1,13 @@
+using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Gamification;
 
 namespace KairuFocus.Application.Gamification.Queries.GetCommunityLeaderboard;
 
 /// <summary>
-/// Pure ranking (no I/O). Participants with 0 XP are excluded; rows are sorted by XP descending, then by
-/// pseudonym (ordinal); rank = 1 + number of rows with strictly more XP ("standard competition":
+/// Pure ranking (no I/O). Members with 0 XP are excluded; rows are sorted by XP descending, then by
+/// profile name (ordinal); rank = 1 + number of rows with strictly more XP ("standard competition":
 /// 10, 8, 8, 5 → 1, 2, 2, 4). Top = the first <see cref="TopCount"/> rows, strictly: ties beyond the
-/// 10th row are not included. "My" row is found by pseudonym, which is unique: no user identifier involved.
+/// 10th row are not included. "My" row is found by profile name, which is unique: no user identifier involved.
 /// </summary>
 internal static class LeaderboardRanker
 {
@@ -14,13 +15,13 @@ internal static class LeaderboardRanker
 
     public static GetCommunityLeaderboardResult Rank(
         IReadOnlyList<XpStanding> standings,
-        Pseudonym? myPseudonym,
+        ProfileName? me,
         bool isParticipant)
     {
         var ordered = standings
             .Where(s => s.Xp > 0)
             .OrderByDescending(s => s.Xp)
-            .ThenBy(s => s.Pseudonym.Value, StringComparer.Ordinal)
+            .ThenBy(s => s.Name.Value, StringComparer.Ordinal)
             .ToList();
 
         var ranks = new int[ordered.Count];
@@ -31,20 +32,22 @@ internal static class LeaderboardRanker
             .Take(TopCount)
             .Select((standing, i) => new LeaderboardRowViewModel(
                 ranks[i],
-                standing.Pseudonym.Value,
+                standing.Name.Value,
+                standing.AvatarUrl,
                 standing.Xp,
-                IsMe: standing.Pseudonym == myPseudonym))
+                IsMe: standing.Name == me))
             .ToList();
 
-        MyStandingViewModel? me = null;
-        var myIndex = myPseudonym is null ? -1 : ordered.FindIndex(s => s.Pseudonym == myPseudonym);
+        MyStandingViewModel? myStanding = null;
+        var myIndex = me is null ? -1 : ordered.FindIndex(s => s.Name == me);
         if (myIndex >= 0)
         {
             var mine = ordered[myIndex];
             var isTied = ordered.Count(s => s.Xp == mine.Xp) > 1;
-            me = new MyStandingViewModel(ranks[myIndex], isTied, mine.Xp, mine.Pseudonym.Value, IsInTop: myIndex < TopCount);
+            myStanding = new MyStandingViewModel(
+                ranks[myIndex], isTied, mine.Xp, mine.Name.Value, mine.AvatarUrl, IsInTop: myIndex < TopCount);
         }
 
-        return new GetCommunityLeaderboardResult(isParticipant, ordered.Count, me, top);
+        return new GetCommunityLeaderboardResult(isParticipant, ordered.Count, myStanding, top);
     }
 }

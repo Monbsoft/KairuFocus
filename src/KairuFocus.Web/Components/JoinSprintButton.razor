@@ -1,0 +1,157 @@
+@* "Join this sprint" for the open sprint of TargetName. A visitor outside the community gets a link to the settings.
+   During the call the button is aria-disabled (not disabled, so the keyboard focus stays on it) and the handler ignores
+   a second click: it cannot start a second session. Once the answer is in, the button is usable again (except for a
+   closed sprint, where it is hidden): a refusal can be retried, the server refuses again if nothing changed.
+   Under five minutes left, a warning says the sprint will not earn XP; a single render is scheduled for that instant.
+   Nothing here announces an arrival to the people already in the sprint. *@
+@implements IDisposable
+@inject CommunityApiClient Community
+@inject CommunityFormatter F
+@inject NavigationManager Nav
+@inject TimeProvider Clock
+
+<div class="kf-join">
+    @if (!ViewerIsMember || _outcome == JoinSprintOutcome.NotMember)
+    {
+        if (Compact)
+        {
+            @* In a list: only the way in, the explanation is given once by the list. *@
+            <a class="kf-join__btn" href="settings#communaute">@F["Join.Button"]</a>
+        }
+        else
+        {
+            <p class="kf-join__text">@F["Join.NeedMember.Body"]</p>
+            <a class="kf-join__btn" href="settings#communaute">@F["Join.NeedMember.Link"]</a>
+        }
+    }
+    else
+    {
+        @if (_outcome is null && ShortOnTime)
+        {
+            <p class="kf-join__note kf-join__note--warning">@F["Join.ShortWarning"]</p>
+        }
+
+        @if (_outcome != JoinSprintOutcome.SprintClosed)
+        {
+            <button type="button" class="kf-join__btn" aria-disabled="@(_busy ? "true" : null)" aria-busy="@(_busy ? "true" : null)"
+                    aria-label="@F.Format("Join.Button.Aria", TargetName)" @onclick="JoinAsync">
+                @F[_busy ? "Join.Joining" : "Join.Button"]
+            </button>
+        }
+
+        @switch (_outcome)
+        {
+            case JoinSprintOutcome.SprintActive:
+                <p class="kf-join__note kf-join__note--error" role="alert">
+                    @F["Join.SprintActive"]
+                    <a href="pomodoro">@F["Join.SprintActive.Link"]</a>
+                </p>
+                break;
+            case JoinSprintOutcome.OwnSprint:
+                <p class="kf-join__note kf-join__note--error" role="alert">@F["Join.OwnSprint"]</p>
+                break;
+            case JoinSprintOutcome.SprintClosed:
+                <p class="kf-join__note kf-join__note--error" role="alert">@F["Join.Closed"]</p>
+                break;
+            case JoinSprintOutcome.Failed:
+                <p class="kf-join__note kf-join__note--error" role="alert">@F["Join.Error"]</p>
+                break;
+        }
+    }
+</div>
+
+@code {
+    /// <summary>Name of the member whose sprint is joined.</summary>
+    [Parameter, EditorRequired] public string TargetName { get; set; } = "";
+
+    /// <summary>End of the sprint: under five minutes left, a warning says it will not earn XP.</summary>
+    [Parameter, EditorRequired] public DateTimeOffset EndsAt { get; set; }
+
+    [Parameter] public bool ViewerIsMember { get; set; }
+
+    /// <summary>For a list of sprints: a visitor outside the community only gets the link (no explanatory text).</summary>
+    [Parameter] public bool Compact { get; set; }
+
+    /// <summary>The sprint was closed, elapsed or finished (410): the parent refreshes its data.</summary>
+    [Parameter] public EventCallback OnNoLongerOpen { get; set; }
+
+    private static readonly TimeSpan XpThreshold = TimeSpan.FromMinutes(5);
+
+    private bool _busy;
+    private JoinSprintOutcome? _outcome;
+
+    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource? _warningCts;
+    private DateTimeOffset _warningScheduledFor;
+
+    private bool ShortOnTime => EndsAt - Clock.GetUtcNow() < XpThreshold;
+
+    protected override void OnParametersSet()
+    {
+        // Recomputed when the end time changes (another sprint under the same component).
+        if (_warningScheduledFor == EndsAt) return;
+        _warningScheduledFor = EndsAt;
+        _warningCts?.Cancel();
+        _warningCts?.Dispose();
+        _warningCts = null;
+
+        var wait = EndsAt - XpThreshold - Clock.GetUtcNow();
+        if (wait <= TimeSpan.Zero) return;
+
+        _warningCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
+        _ = RenderAtXpThresholdAsync(wait, _warningCts.Token);
+    }
+
+    /// <summary>One render at "five minutes left", so that the warning appears without the page doing anything.</summary>
+    private async Task RenderAtXpThresholdAsync(TimeSpan wait, CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(wait, Clock, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task JoinAsync()
+    {
+        if (_busy) return;
+        _busy = true;
+        _outcome = null;
+
+        JoinSprintResult result;
+        try
+        {
+            result = await Community.JoinSprintAsync(TargetName);
+        }
+        finally
+        {
+            // Busy only during the call: a refusal leaves the button usable again.
+            _busy = false;
+        }
+
+        if (result.Outcome == JoinSprintOutcome.Succeeded)
+        {
+            // Busy again: the page changes, a second click must do nothing meanwhile.
+            _busy = true;
+            Nav.NavigateTo("/pomodoro");
+            return;
+        }
+
+        _outcome = result.Outcome;
+
+        if (result.Outcome == JoinSprintOutcome.SprintClosed)
+            await OnNoLongerOpen.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+        _warningCts?.Dispose();
+    }
+}

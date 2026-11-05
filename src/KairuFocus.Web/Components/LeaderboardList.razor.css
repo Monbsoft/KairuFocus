@@ -1,0 +1,14 @@
+/* Avatar + name of a row, as one link to the profile. The row is already 44px high: the link fills that height. */
+.kf-row__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    min-height: var(--target-min);
+    color: inherit;
+    text-decoration: none;
+}
+
+.kf-row__link:hover .kf-row__name {
+    text-decoration: underline;
+}

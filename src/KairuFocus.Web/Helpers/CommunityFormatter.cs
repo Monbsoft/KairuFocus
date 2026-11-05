@@ -7,7 +7,7 @@ using Microsoft.Extensions.Localization;
 namespace KairuFocus.Web.Helpers;
 
 /// <summary>
-/// Texts and culture-aware formats of the Community page and of the leaderboard section of the
+/// Texts and culture-aware formats of the Community page and of the community section of the
 /// settings. Wraps <see cref="IStringLocalizer{Community}"/> (resource <c>Pages/Community.resx</c>)
 /// and holds the rules a resource file cannot express: plural forms, ordinals, durations, dates.
 /// <para>

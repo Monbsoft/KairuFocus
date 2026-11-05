@@ -58,7 +58,7 @@
 	<value>Der Arbeitsbereich, um fokussiert zu bleiben</value>
   </data>
   <data name="Description" xml:space="preserve">
-	<value>Aufgaben, Pomodoro-Sprints, Aktivitätsjournal — Ihr gesamter Workflow an einem Ort. Verbinden Sie Ihre bevorzugte KI über das MCP-Protokoll und lassen Sie sie Ihre Aufgaben verwalten.</value>
+	<value>Aufgaben, Pomodoro-Sprints, Aktivitätsjournal — Ihr gesamter Workflow an einem Ort, und die Möglichkeit, sich in der Gruppe zu konzentrieren. Verbinden Sie Ihre bevorzugte KI über das MCP-Protokoll und lassen Sie sie Ihre Aufgaben verwalten.</value>
   </data>
   <data name="LoginButton" xml:space="preserve">
 	<value>Mit GitHub anmelden</value>
@@ -86,5 +86,11 @@
   </data>
   <data name="FeatureAIDesc" xml:space="preserve">
 	<value>Integrierter MCP-Server: Ihre KI erstellt, listet und erledigt Ihre Aufgaben direkt.</value>
+  </data>
+  <data name="FeatureGroup" xml:space="preserve">
+	<value>Gruppen-Sprints</value>
+  </data>
+  <data name="FeatureGroupDesc" xml:space="preserve">
+	<value>Treten Sie mit einem Klick dem Sprint eines anderen Mitglieds bei und konzentrieren Sie sich gemeinsam, ohne Nachrichten und ohne Ablenkung.</value>
   </data>
 </root>

@@ -58,7 +58,7 @@
 	<value>保持专注的工作空间</value>
   </data>
   <data name="Description" xml:space="preserve">
-	<value>任务、番茄钟冲刺、活动日志 — 所有工作流集于一处。通过MCP协议连接您喜爱的AI，让它为您管理任务。</value>
+	<value>任务、番茄钟冲刺、活动日志 — 所有工作流集于一处，还可以与小组一起专注。通过MCP协议连接您喜爱的AI，让它为您管理任务。</value>
   </data>
   <data name="LoginButton" xml:space="preserve">
 	<value>使用 GitHub 登录</value>
@@ -86,5 +86,11 @@
   </data>
   <data name="FeatureAIDesc" xml:space="preserve">
 	<value>内置MCP服务器：您的AI直接创建、列出和完成任务。</value>
+  </data>
+  <data name="FeatureGroup" xml:space="preserve">
+	<value>小组冲刺</value>
+  </data>
+  <data name="FeatureGroupDesc" xml:space="preserve">
+	<value>一键加入其他成员的冲刺，一起专注，没有消息，也没有干扰。</value>
   </data>
 </root>

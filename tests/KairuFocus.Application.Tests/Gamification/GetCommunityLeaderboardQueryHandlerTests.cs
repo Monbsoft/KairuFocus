@@ -3,6 +3,8 @@ using System.Text.RegularExpressions;
 using KairuFocus.Application.Gamification.Common;
 using KairuFocus.Application.Gamification.Queries.GetCommunityLeaderboard;
 using KairuFocus.Application.Tests.Common;
+using KairuFocus.Application.Tests.Community;
+using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -18,7 +20,7 @@ public sealed class GetCommunityLeaderboardQueryHandlerTests
         "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
         RegexOptions.CultureInvariant);
 
-    private readonly FakeLeaderboardProfileRepository _profileRepository = new();
+    private readonly FakeMemberProfileRepository _profileRepository = new();
     private readonly FakeLeaderboardStandingsRepository _standingsRepository = new();
     private readonly GetCommunityLeaderboardQueryHandler _sut;
 
@@ -65,7 +67,7 @@ public sealed class GetCommunityLeaderboardQueryHandlerTests
     [Fact]
     public async Task Should_ReturnBoardWithoutMe_When_UserIsNotParticipant()
     {
-        _profileRepository.Seed(UserId.New(), "LoutreTenace", JoinedAtUtc);
+        _profileRepository.Seed(UserId.New(), "LoutreTenace", joinedAtUtc: JoinedAtUtc);
         _standingsRepository.Add("LoutreTenace", 210);
         _standingsRepository.Add("HibouAttentif", 180);
 
@@ -74,34 +76,49 @@ public sealed class GetCommunityLeaderboardQueryHandlerTests
         Assert.False(result.IsParticipant);
         Assert.Null(result.Me);
         Assert.Equal(2, result.RankedCount);
-        Assert.Equal(["LoutreTenace", "HibouAttentif"], result.Top.Select(r => r.Pseudonym));
+        Assert.Equal(["LoutreTenace", "HibouAttentif"], result.Top.Select(r => r.Name));
     }
 
     [Fact]
-    public async Task Should_FindMyRowByPseudonym_When_UserIsParticipant()
+    public async Task Should_FindMyRowByName_When_UserIsParticipant()
     {
-        _profileRepository.Seed(FakeCurrentUserService.TestUserId, "RenardAgile", JoinedAtUtc);
+        _profileRepository.Seed(FakeCurrentUserService.TestUserId, "RenardAgile", joinedAtUtc: JoinedAtUtc);
         _standingsRepository.Add("LoutreTenace", 210);
         _standingsRepository.Add("RenardAgile", 120);
 
         var result = await _sut.Handle(new GetCommunityLeaderboardQuery(CommunityPeriod.Week));
 
         Assert.True(result.IsParticipant);
-        Assert.Equal(new MyStandingViewModel(Rank: 2, IsTied: false, Xp: 120, Pseudonym: "RenardAgile", IsInTop: true), result.Me);
+        Assert.Equal(new MyStandingViewModel(Rank: 2, IsTied: false, Xp: 120, Name: "RenardAgile", AvatarUrl: null, IsInTop: true), result.Me);
+    }
+
+    [Fact]
+    public async Task Should_ReturnAvatarOfMyRow_When_MyNameIsGitHubLogin()
+    {
+        const string avatar = "https://avatars.githubusercontent.com/u/42";
+        _profileRepository.Seed(
+            FakeCurrentUserService.TestUserId, "RenardAgile", ProfileNameSource.GitHub, avatar, JoinedAtUtc);
+        _standingsRepository.Add("RenardAgile", 120, avatar);
+        _standingsRepository.Add("LoutreTenace", 210);
+
+        var result = await _sut.Handle(new GetCommunityLeaderboardQuery(CommunityPeriod.Week));
+
+        Assert.Equal(avatar, result.Me?.AvatarUrl);
+        Assert.Equal(new string?[] { null, avatar }, result.Top.Select(r => r.AvatarUrl));
     }
 
     [Fact]
     public async Task Should_NotSerializeAnyUserId_When_ResultIsSerialized()
     {
-        _profileRepository.Seed(FakeCurrentUserService.TestUserId, "RenardAgile", JoinedAtUtc);
-        _profileRepository.Seed(UserId.New(), "LoutreTenace", JoinedAtUtc);
+        _profileRepository.Seed(FakeCurrentUserService.TestUserId, "RenardAgile", joinedAtUtc: JoinedAtUtc);
+        _profileRepository.Seed(UserId.New(), "LoutreTenace", joinedAtUtc: JoinedAtUtc);
         _standingsRepository.Add("LoutreTenace", 210);
         _standingsRepository.Add("RenardAgile", 120);
 
         var result = await _sut.Handle(new GetCommunityLeaderboardQuery(CommunityPeriod.Week));
         var json = JsonSerializer.Serialize(result, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
-        Assert.Contains("\"pseudonym\":\"RenardAgile\"", json);
+        Assert.Contains("\"name\":\"RenardAgile\"", json);
         Assert.DoesNotMatch(AnyGuid, json);
         Assert.DoesNotContain(FakeCurrentUserService.TestUserId.Value.ToString(), json, StringComparison.OrdinalIgnoreCase);
     }

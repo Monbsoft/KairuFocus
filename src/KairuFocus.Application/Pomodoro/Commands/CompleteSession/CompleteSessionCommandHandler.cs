@@ -47,6 +47,14 @@ public sealed class CompleteSessionCommandHandler : ICommandHandler<CompleteSess
             return CompleteSessionResult.Failure(PomodoroErrors.Pomodoro.NoActiveSession);
         }
 
+        if (command.ExpectedSessionId is { } expectedId && session.Id.Value != expectedId)
+        {
+            _logger.LogWarning(
+                "Completion of session {ExpectedSessionId} ignored for user {UserId}: session {SessionId} is the active one",
+                expectedId, userId, session.Id.Value);
+            return CompleteSessionResult.Failure(PomodoroErrors.Pomodoro.NoActiveSession);
+        }
+
         var result = session.Complete(DateTime.UtcNow);
         if (result.IsFailure)
             return CompleteSessionResult.Failure(result.Error);

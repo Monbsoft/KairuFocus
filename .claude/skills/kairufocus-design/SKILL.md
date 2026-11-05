@@ -11,7 +11,7 @@ Read `readme.md` in this skill first — it is the full design guide (sources, c
 ## What's here
 - `styles.css` — the single entry point; `@import`s all tokens + fonts. Link this one file.
 - `tokens/` — CSS custom properties: `colors.css` (brand + semantic, light/dark), `typography.css`, `spacing.css`, `radius-elevation-motion.css`, `base.css`.
-- `components/` — React primitives (`buttons/`, `forms/`, `data-display/`, `feedback/`). Each has a `.jsx`, `.d.ts`, `.prompt.md` and a showcase card.
+- `components/` — React primitives (`buttons/`, `forms/`, `data-display/`, `feedback/`, `community/`). Each has a `.jsx`, `.d.ts`, `.prompt.md` and a showcase card.
 - `ui_kits/kairufocus-web/` — interactive click-through recreation of the real app (landing, dashboard, tasks, pomodoro, journal, settings).
 - `guidelines/` — foundation specimen cards (color, type, spacing, brand).
 - `assets/` — the KairuFocus "K" logo (192 & 512px).

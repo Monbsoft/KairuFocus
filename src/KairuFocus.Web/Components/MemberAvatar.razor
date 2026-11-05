@@ -1,0 +1,39 @@
+@* Avatar of a member: the image when there is one and it loads, the initial of the name otherwise.
+   Purely visual (alt="" and aria-hidden): the name always sits next to it. The link around it, if any, belongs to the caller. *@
+
+<span class="kf-avatar" style="@StyleValue" aria-hidden="true">
+    @if (ShowImage)
+    {
+        <img src="@AvatarUrl" alt="" referrerpolicy="no-referrer" loading="lazy" @onerror="OnImageError" />
+    }
+    else
+    {
+        <span class="kf-avatar__initial">@Initial</span>
+    }
+</span>
+
+@code {
+    /// <summary>The name of the member: its first character is the fallback initial.</summary>
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+
+    /// <summary>Null for a chosen name: the initial is then shown.</summary>
+    [Parameter] public string? AvatarUrl { get; set; }
+
+    /// <summary>Side in pixels.</summary>
+    [Parameter] public int Size { get; set; } = 32;
+
+    private bool _failed;
+    private string? _failedUrl;
+
+    private bool ShowImage => !string.IsNullOrWhiteSpace(AvatarUrl) && !(_failed && _failedUrl == AvatarUrl);
+
+    private string Initial => string.IsNullOrEmpty(Name) ? "?" : char.ToUpperInvariant(Name[0]).ToString();
+
+    private string StyleValue => FormattableString.Invariant($"width:{Size}px;height:{Size}px;font-size:{Size * 0.42:0.#}px");
+
+    private void OnImageError()
+    {
+        _failed = true;
+        _failedUrl = AvatarUrl;
+    }
+}

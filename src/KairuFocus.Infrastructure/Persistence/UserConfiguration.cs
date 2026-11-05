@@ -21,5 +21,6 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Login).HasColumnType("nvarchar(100)").HasMaxLength(100).IsRequired();
         builder.Property(u => u.DisplayName).HasColumnType("nvarchar(200)").HasMaxLength(200).IsRequired();
         builder.Property(u => u.Email).HasColumnType("nvarchar(200)").HasMaxLength(200);
+        builder.Property(u => u.AvatarUrl).HasColumnType("nvarchar(500)").HasMaxLength(500);
     }
 }

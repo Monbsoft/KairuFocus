@@ -1,0 +1,47 @@
+@* The head block of a profile, on the dark hero gradient: who (avatar, name, GitHub link, join month) on the left,
+   the sprint status on the right. The status stays in the same place with or without an open sprint. *@
+@using System.Globalization
+@inject CommunityFormatter F
+
+<div class="kf-phero">
+    <div class="kf-phero__id">
+        <MemberAvatar Name="@Profile.Name" AvatarUrl="@Profile.AvatarUrl" Size="80" />
+        <div class="kf-phero__who">
+            <h1 class="kf-phero__name">@Profile.Name</h1>
+            @if (Profile.IsGitHub || Profile.IsMe)
+            {
+                <div class="kf-phero__links">
+                    @if (Profile.IsGitHub)
+                    {
+                        @* Only a name that comes from GitHub is a GitHub login: a chosen name never links there. *@
+                        <a class="kf-phero__link" href="@("https://github.com/" + Uri.EscapeDataString(Profile.Name))"
+                           target="_blank" rel="noopener noreferrer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                            </svg>
+                            <span>@F.Format("Profile.GitHub.Link", Profile.Name)</span>
+                        </a>
+                    }
+                    @if (Profile.IsMe)
+                    {
+                        <a class="kf-phero__link" href="settings#communaute">@F["Profile.EditName"]</a>
+                    }
+                </div>
+            }
+            <p class="kf-phero__since">@F.Format("Profile.JoinedSince", JoinedText)</p>
+        </div>
+    </div>
+
+    <SprintStatusPanel Profile="Profile" OnReload="OnReload" />
+</div>
+
+@code {
+    [Parameter, EditorRequired] public MemberProfileDto Profile { get; set; } = default!;
+
+    /// <summary>Reloads the profile (retry of the status zone, sprint no longer open).</summary>
+    [Parameter] public EventCallback OnReload { get; set; }
+
+    /// <summary>« octobre 2026 »: the month always comes with its year here, since it is a membership date.</summary>
+    private string JoinedText =>
+        Profile.JoinedMonth.ToString(F["Community.Format.MonthYear"], CultureInfo.CurrentCulture);
+}

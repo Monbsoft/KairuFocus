@@ -154,7 +154,7 @@
 	<value>У тебя пока нет места.</value>
   </data>
   <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>Вступи в рейтинг в настройках: ты будешь отображаться под сгенерированным псевдонимом.</value>
+	<value>Вступи в сообщество в настройках: другие участники увидят твоё имя, твой XP и твой ранг.</value>
   </data>
   <data name="Community.Place.Join.Link" xml:space="preserve">
 	<value>Вступить в настройках</value>
@@ -339,9 +339,6 @@
   <data name="Community.Board.Title.Global" xml:space="preserve">
 	<value>Общий рейтинг</value>
   </data>
-  <data name="Community.Board.Hint" xml:space="preserve">
-	<value>Участники отображаются только под псевдонимами</value>
-  </data>
   <data name="Community.Board.You" xml:space="preserve">
 	<value>(ты)</value>
   </data>
@@ -378,61 +375,448 @@
   <data name="Community.Format.MonthShortYear" xml:space="preserve">
 	<value>MMM yyyy</value>
   </data>
-  <data name="Settings.Leaderboard.Title" xml:space="preserve">
-	<value>Рейтинг сообщества</value>
+  <data name="Nav.Profile" xml:space="preserve">
+	<value>Профиль</value>
   </data>
-  <data name="Settings.Leaderboard.Loading" xml:space="preserve">
-	<value>Загрузка статуса…</value>
+  <data name="Profile.PageTitle" xml:space="preserve">
+	<value>Профиль — KairuFocus</value>
   </data>
-  <data name="Settings.Leaderboard.LoadError" xml:space="preserve">
-	<value>Не удалось загрузить твой статус в рейтинге. Обнови страницу.</value>
+  <data name="Profile.PageTitle.Member" xml:space="preserve">
+	<value>{0} · Профиль — KairuFocus</value>
   </data>
-  <data name="Settings.Leaderboard.Out" xml:space="preserve">
-	<value>Тебя нет в рейтинге. Ты всё равно можешь посмотреть его в разделе «Сообщество».</value>
+  <data name="Profile.Loading" xml:space="preserve">
+	<value>Загрузка профиля…</value>
   </data>
-  <data name="Settings.Leaderboard.Out.Hint" xml:space="preserve">
-	<value>Ты будешь отображаться под сгенерированным псевдонимом: видны только псевдоним, место и XP.</value>
+  <data name="Profile.LoadError" xml:space="preserve">
+	<value>Сейчас не удаётся загрузить этот профиль.</value>
   </data>
-  <data name="Settings.Leaderboard.In" xml:space="preserve">
-	<value>В рейтинге ты отображаешься как «{0}».</value>
+  <data name="Profile.NotFound.Title" xml:space="preserve">
+	<value>Профиль не найден</value>
   </data>
-  <data name="Settings.Leaderboard.Reroll" xml:space="preserve">
-	<value>Выбрать другой псевдоним</value>
+  <data name="Profile.NotFound.Body" xml:space="preserve">
+	<value>Этого участника не существует, он не вступил в сообщество или сменил имя.</value>
   </data>
-  <data name="Settings.Leaderboard.Rerolling" xml:space="preserve">
-	<value>Выбираем…</value>
+  <data name="Profile.NotFound.Link" xml:space="preserve">
+	<value>Перейти в сообщество</value>
   </data>
-  <data name="Settings.Leaderboard.Join" xml:space="preserve">
-	<value>Вступить в рейтинг</value>
+  <data name="Profile.GitHub.Link" xml:space="preserve">
+	<value>Аккаунт GitHub: {0}</value>
   </data>
-  <data name="Settings.Leaderboard.Joining" xml:space="preserve">
-	<value>Вступаем…</value>
+  <data name="Profile.JoinedSince" xml:space="preserve">
+	<value>В сообществе с {0}</value>
   </data>
-  <data name="Settings.Leaderboard.Saved" xml:space="preserve">
-	<value>Новый псевдоним: «{0}».</value>
+  <data name="Profile.EditName" xml:space="preserve">
+	<value>Изменить моё имя</value>
   </data>
-  <data name="Settings.Leaderboard.Leave" xml:space="preserve">
-	<value>Выйти из рейтинга</value>
+  <data name="Profile.Status.Aria" xml:space="preserve">
+	<value>Открытый спринт</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Title" xml:space="preserve">
-	<value>Выйти из рейтинга?</value>
+  <data name="Profile.Status.Open" xml:space="preserve">
+	<value>В спринте · осталось {0}</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Body" xml:space="preserve">
-	<value>Ты сразу исчезнешь из рейтинга. Твой XP сохранится. Если вернёшься, получишь новый псевдоним.</value>
+  <data name="Profile.Status.Closed" xml:space="preserve">
+	<value>Сейчас нет открытого спринта</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Confirm" xml:space="preserve">
-	<value>Выйти</value>
+  <data name="Profile.Status.IncludesViewer" xml:space="preserve">
+	<value>Ты участвуешь в этом спринте.</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Cancel" xml:space="preserve">
+  <data name="Profile.Status.Error" xml:space="preserve">
+	<value>Сейчас не удаётся прочитать открытый спринт.</value>
+  </data>
+  <data name="Profile.Status.Together.One" xml:space="preserve">
+	<value>Совместных спринтов: {0}</value>
+  </data>
+  <data name="Profile.Status.Together.Other" xml:space="preserve">
+	<value>Совместных спринтов: {0}</value>
+  </data>
+  <data name="Profile.With.One" xml:space="preserve">
+	<value>с {0}</value>
+  </data>
+  <data name="Profile.With.Many.One" xml:space="preserve">
+	<value>с {0} и ещё {1}</value>
+  </data>
+  <data name="Profile.With.Many.Other" xml:space="preserve">
+	<value>с {0} и ещё {1}</value>
+  </data>
+  <data name="Profile.Kpi.Aria" xml:space="preserve">
+	<value>Ключевые показатели</value>
+  </data>
+  <data name="Profile.Kpi.Xp" xml:space="preserve">
+	<value>Всего XP</value>
+  </data>
+  <data name="Profile.Kpi.Xp.Hint" xml:space="preserve">
+	<value>С самого начала</value>
+  </data>
+  <data name="Profile.Kpi.Rank" xml:space="preserve">
+	<value>Рейтинг</value>
+  </data>
+  <data name="Profile.Kpi.Rank.Hint" xml:space="preserve">
+	<value>В общем зачёте</value>
+  </data>
+  <data name="Profile.Kpi.Rank.None" xml:space="preserve">
+	<value>Пока без места в рейтинге</value>
+  </data>
+  <data name="Profile.Kpi.Sprints" xml:space="preserve">
+	<value>Спринты</value>
+  </data>
+  <data name="Profile.Kpi.Sprints.Hint" xml:space="preserve">
+	<value>Фокус: {0}</value>
+  </data>
+  <data name="Profile.Kpi.Together" xml:space="preserve">
+	<value>Вместе</value>
+  </data>
+  <data name="Profile.Kpi.Together.Hint" xml:space="preserve">
+	<value>Спринты в группе</value>
+  </data>
+  <data name="Profile.Standing.Error" xml:space="preserve">
+	<value>Сейчас не удаётся прочитать показатели.</value>
+  </data>
+  <data name="Profile.Activity.Title" xml:space="preserve">
+	<value>Активность · последние 12 месяцев</value>
+  </data>
+  <data name="Profile.Activity.Total.One" xml:space="preserve">
+	<value>Спринтов: {0}</value>
+  </data>
+  <data name="Profile.Activity.Total.Other" xml:space="preserve">
+	<value>Спринтов: {0}</value>
+  </data>
+  <data name="Profile.Activity.Aria.One" xml:space="preserve">
+	<value>Карта активности за последние 12 месяцев: всего спринтов — {0}.</value>
+  </data>
+  <data name="Profile.Activity.Aria.Other" xml:space="preserve">
+	<value>Карта активности за последние 12 месяцев: всего спринтов — {0}.</value>
+  </data>
+  <data name="Profile.Activity.Cell.One" xml:space="preserve">
+	<value>{0} — спринтов: {1}</value>
+  </data>
+  <data name="Profile.Activity.Cell.Other" xml:space="preserve">
+	<value>{0} — спринтов: {1}</value>
+  </data>
+  <data name="Profile.Activity.Less" xml:space="preserve">
+	<value>Меньше</value>
+  </data>
+  <data name="Profile.Activity.More" xml:space="preserve">
+	<value>Больше</value>
+  </data>
+  <data name="Profile.Activity.Utc" xml:space="preserve">
+	<value>Дни указаны по UTC: ячейка может отличаться на один день от твоего календаря.</value>
+  </data>
+  <data name="Profile.Activity.Error" xml:space="preserve">
+	<value>Сейчас не удаётся прочитать активность.</value>
+  </data>
+  <data name="Profile.Invite.Title" xml:space="preserve">
+	<value>Вступи в сообщество</value>
+  </data>
+  <data name="Profile.Invite.Body" xml:space="preserve">
+	<value>Вступив в сообщество, ты делаешь видимым для всех вошедших участников:</value>
+  </data>
+  <data name="Profile.Invite.Item.Name" xml:space="preserve">
+	<value>твоё имя и аватар;</value>
+  </data>
+  <data name="Profile.Invite.Item.Xp" xml:space="preserve">
+	<value>твой XP и ранг;</value>
+  </data>
+  <data name="Profile.Invite.Item.Activity" xml:space="preserve">
+	<value>твою карту активности по дням;</value>
+  </data>
+  <data name="Profile.Invite.Item.Sprint" xml:space="preserve">
+	<value>твой статус, когда у тебя есть открытый спринт.</value>
+  </data>
+  <data name="Profile.Invite.Link" xml:space="preserve">
+	<value>Вступить в сообщество</value>
+  </data>
+  <data name="MyStats.Heading" xml:space="preserve">
+	<value>Моя статистика</value>
+  </data>
+  <data name="MyStats.Sub" xml:space="preserve">
+	<value>Твоя активность концентрации со временем</value>
+  </data>
+  <data name="MyStats.Private" xml:space="preserve">
+	<value>Видно только тебе.</value>
+  </data>
+  <data name="MyStats.Loading" xml:space="preserve">
+	<value>Загрузка статистики…</value>
+  </data>
+  <data name="MyStats.Period.Aria" xml:space="preserve">
+	<value>Выбрать период</value>
+  </data>
+  <data name="MyStats.Period.Week" xml:space="preserve">
+	<value>Неделя</value>
+  </data>
+  <data name="MyStats.Period.Month" xml:space="preserve">
+	<value>Месяц</value>
+  </data>
+  <data name="MyStats.Range.Week" xml:space="preserve">
+	<value>Последние 7 дней</value>
+  </data>
+  <data name="MyStats.Range.Month" xml:space="preserve">
+	<value>Последние 30 дней</value>
+  </data>
+  <data name="MyStats.Empty" xml:space="preserve">
+	<value>Запусти первый спринт, и здесь начнёт расти твоя статистика.</value>
+  </data>
+  <data name="MyStats.Kpi.Focus" xml:space="preserve">
+	<value>Время фокуса</value>
+  </data>
+  <data name="MyStats.Kpi.Sprints" xml:space="preserve">
+	<value>Завершённые спринты</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp" xml:space="preserve">
+	<value>Всего XP</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp.Hint" xml:space="preserve">
+	<value>Всего с самого начала</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp.None" xml:space="preserve">
+	<value>Заверши спринт длительностью не менее 5 минут, чтобы получить XP.</value>
+  </data>
+  <data name="MyStats.Kpi.WeekXp" xml:space="preserve">
+	<value>XP на этой неделе</value>
+  </data>
+  <data name="MyStats.Kpi.WeekXp.Hint" xml:space="preserve">
+	<value>Текущая неделя</value>
+  </data>
+  <data name="MyStats.Bars.Title" xml:space="preserve">
+	<value>Фокус по дням — {0}</value>
+  </data>
+  <data name="MyStats.Bars.Aria" xml:space="preserve">
+	<value>Время фокуса по дням за последние дни ({0}), всего {1}.</value>
+  </data>
+  <data name="MyStats.Bars.Item" xml:space="preserve">
+	<value>{0} — {1}</value>
+  </data>
+  <data name="MyStats.Day.Sun" xml:space="preserve">
+	<value>вс</value>
+  </data>
+  <data name="MyStats.Day.Mon" xml:space="preserve">
+	<value>пн</value>
+  </data>
+  <data name="MyStats.Day.Tue" xml:space="preserve">
+	<value>вт</value>
+  </data>
+  <data name="MyStats.Day.Wed" xml:space="preserve">
+	<value>ср</value>
+  </data>
+  <data name="MyStats.Day.Thu" xml:space="preserve">
+	<value>чт</value>
+  </data>
+  <data name="MyStats.Day.Fri" xml:space="preserve">
+	<value>пт</value>
+  </data>
+  <data name="MyStats.Day.Sat" xml:space="preserve">
+	<value>сб</value>
+  </data>
+  <data name="MyStats.Heatmap.Title" xml:space="preserve">
+	<value>Активность фокуса — последние 12 месяцев</value>
+  </data>
+  <data name="MyStats.Heatmap.Total.One" xml:space="preserve">
+	<value>Спринтов за год: {0}</value>
+  </data>
+  <data name="MyStats.Heatmap.Total.Other" xml:space="preserve">
+	<value>Спринтов за год: {0}</value>
+  </data>
+  <data name="Settings.Community.Title" xml:space="preserve">
+	<value>Сообщество</value>
+  </data>
+  <data name="Settings.Community.Loading" xml:space="preserve">
+	<value>Загрузка настроек сообщества…</value>
+  </data>
+  <data name="Settings.Community.LoadError" xml:space="preserve">
+	<value>Сейчас не удаётся загрузить твои настройки сообщества.</value>
+  </data>
+  <data name="Settings.Community.Intro" xml:space="preserve">
+	<value>Выбери имя и находи других участников: рейтинг, профили и открытые спринты.</value>
+  </data>
+  <data name="Settings.Community.Visible.Heading" xml:space="preserve">
+	<value>Вступив, ты делаешь видимым для всех вошедших участников:</value>
+  </data>
+  <data name="Settings.Community.Visible.Name" xml:space="preserve">
+	<value>твоё имя и аватар;</value>
+  </data>
+  <data name="Settings.Community.Visible.Xp" xml:space="preserve">
+	<value>твой XP и ранг;</value>
+  </data>
+  <data name="Settings.Community.Visible.Activity" xml:space="preserve">
+	<value>твою карту активности по дням;</value>
+  </data>
+  <data name="Settings.Community.Visible.Sprint" xml:space="preserve">
+	<value>твой статус, когда у тебя есть открытый спринт.</value>
+  </data>
+  <data name="Settings.Community.Source.Heading" xml:space="preserve">
+	<value>Твоё имя</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub" xml:space="preserve">
+	<value>Мой логин GitHub: {0}</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub.Hint" xml:space="preserve">
+	<value>Будут видны твой аватар GitHub и ссылка на твой аккаунт.</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub.Unavailable" xml:space="preserve">
+	<value>Твой логин GitHub нельзя использовать как имя (он не соответствует правилам или уже занят). Выбери имя.</value>
+  </data>
+  <data name="Settings.Community.Source.Chosen" xml:space="preserve">
+	<value>Имя, которое выбираю я</value>
+  </data>
+  <data name="Settings.Community.Source.Chosen.Hint" xml:space="preserve">
+	<value>Твоим аватаром будет первая буква имени: твой аккаунт GitHub показан не будет.</value>
+  </data>
+  <data name="Settings.Community.Name.Label" xml:space="preserve">
+	<value>Имя</value>
+  </data>
+  <data name="Settings.Community.Name.Rules" xml:space="preserve">
+	<value>От 3 до 39 символов: буквы без диакритических знаков, цифры, дефисы и знаки подчёркивания, начиная с буквы или цифры.</value>
+  </data>
+  <data name="Settings.Community.Error.Invalid" xml:space="preserve">
+	<value>Это имя не соответствует правилам. Нужно от 3 до 39 символов: буквы без диакритических знаков, цифры, дефисы и знаки подчёркивания, начиная с буквы или цифры.</value>
+  </data>
+  <data name="Settings.Community.Error.Unavailable" xml:space="preserve">
+	<value>Это имя недоступно</value>
+  </data>
+  <data name="Settings.Community.Error.Generic" xml:space="preserve">
+	<value>Произошла ошибка. Повтори через мгновение.</value>
+  </data>
+  <data name="Settings.Community.Join" xml:space="preserve">
+	<value>Вступить в сообщество</value>
+  </data>
+  <data name="Settings.Community.Joining" xml:space="preserve">
+	<value>Активация…</value>
+  </data>
+  <data name="Settings.Community.Member.Name" xml:space="preserve">
+	<value>Твоё имя: {0}</value>
+  </data>
+  <data name="Settings.Community.Member.Profile" xml:space="preserve">
+	<value>Посмотреть мой профиль</value>
+  </data>
+  <data name="Settings.Community.Member.Change" xml:space="preserve">
+	<value>Изменить моё имя</value>
+  </data>
+  <data name="Settings.Community.Member.Save" xml:space="preserve">
+	<value>Сохранить</value>
+  </data>
+  <data name="Settings.Community.Member.Saving" xml:space="preserve">
+	<value>Сохранение…</value>
+  </data>
+  <data name="Settings.Community.Member.Cancel" xml:space="preserve">
 	<value>Отмена</value>
   </data>
-  <data name="Settings.Leaderboard.Left" xml:space="preserve">
-	<value>Выход из рейтинга выполнен. Твой XP сохранён.</value>
+  <data name="Settings.Community.Member.Changed" xml:space="preserve">
+	<value>Теперь твоё имя — «{0}».</value>
   </data>
-  <data name="Settings.Leaderboard.Error.Pool" xml:space="preserve">
-	<value>Сейчас не удалось создать псевдоним. Повтори попытку через мгновение.</value>
+  <data name="Settings.Community.Leave" xml:space="preserve">
+	<value>Выйти</value>
   </data>
-  <data name="Settings.Leaderboard.Error.Generic" xml:space="preserve">
-	<value>Что-то пошло не так. Повтори попытку через мгновение.</value>
+  <data name="Settings.Community.Leave.Title" xml:space="preserve">
+	<value>Выйти из сообщества?</value>
+  </data>
+  <data name="Settings.Community.Leave.Body" xml:space="preserve">
+	<value>Твой профиль исчезнет сразу, а имя освободится. Твой XP сохранится.</value>
+  </data>
+  <data name="Settings.Community.Leave.Confirm" xml:space="preserve">
+	<value>Выйти из сообщества</value>
+  </data>
+  <data name="Settings.Community.Leave.Cancel" xml:space="preserve">
+	<value>Отмена</value>
+  </data>
+  <data name="Settings.Community.Left" xml:space="preserve">
+	<value>Ты вышел из сообщества.</value>
+  </data>
+  <data name="OpenSprints.Title" xml:space="preserve">
+	<value>Сейчас в спринте</value>
+  </data>
+  <data name="OpenSprints.Sub" xml:space="preserve">
+	<value>Присоединяйся к уже запущенному спринту: вы завершите его вместе, в одно и то же время.</value>
+  </data>
+  <data name="OpenSprints.Loading" xml:space="preserve">
+	<value>Загрузка открытых спринтов…</value>
+  </data>
+  <data name="OpenSprints.Empty" xml:space="preserve">
+	<value>Сейчас ни у кого нет открытого спринта. Запусти свой: другие смогут присоединиться.</value>
+  </data>
+  <data name="OpenSprints.Error" xml:space="preserve">
+	<value>Сейчас не удаётся прочитать открытые спринты.</value>
+  </data>
+  <data name="OpenSprints.Remaining" xml:space="preserve">
+	<value>осталось {0}</value>
+  </data>
+  <data name="OpenSprints.Participants.One" xml:space="preserve">
+	<value>Участников: {0}</value>
+  </data>
+  <data name="OpenSprints.Participants.Other" xml:space="preserve">
+	<value>Участников: {0}</value>
+  </data>
+  <data name="OpenSprints.Mine" xml:space="preserve">
+	<value>Твой спринт</value>
+  </data>
+  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
+	<value>Профиль: {0}</value>
+  </data>
+  <data name="Participants.Aria" xml:space="preserve">
+	<value>С кем ты в спринте</value>
+  </data>
+  <data name="Participants.With.One" xml:space="preserve">
+	<value>С {0}</value>
+  </data>
+  <data name="Participants.With.Two" xml:space="preserve">
+	<value>С {0} и {1}</value>
+  </data>
+  <data name="Participants.With.Three" xml:space="preserve">
+	<value>С {0}, {1} и {2}</value>
+  </data>
+  <data name="Participants.With.Many.One" xml:space="preserve">
+	<value>С {0}, {1}, {2} и ещё {3}</value>
+  </data>
+  <data name="Participants.With.Many.Other" xml:space="preserve">
+	<value>С {0}, {1}, {2} и ещё {3}</value>
+  </data>
+  <data name="Participants.Close" xml:space="preserve">
+	<value>Закрыть этот спринт</value>
+  </data>
+  <data name="Participants.Reopen" xml:space="preserve">
+	<value>Открыть этот спринт снова</value>
+  </data>
+  <data name="Participants.Close.Hint" xml:space="preserve">
+	<value>Больше никто не сможет к нему присоединиться; те, кто уже в нём, останутся.</value>
+  </data>
+  <data name="Participants.Reopen.Hint" xml:space="preserve">
+	<value>Этот спринт закрыт: больше никто не может к нему присоединиться.</value>
+  </data>
+  <data name="Participants.Close.Error" xml:space="preserve">
+	<value>Сейчас не удаётся изменить доступность спринта.</value>
+  </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>Общий перерыв: он заканчивается одновременно для всей группы.</value>
+  </data>
+  <data name="Join.Button" xml:space="preserve">
+	<value>Присоединиться к спринту</value>
+  </data>
+  <data name="Join.Button.Aria" xml:space="preserve">
+	<value>Присоединиться к спринту: {0}</value>
+  </data>
+  <data name="Join.Joining" xml:space="preserve">
+	<value>Подключение к спринту…</value>
+  </data>
+  <data name="Join.NeedMember.Body" xml:space="preserve">
+	<value>Чтобы присоединиться к спринту, сначала вступи в сообщество.</value>
+  </data>
+  <data name="Join.NeedMember.Link" xml:space="preserve">
+	<value>Вступить в сообщество</value>
+  </data>
+  <data name="Join.ShortWarning" xml:space="preserve">
+	<value>Осталось меньше 5 минут: за этот спринт XP не начисляется.</value>
+  </data>
+  <data name="Join.SprintActive" xml:space="preserve">
+	<value>У тебя уже идёт сессия.</value>
+  </data>
+  <data name="Join.SprintActive.Link" xml:space="preserve">
+	<value>К моей сессии</value>
+  </data>
+  <data name="Join.OwnSprint" xml:space="preserve">
+	<value>Это твой собственный спринт.</value>
+  </data>
+  <data name="Join.Closed" xml:space="preserve">
+	<value>Этот спринт больше не открыт</value>
+  </data>
+  <data name="Join.Error" xml:space="preserve">
+	<value>Сейчас не удаётся присоединиться к этому спринту. Повтори через мгновение.</value>
   </data>
 </root>

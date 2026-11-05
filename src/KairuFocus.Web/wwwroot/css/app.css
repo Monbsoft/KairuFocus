@@ -483,84 +483,23 @@ code {
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   Stats — KairuFocus design-system port (itération #35).
-   Tokens SCOPÉS à .kf-stats-page (jumeaux de .kf-dash). Light = défaut ;
-   dark overrides sur [data-bs-theme="dark"].
+   Composants partagés issus de la page Statistiques (itération #35) : sélecteur de période,
+   KPI, graphe à barres, heatmap. La page /stats n'existe plus : ces composants vivent dans
+   les pages Communauté et Profil, dont les jetons (.kf-community-page, .kf-profile-page,
+   plus bas) leur fournissent couleurs, tailles et heatmap (--hm-l0 à --hm-l4).
    ════════════════════════════════════════════════════════════════════════ */
-.kf-stats-page {
-    --surface-card:    #ffffff;
-    --surface-sunken:  #f1f3f5;
-    --border-subtle:   #e9ecef;
-    --text-primary:    #212529;
-    --text-secondary:  #495057;
-    --text-muted:      #6c757d;
-    --primary:         #0d6efd;
-    --primary-subtle:  #e7f1ff;
-    --primary-border:  #9ec5fe;
-    /* heatmap (intensité bleue marque) */
-    --hm-l0: #ebedf0;
-    --hm-l1: #cfe2ff;
-    --hm-l2: #9ec5fe;
-    --hm-l3: #4d94ff;
-    --hm-l4: #0d6efd;
-    --text-xs:  0.75rem;
-    --text-sm:  0.875rem;
-    --text-md:  1.125rem;
-    --text-lg:  1.375rem;
-    --text-2xl: 2.25rem;
-    --tracking-wide: 0.08em;
-    --radius-md:   8px;
-    --radius-lg:   12px;
-    --radius-pill: 999px;
-    --shadow-md: 0 4px 16px rgba(16, 24, 40, 0.10);
-    --duration-base: 200ms;
-    --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
-    --container-lg: 960px;
-
-    max-width: var(--container-lg);
-    padding: 1.5rem;
-    color: var(--text-primary);
-}
-
-[data-bs-theme="dark"] .kf-stats-page {
-    --surface-card:    #1e293b;
-    --surface-sunken:  #13131f;
-    --border-subtle:   #334155;
-    --text-primary:    #e2e8f0;
-    --text-secondary:  #cbd5e1;
-    --text-muted:      #94a3b8;
-    --primary:         #2b7dff;
-    --primary-subtle:  #0d1b3e;
-    --primary-border:  #1e3a6e;
-    --hm-l0: #172033;
-    --hm-l1: #0d2a52;
-    --hm-l2: #14478f;
-    --hm-l3: #1f6fe0;
-    --hm-l4: #2b7dff;
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.50);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .kf-stats-page { --duration-base: 0ms; }
-}
-
-/* En-tête + toggle */
-.kf-stats-page__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-.kf-stats-page__title { font-size: var(--text-2xl); font-weight: 700; margin: 0; color: var(--text-primary); }
-.kf-stats-page__sub { color: var(--text-muted); margin: .25rem 0 0; }
 
 .kf-seg { display: inline-flex; background: var(--surface-sunken); border-radius: var(--radius-md); padding: 3px; }
 .kf-seg__btn { border: 0; background: transparent; color: var(--text-secondary); font-weight: 600; font-size: var(--text-sm); padding: .5rem 1rem; min-height: 44px; border-radius: 6px; cursor: pointer; transition: background var(--duration-base) var(--ease-standard); }
 .kf-seg__btn--on { background: var(--primary); color: #fff; }
 .kf-seg__btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 
-/* Empty state (la carte partagée .kf-card est définie globalement plus haut) */
+/* État vide de « Mes statistiques » (la carte partagée .kf-card est définie globalement plus haut) */
 .kf-stats-page__empty { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
 .kf-stats-page__empty-icon { font-size: 1.6rem; }
 .kf-stats-page__empty-text { margin: 0; color: var(--text-secondary); }
 
 /* KPI */
-.kf-stats-page__kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .kf-kpi { padding: 1.1rem 1.25rem; }
 .kf-kpi__label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: var(--tracking-wide); color: var(--text-muted); font-weight: 700; }
 .kf-kpi__value { font-size: var(--text-2xl); font-weight: 700; margin-top: .2rem; color: var(--text-primary); }
@@ -593,18 +532,13 @@ code {
 .kf-hm__cell--empty { background: transparent; }
 .kf-hm__legend { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-top: .85rem; font-size: var(--text-xs); color: var(--text-muted); }
 
-/* Skeleton : la règle de base .kf-skel + l'animation @keyframes kf-shimmer
-   sont définies globalement plus haut dans ce fichier (pas scopées à .kf-dash),
-   donc le skeleton de chargement fonctionne ici sans duplication. */
-.kf-stats-page .kf-skelrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
-
 /* ════════════════════════════════════════════════════════════════════════
-   Communauté — page /communaute et section « Classement » des Paramètres (itération #42).
-   Tokens SCOPÉS à .kf-community-page (jumeaux de .kf-stats-page, plus les jetons du
-   design system absents d'app.css). Light = défaut ; dark sur [data-bs-theme="dark"].
-   Les composants .kf-card, .kf-kpi, .kf-bars, .kf-seg, .kf-skel sont ceux de Statistiques.
+   Communauté — page /communaute et section « Communauté » des Paramètres (itération #42).
+   Tokens SCOPÉS à .kf-community-page et .kf-profile-page (jetons du design system absents
+   d'app.css, heatmap comprise). Light = défaut ; dark sur [data-bs-theme="dark"].
+   Les composants .kf-card, .kf-kpi, .kf-bars, .kf-seg, .kf-skel sont les composants partagés plus haut.
    ════════════════════════════════════════════════════════════════════════ */
-.kf-community-page {
+.kf-community-page, .kf-profile-page {
     /* surfaces, bordures, textes */
     --surface-card:    #ffffff;
     --surface-sunken:  #f1f3f5;
@@ -618,6 +552,12 @@ code {
     --primary:         #0d6efd;
     --primary-subtle:  #e7f1ff;
     --primary-border:  #9ec5fe;
+    /* heatmap (intensité bleue marque) */
+    --hm-l0: #ebedf0;
+    --hm-l1: #cfe2ff;
+    --hm-l2: #9ec5fe;
+    --hm-l3: #4d94ff;
+    --hm-l4: #0d6efd;
     --success:         #198754;
     --danger-subtle:   #fbe9eb;
     --danger-text:     #842029;
@@ -692,7 +632,7 @@ code {
     color: var(--text-primary);
 }
 
-[data-bs-theme="dark"] .kf-community-page {
+[data-bs-theme="dark"] .kf-community-page, [data-bs-theme="dark"] .kf-profile-page {
     --surface-card:    #1e293b;
     --surface-sunken:  #13131f;
     --surface-hover:   #334155;
@@ -704,6 +644,11 @@ code {
     --primary:         #2b7dff;
     --primary-subtle:  #0d1b3e;
     --primary-border:  #1e3a6e;
+    --hm-l0: #172033;
+    --hm-l1: #0d2a52;
+    --hm-l2: #14478f;
+    --hm-l3: #1f6fe0;
+    --hm-l4: #2b7dff;
     --success:         #34c77b;
     --danger-subtle:   #3a1418;
     --danger-text:     #f6a6ae;
@@ -717,13 +662,13 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .kf-community-page { --duration-instant: 0ms; --duration-base: 0ms; }
+    .kf-community-page, .kf-profile-page { --duration-instant: 0ms; --duration-base: 0ms; }
 }
 
 /* :where() pour ne pas peser dans la spécificité : les marges des classes ci-dessous l'emportent. */
-.kf-community-page :where(h1, h2, p) { margin: 0; }
-.kf-community-page :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.kf-community-page .kf-card { box-shadow: var(--shadow-sm); }
+.kf-community-page :where(h1, h2, p), .kf-profile-page :where(h1, h2, p) { margin: 0; }
+.kf-community-page :focus-visible, .kf-profile-page :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.kf-community-page .kf-card, .kf-profile-page .kf-card { box-shadow: var(--shadow-sm); }
 
 /* En-tête : titre, sous-titre (période + présence), sélecteur */
 .kf-community-page__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
@@ -731,12 +676,12 @@ code {
 .kf-community-page__sub { margin-top: var(--space-1); color: var(--text-muted); }
 
 /* Sélecteur de période : le .kf-seg de Statistiques, avec un fond actif assez contrasté en sombre */
-.kf-community-page .kf-seg__btn { white-space: normal; transition: background var(--duration-base) var(--ease-standard), transform var(--duration-instant) var(--ease-standard); }
-.kf-community-page .kf-seg__btn:hover:not(.kf-seg__btn--on) { background: var(--surface-hover); }
-.kf-community-page .kf-seg__btn--on { background: var(--seg-on-bg); color: #fff; }
+.kf-community-page .kf-seg__btn, .kf-profile-page .kf-seg__btn { white-space: normal; transition: background var(--duration-base) var(--ease-standard), transform var(--duration-instant) var(--ease-standard); }
+.kf-community-page .kf-seg__btn:hover:not(.kf-seg__btn--on), .kf-profile-page .kf-seg__btn:hover:not(.kf-seg__btn--on) { background: var(--surface-hover); }
+.kf-community-page .kf-seg__btn--on, .kf-profile-page .kf-seg__btn--on { background: var(--seg-on-bg); color: #fff; }
 /* Appui : 1 px vers le bas en 100 ms (handoff §8). La transition est posée sur l'état de repos, pour aller et retour. */
-.kf-community-page .kf-linkbtn, .kf-community-page .kf-btn-light { transition: transform var(--duration-instant) var(--ease-standard); }
-.kf-community-page button:active, .kf-community-page .kf-btn-light:active { transform: translateY(1px); }
+.kf-community-page .kf-linkbtn, .kf-profile-page .kf-linkbtn, .kf-community-page .kf-btn-light, .kf-profile-page .kf-btn-light { transition: transform var(--duration-instant) var(--ease-standard); }
+.kf-community-page button:active, .kf-profile-page button:active, .kf-community-page .kf-btn-light:active, .kf-profile-page .kf-btn-light:active { transform: translateY(1px); }
 
 /* Présence en direct : point fixe (pas de pulsation, ça distrairait) */
 .kf-presence { display: inline-flex; align-items: center; gap: var(--space-2); }
@@ -767,7 +712,7 @@ code {
 .kf-hero__activity { font-size: var(--text-sm); color: var(--hero-text-muted); }
 .kf-hero__compare { margin-top: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--hero-divider); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); font-size: var(--text-sm); color: var(--hero-text-muted); }
 .kf-hero__skel { display: flex; flex-direction: column; gap: var(--space-3); }
-.kf-community-page .kf-hero .kf-skel { background: rgba(255, 255, 255, 0.12); }
+.kf-community-page .kf-hero .kf-skel, .kf-profile-page .kf-hero .kf-skel { background: rgba(255, 255, 255, 0.12); }
 
 /* Pastille d'écart : ▲ vert, ▼ orange (une information, pas une alerte) ; mêmes valeurs dans les deux thèmes (posée sur le bloc de tête) */
 .kf-trend { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); font-size: var(--text-sm); font-weight: 700; }
@@ -798,24 +743,24 @@ code {
 
 /* KPI et graphe (surcharges locales de Statistiques) */
 .kf-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); }
-.kf-community-page .kf-kpi__value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.kf-community-page .kf-barcard { margin-bottom: 0; padding: var(--space-4) var(--space-5); }
+.kf-community-page .kf-kpi__value, .kf-profile-page .kf-kpi__value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.kf-community-page .kf-barcard, .kf-profile-page .kf-barcard { margin-bottom: 0; padding: var(--space-4) var(--space-5); }
 .kf-barcard__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-4); }
 .kf-barcard__head .kf-barcard__title { margin-bottom: 0; }
 .kf-barcard__unit { font-size: var(--text-xs); color: var(--text-muted); }
-.kf-community-page .kf-bars { align-items: stretch; height: 190px; gap: var(--space-2); }
-.kf-community-page .kf-bars__col { min-width: 0; height: auto; gap: var(--space-1); }
+.kf-community-page .kf-bars, .kf-profile-page .kf-bars { align-items: stretch; height: 190px; gap: var(--space-2); }
+.kf-community-page .kf-bars__col, .kf-profile-page .kf-bars__col { min-width: 0; height: auto; gap: var(--space-1); }
 .kf-bars__top { height: 20px; display: flex; align-items: flex-end; }
-.kf-community-page .kf-bars__fill { background: var(--bar-past); }
-.kf-community-page .kf-bars__col--current .kf-bars__fill { background: var(--primary); }
+.kf-community-page .kf-bars__fill, .kf-profile-page .kf-bars__fill { background: var(--bar-past); }
+.kf-community-page .kf-bars__col--current .kf-bars__fill, .kf-profile-page .kf-bars__col--current .kf-bars__fill { background: var(--primary); }
 .kf-bars__val { font-size: var(--text-xs); font-weight: 700; color: var(--current-text); white-space: nowrap; }
 .kf-bars__record { font-size: var(--text-xs); font-weight: 700; white-space: nowrap; padding: 0 6px; border-radius: var(--radius-xs); background: var(--warning-subtle); color: var(--warning-text); }
-.kf-community-page .kf-bars__lbl { font-size: var(--text-xs); white-space: nowrap; }
-.kf-community-page .kf-bars__col--current .kf-bars__lbl { color: var(--current-text); font-weight: 700; }
+.kf-community-page .kf-bars__lbl, .kf-profile-page .kf-bars__lbl { font-size: var(--text-xs); white-space: nowrap; }
+.kf-community-page .kf-bars__col--current .kf-bars__lbl, .kf-profile-page .kf-bars__col--current .kf-bars__lbl { color: var(--current-text); font-weight: 700; }
 /* Libellés trop proches : XpBarChart n'en garde qu'un sur N (N calculé pour la plage de largeur du graphe, d'après le nombre
    de barres et la longueur des libellés) et marque les autres ; ils sont masqués sans quitter la mise en page.
    Le conteneur est .kf-bars. Plages alignées sur RangeWidths de XpBarChart.razor : < 230, 230-309, 310-519, >= 520 px. */
-.kf-community-page .kf-bars { container-type: inline-size; }
+.kf-community-page .kf-bars, .kf-profile-page .kf-bars { container-type: inline-size; }
 @container (max-width: 229.98px) { .kf-bars__col--lbl-off0 .kf-bars__lbl { visibility: hidden; } }
 @container (min-width: 230px) and (max-width: 309.98px) { .kf-bars__col--lbl-off1 .kf-bars__lbl { visibility: hidden; } }
 @container (min-width: 310px) and (max-width: 519.98px) { .kf-bars__col--lbl-off2 .kf-bars__lbl { visibility: hidden; } }
@@ -833,35 +778,35 @@ code {
 .kf-board ol { list-style: none; margin: 0; padding: 0; }
 .kf-row { display: flex; align-items: center; gap: var(--space-4); min-height: var(--target-min); padding: 0 var(--space-3); border-radius: var(--radius-md); }
 .kf-row__rank { flex: 0 0 auto; min-width: 3rem; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
-.kf-row__pseudo { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--space-1); }
+.kf-row__who { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: var(--space-1); }
 .kf-row__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kf-row__xp { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-secondary); white-space: nowrap; }
 .kf-row--me { background: var(--primary-subtle); }
 .kf-row--me .kf-row__rank { color: var(--me-rank); font-weight: 700; }
-.kf-row--me .kf-row__pseudo, .kf-row--me .kf-row__xp { color: var(--text-primary); font-weight: 700; }
+.kf-row--me .kf-row__who, .kf-row--me .kf-row__xp { color: var(--text-primary); font-weight: 700; }
 .kf-row__you { flex: none; font-weight: 400; color: var(--text-secondary); white-space: nowrap; }
 .kf-row--gap { min-height: 32px; color: var(--text-muted); letter-spacing: 0.2em; }
 
 /* Responsive : le rail passe en barre à 641 px (MainLayout) */
 @media (max-width: 640.98px) {
-    .kf-community-page { padding: var(--space-4); }
-    .kf-community-page .kf-seg { width: 100%; }
-    .kf-community-page .kf-seg__btn { flex: 1; }
+    .kf-community-page, .kf-profile-page { padding: var(--space-4); }
+    .kf-community-page .kf-seg, .kf-profile-page .kf-seg { width: 100%; }
+    .kf-community-page .kf-seg__btn, .kf-profile-page .kf-seg__btn { flex: 1; }
     .kf-hero { padding: var(--space-5); }
     .kf-presence-sep { display: none; }
     .kf-presence { display: flex; margin-top: var(--space-1); }
     .kf-recap__sep { display: none; }
     .kf-recap__stats { flex-direction: column; align-items: flex-start; }
-    /* Téléphone : on garde la place au pseudo (colonne du rang et espaces resserrés). */
+    /* Téléphone : on garde la place au nom (colonne du rang et espaces resserrés). */
     .kf-row { gap: var(--space-2); padding: 0 var(--space-2); }
     .kf-row__rank { min-width: 2rem; }
-    /* « (toi) » passe sous le pseudo quand les deux ne tiennent pas côte à côte : le pseudo garde toute la largeur
-       (ellipse au-delà, pseudo complet dans title). Petit corps et interligne serré : la ligne reste à 44 px. */
-    .kf-row__pseudo { flex-wrap: wrap; row-gap: 0; }
+    /* « (toi) » passe sous le nom quand les deux ne tiennent pas côte à côte : le nom garde toute la largeur
+       (ellipse au-delà, nom complet dans title). Petit corps et interligne serré : la ligne reste à 44 px. */
+    .kf-row__who { flex-wrap: wrap; row-gap: 0; }
     .kf-row__you { font-size: var(--text-sm); line-height: 1.25; }
 }
 
-/* ── Paramètres : section « Classement de la communauté » ───────────────── */
+/* ── Paramètres : section « Communauté » ───────────────── */
 .kf-lb-section { scroll-margin-top: 5rem; }
 .kf-lb-section .btn, .kf-lb-modal .btn { min-height: 44px; }
 .kf-lb-danger { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--bs-border-color); }

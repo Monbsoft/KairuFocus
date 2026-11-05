@@ -179,12 +179,15 @@ public sealed class PomodoroApiClient
     /// awarded for this completion (0 if the session wasn't XP-eligible). Never throws on a
     /// network error or timeout: those are reported as a failure (null) like a non-2xx status, so
     /// callers can offer a retry instead of crashing on an unhandled exception.</summary>
-    public async Task<int?> CompleteSessionAsync()
+    public async Task<int?> CompleteSessionAsync(Guid? sessionId = null)
     {
         HttpResponseMessage response;
         try
         {
-            response = await _http.PatchAsync("api/pomodoro/session/complete", null);
+            var url = sessionId is { } id
+                ? $"api/pomodoro/session/complete?sessionId={id}"
+                : "api/pomodoro/session/complete";
+            response = await _http.PatchAsync(url, null);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {

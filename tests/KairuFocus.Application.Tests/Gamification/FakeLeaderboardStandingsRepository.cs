@@ -1,3 +1,4 @@
+using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Gamification;
 
 namespace KairuFocus.Application.Tests.Gamification;
@@ -9,8 +10,8 @@ internal sealed class FakeLeaderboardStandingsRepository : ILeaderboardStandings
     public List<(DateTime StartUtc, DateTime EndUtc)> BetweenWindows { get; } = [];
     public int AllTimeCallCount { get; private set; }
 
-    public void Add(string pseudonym, int xp) =>
-        Standings.Add(new XpStanding(Pseudonym.Create(pseudonym).Value, xp));
+    public void Add(string name, int xp, string? avatarUrl = null) =>
+        Standings.Add(new XpStanding(ProfileName.Create(name).Value, avatarUrl, xp));
 
     public Task<IReadOnlyList<XpStanding>> GetStandingsBetweenAsync(DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
     {

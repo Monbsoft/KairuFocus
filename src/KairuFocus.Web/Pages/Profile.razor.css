@@ -1,0 +1,79 @@
+/* The blocks themselves (hero, KPI cards, heatmap, statistics) are components with their own styles. Only the page frame is here. */
+.kf-profile__skel-hero {
+    height: 160px;
+    border-radius: var(--radius-lg);
+}
+
+.kf-profile__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* A failed zone takes the whole row of the KPI grid. */
+.kf-profile__zone {
+    grid-column: 1 / -1;
+}
+
+.kf-profile__zone-card {
+    padding: var(--space-4) var(--space-5);
+}
+
+.kf-profile__empty,
+.kf-profile__invite {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-6);
+}
+
+.kf-profile__empty-title,
+.kf-profile__invite-title {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tight);
+}
+
+.kf-profile__empty-text,
+.kf-profile__invite-text {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.kf-profile__invite-list {
+    margin: 0;
+    padding-left: var(--space-5);
+    color: var(--text-secondary);
+}
+
+.kf-profile__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.kf-profile__invite-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-sm);
+    background: var(--seg-on-bg);
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform var(--duration-instant) var(--ease-standard);
+}
+
+.kf-profile__invite-link:hover {
+    background: var(--kf-blue-800);
+    color: #fff;
+}
+
+.kf-profile__invite-link:active {
+    transform: translateY(1px);
+}

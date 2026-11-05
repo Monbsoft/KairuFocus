@@ -154,7 +154,7 @@
 	<value>Du hast noch keinen Platz.</value>
   </data>
   <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>Tritt der Rangliste in deinen Einstellungen bei: Du erscheinst dort unter einem generierten Pseudonym.</value>
+	<value>Tritt der Community in deinen Einstellungen bei: Die anderen Mitglieder sehen deinen Namen, deine XP und deinen Rang.</value>
   </data>
   <data name="Community.Place.Join.Link" xml:space="preserve">
 	<value>In den Einstellungen beitreten</value>
@@ -339,9 +339,6 @@
   <data name="Community.Board.Title.Global" xml:space="preserve">
 	<value>Gesamtrangliste</value>
   </data>
-  <data name="Community.Board.Hint" xml:space="preserve">
-	<value>Mitglieder erscheinen nur unter einem Pseudonym</value>
-  </data>
   <data name="Community.Board.You" xml:space="preserve">
 	<value>(du)</value>
   </data>
@@ -378,61 +375,448 @@
   <data name="Community.Format.MonthShortYear" xml:space="preserve">
 	<value>MMM yyyy</value>
   </data>
-  <data name="Settings.Leaderboard.Title" xml:space="preserve">
-	<value>Community-Rangliste</value>
+  <data name="Nav.Profile" xml:space="preserve">
+	<value>Profil</value>
   </data>
-  <data name="Settings.Leaderboard.Loading" xml:space="preserve">
-	<value>Status wird geladen…</value>
+  <data name="Profile.PageTitle" xml:space="preserve">
+	<value>Profil — KairuFocus</value>
   </data>
-  <data name="Settings.Leaderboard.LoadError" xml:space="preserve">
-	<value>Dein Ranglistenstatus konnte nicht geladen werden. Lade die Seite neu.</value>
+  <data name="Profile.PageTitle.Member" xml:space="preserve">
+	<value>{0} · Profil — KairuFocus</value>
   </data>
-  <data name="Settings.Leaderboard.Out" xml:space="preserve">
-	<value>Du erscheinst nicht in der Rangliste. Du kannst sie trotzdem in der Community ansehen.</value>
+  <data name="Profile.Loading" xml:space="preserve">
+	<value>Profil wird geladen…</value>
   </data>
-  <data name="Settings.Leaderboard.Out.Hint" xml:space="preserve">
-	<value>Du erscheinst dort unter einem generierten Pseudonym: Nur dein Pseudonym, dein Rang und deine XP sind sichtbar.</value>
+  <data name="Profile.LoadError" xml:space="preserve">
+	<value>Dieses Profil kann gerade nicht geladen werden.</value>
   </data>
-  <data name="Settings.Leaderboard.In" xml:space="preserve">
-	<value>Du erscheinst in der Rangliste als „{0}“.</value>
+  <data name="Profile.NotFound.Title" xml:space="preserve">
+	<value>Profil nicht gefunden</value>
   </data>
-  <data name="Settings.Leaderboard.Reroll" xml:space="preserve">
-	<value>Anderes Pseudonym ziehen</value>
+  <data name="Profile.NotFound.Body" xml:space="preserve">
+	<value>Dieses Mitglied existiert nicht, ist der Community nicht beigetreten oder hat seinen Namen geändert.</value>
   </data>
-  <data name="Settings.Leaderboard.Rerolling" xml:space="preserve">
-	<value>Wird gezogen…</value>
+  <data name="Profile.NotFound.Link" xml:space="preserve">
+	<value>Zur Community</value>
   </data>
-  <data name="Settings.Leaderboard.Join" xml:space="preserve">
-	<value>Der Rangliste beitreten</value>
+  <data name="Profile.GitHub.Link" xml:space="preserve">
+	<value>GitHub-Konto von {0}</value>
   </data>
-  <data name="Settings.Leaderboard.Joining" xml:space="preserve">
-	<value>Beitritt läuft…</value>
+  <data name="Profile.JoinedSince" xml:space="preserve">
+	<value>In der Community seit {0}</value>
   </data>
-  <data name="Settings.Leaderboard.Saved" xml:space="preserve">
-	<value>Neues Pseudonym: „{0}“.</value>
+  <data name="Profile.EditName" xml:space="preserve">
+	<value>Meinen Namen ändern</value>
   </data>
-  <data name="Settings.Leaderboard.Leave" xml:space="preserve">
-	<value>Rangliste verlassen</value>
+  <data name="Profile.Status.Aria" xml:space="preserve">
+	<value>Offener Sprint</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Title" xml:space="preserve">
-	<value>Rangliste verlassen?</value>
+  <data name="Profile.Status.Open" xml:space="preserve">
+	<value>Im Sprint · noch {0}</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Body" xml:space="preserve">
-	<value>Du verschwindest sofort aus der Rangliste. Deine XP bleiben erhalten. Wenn du zurückkommst, erhältst du ein neues Pseudonym.</value>
+  <data name="Profile.Status.Closed" xml:space="preserve">
+	<value>Gerade kein offener Sprint</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Confirm" xml:space="preserve">
-	<value>Verlassen</value>
+  <data name="Profile.Status.IncludesViewer" xml:space="preserve">
+	<value>Du bist in diesem Sprint.</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Cancel" xml:space="preserve">
+  <data name="Profile.Status.Error" xml:space="preserve">
+	<value>Der offene Sprint kann gerade nicht gelesen werden.</value>
+  </data>
+  <data name="Profile.Status.Together.One" xml:space="preserve">
+	<value>{0} gemeinsamer Sprint</value>
+  </data>
+  <data name="Profile.Status.Together.Other" xml:space="preserve">
+	<value>{0} gemeinsame Sprints</value>
+  </data>
+  <data name="Profile.With.One" xml:space="preserve">
+	<value>mit {0}</value>
+  </data>
+  <data name="Profile.With.Many.One" xml:space="preserve">
+	<value>mit {0} und {1} weiterem</value>
+  </data>
+  <data name="Profile.With.Many.Other" xml:space="preserve">
+	<value>mit {0} und {1} weiteren</value>
+  </data>
+  <data name="Profile.Kpi.Aria" xml:space="preserve">
+	<value>Kennzahlen</value>
+  </data>
+  <data name="Profile.Kpi.Xp" xml:space="preserve">
+	<value>XP gesamt</value>
+  </data>
+  <data name="Profile.Kpi.Xp.Hint" xml:space="preserve">
+	<value>Seit Beginn</value>
+  </data>
+  <data name="Profile.Kpi.Rank" xml:space="preserve">
+	<value>Rang</value>
+  </data>
+  <data name="Profile.Kpi.Rank.Hint" xml:space="preserve">
+	<value>Insgesamt</value>
+  </data>
+  <data name="Profile.Kpi.Rank.None" xml:space="preserve">
+	<value>Noch nicht platziert</value>
+  </data>
+  <data name="Profile.Kpi.Sprints" xml:space="preserve">
+	<value>Sprints</value>
+  </data>
+  <data name="Profile.Kpi.Sprints.Hint" xml:space="preserve">
+	<value>{0} Fokus</value>
+  </data>
+  <data name="Profile.Kpi.Together" xml:space="preserve">
+	<value>Gemeinsam</value>
+  </data>
+  <data name="Profile.Kpi.Together.Hint" xml:space="preserve">
+	<value>Sprints in der Gruppe</value>
+  </data>
+  <data name="Profile.Standing.Error" xml:space="preserve">
+	<value>Die Zahlen können gerade nicht gelesen werden.</value>
+  </data>
+  <data name="Profile.Activity.Title" xml:space="preserve">
+	<value>Aktivität · letzte 12 Monate</value>
+  </data>
+  <data name="Profile.Activity.Total.One" xml:space="preserve">
+	<value>{0} Sprint</value>
+  </data>
+  <data name="Profile.Activity.Total.Other" xml:space="preserve">
+	<value>{0} Sprints</value>
+  </data>
+  <data name="Profile.Activity.Aria.One" xml:space="preserve">
+	<value>Aktivitätskarte der letzten 12 Monate: {0} Sprint insgesamt.</value>
+  </data>
+  <data name="Profile.Activity.Aria.Other" xml:space="preserve">
+	<value>Aktivitätskarte der letzten 12 Monate: {0} Sprints insgesamt.</value>
+  </data>
+  <data name="Profile.Activity.Cell.One" xml:space="preserve">
+	<value>{0} — {1} Sprint</value>
+  </data>
+  <data name="Profile.Activity.Cell.Other" xml:space="preserve">
+	<value>{0} — {1} Sprints</value>
+  </data>
+  <data name="Profile.Activity.Less" xml:space="preserve">
+	<value>Weniger</value>
+  </data>
+  <data name="Profile.Activity.More" xml:space="preserve">
+	<value>Mehr</value>
+  </data>
+  <data name="Profile.Activity.Utc" xml:space="preserve">
+	<value>Tage in UTC: Ein Feld kann um einen Tag von deinem Kalender abweichen.</value>
+  </data>
+  <data name="Profile.Activity.Error" xml:space="preserve">
+	<value>Die Aktivität kann gerade nicht gelesen werden.</value>
+  </data>
+  <data name="Profile.Invite.Title" xml:space="preserve">
+	<value>Tritt der Community bei</value>
+  </data>
+  <data name="Profile.Invite.Body" xml:space="preserve">
+	<value>Wenn du der Community beitrittst, machst du für alle angemeldeten Mitglieder sichtbar:</value>
+  </data>
+  <data name="Profile.Invite.Item.Name" xml:space="preserve">
+	<value>deinen Namen und deinen Avatar;</value>
+  </data>
+  <data name="Profile.Invite.Item.Xp" xml:space="preserve">
+	<value>deine XP und deinen Rang;</value>
+  </data>
+  <data name="Profile.Invite.Item.Activity" xml:space="preserve">
+	<value>deine Aktivitätskarte, Tag für Tag;</value>
+  </data>
+  <data name="Profile.Invite.Item.Sprint" xml:space="preserve">
+	<value>deinen Status, wenn du einen offenen Sprint hast.</value>
+  </data>
+  <data name="Profile.Invite.Link" xml:space="preserve">
+	<value>Der Community beitreten</value>
+  </data>
+  <data name="MyStats.Heading" xml:space="preserve">
+	<value>Meine Statistiken</value>
+  </data>
+  <data name="MyStats.Sub" xml:space="preserve">
+	<value>Deine Konzentrationsaktivität im Zeitverlauf</value>
+  </data>
+  <data name="MyStats.Private" xml:space="preserve">
+	<value>Nur für dich sichtbar.</value>
+  </data>
+  <data name="MyStats.Loading" xml:space="preserve">
+	<value>Statistiken werden geladen…</value>
+  </data>
+  <data name="MyStats.Period.Aria" xml:space="preserve">
+	<value>Zeitraum wählen</value>
+  </data>
+  <data name="MyStats.Period.Week" xml:space="preserve">
+	<value>Woche</value>
+  </data>
+  <data name="MyStats.Period.Month" xml:space="preserve">
+	<value>Monat</value>
+  </data>
+  <data name="MyStats.Range.Week" xml:space="preserve">
+	<value>Letzte 7 Tage</value>
+  </data>
+  <data name="MyStats.Range.Month" xml:space="preserve">
+	<value>Letzte 30 Tage</value>
+  </data>
+  <data name="MyStats.Empty" xml:space="preserve">
+	<value>Starte deinen ersten Sprint, damit hier deine Statistiken wachsen.</value>
+  </data>
+  <data name="MyStats.Kpi.Focus" xml:space="preserve">
+	<value>Fokuszeit</value>
+  </data>
+  <data name="MyStats.Kpi.Sprints" xml:space="preserve">
+	<value>Abgeschlossene Sprints</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp" xml:space="preserve">
+	<value>XP gesamt</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp.Hint" xml:space="preserve">
+	<value>Summe seit Beginn</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp.None" xml:space="preserve">
+	<value>Schließe einen Sprint von mindestens 5 Minuten ab, um XP zu sammeln.</value>
+  </data>
+  <data name="MyStats.Kpi.WeekXp" xml:space="preserve">
+	<value>XP diese Woche</value>
+  </data>
+  <data name="MyStats.Kpi.WeekXp.Hint" xml:space="preserve">
+	<value>Aktuelle Woche</value>
+  </data>
+  <data name="MyStats.Bars.Title" xml:space="preserve">
+	<value>Fokus pro Tag — {0}</value>
+  </data>
+  <data name="MyStats.Bars.Aria" xml:space="preserve">
+	<value>Fokuszeit pro Tag in den letzten {0} Tagen, insgesamt {1}.</value>
+  </data>
+  <data name="MyStats.Bars.Item" xml:space="preserve">
+	<value>{0} — {1}</value>
+  </data>
+  <data name="MyStats.Day.Sun" xml:space="preserve">
+	<value>So.</value>
+  </data>
+  <data name="MyStats.Day.Mon" xml:space="preserve">
+	<value>Mo.</value>
+  </data>
+  <data name="MyStats.Day.Tue" xml:space="preserve">
+	<value>Di.</value>
+  </data>
+  <data name="MyStats.Day.Wed" xml:space="preserve">
+	<value>Mi.</value>
+  </data>
+  <data name="MyStats.Day.Thu" xml:space="preserve">
+	<value>Do.</value>
+  </data>
+  <data name="MyStats.Day.Fri" xml:space="preserve">
+	<value>Fr.</value>
+  </data>
+  <data name="MyStats.Day.Sat" xml:space="preserve">
+	<value>Sa.</value>
+  </data>
+  <data name="MyStats.Heatmap.Title" xml:space="preserve">
+	<value>Fokusaktivität — letzte 12 Monate</value>
+  </data>
+  <data name="MyStats.Heatmap.Total.One" xml:space="preserve">
+	<value>{0} Sprint im Jahr</value>
+  </data>
+  <data name="MyStats.Heatmap.Total.Other" xml:space="preserve">
+	<value>{0} Sprints im Jahr</value>
+  </data>
+  <data name="Settings.Community.Title" xml:space="preserve">
+	<value>Community</value>
+  </data>
+  <data name="Settings.Community.Loading" xml:space="preserve">
+	<value>Community-Einstellungen werden geladen…</value>
+  </data>
+  <data name="Settings.Community.LoadError" xml:space="preserve">
+	<value>Deine Community-Einstellungen können gerade nicht geladen werden.</value>
+  </data>
+  <data name="Settings.Community.Intro" xml:space="preserve">
+	<value>Wähle einen Namen und finde die anderen Mitglieder: Rangliste, Profile und offene Sprints.</value>
+  </data>
+  <data name="Settings.Community.Visible.Heading" xml:space="preserve">
+	<value>Wenn du beitrittst, machst du für alle angemeldeten Mitglieder sichtbar:</value>
+  </data>
+  <data name="Settings.Community.Visible.Name" xml:space="preserve">
+	<value>deinen Namen und deinen Avatar;</value>
+  </data>
+  <data name="Settings.Community.Visible.Xp" xml:space="preserve">
+	<value>deine XP und deinen Rang;</value>
+  </data>
+  <data name="Settings.Community.Visible.Activity" xml:space="preserve">
+	<value>deine Aktivitätskarte, Tag für Tag;</value>
+  </data>
+  <data name="Settings.Community.Visible.Sprint" xml:space="preserve">
+	<value>deinen Status, wenn du einen offenen Sprint hast.</value>
+  </data>
+  <data name="Settings.Community.Source.Heading" xml:space="preserve">
+	<value>Dein Name</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub" xml:space="preserve">
+	<value>Mein GitHub-Login: {0}</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub.Hint" xml:space="preserve">
+	<value>Dein GitHub-Avatar und ein Link zu deinem Konto werden sichtbar sein.</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub.Unavailable" xml:space="preserve">
+	<value>Dein GitHub-Login kann nicht als Name verwendet werden (er erfüllt die Regeln nicht oder ist schon vergeben). Wähle einen Namen.</value>
+  </data>
+  <data name="Settings.Community.Source.Chosen" xml:space="preserve">
+	<value>Ein Name, den ich wähle</value>
+  </data>
+  <data name="Settings.Community.Source.Chosen.Hint" xml:space="preserve">
+	<value>Dein Avatar ist dein Anfangsbuchstabe: Dein GitHub-Konto wird nicht angezeigt.</value>
+  </data>
+  <data name="Settings.Community.Name.Label" xml:space="preserve">
+	<value>Name</value>
+  </data>
+  <data name="Settings.Community.Name.Rules" xml:space="preserve">
+	<value>3 bis 39 Zeichen: Buchstaben ohne Akzente, Ziffern, Bindestriche und Unterstriche, beginnend mit einem Buchstaben oder einer Ziffer.</value>
+  </data>
+  <data name="Settings.Community.Error.Invalid" xml:space="preserve">
+	<value>Dieser Name erfüllt die Regeln nicht. Er braucht 3 bis 39 Zeichen: Buchstaben ohne Akzente, Ziffern, Bindestriche und Unterstriche, beginnend mit einem Buchstaben oder einer Ziffer.</value>
+  </data>
+  <data name="Settings.Community.Error.Unavailable" xml:space="preserve">
+	<value>Dieser Name ist nicht verfügbar</value>
+  </data>
+  <data name="Settings.Community.Error.Generic" xml:space="preserve">
+	<value>Es ist ein Fehler aufgetreten. Versuche es gleich noch einmal.</value>
+  </data>
+  <data name="Settings.Community.Join" xml:space="preserve">
+	<value>Der Community beitreten</value>
+  </data>
+  <data name="Settings.Community.Joining" xml:space="preserve">
+	<value>Wird aktiviert…</value>
+  </data>
+  <data name="Settings.Community.Member.Name" xml:space="preserve">
+	<value>Dein Name: {0}</value>
+  </data>
+  <data name="Settings.Community.Member.Profile" xml:space="preserve">
+	<value>Mein Profil ansehen</value>
+  </data>
+  <data name="Settings.Community.Member.Change" xml:space="preserve">
+	<value>Meinen Namen ändern</value>
+  </data>
+  <data name="Settings.Community.Member.Save" xml:space="preserve">
+	<value>Speichern</value>
+  </data>
+  <data name="Settings.Community.Member.Saving" xml:space="preserve">
+	<value>Wird gespeichert…</value>
+  </data>
+  <data name="Settings.Community.Member.Cancel" xml:space="preserve">
 	<value>Abbrechen</value>
   </data>
-  <data name="Settings.Leaderboard.Left" xml:space="preserve">
-	<value>Du hast die Rangliste verlassen. Deine XP bleiben erhalten.</value>
+  <data name="Settings.Community.Member.Changed" xml:space="preserve">
+	<value>Dein Name ist jetzt „{0}“.</value>
   </data>
-  <data name="Settings.Leaderboard.Error.Pool" xml:space="preserve">
-	<value>Im Moment konnte kein Pseudonym erzeugt werden. Versuche es gleich noch einmal.</value>
+  <data name="Settings.Community.Leave" xml:space="preserve">
+	<value>Verlassen</value>
   </data>
-  <data name="Settings.Leaderboard.Error.Generic" xml:space="preserve">
-	<value>Etwas ist schiefgelaufen. Versuche es gleich noch einmal.</value>
+  <data name="Settings.Community.Leave.Title" xml:space="preserve">
+	<value>Community verlassen?</value>
+  </data>
+  <data name="Settings.Community.Leave.Body" xml:space="preserve">
+	<value>Dein Profil verschwindet sofort und dein Name wird freigegeben. Deine XP bleiben erhalten.</value>
+  </data>
+  <data name="Settings.Community.Leave.Confirm" xml:space="preserve">
+	<value>Community verlassen</value>
+  </data>
+  <data name="Settings.Community.Leave.Cancel" xml:space="preserve">
+	<value>Abbrechen</value>
+  </data>
+  <data name="Settings.Community.Left" xml:space="preserve">
+	<value>Du hast die Community verlassen.</value>
+  </data>
+  <data name="OpenSprints.Title" xml:space="preserve">
+	<value>Jetzt im Sprint</value>
+  </data>
+  <data name="OpenSprints.Sub" xml:space="preserve">
+	<value>Tritt einem bereits gestarteten Sprint bei: Ihr beendet ihn gemeinsam, zur selben Uhrzeit.</value>
+  </data>
+  <data name="OpenSprints.Loading" xml:space="preserve">
+	<value>Offene Sprints werden geladen…</value>
+  </data>
+  <data name="OpenSprints.Empty" xml:space="preserve">
+	<value>Gerade hat niemand einen offenen Sprint. Starte deinen eigenen: Andere können sich dir anschließen.</value>
+  </data>
+  <data name="OpenSprints.Error" xml:space="preserve">
+	<value>Die offenen Sprints können gerade nicht gelesen werden.</value>
+  </data>
+  <data name="OpenSprints.Remaining" xml:space="preserve">
+	<value>noch {0}</value>
+  </data>
+  <data name="OpenSprints.Participants.One" xml:space="preserve">
+	<value>{0} Teilnehmer</value>
+  </data>
+  <data name="OpenSprints.Participants.Other" xml:space="preserve">
+	<value>{0} Teilnehmer</value>
+  </data>
+  <data name="OpenSprints.Mine" xml:space="preserve">
+	<value>Dein Sprint</value>
+  </data>
+  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
+	<value>Profil von {0}</value>
+  </data>
+  <data name="Participants.Aria" xml:space="preserve">
+	<value>Mit wem du im Sprint bist</value>
+  </data>
+  <data name="Participants.With.One" xml:space="preserve">
+	<value>Mit {0}</value>
+  </data>
+  <data name="Participants.With.Two" xml:space="preserve">
+	<value>Mit {0} und {1}</value>
+  </data>
+  <data name="Participants.With.Three" xml:space="preserve">
+	<value>Mit {0}, {1} und {2}</value>
+  </data>
+  <data name="Participants.With.Many.One" xml:space="preserve">
+	<value>Mit {0}, {1}, {2} und {3} weiterem</value>
+  </data>
+  <data name="Participants.With.Many.Other" xml:space="preserve">
+	<value>Mit {0}, {1}, {2} und {3} weiteren</value>
+  </data>
+  <data name="Participants.Close" xml:space="preserve">
+	<value>Diesen Sprint schließen</value>
+  </data>
+  <data name="Participants.Reopen" xml:space="preserve">
+	<value>Diesen Sprint wieder öffnen</value>
+  </data>
+  <data name="Participants.Close.Hint" xml:space="preserve">
+	<value>Niemand kann ihm mehr beitreten; wer schon dabei ist, bleibt.</value>
+  </data>
+  <data name="Participants.Reopen.Hint" xml:space="preserve">
+	<value>Dieser Sprint ist geschlossen: Niemand kann ihm mehr beitreten.</value>
+  </data>
+  <data name="Participants.Close.Error" xml:space="preserve">
+	<value>Die Öffnung des Sprints kann gerade nicht geändert werden.</value>
+  </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>Gemeinsame Pause: Sie endet für alle zur gleichen Zeit.</value>
+  </data>
+  <data name="Join.Button" xml:space="preserve">
+	<value>Diesem Sprint beitreten</value>
+  </data>
+  <data name="Join.Button.Aria" xml:space="preserve">
+	<value>Dem Sprint von {0} beitreten</value>
+  </data>
+  <data name="Join.Joining" xml:space="preserve">
+	<value>Verbindung zum Sprint…</value>
+  </data>
+  <data name="Join.NeedMember.Body" xml:space="preserve">
+	<value>Um einem Sprint beizutreten, tritt zuerst der Community bei.</value>
+  </data>
+  <data name="Join.NeedMember.Link" xml:space="preserve">
+	<value>Der Community beitreten</value>
+  </data>
+  <data name="Join.ShortWarning" xml:space="preserve">
+	<value>Es bleiben weniger als 5 Minuten: Dieser Sprint bringt keine XP.</value>
+  </data>
+  <data name="Join.SprintActive" xml:space="preserve">
+	<value>Du hast bereits eine laufende Sitzung.</value>
+  </data>
+  <data name="Join.SprintActive.Link" xml:space="preserve">
+	<value>Zu meiner Sitzung</value>
+  </data>
+  <data name="Join.OwnSprint" xml:space="preserve">
+	<value>Das ist dein eigener Sprint.</value>
+  </data>
+  <data name="Join.Closed" xml:space="preserve">
+	<value>Dieser Sprint ist nicht mehr offen</value>
+  </data>
+  <data name="Join.Error" xml:space="preserve">
+	<value>Du kannst diesem Sprint gerade nicht beitreten. Versuche es gleich noch einmal.</value>
   </data>
 </root>

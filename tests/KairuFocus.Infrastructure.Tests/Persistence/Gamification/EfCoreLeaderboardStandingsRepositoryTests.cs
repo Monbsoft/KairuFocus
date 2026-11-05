@@ -1,3 +1,4 @@
+using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Gamification;
 using KairuFocus.Domain.Identity;
 using KairuFocus.Infrastructure.Persistence.Repositories;
@@ -13,7 +14,7 @@ public sealed class EfCoreLeaderboardStandingsRepositoryTests
     private readonly InMemoryDatabase _database = new();
 
     [Fact]
-    public async Task Should_IncludeOnlyOptedInUsers_When_ComputingStandings()
+    public async Task Should_IncludeOnlyCommunityMembers_When_ComputingStandings()
     {
         var participant = UserId.New();
         var nonParticipant = UserId.New();
@@ -61,7 +62,7 @@ public sealed class EfCoreLeaderboardStandingsRepositoryTests
 
         Assert.Equal(
             [Standing("HibouCalme", 10), Standing("LoutreTenace", 30)],
-            standings.OrderBy(s => s.Pseudonym.Value, StringComparer.Ordinal));
+            standings.OrderBy(s => s.Name.Value, StringComparer.Ordinal));
     }
 
     // The opt-in governs who appears, not what is counted.
@@ -80,6 +81,26 @@ public sealed class EfCoreLeaderboardStandingsRepositoryTests
         Assert.Equal([Standing("LoutreTenace", 10)], allTimeStandings);
     }
 
+    [Fact]
+    public async Task Should_ReturnAvatarOfGitHubMember_When_ComputingStandings()
+    {
+        const string avatar = "https://avatars.githubusercontent.com/u/1";
+        var github = UserId.New();
+        var chosen = UserId.New();
+        await _database.SeedAsync(
+            Profile(github, "LoutreTenace", source: ProfileNameSource.GitHub, avatarUrl: avatar),
+            Profile(chosen, "HibouCalme"),
+            Gain(github, 10, WeekStart.AddHours(1)),
+            Gain(github, 5, WeekStart.AddHours(2)),
+            Gain(chosen, 20, WeekStart.AddHours(3)));
+
+        var standings = await QueryAsync(r => r.GetStandingsBetweenAsync(WeekStart, WeekEnd));
+
+        Assert.Equal(
+            [Standing("HibouCalme", 20), Standing("LoutreTenace", 15, avatar)],
+            standings.OrderBy(s => s.Name.Value, StringComparer.Ordinal));
+    }
+
     private async Task<IReadOnlyList<XpStanding>> QueryAsync(
         Func<EfCoreLeaderboardStandingsRepository, Task<IReadOnlyList<XpStanding>>> query)
     {
@@ -87,11 +108,13 @@ public sealed class EfCoreLeaderboardStandingsRepositoryTests
         return await query(new EfCoreLeaderboardStandingsRepository(context));
     }
 
-    private static LeaderboardProfile Profile(UserId userId, string pseudonym, DateTime? joinedAtUtc = null) =>
-        LeaderboardProfile.Join(userId, Pseudonym.Create(pseudonym).Value, joinedAtUtc ?? WeekStart.AddDays(-30));
+    private static MemberProfile Profile(
+        UserId userId, string name, DateTime? joinedAtUtc = null, ProfileNameSource source = ProfileNameSource.Chosen, string? avatarUrl = null) =>
+        MemberProfile.Join(userId, ProfileName.Create(name).Value, source, avatarUrl, joinedAtUtc ?? WeekStart.AddDays(-30));
 
     private static XpGain Gain(UserId ownerId, int amount, DateTime earnedAtUtc) =>
         XpGain.Credit(ownerId, Guid.NewGuid(), amount, earnedAtUtc);
 
-    private static XpStanding Standing(string pseudonym, int xp) => new(Pseudonym.Create(pseudonym).Value, xp);
+    private static XpStanding Standing(string name, int xp, string? avatarUrl = null) =>
+        new(ProfileName.Create(name).Value, avatarUrl, xp);
 }

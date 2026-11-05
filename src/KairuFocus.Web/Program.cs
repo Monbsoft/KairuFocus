@@ -38,6 +38,7 @@ builder.Services.AddScoped<PomodoroApiClient>();
 builder.Services.AddScoped<JournalApiClient>();
 builder.Services.AddScoped<SettingsApiClient>();
 builder.Services.AddScoped<GamificationApiClient>();
+builder.Services.AddScoped<CommunityApiClient>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<CommunityFormatter>();
 builder.Services.AddScoped<McpTokenService>();

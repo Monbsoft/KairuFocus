@@ -1,0 +1,122 @@
+@* "Avec lea_dev, tomtom et 2 autres": the other members of my sprint, on the Pomodoro page.
+   Meant to be mounted only while a timed sprint is active. It reads the list when it appears, then every 30 seconds
+   while the tab is visible. A quiet line: no link, no live region, no animation, nothing announced when someone
+   arrives. An empty list or a failed read shows nothing at all. *@
+@implements IAsyncDisposable
+@inject CommunityApiClient CommunityApi
+@inject CommunityFormatter F
+@inject IJSRuntime JS
+
+@if (Sentence is { } sentence)
+{
+    <p class="kf-participants" role="group" aria-label="@F["Participants.Aria"]">@sentence</p>
+}
+
+@code {
+    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
+
+    /// <summary>Names shown before the "and N others".</summary>
+    private const int MaxNames = 3;
+
+    private IReadOnlyList<SprintMemberDto> _others = [];
+    private CancellationTokenSource? _loopCts;
+    private DotNetObjectReference<SprintParticipants>? _selfReference;
+    private bool _disposed;
+
+    private string? Sentence => _others.Count switch
+    {
+        0 => null,
+        1 => F.Format("Participants.With.One", _others[0].Name),
+        2 => F.Format("Participants.With.Two", _others[0].Name, _others[1].Name),
+        3 => F.Format("Participants.With.Three", _others[0].Name, _others[1].Name, _others[2].Name),
+        var count => F.Plural("Participants.With.Many", count - MaxNames,
+            _others[0].Name, _others[1].Name, _others[2].Name, F.Number(count - MaxNames))
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        _selfReference = DotNetObjectReference.Create(this);
+        var hidden = false;
+        try
+        {
+            hidden = await JS.InvokeAsync<bool>("kairufocusCommunity.observeVisibility", _selfReference);
+        }
+        catch (JSException)
+        {
+            // Without the script the line still works: it just keeps refreshing while the tab is hidden.
+        }
+
+        if (!hidden && !_disposed) StartLoop();
+    }
+
+    /// <summary>Called by the browser when the tab is hidden or shown again.</summary>
+    [JSInvokable]
+    public void OnVisibilityChanged(bool hidden)
+    {
+        if (_disposed) return;
+
+        if (hidden) StopLoop();
+        else StartLoop(); // reads right away, then every 30 seconds
+    }
+
+    private void StartLoop()
+    {
+        StopLoop();
+        var cts = new CancellationTokenSource();
+        _loopCts = cts;
+        _ = LoopAsync(cts.Token);
+    }
+
+    private void StopLoop()
+    {
+        _loopCts?.Cancel();
+        _loopCts = null;
+    }
+
+    private async Task LoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            await RefreshAsync(ct);
+
+            using var timer = new PeriodicTimer(Interval);
+            while (await timer.WaitForNextTickAsync(ct))
+                await RefreshAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // Tab hidden or component removed.
+        }
+    }
+
+    private async Task RefreshAsync(CancellationToken ct)
+    {
+        var result = await CommunityApi.GetParticipantsAsync(ct);
+        if (ct.IsCancellationRequested) return;
+
+        // A failure hides the line, like the presence of the Community page: nice to have, not worth a message.
+        _others = result?.Others ?? [];
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        StopLoop();
+
+        try
+        {
+            await JS.InvokeVoidAsync("kairufocusCommunity.unobserveVisibility");
+        }
+        catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+        {
+            // Page left while the runtime is going away: nothing to clean up.
+        }
+        finally
+        {
+            _selfReference?.Dispose();
+        }
+    }
+}

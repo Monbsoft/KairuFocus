@@ -154,7 +154,7 @@
 	<value>你还没有排名。</value>
   </data>
   <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>在设置中加入排行榜：你将以生成的昵称显示。</value>
+	<value>在设置中加入社区：其他成员将看到你的名称、XP 和排名。</value>
   </data>
   <data name="Community.Place.Join.Link" xml:space="preserve">
 	<value>在设置中加入</value>
@@ -339,9 +339,6 @@
   <data name="Community.Board.Title.Global" xml:space="preserve">
 	<value>总排行榜</value>
   </data>
-  <data name="Community.Board.Hint" xml:space="preserve">
-	<value>成员仅以昵称显示</value>
-  </data>
   <data name="Community.Board.You" xml:space="preserve">
 	<value>（你）</value>
   </data>
@@ -378,61 +375,448 @@
   <data name="Community.Format.MonthShortYear" xml:space="preserve">
 	<value>yyyy年M月</value>
   </data>
-  <data name="Settings.Leaderboard.Title" xml:space="preserve">
-	<value>社区排行榜</value>
+  <data name="Nav.Profile" xml:space="preserve">
+	<value>个人资料</value>
   </data>
-  <data name="Settings.Leaderboard.Loading" xml:space="preserve">
-	<value>正在加载状态…</value>
+  <data name="Profile.PageTitle" xml:space="preserve">
+	<value>个人资料 — KairuFocus</value>
   </data>
-  <data name="Settings.Leaderboard.LoadError" xml:space="preserve">
-	<value>无法加载你的排行榜状态。请刷新页面。</value>
+  <data name="Profile.PageTitle.Member" xml:space="preserve">
+	<value>{0} · 个人资料 — KairuFocus</value>
   </data>
-  <data name="Settings.Leaderboard.Out" xml:space="preserve">
-	<value>你未出现在排行榜中，但仍可在“社区”页面查看。</value>
+  <data name="Profile.Loading" xml:space="preserve">
+	<value>正在加载个人资料…</value>
   </data>
-  <data name="Settings.Leaderboard.Out.Hint" xml:space="preserve">
-	<value>你将以生成的昵称显示：仅昵称、排名和 XP 可见。</value>
+  <data name="Profile.LoadError" xml:space="preserve">
+	<value>暂时无法加载此个人资料。</value>
   </data>
-  <data name="Settings.Leaderboard.In" xml:space="preserve">
-	<value>你在排行榜中的昵称是“{0}”。</value>
+  <data name="Profile.NotFound.Title" xml:space="preserve">
+	<value>未找到个人资料</value>
   </data>
-  <data name="Settings.Leaderboard.Reroll" xml:space="preserve">
-	<value>重新抽取昵称</value>
+  <data name="Profile.NotFound.Body" xml:space="preserve">
+	<value>该成员不存在、未加入社区，或已更改名称。</value>
   </data>
-  <data name="Settings.Leaderboard.Rerolling" xml:space="preserve">
-	<value>抽取中…</value>
+  <data name="Profile.NotFound.Link" xml:space="preserve">
+	<value>查看社区</value>
   </data>
-  <data name="Settings.Leaderboard.Join" xml:space="preserve">
-	<value>加入排行榜</value>
+  <data name="Profile.GitHub.Link" xml:space="preserve">
+	<value>{0} 的 GitHub 账号</value>
   </data>
-  <data name="Settings.Leaderboard.Joining" xml:space="preserve">
-	<value>加入中…</value>
+  <data name="Profile.JoinedSince" xml:space="preserve">
+	<value>自 {0} 起加入社区</value>
   </data>
-  <data name="Settings.Leaderboard.Saved" xml:space="preserve">
-	<value>新昵称：“{0}”。</value>
+  <data name="Profile.EditName" xml:space="preserve">
+	<value>修改我的名称</value>
   </data>
-  <data name="Settings.Leaderboard.Leave" xml:space="preserve">
-	<value>退出排行榜</value>
+  <data name="Profile.Status.Aria" xml:space="preserve">
+	<value>进行中的冲刺</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Title" xml:space="preserve">
-	<value>退出排行榜？</value>
+  <data name="Profile.Status.Open" xml:space="preserve">
+	<value>冲刺中 · 还剩 {0}</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Body" xml:space="preserve">
-	<value>你会立即从排行榜中消失。你的 XP 会保留。如果你再次加入，将获得新的昵称。</value>
+  <data name="Profile.Status.Closed" xml:space="preserve">
+	<value>暂时没有进行中的冲刺</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Confirm" xml:space="preserve">
-	<value>退出</value>
+  <data name="Profile.Status.IncludesViewer" xml:space="preserve">
+	<value>你在这个冲刺中。</value>
   </data>
-  <data name="Settings.Leaderboard.Leave.Cancel" xml:space="preserve">
+  <data name="Profile.Status.Error" xml:space="preserve">
+	<value>暂时无法读取进行中的冲刺。</value>
+  </data>
+  <data name="Profile.Status.Together.One" xml:space="preserve">
+	<value>一起完成了 {0} 次冲刺</value>
+  </data>
+  <data name="Profile.Status.Together.Other" xml:space="preserve">
+	<value>一起完成了 {0} 次冲刺</value>
+  </data>
+  <data name="Profile.With.One" xml:space="preserve">
+	<value>与 {0} 一起</value>
+  </data>
+  <data name="Profile.With.Many.One" xml:space="preserve">
+	<value>与 {0} 等 {1} 人一起</value>
+  </data>
+  <data name="Profile.With.Many.Other" xml:space="preserve">
+	<value>与 {0} 等 {1} 人一起</value>
+  </data>
+  <data name="Profile.Kpi.Aria" xml:space="preserve">
+	<value>关键数据</value>
+  </data>
+  <data name="Profile.Kpi.Xp" xml:space="preserve">
+	<value>累计 XP</value>
+  </data>
+  <data name="Profile.Kpi.Xp.Hint" xml:space="preserve">
+	<value>自开始以来</value>
+  </data>
+  <data name="Profile.Kpi.Rank" xml:space="preserve">
+	<value>排名</value>
+  </data>
+  <data name="Profile.Kpi.Rank.Hint" xml:space="preserve">
+	<value>总榜</value>
+  </data>
+  <data name="Profile.Kpi.Rank.None" xml:space="preserve">
+	<value>尚未上榜</value>
+  </data>
+  <data name="Profile.Kpi.Sprints" xml:space="preserve">
+	<value>冲刺</value>
+  </data>
+  <data name="Profile.Kpi.Sprints.Hint" xml:space="preserve">
+	<value>专注 {0}</value>
+  </data>
+  <data name="Profile.Kpi.Together" xml:space="preserve">
+	<value>一起完成</value>
+  </data>
+  <data name="Profile.Kpi.Together.Hint" xml:space="preserve">
+	<value>小组冲刺</value>
+  </data>
+  <data name="Profile.Standing.Error" xml:space="preserve">
+	<value>暂时无法读取数据。</value>
+  </data>
+  <data name="Profile.Activity.Title" xml:space="preserve">
+	<value>活动 · 最近 12 个月</value>
+  </data>
+  <data name="Profile.Activity.Total.One" xml:space="preserve">
+	<value>{0} 次冲刺</value>
+  </data>
+  <data name="Profile.Activity.Total.Other" xml:space="preserve">
+	<value>{0} 次冲刺</value>
+  </data>
+  <data name="Profile.Activity.Aria.One" xml:space="preserve">
+	<value>最近 12 个月的活动图：共 {0} 次冲刺。</value>
+  </data>
+  <data name="Profile.Activity.Aria.Other" xml:space="preserve">
+	<value>最近 12 个月的活动图：共 {0} 次冲刺。</value>
+  </data>
+  <data name="Profile.Activity.Cell.One" xml:space="preserve">
+	<value>{0} — {1} 次冲刺</value>
+  </data>
+  <data name="Profile.Activity.Cell.Other" xml:space="preserve">
+	<value>{0} — {1} 次冲刺</value>
+  </data>
+  <data name="Profile.Activity.Less" xml:space="preserve">
+	<value>少</value>
+  </data>
+  <data name="Profile.Activity.More" xml:space="preserve">
+	<value>多</value>
+  </data>
+  <data name="Profile.Activity.Utc" xml:space="preserve">
+	<value>日期按 UTC 计算：某个方格可能与你的日历相差一天。</value>
+  </data>
+  <data name="Profile.Activity.Error" xml:space="preserve">
+	<value>暂时无法读取活动。</value>
+  </data>
+  <data name="Profile.Invite.Title" xml:space="preserve">
+	<value>加入社区</value>
+  </data>
+  <data name="Profile.Invite.Body" xml:space="preserve">
+	<value>加入社区后，所有已登录的成员都能看到：</value>
+  </data>
+  <data name="Profile.Invite.Item.Name" xml:space="preserve">
+	<value>你的名称和头像；</value>
+  </data>
+  <data name="Profile.Invite.Item.Xp" xml:space="preserve">
+	<value>你的 XP 和排名；</value>
+  </data>
+  <data name="Profile.Invite.Item.Activity" xml:space="preserve">
+	<value>你逐日的活动图；</value>
+  </data>
+  <data name="Profile.Invite.Item.Sprint" xml:space="preserve">
+	<value>你有进行中冲刺时的状态。</value>
+  </data>
+  <data name="Profile.Invite.Link" xml:space="preserve">
+	<value>加入社区</value>
+  </data>
+  <data name="MyStats.Heading" xml:space="preserve">
+	<value>我的统计</value>
+  </data>
+  <data name="MyStats.Sub" xml:space="preserve">
+	<value>你的专注随时间的变化</value>
+  </data>
+  <data name="MyStats.Private" xml:space="preserve">
+	<value>仅你自己可见。</value>
+  </data>
+  <data name="MyStats.Loading" xml:space="preserve">
+	<value>正在加载统计…</value>
+  </data>
+  <data name="MyStats.Period.Aria" xml:space="preserve">
+	<value>选择时间范围</value>
+  </data>
+  <data name="MyStats.Period.Week" xml:space="preserve">
+	<value>周</value>
+  </data>
+  <data name="MyStats.Period.Month" xml:space="preserve">
+	<value>月</value>
+  </data>
+  <data name="MyStats.Range.Week" xml:space="preserve">
+	<value>最近 7 天</value>
+  </data>
+  <data name="MyStats.Range.Month" xml:space="preserve">
+	<value>最近 30 天</value>
+  </data>
+  <data name="MyStats.Empty" xml:space="preserve">
+	<value>完成第一次冲刺后，你的统计将显示在这里。</value>
+  </data>
+  <data name="MyStats.Kpi.Focus" xml:space="preserve">
+	<value>专注时间</value>
+  </data>
+  <data name="MyStats.Kpi.Sprints" xml:space="preserve">
+	<value>已完成的冲刺</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp" xml:space="preserve">
+	<value>累计 XP</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp.Hint" xml:space="preserve">
+	<value>自开始以来的累计</value>
+  </data>
+  <data name="MyStats.Kpi.TotalXp.None" xml:space="preserve">
+	<value>完成至少 5 分钟的冲刺即可获得 XP。</value>
+  </data>
+  <data name="MyStats.Kpi.WeekXp" xml:space="preserve">
+	<value>本周 XP</value>
+  </data>
+  <data name="MyStats.Kpi.WeekXp.Hint" xml:space="preserve">
+	<value>本周</value>
+  </data>
+  <data name="MyStats.Bars.Title" xml:space="preserve">
+	<value>每日专注 — {0}</value>
+  </data>
+  <data name="MyStats.Bars.Aria" xml:space="preserve">
+	<value>最近 {0} 天的每日专注时间，共 {1}。</value>
+  </data>
+  <data name="MyStats.Bars.Item" xml:space="preserve">
+	<value>{0} — {1}</value>
+  </data>
+  <data name="MyStats.Day.Sun" xml:space="preserve">
+	<value>周日</value>
+  </data>
+  <data name="MyStats.Day.Mon" xml:space="preserve">
+	<value>周一</value>
+  </data>
+  <data name="MyStats.Day.Tue" xml:space="preserve">
+	<value>周二</value>
+  </data>
+  <data name="MyStats.Day.Wed" xml:space="preserve">
+	<value>周三</value>
+  </data>
+  <data name="MyStats.Day.Thu" xml:space="preserve">
+	<value>周四</value>
+  </data>
+  <data name="MyStats.Day.Fri" xml:space="preserve">
+	<value>周五</value>
+  </data>
+  <data name="MyStats.Day.Sat" xml:space="preserve">
+	<value>周六</value>
+  </data>
+  <data name="MyStats.Heatmap.Title" xml:space="preserve">
+	<value>专注活动 — 最近 12 个月</value>
+  </data>
+  <data name="MyStats.Heatmap.Total.One" xml:space="preserve">
+	<value>全年 {0} 次冲刺</value>
+  </data>
+  <data name="MyStats.Heatmap.Total.Other" xml:space="preserve">
+	<value>全年 {0} 次冲刺</value>
+  </data>
+  <data name="Settings.Community.Title" xml:space="preserve">
+	<value>社区</value>
+  </data>
+  <data name="Settings.Community.Loading" xml:space="preserve">
+	<value>正在加载社区设置…</value>
+  </data>
+  <data name="Settings.Community.LoadError" xml:space="preserve">
+	<value>暂时无法加载你的社区设置。</value>
+  </data>
+  <data name="Settings.Community.Intro" xml:space="preserve">
+	<value>选择一个名称，与其他成员相遇：排行榜、个人资料和进行中的冲刺。</value>
+  </data>
+  <data name="Settings.Community.Visible.Heading" xml:space="preserve">
+	<value>加入后，所有已登录的成员都能看到：</value>
+  </data>
+  <data name="Settings.Community.Visible.Name" xml:space="preserve">
+	<value>你的名称和头像；</value>
+  </data>
+  <data name="Settings.Community.Visible.Xp" xml:space="preserve">
+	<value>你的 XP 和排名；</value>
+  </data>
+  <data name="Settings.Community.Visible.Activity" xml:space="preserve">
+	<value>你逐日的活动图；</value>
+  </data>
+  <data name="Settings.Community.Visible.Sprint" xml:space="preserve">
+	<value>你有进行中冲刺时的状态。</value>
+  </data>
+  <data name="Settings.Community.Source.Heading" xml:space="preserve">
+	<value>你的名称</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub" xml:space="preserve">
+	<value>我的 GitHub 登录名：{0}</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub.Hint" xml:space="preserve">
+	<value>将显示你的 GitHub 头像和账号链接。</value>
+  </data>
+  <data name="Settings.Community.Source.GitHub.Unavailable" xml:space="preserve">
+	<value>你的 GitHub 登录名无法用作名称（不符合规则或已被占用）。请另选一个名称。</value>
+  </data>
+  <data name="Settings.Community.Source.Chosen" xml:space="preserve">
+	<value>我自己选择的名称</value>
+  </data>
+  <data name="Settings.Community.Source.Chosen.Hint" xml:space="preserve">
+	<value>你的头像将是名称首字母：不会显示你的 GitHub 账号。</value>
+  </data>
+  <data name="Settings.Community.Name.Label" xml:space="preserve">
+	<value>名称</value>
+  </data>
+  <data name="Settings.Community.Name.Rules" xml:space="preserve">
+	<value>3 至 39 个字符：不带重音的字母、数字、连字符和下划线，须以字母或数字开头。</value>
+  </data>
+  <data name="Settings.Community.Error.Invalid" xml:space="preserve">
+	<value>此名称不符合规则。需要 3 至 39 个字符：不带重音的字母、数字、连字符和下划线，须以字母或数字开头。</value>
+  </data>
+  <data name="Settings.Community.Error.Unavailable" xml:space="preserve">
+	<value>此名称不可用</value>
+  </data>
+  <data name="Settings.Community.Error.Generic" xml:space="preserve">
+	<value>出错了。请稍后重试。</value>
+  </data>
+  <data name="Settings.Community.Join" xml:space="preserve">
+	<value>加入社区</value>
+  </data>
+  <data name="Settings.Community.Joining" xml:space="preserve">
+	<value>正在启用…</value>
+  </data>
+  <data name="Settings.Community.Member.Name" xml:space="preserve">
+	<value>你的名称：{0}</value>
+  </data>
+  <data name="Settings.Community.Member.Profile" xml:space="preserve">
+	<value>查看我的个人资料</value>
+  </data>
+  <data name="Settings.Community.Member.Change" xml:space="preserve">
+	<value>修改我的名称</value>
+  </data>
+  <data name="Settings.Community.Member.Save" xml:space="preserve">
+	<value>保存</value>
+  </data>
+  <data name="Settings.Community.Member.Saving" xml:space="preserve">
+	<value>正在保存…</value>
+  </data>
+  <data name="Settings.Community.Member.Cancel" xml:space="preserve">
 	<value>取消</value>
   </data>
-  <data name="Settings.Leaderboard.Left" xml:space="preserve">
-	<value>你已退出排行榜。你的 XP 已保留。</value>
+  <data name="Settings.Community.Member.Changed" xml:space="preserve">
+	<value>你的名称现在是“{0}”。</value>
   </data>
-  <data name="Settings.Leaderboard.Error.Pool" xml:space="preserve">
-	<value>目前无法生成昵称。请稍后重试。</value>
+  <data name="Settings.Community.Leave" xml:space="preserve">
+	<value>退出</value>
   </data>
-  <data name="Settings.Leaderboard.Error.Generic" xml:space="preserve">
-	<value>出了点问题。请稍后重试。</value>
+  <data name="Settings.Community.Leave.Title" xml:space="preserve">
+	<value>退出社区？</value>
+  </data>
+  <data name="Settings.Community.Leave.Body" xml:space="preserve">
+	<value>你的个人资料会立即消失，你的名称将被释放。你的 XP 会保留。</value>
+  </data>
+  <data name="Settings.Community.Leave.Confirm" xml:space="preserve">
+	<value>退出社区</value>
+  </data>
+  <data name="Settings.Community.Leave.Cancel" xml:space="preserve">
+	<value>取消</value>
+  </data>
+  <data name="Settings.Community.Left" xml:space="preserve">
+	<value>你已退出社区。</value>
+  </data>
+  <data name="OpenSprints.Title" xml:space="preserve">
+	<value>正在冲刺</value>
+  </data>
+  <data name="OpenSprints.Sub" xml:space="preserve">
+	<value>加入已经开始的冲刺：你们将在同一时间一起结束。</value>
+  </data>
+  <data name="OpenSprints.Loading" xml:space="preserve">
+	<value>正在加载进行中的冲刺…</value>
+  </data>
+  <data name="OpenSprints.Empty" xml:space="preserve">
+	<value>暂时没有人有进行中的冲刺。开始你自己的冲刺：其他人可以加入你。</value>
+  </data>
+  <data name="OpenSprints.Error" xml:space="preserve">
+	<value>暂时无法读取进行中的冲刺。</value>
+  </data>
+  <data name="OpenSprints.Remaining" xml:space="preserve">
+	<value>还剩 {0}</value>
+  </data>
+  <data name="OpenSprints.Participants.One" xml:space="preserve">
+	<value>{0} 位参与者</value>
+  </data>
+  <data name="OpenSprints.Participants.Other" xml:space="preserve">
+	<value>{0} 位参与者</value>
+  </data>
+  <data name="OpenSprints.Mine" xml:space="preserve">
+	<value>你的冲刺</value>
+  </data>
+  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
+	<value>{0} 的个人资料</value>
+  </data>
+  <data name="Participants.Aria" xml:space="preserve">
+	<value>和你一起冲刺的人</value>
+  </data>
+  <data name="Participants.With.One" xml:space="preserve">
+	<value>与 {0} 一起</value>
+  </data>
+  <data name="Participants.With.Two" xml:space="preserve">
+	<value>与 {0} 和 {1} 一起</value>
+  </data>
+  <data name="Participants.With.Three" xml:space="preserve">
+	<value>与 {0}、{1} 和 {2} 一起</value>
+  </data>
+  <data name="Participants.With.Many.One" xml:space="preserve">
+	<value>与 {0}、{1}、{2} 等 {3} 人一起</value>
+  </data>
+  <data name="Participants.With.Many.Other" xml:space="preserve">
+	<value>与 {0}、{1}、{2} 等 {3} 人一起</value>
+  </data>
+  <data name="Participants.Close" xml:space="preserve">
+	<value>关闭此冲刺</value>
+  </data>
+  <data name="Participants.Reopen" xml:space="preserve">
+	<value>重新开放此冲刺</value>
+  </data>
+  <data name="Participants.Close.Hint" xml:space="preserve">
+	<value>之后没有人能加入；已在其中的人保持不变。</value>
+  </data>
+  <data name="Participants.Reopen.Hint" xml:space="preserve">
+	<value>此冲刺已关闭：没有人能再加入。</value>
+  </data>
+  <data name="Participants.Close.Error" xml:space="preserve">
+	<value>暂时无法修改冲刺的开放状态。</value>
+  </data>
+  <data name="Participants.GroupBreak" xml:space="preserve">
+	<value>小组休息：所有人同时结束。</value>
+  </data>
+  <data name="Join.Button" xml:space="preserve">
+	<value>加入此冲刺</value>
+  </data>
+  <data name="Join.Button.Aria" xml:space="preserve">
+	<value>加入 {0} 的这个冲刺</value>
+  </data>
+  <data name="Join.Joining" xml:space="preserve">
+	<value>正在连接冲刺…</value>
+  </data>
+  <data name="Join.NeedMember.Body" xml:space="preserve">
+	<value>要加入冲刺，请先加入社区。</value>
+  </data>
+  <data name="Join.NeedMember.Link" xml:space="preserve">
+	<value>加入社区</value>
+  </data>
+  <data name="Join.ShortWarning" xml:space="preserve">
+	<value>剩余不到 5 分钟：此冲刺不会获得 XP。</value>
+  </data>
+  <data name="Join.SprintActive" xml:space="preserve">
+	<value>你已有一个正在进行的会话。</value>
+  </data>
+  <data name="Join.SprintActive.Link" xml:space="preserve">
+	<value>前往我的会话</value>
+  </data>
+  <data name="Join.OwnSprint" xml:space="preserve">
+	<value>这是你自己的冲刺。</value>
+  </data>
+  <data name="Join.Closed" xml:space="preserve">
+	<value>此冲刺已不再开放</value>
+  </data>
+  <data name="Join.Error" xml:space="preserve">
+	<value>暂时无法加入此冲刺。请稍后重试。</value>
   </data>
 </root>

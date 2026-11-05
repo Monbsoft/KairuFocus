@@ -63,15 +63,18 @@ public sealed class AuthController : ControllerBase
         }
 
         var githubId = result.Principal!.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var login = result.Principal.FindFirst("urn:github:login")?.Value
+        var githubLogin = result.Principal.FindFirst("urn:github:login")?.Value;
+        var login = githubLogin
             ?? result.Principal.FindFirst(ClaimTypes.Name)?.Value ?? "unknown";
         var displayName = result.Principal.FindFirst(ClaimTypes.Name)?.Value ?? login;
         var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
+        var avatarUrl = result.Principal.FindFirst("urn:github:avatar")?.Value;
 
         if (string.IsNullOrEmpty(githubId))
             return await RedirectWithErrorAsync(webBase, "no-id");
 
-        var command = new GetOrCreateUserCommand(githubId, login, displayName, email);
+        var command = new GetOrCreateUserCommand(
+            githubId, login, displayName, email, avatarUrl, LoginIsFromGitHub: githubLogin is not null);
         var userResult = await _mediator.DispatchAsync<GetOrCreateUserCommand, Result<GetOrCreateUserResult>>(command, ct);
 
         if (userResult.IsFailure)

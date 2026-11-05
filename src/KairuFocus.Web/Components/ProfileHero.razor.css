@@ -1,0 +1,74 @@
+/* The brand hero surface: the same gradient in light and dark, so the text is white in both themes. */
+.kf-phero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-6) var(--space-8);
+    border-radius: var(--radius-lg);
+    background: var(--brand-hero);
+    color: var(--hero-text, #fff);
+    box-shadow: var(--shadow-md);
+}
+
+.kf-phero__id {
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    min-width: 0;
+}
+
+.kf-phero__who {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.kf-phero__name {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    overflow-wrap: anywhere;
+}
+
+.kf-phero__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-4);
+}
+
+.kf-phero__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--target-min);
+    font-size: var(--text-sm);
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.kf-phero__link:hover {
+    color: var(--kf-blue-100, #cfe2ff);
+}
+
+.kf-phero__since {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--kf-blue-100, #cfe2ff);
+}
+
+@media (max-width: 640.98px) {
+    .kf-phero {
+        padding: var(--space-5);
+    }
+
+    /* The panel takes the full width under the identity. */
+    .kf-phero ::deep .kf-status {
+        flex-basis: 100%;
+    }
+}

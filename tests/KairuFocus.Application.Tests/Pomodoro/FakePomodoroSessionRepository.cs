@@ -48,6 +48,12 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
     public Task<PomodoroSession?> GetActiveAsync(UserId userId, CancellationToken cancellationToken = default) =>
         Task.FromResult(Sessions.FirstOrDefault(s => s.OwnerId == userId && s.Status == PomodoroSessionStatus.Active));
 
+    public Task<PomodoroSession?> GetLatestEndedAsync(UserId userId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Sessions
+            .Where(s => s.OwnerId == userId && s.EndedAt.HasValue)
+            .OrderByDescending(s => s.EndedAt)
+            .FirstOrDefault());
+
     public Task UpdateAsync(PomodoroSession session, CancellationToken cancellationToken = default)
     {
         UpdateAsyncCallCount++;

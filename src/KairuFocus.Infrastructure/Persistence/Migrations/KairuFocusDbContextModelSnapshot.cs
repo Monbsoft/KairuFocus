@@ -22,28 +22,43 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("KairuFocus.Domain.Gamification.LeaderboardProfile", b =>
+            modelBuilder.Entity("KairuFocus.Domain.Community.MemberProfile", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("UserId");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("JoinedAtUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Pseudonym")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
+                        .HasMaxLength(39)
+                        .HasColumnType("nvarchar(39)")
+                        .HasColumnName("ProfileName");
+
+                    b.Property<string>("NameKey")
+                        .IsRequired()
+                        .HasMaxLength(39)
+                        .HasColumnType("nvarchar(39)");
+
+                    b.Property<string>("NameSource")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id")
-                        .HasName("PK_LeaderboardProfiles");
+                        .HasName("PK_MemberProfiles");
 
-                    b.HasIndex("Pseudonym")
+                    b.HasIndex("NameKey")
                         .IsUnique()
-                        .HasDatabaseName("IX_LeaderboardProfiles_Pseudonym");
+                        .HasDatabaseName("IX_MemberProfiles_NameKey");
 
-                    b.ToTable("LeaderboardProfiles", (string)null);
+                    b.ToTable("MemberProfiles", (string)null);
                 });
 
             modelBuilder.Entity("KairuFocus.Domain.Gamification.XpGain", b =>
@@ -111,6 +126,10 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -194,6 +213,11 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("EndedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsClosedToJoin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("JournalComment")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -215,6 +239,12 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<DateTime?>("SharedEndAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("SharedSprintId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("datetime2");
 
@@ -229,6 +259,9 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_PomodoroSessions_OwnerId_ActiveUnique")
                         .HasFilter("[Status] = N'Active' AND [OwnerId] IS NOT NULL");
+
+                    b.HasIndex("SharedSprintId")
+                        .HasDatabaseName("IX_PomodoroSessions_SharedSprintId");
 
                     b.ToTable("PomodoroSessions", (string)null);
                 });
@@ -339,11 +372,11 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                     b.ToTable("PomodoroSettings", (string)null);
                 });
 
-            modelBuilder.Entity("KairuFocus.Domain.Gamification.LeaderboardProfile", b =>
+            modelBuilder.Entity("KairuFocus.Domain.Community.MemberProfile", b =>
                 {
                     b.HasOne("KairuFocus.Domain.Identity.User", null)
                         .WithOne()
-                        .HasForeignKey("KairuFocus.Domain.Gamification.LeaderboardProfile", "Id")
+                        .HasForeignKey("KairuFocus.Domain.Community.MemberProfile", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

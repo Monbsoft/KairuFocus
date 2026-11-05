@@ -1,5 +1,6 @@
 @* Top 10 of the period, plus my own row when I am further down (after a "···" gap if at least one member ranked above me is not shown).
-   Only pseudonyms and XP are shown: nothing that identifies a member. The rows are not interactive.
+   Each row shows the avatar and the name of a community member, linking to the profile (my own row included),
+   and the XP. The avatar is decorative: the name is always next to it.
    My row is marked three ways (tint, bold + "(toi)", aria-current): color is never the only cue. *@
 @inject CommunityFormatter F
 
@@ -23,8 +24,11 @@ else
                 {
                     <li class="kf-row @(row.IsMe ? "kf-row--me" : "")" aria-current="@(row.IsMe ? "true" : null)">
                         <span class="kf-row__rank">@F.Number(row.Rank)</span>
-                        <span class="kf-row__pseudo">
-                            <span class="kf-row__name" title="@row.Pseudonym">@row.Pseudonym</span>
+                        <span class="kf-row__who">
+                            <a class="kf-row__link" href="@ProfileHref(row.Name)" title="@row.Name">
+                                <MemberAvatar Name="@row.Name" AvatarUrl="@row.AvatarUrl" Size="28" />
+                                <span class="kf-row__name">@row.Name</span>
+                            </a>
                             @if (row.IsMe)
                             {
                                 @* Leading space: it keeps "RenardAgile (toi)" readable for assistive technologies. *@
@@ -40,7 +44,9 @@ else
 }
 
 @code {
-    private sealed record RowView(int Rank, string Pseudonym, int Xp, bool IsMe, bool IsGap = false);
+    private sealed record RowView(int Rank, string Name, string? AvatarUrl, int Xp, bool IsMe, bool IsGap = false);
+
+    private static string ProfileHref(string name) => $"/membres/{Uri.EscapeDataString(name)}";
 
     [Parameter, EditorRequired] public CommunityLeaderboardDto Board { get; set; } = default!;
 
@@ -52,7 +58,7 @@ else
     private IEnumerable<RowView> BuildRows()
     {
         foreach (var row in Board.Top)
-            yield return new RowView(row.Rank, row.Pseudonym, row.Xp, row.IsMe);
+            yield return new RowView(row.Rank, row.Name, row.AvatarUrl, row.Xp, row.IsMe);
 
         // Not in the top: my row comes last (a position people remember). The gap says "members ranked above me are
         // hidden", so it appears only when there is at least one. Ranking is "standard competition" (1, 2, 2, 4):
@@ -62,9 +68,9 @@ else
         if (Board.Me is { IsInTop: false } me)
         {
             if (me.Rank > Board.Top.Count + 1)
-                yield return new RowView(0, "", 0, false, IsGap: true);
+                yield return new RowView(0, "", null, 0, false, IsGap: true);
 
-            yield return new RowView(me.Rank, me.Pseudonym, me.Xp, IsMe: true);
+            yield return new RowView(me.Rank, me.Name, me.AvatarUrl, me.Xp, IsMe: true);
         }
     }
 }

@@ -13,6 +13,12 @@ public interface IPomodoroSessionRepository
     Task<PomodoroSession?> GetByIdAsync(PomodoroSessionId id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PomodoroSession>> GetByIdsAsync(IEnumerable<PomodoroSessionId> ids, CancellationToken cancellationToken = default);
     Task<PomodoroSession?> GetActiveAsync(UserId userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The session of the user that ended last (by EndedAt), whatever its type and whether it was completed
+    /// or interrupted. Null when the user has none.
+    /// </summary>
+    Task<PomodoroSession?> GetLatestEndedAsync(UserId userId, CancellationToken cancellationToken = default);
     Task UpdateAsync(PomodoroSession session, CancellationToken cancellationToken = default);
     Task<int> GetCompletedTodayCountAsync(UserId userId, CancellationToken cancellationToken = default);
     Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, CancellationToken cancellationToken = default);

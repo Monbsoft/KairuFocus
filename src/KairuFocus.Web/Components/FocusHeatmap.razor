@@ -1,0 +1,131 @@
+@* Sprints per day over the last 53 weeks (columns = weeks, Monday to Sunday). Same .kf-hm classes as the former Statistics page.
+   The caller decides which days it feeds: the visitor's local days for their own page, UTC days for another member
+   (then it asks for the note that says so). *@
+@inject CommunityFormatter F
+
+<div class="kf-card kf-hmcard">
+    <div class="kf-hmcard__head">
+        <h2 class="kf-hmcard__title">@F[TextPrefix + ".Title"]</h2>
+        <div class="kf-hmcard__total">@F.Plural(TextPrefix + ".Total", _total, F.Number(_total))</div>
+    </div>
+    <div class="kf-hm" role="img" aria-label="@_ariaLabel">
+        <div class="kf-hm__months" aria-hidden="true">
+            @foreach (var column in _columns)
+            {
+                <span class="kf-hm__month">@column.MonthLabel</span>
+            }
+        </div>
+        <div class="kf-hm__grid" aria-hidden="true">
+            @foreach (var column in _columns)
+            {
+                <div class="kf-hm__col">
+                    @foreach (var cell in column.Cells)
+                    {
+                        <span class="kf-hm__cell @cell.CssClass" title="@cell.Title"></span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="kf-hm__legend" aria-hidden="true">
+        <span>@F["Profile.Activity.Less"]</span>
+        <span class="kf-hm__cell kf-hm__cell--l0"></span>
+        <span class="kf-hm__cell kf-hm__cell--l1"></span>
+        <span class="kf-hm__cell kf-hm__cell--l2"></span>
+        <span class="kf-hm__cell kf-hm__cell--l3"></span>
+        <span class="kf-hm__cell kf-hm__cell--l4"></span>
+        <span>@F["Profile.Activity.More"]</span>
+    </div>
+    @if (ShowUtcNote)
+    {
+        <p class="kf-hmcard__note">@F["Profile.Activity.Utc"]</p>
+    }
+</div>
+
+@code {
+    private const int Weeks = 53;
+
+    /// <summary>Number of sprints per calendar day. Days that are absent count for zero.</summary>
+    [Parameter, EditorRequired] public IReadOnlyDictionary<DateOnly, int> SprintCounts { get; set; } = default!;
+
+    /// <summary>The last day of the grid, in the same calendar as <see cref="SprintCounts"/>.</summary>
+    [Parameter, EditorRequired] public DateOnly Today { get; set; }
+
+    /// <summary>Says that the days are UTC days (another member's activity).</summary>
+    [Parameter] public bool ShowUtcNote { get; set; }
+
+    /// <summary>
+    /// Prefix of the title and total texts (<c>{prefix}.Title</c>, <c>{prefix}.Total.One/Other</c>):
+    /// "Profile.Activity" for the public block, "MyStats.Heatmap" for the visitor's own statistics.
+    /// </summary>
+    [Parameter] public string TextPrefix { get; set; } = "Profile.Activity";
+
+    private sealed record Cell(string CssClass, string Title);
+
+    private sealed record Column(string MonthLabel, List<Cell> Cells);
+
+    private IReadOnlyDictionary<DateOnly, int>? _builtFor;
+    private DateOnly _builtToday;
+    private List<Column> _columns = [];
+    private int _total;
+    private string _ariaLabel = "";
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_builtFor, SprintCounts) && _builtToday == Today) return;
+
+        _builtFor = SprintCounts;
+        _builtToday = Today;
+        Build();
+    }
+
+    private void Build()
+    {
+        // Columns are weeks from Monday: the grid starts on the Monday that is 52 weeks before this week's Monday.
+        var thisMonday = Today.AddDays(-(((int)Today.DayOfWeek + 6) % 7));
+        var gridStart = thisMonday.AddDays(-(Weeks - 1) * 7);
+
+        _columns = new List<Column>(Weeks);
+        _total = 0;
+        var lastMonth = -1;
+
+        for (var week = 0; week < Weeks; week++)
+        {
+            var first = gridStart.AddDays(week * 7);
+            var cells = new List<Cell>(7);
+
+            for (var day = 0; day < 7; day++)
+            {
+                var date = first.AddDays(day);
+                if (date > Today)
+                {
+                    cells.Add(new Cell("kf-hm__cell--empty", ""));
+                    continue;
+                }
+
+                SprintCounts.TryGetValue(date, out var count);
+                _total += count;
+                cells.Add(new Cell($"kf-hm__cell--l{Level(count)}", F.Plural("Profile.Activity.Cell", count, F.DayMonth(date), F.Number(count))));
+            }
+
+            // The month is named above the first column that starts in it. The very first column is skipped when the next
+            // one starts a new month: both labels would sit on top of each other.
+            var label = first.Month != lastMonth && !(week == 0 && first.AddDays(7).Month != first.Month)
+                ? F.MonthShort(first)
+                : "";
+            lastMonth = first.Month;
+            _columns.Add(new Column(label, cells));
+        }
+
+        _ariaLabel = F.Plural("Profile.Activity.Aria", _total, F.Number(_total));
+    }
+
+    private static int Level(int count) => count switch
+    {
+        <= 0 => 0,
+        <= 2 => 1,
+        <= 4 => 2,
+        <= 6 => 3,
+        _ => 4,
+    };
+}
