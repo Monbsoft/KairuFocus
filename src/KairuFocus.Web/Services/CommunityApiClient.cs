@@ -23,6 +23,9 @@ public sealed class CommunityApiClient
     public Task<OpenSprintsDto?> GetOpenSprintsAsync(CancellationToken ct = default) =>
         GetOrNullAsync<OpenSprintsDto>($"{Route}/open-sprints", ct);
 
+    public Task<ActiveTodayDto?> GetActiveTodayAsync(CancellationToken ct = default) =>
+        GetOrNullAsync<ActiveTodayDto>($"{Route}/active-today", ct);
+
     public Task<SprintParticipantsDto?> GetParticipantsAsync(CancellationToken ct = default) =>
         GetOrNullAsync<SprintParticipantsDto>($"{Route}/current-sprint/participants", ct);
 
