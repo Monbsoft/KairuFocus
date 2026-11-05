@@ -1,88 +1,94 @@
-/* Rendered on the Community page only: its tokens (--space-*, --text-*, --border-subtle...) are available. */
-.kf-open__sub {
-    color: var(--text-secondary);
-    font-size: var(--text-sm);
-    margin: 0;
+/* The live strip: the existing .kf-hero (brand background, white text, skeletons and alerts on dark), in one column.
+   Rendered on the Community page only: its tokens (--space-*, --text-*, --kf-blue-100, --target-min...) are available. */
+.kf-live {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: var(--space-4);
 }
 
-.kf-open__notice {
+.kf-live__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.kf-live__sub {
+    color: var(--kf-blue-100);
+    font-size: var(--text-sm);
+}
+
+.kf-live__closed,
+.kf-live__notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
     margin: var(--space-2) 0 0;
     padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-md);
-    background: var(--warning-subtle);
-    color: var(--warning-text);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
     font-size: var(--text-sm);
 }
 
-.kf-open__list {
-    list-style: none;
+.kf-live__notice {
     margin: 0;
-    padding: var(--space-2);
 }
 
-.kf-open__row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+.kf-live__notice a {
+    display: inline-flex;
     align-items: center;
-    column-gap: var(--space-4);
-    row-gap: var(--space-2);
-    padding: var(--space-3);
+    min-height: var(--target-min);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Cards: as many columns of at least 250 px as fit (one column when the strip is narrower). */
+.kf-live__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kf-live__skel {
+    height: 160px;
     border-radius: var(--radius-md);
 }
 
-.kf-open__row + .kf-open__row {
-    border-top: 1px solid var(--border-subtle);
-}
-
-.kf-open__who {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3);
-    min-width: 0;
-    min-height: var(--target-min);
-    color: var(--text-primary);
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.kf-open__who:hover .kf-open__name {
-    text-decoration: underline;
-}
-
-.kf-open__name {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.kf-open__meta {
+.kf-live__empty {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1) var(--space-2);
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: var(--text-sm);
-}
-
-.kf-open__action {
-    min-width: 0;
-}
-
-.kf-open__mine {
-    display: inline-flex;
     align-items: center;
-    min-height: var(--target-min);
-    padding: 0 var(--space-3);
-    border-radius: var(--radius-sm);
-    background: var(--primary-subtle);
-    color: var(--text-primary);
-    font-size: var(--text-sm);
-    font-weight: 700;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-5);
 }
 
-@media (max-width: 767.98px) {
-    .kf-open__row {
-        grid-template-columns: minmax(0, 1fr);
-    }
+.kf-live__emptytext {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 52ch;
+}
+
+.kf-live__emptytitle {
+    font-size: var(--text-md);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.kf-live__more {
+    align-self: flex-start;
+}
+
+/* The focus ring of the page is blue on blue here: a light one on the dark strip (links, buttons, and the title once focused by code). */
+.kf-live ::deep a:focus-visible,
+.kf-live ::deep .kf-linkbtn:focus-visible {
+    outline-color: var(--kf-blue-100);
+}
+
+.kf-live h2:focus-visible {
+    outline-color: var(--kf-blue-100);
 }

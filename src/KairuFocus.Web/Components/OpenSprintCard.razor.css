@@ -1,0 +1,92 @@
+/* A card on the dark strip: translucent white over --brand-hero. Rendered on the Community page only (page tokens available). */
+.kf-sprint {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.kf-sprint--mine {
+    border-style: dashed;
+}
+
+.kf-sprint__who {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    min-height: var(--target-min);
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.kf-sprint__who:hover .kf-sprint__name {
+    text-decoration: underline;
+}
+
+/* A long name without spaces wraps instead of widening the card. */
+.kf-sprint__name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.kf-sprint__time {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0 var(--space-2);
+    color: var(--kf-blue-100);
+    font-size: var(--text-sm);
+}
+
+.kf-sprint__clock {
+    color: #fff;
+    font-size: var(--text-xl, 1.75rem);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.kf-sprint__with {
+    color: var(--kf-blue-100);
+    font-size: var(--text-sm);
+}
+
+.kf-sprint__action {
+    margin-top: auto;
+}
+
+/* The button belongs to JoinSprintButton: full width of the card, from here. */
+.kf-sprint__action ::deep .kf-join {
+    align-items: stretch;
+}
+
+.kf-sprint__action ::deep .kf-join__btn {
+    width: 100%;
+}
+
+.kf-sprint__mine {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    margin-top: auto;
+    color: var(--kf-blue-100);
+    font-size: var(--text-sm);
+}
+
+.kf-sprint__mine span {
+    font-weight: 700;
+}
+
+.kf-sprint__mine a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target-min);
+    color: #fff;
+    font-weight: 600;
+}
