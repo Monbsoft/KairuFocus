@@ -13,6 +13,7 @@ using KairuFocus.Application.Community.Commands.StartGroupBreak;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
+using KairuFocus.Application.Community.Queries.GetActiveToday;
 using KairuFocus.Application.Community.Queries.GetOpenSprints;
 using KairuFocus.Application.Community.Queries.GetSprintParticipants;
 using KairuFocus.Application.Pomodoro.Commands.StartSession;
@@ -34,6 +35,7 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     private const string MembershipNameUrl = "api/community/membership/name";
     private const string MemberUrl = "api/community/members/RenardAgile";
     private const string OpenSprintsUrl = "api/community/open-sprints";
+    private const string ActiveTodayUrl = "api/community/active-today";
     private const string JoinUrl = "api/community/open-sprints/LoutreTenace/join";
     private const string ParticipantsUrl = "api/community/current-sprint/participants";
     private const string ClosedUrl = "api/community/current-sprint/closed";
@@ -74,6 +76,7 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [InlineData("DELETE", MembershipUrl)]
     [InlineData("GET", MemberUrl)]
     [InlineData("GET", OpenSprintsUrl)]
+    [InlineData("GET", ActiveTodayUrl)]
     [InlineData("POST", JoinUrl)]
     [InlineData("GET", ParticipantsUrl)]
     [InlineData("PUT", ClosedUrl)]
@@ -351,6 +354,25 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
                 "participantCount": 3, "isMine": false
               } ]
             }
+            """, response);
+    }
+
+    [Fact]
+    public async Task Should_ReturnActiveTodayContract_When_Requested()
+    {
+        _mediator.SendResult = _ => new GetActiveTodayResult(
+            7,
+            [
+                new("lea_dev", "https://avatars.githubusercontent.com/u/1", false),
+                new("nora", null, true),
+            ]);
+
+        var response = await _client.GetAsync(ActiveTodayUrl);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        AssertNoForbiddenKey(await ReadJsonAsync(response));
+        await AssertJsonAsync("""
+            {"total":7,"members":[{"name":"lea_dev","avatarUrl":"https://avatars.githubusercontent.com/u/1","isMe":false},{"name":"nora","avatarUrl":null,"isMe":true}]}
             """, response);
     }
 

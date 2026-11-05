@@ -8,6 +8,7 @@ using KairuFocus.Application.Community.Commands.StartGroupBreak;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
+using KairuFocus.Application.Community.Queries.GetActiveToday;
 using KairuFocus.Application.Community.Queries.GetOpenSprints;
 using KairuFocus.Application.Community.Queries.GetSprintParticipants;
 using Microsoft.AspNetCore.Authorization;
@@ -106,6 +107,16 @@ public sealed class CommunityController : ControllerBase
     {
         var result = await _mediator.SendAsync<GetOpenSprintsQuery, GetOpenSprintsResult>(
             new GetOpenSprintsQuery(), ct);
+        return Ok(result);
+    }
+
+    // ── UC-CO-13 : membres actifs aujourd'hui ──────────────────────────────
+
+    [HttpGet("active-today")]
+    public async Task<IActionResult> GetActiveToday(CancellationToken ct)
+    {
+        var result = await _mediator.SendAsync<GetActiveTodayQuery, GetActiveTodayResult>(
+            new GetActiveTodayQuery(), ct);
         return Ok(result);
     }
 
