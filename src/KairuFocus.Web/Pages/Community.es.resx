@@ -789,6 +789,9 @@
   <data name="Participants.With.Many.Other" xml:space="preserve">
 	<value>Con {0}, {1}, {2} y {3} más</value>
   </data>
+  <data name="Participants.NewTab" xml:space="preserve">
+	<value>(se abre en una pestaña nueva)</value>
+  </data>
   <data name="Participants.Close" xml:space="preserve">
 	<value>Cerrar este sprint</value>
   </data>

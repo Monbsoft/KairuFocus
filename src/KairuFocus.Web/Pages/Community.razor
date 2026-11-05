@@ -20,7 +20,7 @@
 
     @* The live strip: independent of the period and of the other sections (each of its two parts shows its own error). *@
     <OpenSprintsSection Data="_openSprints" Failed="_openSprintsFailed"
-                        OnRetry="RetryOpenSprintsAsync" OnChanged="LoadOpenSprintsAsync">
+                        OnRetry="RetryOpenSprintsAsync" OnChanged="HandleStripChanged">
         <Footer>
             <ActiveTodayStrip Data="_activeToday" Failed="_activeTodayFailed" OnRetry="RetryActiveTodayAsync" />
         </Footer>
@@ -85,6 +85,11 @@
     private bool _activeTodayFailed;
     private CancellationTokenSource? _activeTodayCts;
     private DateTimeOffset _activeTodayRequestedAt = DateTimeOffset.MinValue;
+
+    // A sprint ends on the clients: each participant's Pomodoro page records it when its own countdown reaches zero.
+    // After a card of the strip ends, "Actifs aujourd'hui" is read again once they had the time to do so.
+    private static readonly TimeSpan CompletionGrace = TimeSpan.FromSeconds(5);
+    private CancellationTokenSource? _stripChangedCts;
 
     /// <summary>The period lives in the URL (<c>?periode=mois</c>) so that Back and a reload keep it.</summary>
     [Parameter, SupplyParameterFromQuery(Name = "periode")]
@@ -151,6 +156,7 @@
         _recap.Cancel();
         _openSprintsCts?.Cancel();
         _activeTodayCts?.Cancel();
+        _stripChangedCts?.Cancel();
 
         try
         {
@@ -296,12 +302,50 @@
         if (now - _activeTodayRequestedAt >= ReadFreshness)
             _ = LoadActiveTodayAsync();
 
+        await ReadPresenceAsync(ct);
+    }
+
+    private async Task ReadPresenceAsync(CancellationToken ct)
+    {
         var presence = await Gamification.GetCommunityPresenceAsync(ct);
-        if (ct.IsCancellationRequested) return;
+        if (ct.IsCancellationRequested || _disposed) return;
 
         // A failure hides the line: the presence is nice to have, not worth an error message.
         _presence = presence;
         await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// A card of the strip reached zero, or its sprint turned out to be no longer open (410). The strip, the subtitle and
+    /// "Actifs aujourd'hui" must not contradict each other until the next tick of the presence loop: the list and the
+    /// presence are read at once, "Actifs aujourd'hui" a little later (see <see cref="CompletionGrace"/>).
+    /// Not awaited by the caller: the countdown that raised it must not wait for the reads.
+    /// </summary>
+    private void HandleStripChanged()
+    {
+        if (_disposed) return;
+
+        _ = LoadOpenSprintsAsync();
+
+        _stripChangedCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _stripChangedCts = cts;
+        _ = ReadAfterSprintEndedAsync(cts.Token);
+    }
+
+    private async Task ReadAfterSprintEndedAsync(CancellationToken ct)
+    {
+        try
+        {
+            await ReadPresenceAsync(ct);
+            await Task.Delay(CompletionGrace, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (!_disposed) await LoadActiveTodayAsync();
     }
 
     // ── Open sprints ────────────────────────────────────────────────────────

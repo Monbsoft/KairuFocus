@@ -789,6 +789,9 @@
   <data name="Participants.With.Many.Other" xml:space="preserve">
 	<value>与 {0}、{1}、{2} 等 {3} 人一起</value>
   </data>
+  <data name="Participants.NewTab" xml:space="preserve">
+	<value>（在新标签页中打开）</value>
+  </data>
   <data name="Participants.Close" xml:space="preserve">
 	<value>关闭此冲刺</value>
   </data>

@@ -52,6 +52,21 @@
     overflow-wrap: anywhere;
 }
 
+/* The name is a link to the member's profile, inside the localized sentence (hence ::deep). Inline link in a
+   sentence: exempt from the 24 px target size (WCAG 2.5.8). */
+.kf-status__names ::deep a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.kf-status__names ::deep a:focus-visible {
+    outline: 2px solid var(--kf-blue-100, #cfe2ff);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
 /* The status zone is always mounted: while empty it must not add a gap to the column. */
 .kf-status > [role="status"]:empty {
     margin-top: calc(-1 * var(--space-2));

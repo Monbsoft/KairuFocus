@@ -789,6 +789,9 @@
   <data name="Participants.With.Many.Other" xml:space="preserve">
 	<value>{0}님, {1}님, {2}님 외 {3}명과 함께</value>
   </data>
+  <data name="Participants.NewTab" xml:space="preserve">
+	<value>(새 탭에서 열림)</value>
+  </data>
   <data name="Participants.Close" xml:space="preserve">
 	<value>이 스프린트 닫기</value>
   </data>
