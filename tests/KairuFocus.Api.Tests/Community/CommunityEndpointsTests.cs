@@ -180,7 +180,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [Theory]
     [InlineData(CommunityErrors.Community.InvalidName, HttpStatusCode.BadRequest, "invalid-name")]
     [InlineData(CommunityErrors.Community.ReservedName, HttpStatusCode.BadRequest, "name-unavailable")]
-    [InlineData(CommunityErrors.Community.LoginOfAnotherUser, HttpStatusCode.BadRequest, "name-unavailable")]
     [InlineData(CommunityErrors.Community.NameTaken, HttpStatusCode.Conflict, "name-unavailable")]
     [InlineData(CommunityErrors.Community.AlreadyMember, HttpStatusCode.Conflict, "already-member")]
     public async Task Should_MapError_When_JoinCommunityFails(string error, HttpStatusCode status, string code)
@@ -196,7 +195,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [Theory]
     [InlineData(CommunityErrors.Community.InvalidName, HttpStatusCode.BadRequest, "invalid-name")]
     [InlineData(CommunityErrors.Community.ReservedName, HttpStatusCode.BadRequest, "name-unavailable")]
-    [InlineData(CommunityErrors.Community.LoginOfAnotherUser, HttpStatusCode.BadRequest, "name-unavailable")]
     [InlineData(CommunityErrors.Community.NameTaken, HttpStatusCode.Conflict, "name-unavailable")]
     [InlineData(CommunityErrors.Community.NotMember, HttpStatusCode.NotFound, "not-member")]
     public async Task Should_MapError_When_ChangeNameFails(string error, HttpStatusCode status, string code)
@@ -263,13 +261,12 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     }
 
     [Fact]
-    public async Task Should_ReturnSameBody_When_NameIsReservedOrAnotherUsersLogin()
+    public async Task Should_ReturnSameBody_When_NameIsReservedOrTaken()
     {
         var bodies = new List<string>();
         foreach (var error in new[]
                  {
                      CommunityErrors.Community.ReservedName,
-                     CommunityErrors.Community.LoginOfAnotherUser,
                      CommunityErrors.Community.NameTaken
                  })
         {

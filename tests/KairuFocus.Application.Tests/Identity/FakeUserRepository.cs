@@ -24,8 +24,4 @@ internal sealed class FakeUserRepository : IUserRepository
         UpdateCount++;
         return Task.CompletedTask;
     }
-
-    public Task<bool> IsLoginUsedByOtherAsync(string login, UserId userId, CancellationToken ct = default)
-        => Task.FromResult(Users.Any(u =>
-            u.Id != userId && string.Equals(u.Login, login, StringComparison.OrdinalIgnoreCase)));
 }

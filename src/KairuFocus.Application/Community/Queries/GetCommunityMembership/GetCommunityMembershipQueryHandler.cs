@@ -33,7 +33,7 @@ public sealed class GetCommunityMembershipQueryHandler : IQueryHandler<GetCommun
 
         // Without a user row there is no login to propose.
         var loginAvailable = user is not null
-            && await new ProfileNameResolver(_userRepository, _profileRepository)
+            && await new ProfileNameResolver(_profileRepository)
                 .IsGitHubLoginAvailableAsync(user, profile?.NameKey, cancellationToken);
 
         return profile is null

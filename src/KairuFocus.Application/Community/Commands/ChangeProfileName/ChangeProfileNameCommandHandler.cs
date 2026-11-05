@@ -42,7 +42,7 @@ public sealed class ChangeProfileNameCommandHandler : ICommandHandler<ChangeProf
         if (user is null)
             return ChangeProfileNameResult.Failure(CommunityErrors.Community.UserNotFound);
 
-        var resolver = new ProfileNameResolver(_userRepository, _profileRepository);
+        var resolver = new ProfileNameResolver(_profileRepository);
         var resolution = await resolver.ResolveAsync(
             user, command.Source, command.ChosenName, profile.NameKey, cancellationToken);
         if (!resolution.IsSuccess)

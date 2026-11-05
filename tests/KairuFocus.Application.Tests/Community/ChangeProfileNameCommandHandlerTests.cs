@@ -84,32 +84,6 @@ public sealed class ChangeProfileNameCommandHandlerTests
     }
 
     [Fact]
-    public async Task Should_SucceedWithoutWrite_When_OwnChosenNameBecameAnotherUsersLogin()
-    {
-        _profiles.Seed(_me.Id, "alice");
-        _users.Users.Add(User.Create("gh-9", "alice", "Alice", null));
-
-        var result = await _sut.Handle(new ChangeProfileNameCommand(ProfileNameSource.Chosen, "alice"));
-
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Error);
-        Assert.Equal(0, _profiles.TryUpdateCallCount);
-    }
-
-    [Fact]
-    public async Task Should_AllowCaseOnlyChange_When_OwnChosenNameBecameAnotherUsersLogin()
-    {
-        _profiles.Seed(_me.Id, "alice");
-        _users.Users.Add(User.Create("gh-9", "alice", "Alice", null));
-
-        var result = await _sut.Handle(new ChangeProfileNameCommand(ProfileNameSource.Chosen, "Alice"));
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal("Alice", Assert.Single(_profiles.Stored, p => p.UserId == _me.Id).Name.Value);
-        Assert.Equal(1, _profiles.TryUpdateCallCount);
-    }
-
-    [Fact]
     public async Task Should_RefreshAvatar_When_SameGitHubNameIsSavedAgain()
     {
         _profiles.Seed(_me.Id, "octocat", ProfileNameSource.GitHub, null);
@@ -163,16 +137,18 @@ public sealed class ChangeProfileNameCommandHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnLoginOfAnotherUser_When_ChosenNameIsLoginOfAnotherUser()
+    public async Task Should_AcceptName_When_ChosenNameIsLoginOfAnotherUser()
     {
         _profiles.Seed(_me.Id, "bobby");
         _users.Users.Add(User.Create("gh-9", "someoneelse", "Someone Else", null));
 
         var result = await _sut.Handle(new ChangeProfileNameCommand(ProfileNameSource.Chosen, "SomeoneElse"));
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal(CommunityErrors.Community.LoginOfAnotherUser, result.Error);
-        Assert.Equal(0, _profiles.TryUpdateCallCount);
+        Assert.True(result.IsSuccess);
+        var stored = Assert.Single(_profiles.Stored);
+        Assert.Equal("SomeoneElse", stored.Name.Value);
+        Assert.Equal(ProfileNameSource.Chosen, stored.NameSource);
+        Assert.Null(stored.AvatarUrl);
     }
 
     [Fact]

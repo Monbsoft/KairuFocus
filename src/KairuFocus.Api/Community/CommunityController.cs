@@ -168,7 +168,7 @@ public sealed class CommunityController : ControllerBase
         {
             CommunityErrors.Community.InvalidName =>
                 Body(StatusCodes.Status400BadRequest, error, "invalid-name"),
-            CommunityErrors.Community.ReservedName or CommunityErrors.Community.LoginOfAnotherUser =>
+            CommunityErrors.Community.ReservedName =>
                 Body(StatusCodes.Status400BadRequest, NameUnavailableText, "name-unavailable"),
             CommunityErrors.Community.NameTaken =>
                 Body(StatusCodes.Status409Conflict, NameUnavailableText, "name-unavailable"),

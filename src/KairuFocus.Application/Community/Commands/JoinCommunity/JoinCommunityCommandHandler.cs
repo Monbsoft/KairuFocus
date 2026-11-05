@@ -44,7 +44,7 @@ public sealed class JoinCommunityCommandHandler : ICommandHandler<JoinCommunityC
         if (user is null)
             return JoinCommunityResult.Failure(CommunityErrors.Community.UserNotFound);
 
-        var resolver = new ProfileNameResolver(_userRepository, _profileRepository);
+        var resolver = new ProfileNameResolver(_profileRepository);
         var resolution = await resolver.ResolveAsync(
             user, command.Source, command.ChosenName, ownNameKey: null, cancellationToken);
         if (!resolution.IsSuccess)

@@ -27,10 +27,4 @@ internal sealed class EfCoreUserRepository : IUserRepository
         _context.Users.Update(user);
         await _context.SaveChangesAsync(ct);
     }
-
-    public async Task<bool> IsLoginUsedByOtherAsync(string login, UserId userId, CancellationToken ct = default)
-    {
-        var normalized = login.ToLowerInvariant();
-        return await _context.Users.AnyAsync(u => u.Id != userId && u.Login.ToLower() == normalized, ct);
-    }
 }

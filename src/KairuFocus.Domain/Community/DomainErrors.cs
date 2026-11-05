@@ -11,7 +11,6 @@ public static class DomainErrors
             "and start with a letter or a digit.";
         public const string ReservedName = "This profile name is reserved.";
         public const string NameTaken = "This profile name is already taken.";
-        public const string LoginOfAnotherUser = "This profile name is the GitHub login of another user.";
         public const string AlreadyMember = "The user is already a member of the community.";
         public const string NotMember = "The user is not a member of the community.";
         public const string SprintNotJoinable = "This sprint cannot be joined.";

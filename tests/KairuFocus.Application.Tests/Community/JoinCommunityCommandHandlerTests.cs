@@ -143,15 +143,17 @@ public sealed class JoinCommunityCommandHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnLoginOfAnotherUser_When_ChosenNameIsLoginOfAnotherUser()
+    public async Task Should_AcceptName_When_ChosenNameIsLoginOfAnotherUser()
     {
         _users.Users.Add(User.Create("gh-9", "SomeoneElse", "Someone Else", null));
 
         var result = await _sut.Handle(new JoinCommunityCommand(ProfileNameSource.Chosen, "someoneelse"));
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal(CommunityErrors.Community.LoginOfAnotherUser, result.Error);
-        Assert.Empty(_profiles.Stored);
+        Assert.True(result.IsSuccess);
+        var stored = Assert.Single(_profiles.Stored);
+        Assert.Equal("someoneelse", stored.Name.Value);
+        Assert.Equal(ProfileNameSource.Chosen, stored.NameSource);
+        Assert.Null(stored.AvatarUrl);
     }
 
     [Fact]

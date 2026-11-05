@@ -26,12 +26,10 @@ internal sealed record ProfileNameResolution
 /// </summary>
 internal sealed class ProfileNameResolver
 {
-    private readonly IUserRepository _userRepository;
     private readonly IMemberProfileRepository _profileRepository;
 
-    public ProfileNameResolver(IUserRepository userRepository, IMemberProfileRepository profileRepository)
+    public ProfileNameResolver(IMemberProfileRepository profileRepository)
     {
-        _userRepository = userRepository;
         _profileRepository = profileRepository;
     }
 
@@ -63,15 +61,11 @@ internal sealed class ProfileNameResolver
 
             case ProfileNameSource.Chosen:
             {
+                // No check against the logins of other users (ADR-026, revised): it would reveal that a GitHub
+                // login has a KairuFocus account. Only a GitHub-sourced name carries the GitHub link and avatar.
                 var nameResult = ProfileName.Create(chosenName?.Trim());
                 if (nameResult.IsFailure)
                     return ProfileNameResolution.Failure(nameResult.Error);
-
-                // Anti-impersonation: a chosen name cannot be the GitHub login of another user. The name the
-                // member already holds is exempt: someone may have signed up with that login since.
-                if (nameResult.Value.Key != ownNameKey
-                    && await _userRepository.IsLoginUsedByOtherAsync(nameResult.Value.Value, user.Id, cancellationToken))
-                    return ProfileNameResolution.Failure(DomainErrors.Community.LoginOfAnotherUser);
 
                 if (await IsTakenByOtherAsync(nameResult.Value, ownNameKey, cancellationToken))
                     return ProfileNameResolution.Failure(DomainErrors.Community.NameTaken);
