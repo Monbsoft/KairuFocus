@@ -81,15 +81,6 @@
   <data name="Community.Sub.Month" xml:space="preserve">
 	<value>{0}, du 1ᵉʳ au {1}</value>
   </data>
-  <data name="Community.Sub.Global" xml:space="preserve">
-	<value>Depuis ton premier XP, le {0}</value>
-  </data>
-  <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
-	<value>Ton premier XP viendra avec ton premier sprint d'au moins 5 minutes</value>
-  </data>
-  <data name="Community.Sub.GlobalSince" xml:space="preserve">
-	<value>Depuis ton premier XP</value>
-  </data>
   <data name="Community.Sub.Fallback" xml:space="preserve">
 	<value>Les membres qui travaillent, maintenant et aujourd'hui</value>
   </data>
@@ -161,15 +152,6 @@
   </data>
   <data name="Community.Place.Unranked.Global" xml:space="preserve">
 	<value>Pas encore classé au général</value>
-  </data>
-  <data name="Community.Place.Join.Title" xml:space="preserve">
-	<value>Tu n'as pas encore de place.</value>
-  </data>
-  <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>Rejoins la communauté depuis tes paramètres : les autres membres verront ton nom, ton XP et ton rang.</value>
-  </data>
-  <data name="Community.Place.Join.Link" xml:space="preserve">
-	<value>Rejoindre dans les paramètres</value>
   </data>
   <data name="Community.Ordinal.One" xml:space="preserve">
 	<value>{0}er</value>
@@ -245,9 +227,6 @@
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
 	<value>{0} h {1:00}</value>
-  </data>
-  <data name="Community.Progress.Heading" xml:space="preserve">
-	<value>Ma progression</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>Record perso</value>
@@ -332,12 +311,6 @@
   </data>
   <data name="Community.Together.Members.Other" xml:space="preserve">
 	<value>{0} membres actifs</value>
-  </data>
-  <data name="Community.Together.Mine.One" xml:space="preserve">
-	<value>dont {0} sprint de toi</value>
-  </data>
-  <data name="Community.Together.Mine.Other" xml:space="preserve">
-	<value>dont {0} sprints de toi</value>
   </data>
   <data name="Community.Together.Error" xml:space="preserve">
 	<value>Impossible de charger le bilan de la communauté.</value>
@@ -745,9 +718,6 @@
   </data>
   <data name="OpenSprints.Loading" xml:space="preserve">
 	<value>Chargement des sprints ouverts…</value>
-  </data>
-  <data name="OpenSprints.Empty" xml:space="preserve">
-	<value>Personne n'a de sprint ouvert pour le moment. Lance le tien : d'autres pourront te rejoindre.</value>
   </data>
   <data name="OpenSprints.Error" xml:space="preserve">
 	<value>Impossible de lire les sprints ouverts pour le moment.</value>

@@ -81,14 +81,17 @@
   <data name="Community.Sub.Month" xml:space="preserve">
 	<value>{0}, с 1 по {1}</value>
   </data>
-  <data name="Community.Sub.Global" xml:space="preserve">
-	<value>С твоего первого XP, {0}</value>
+  <data name="Community.Sub.Fallback" xml:space="preserve">
+	<value>Участники за работой: сейчас и сегодня</value>
   </data>
-  <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
-	<value>Твой первый XP появится после первого спринта длительностью не менее 5 минут</value>
+  <data name="Community.Zone.Title" xml:space="preserve">
+	<value>В сообществе</value>
   </data>
-  <data name="Community.Sub.GlobalSince" xml:space="preserve">
-	<value>С твоего первого XP</value>
+  <data name="Community.Zone.Sub.Global" xml:space="preserve">
+	<value>С самого начала</value>
+  </data>
+  <data name="Community.MyProgress.Link" xml:space="preserve">
+	<value>Мой прогресс в моём профиле</value>
   </data>
   <data name="Community.Announce.Week" xml:space="preserve">
 	<value>Показан рейтинг недели</value>
@@ -100,16 +103,16 @@
 	<value>Показан общий рейтинг</value>
   </data>
   <data name="Community.Presence.Now.One" xml:space="preserve">
-	<value>Участников в спринте сейчас: {0}</value>
+	<value>Пользователей в спринте сейчас: {0}</value>
   </data>
   <data name="Community.Presence.Now.Other" xml:space="preserve">
-	<value>Участников в спринте сейчас: {0}</value>
+	<value>Пользователей в спринте сейчас: {0}</value>
   </data>
   <data name="Community.Presence.Today.One" xml:space="preserve">
-	<value>Участников, уже сделавших спринт сегодня: {0}</value>
+	<value>Пользователей, уже сделавших спринт сегодня: {0}</value>
   </data>
   <data name="Community.Presence.Today.Other" xml:space="preserve">
-	<value>Участников, уже сделавших спринт сегодня: {0}</value>
+	<value>Пользователей, уже сделавших спринт сегодня: {0}</value>
   </data>
   <data name="Community.Place.Heading" xml:space="preserve">
 	<value>Моё место в сообществе</value>
@@ -149,15 +152,6 @@
   </data>
   <data name="Community.Place.Unranked.Global" xml:space="preserve">
 	<value>За всё время пока нет места в рейтинге</value>
-  </data>
-  <data name="Community.Place.Join.Title" xml:space="preserve">
-	<value>У тебя пока нет места.</value>
-  </data>
-  <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>Вступи в сообщество в настройках: другие участники увидят твоё имя, твой XP и твой ранг.</value>
-  </data>
-  <data name="Community.Place.Join.Link" xml:space="preserve">
-	<value>Вступить в настройках</value>
   </data>
   <data name="Community.Ordinal.One" xml:space="preserve">
 	<value>{0}-й</value>
@@ -233,9 +227,6 @@
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
 	<value>{0} ч {1} мин</value>
-  </data>
-  <data name="Community.Progress.Heading" xml:space="preserve">
-	<value>Мой прогресс</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>Личный рекорд</value>
@@ -320,12 +311,6 @@
   </data>
   <data name="Community.Together.Members.Other" xml:space="preserve">
 	<value>Активных участников: {0}</value>
-  </data>
-  <data name="Community.Together.Mine.One" xml:space="preserve">
-	<value>Из них твоих спринтов: {0}</value>
-  </data>
-  <data name="Community.Together.Mine.Other" xml:space="preserve">
-	<value>Из них твоих спринтов: {0}</value>
   </data>
   <data name="Community.Together.Error" xml:space="preserve">
 	<value>Не удалось загрузить итоги сообщества.</value>
@@ -541,10 +526,10 @@
 	<value>Выбрать период</value>
   </data>
   <data name="MyStats.Period.Week" xml:space="preserve">
-	<value>Неделя</value>
+	<value>7 дней</value>
   </data>
   <data name="MyStats.Period.Month" xml:space="preserve">
-	<value>Месяц</value>
+	<value>30 дней</value>
   </data>
   <data name="MyStats.Range.Week" xml:space="preserve">
 	<value>Последние 7 дней</value>
@@ -676,7 +661,7 @@
 	<value>Произошла ошибка. Повтори через мгновение.</value>
   </data>
   <data name="Settings.Community.Join" xml:space="preserve">
-	<value>Вступить в сообщество</value>
+	<value>Включить сообщество</value>
   </data>
   <data name="Settings.Community.Joining" xml:space="preserve">
 	<value>Активация…</value>
@@ -729,9 +714,6 @@
   <data name="OpenSprints.Loading" xml:space="preserve">
 	<value>Загрузка открытых спринтов…</value>
   </data>
-  <data name="OpenSprints.Empty" xml:space="preserve">
-	<value>Сейчас ни у кого нет открытого спринта. Запусти свой: другие смогут присоединиться.</value>
-  </data>
   <data name="OpenSprints.Error" xml:space="preserve">
 	<value>Сейчас не удаётся прочитать открытые спринты.</value>
   </data>
@@ -743,6 +725,45 @@
   </data>
   <data name="OpenSprints.Participants.Other" xml:space="preserve">
 	<value>Участников: {0}</value>
+  </data>
+  <data name="OpenSprints.Empty.Title" xml:space="preserve">
+	<value>Сейчас никто не в спринте</value>
+  </data>
+  <data name="OpenSprints.Empty.Body" xml:space="preserve">
+	<value>Запусти свой: другие участники увидят его здесь и смогут присоединиться.</value>
+  </data>
+  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
+	<value>Запустить спринт</value>
+  </data>
+  <data name="OpenSprints.Alone" xml:space="preserve">
+	<value>Пока никто не присоединился</value>
+  </data>
+  <data name="OpenSprints.More.One" xml:space="preserve">
+	<value>Показать другой спринт</value>
+  </data>
+  <data name="OpenSprints.More.Other" xml:space="preserve">
+	<value>Показать другие спринты: {0}</value>
+  </data>
+  <data name="OpenSprints.Less" xml:space="preserve">
+	<value>Свернуть</value>
+  </data>
+  <data name="ActiveToday.Title" xml:space="preserve">
+	<value>Активны сегодня</value>
+  </data>
+  <data name="ActiveToday.More.One" xml:space="preserve">
+	<value>ещё {0}</value>
+  </data>
+  <data name="ActiveToday.More.Other" xml:space="preserve">
+	<value>ещё {0}</value>
+  </data>
+  <data name="ActiveToday.You" xml:space="preserve">
+	<value>ты</value>
+  </data>
+  <data name="ActiveToday.Empty" xml:space="preserve">
+	<value>Сегодня никто ещё не завершил спринт.</value>
+  </data>
+  <data name="ActiveToday.Error" xml:space="preserve">
+	<value>Не удаётся загрузить участников, активных сегодня.</value>
   </data>
   <data name="OpenSprints.Mine" xml:space="preserve">
 	<value>Твой спринт</value>
@@ -796,10 +817,10 @@
 	<value>Подключение к спринту…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>Чтобы присоединиться к спринту, сначала вступи в сообщество.</value>
+	<value>Включи сообщество, чтобы присоединиться к спринту: другие участники увидят твоё имя и твой XP.</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
-	<value>Вступить в сообщество</value>
+	<value>Включить сообщество</value>
   </data>
   <data name="Join.ShortWarning" xml:space="preserve">
 	<value>Осталось меньше 5 минут: за этот спринт XP не начисляется.</value>
@@ -818,5 +839,20 @@
   </data>
   <data name="Join.Error" xml:space="preserve">
 	<value>Сейчас не удаётся присоединиться к этому спринту. Повтори через мгновение.</value>
+  </data>
+  <data name="Profile.Progress.Title" xml:space="preserve">
+	<value>Мой прогресс</value>
+  </data>
+  <data name="Profile.Progress.Period.Aria" xml:space="preserve">
+	<value>Выбрать период твоего прогресса</value>
+  </data>
+  <data name="Profile.Progress.Period.Week" xml:space="preserve">
+	<value>Эта неделя</value>
+  </data>
+  <data name="Profile.Progress.Period.Month" xml:space="preserve">
+	<value>Этот месяц</value>
+  </data>
+  <data name="Profile.Progress.Period.Global" xml:space="preserve">
+	<value>С самого начала</value>
   </data>
 </root>
