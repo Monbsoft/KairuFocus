@@ -12,12 +12,19 @@ internal sealed class FakeMemberDirectoryReadRepository : IMemberDirectoryReadRe
 
     private readonly Dictionary<string, PublicMemberProfile> _profiles = [];
     private readonly Dictionary<string, MemberActivity> _activities = [];
+    private ActiveMembers _active = new(0, []);
 
     /// <summary>Thrown by every read when set.</summary>
     public Exception? ThrowOnRead { get; set; }
 
     /// <summary>The window start received by the last <see cref="GetActivityAsync"/> call.</summary>
     public DateTime? LastHeatmapSinceUtc { get; private set; }
+
+    /// <summary>The window and cap received by the last <see cref="GetActiveMembersAsync"/> call.</summary>
+    public (DateTime From, DateTime To, int Max)? LastActiveWindow { get; private set; }
+
+    /// <summary>Sets what <see cref="GetActiveMembersAsync"/> returns.</summary>
+    public void SeedActive(ActiveMembers result) => _active = result;
 
     /// <summary>Adds a member. A later seed with the same key replaces the previous one.</summary>
     public void Seed(PublicMemberProfile profile, MemberActivity? activity = null)
@@ -41,6 +48,15 @@ internal sealed class FakeMemberDirectoryReadRepository : IMemberDirectoryReadRe
         LastHeatmapSinceUtc = heatmapSinceUtc;
 
         return Task.FromResult(_activities.GetValueOrDefault(name.Key, NoActivity));
+    }
+
+    public Task<ActiveMembers> GetActiveMembersAsync(DateTime fromUtc, DateTime toUtc, int maxMembers, CancellationToken ct = default)
+    {
+        ThrowIfReadFails();
+
+        LastActiveWindow = (fromUtc, toUtc, maxMembers);
+
+        return Task.FromResult(_active);
     }
 
     private void ThrowIfReadFails()

@@ -31,6 +31,9 @@ internal sealed class EfCoreMemberDirectoryReadRepository : IMemberDirectoryRead
             .Select(p => new PublicMemberProfile(p.Name, p.NameSource, p.AvatarUrl, p.JoinedAtUtc))
             .FirstOrDefaultAsync(ct);
 
+    public Task<ActiveMembers> GetActiveMembersAsync(DateTime fromUtc, DateTime toUtc, int maxMembers, CancellationToken ct = default) =>
+        throw new NotImplementedException("T2");
+
     public async Task<MemberActivity> GetActivityAsync(ProfileName name, DateTime heatmapSinceUtc, CancellationToken ct = default)
     {
         // Totals are all-time, only the days are bounded by the window: every completed sprint is read.
