@@ -13,6 +13,7 @@ public sealed class MemberDirectorySqlTests
 {
     private const string FindByName = nameof(IMemberDirectoryReadRepository.FindByNameAsync);
     private const string GetActivity = nameof(IMemberDirectoryReadRepository.GetActivityAsync);
+    private const string GetActive = nameof(IMemberDirectoryReadRepository.GetActiveMembersAsync);
 
     private static readonly ProfileName Name = ProfileName.Create("Lea_Dev").Value;
     private static readonly DateTime Since = new(2025, 10, 25, 0, 0, 0, DateTimeKind.Utc);
@@ -20,6 +21,7 @@ public sealed class MemberDirectorySqlTests
     [Theory]
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
+    [InlineData(GetActive)]
     public async Task Should_NotReferenceUsersEmailOrDisplayName_When_Queried(string method)
     {
         var command = await CaptureAsync(method);
@@ -32,6 +34,7 @@ public sealed class MemberDirectorySqlTests
     [Theory]
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
+    [InlineData(GetActive)]
     public async Task Should_NotProjectOwnerOrUserId_When_Queried(string method)
     {
         var command = await CaptureAsync(method);
@@ -88,6 +91,31 @@ public sealed class MemberDirectorySqlTests
         Assert.Single(Regex.Matches(command.Text, "UserId"));
     }
 
+    [Fact]
+    public async Task Should_JoinMemberProfilesOnOwner_When_GettingActiveMembers()
+    {
+        var command = await CaptureAsync(GetActive);
+
+        Assert.Matches(
+            @"INNER JOIN \[MemberProfiles\] AS \[(\w+)\] ON \[\w+\]\.\[OwnerId\] = \[\1\]\.\[UserId\]",
+            command.Text);
+        Assert.Single(Regex.Matches(command.Text, "OwnerId"));
+        Assert.Single(Regex.Matches(command.Text, "UserId"));
+    }
+
+    [Fact]
+    public async Task Should_ProjectOnlyNameAvatarAndEnd_When_GettingActiveMembers()
+    {
+        var command = await CaptureAsync(GetActive);
+
+        Assert.Collection(
+            OuterSelectList(command.Text),
+            name => Assert.EndsWith(".[ProfileName]", name, StringComparison.Ordinal),
+            key => Assert.EndsWith(".[NameKey]", key, StringComparison.Ordinal),
+            avatar => Assert.EndsWith(".[AvatarUrl]", avatar, StringComparison.Ordinal),
+            endedAt => Assert.EndsWith(".[EndedAt]", endedAt, StringComparison.Ordinal));
+    }
+
     [Theory]
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
@@ -117,6 +145,7 @@ public sealed class MemberDirectorySqlTests
             {
                 FindByName => repository.FindByNameAsync(Name),
                 GetActivity => repository.GetActivityAsync(Name, Since),
+                GetActive => repository.GetActiveMembersAsync(Since, Since.AddDays(1), 10),
                 _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
             };
         });
