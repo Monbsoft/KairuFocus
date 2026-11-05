@@ -50,6 +50,11 @@ public sealed record OpenSprintsDto(bool ViewerIsMember, IReadOnlyList<OpenSprin
 
 public sealed record OpenSprintRowDto(string Name, string? AvatarUrl, DateTimeOffset EndsAt, int ParticipantCount, bool IsMine);
 
+/// <summary>GET active-today: members who finished a sprint today (UTC); Members lists at most 5, Total counts all of them.</summary>
+public sealed record ActiveTodayDto(int Total, IReadOnlyList<ActiveMemberDto> Members);
+
+public sealed record ActiveMemberDto(string Name, string? AvatarUrl, bool IsMe);
+
 /// <summary>GET current-sprint/participants: the other members of my group.</summary>
 public sealed record SprintParticipantsDto(IReadOnlyList<SprintMemberDto> Others);
 

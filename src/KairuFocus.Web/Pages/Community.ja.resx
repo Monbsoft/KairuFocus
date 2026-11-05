@@ -81,14 +81,17 @@
   <data name="Community.Sub.Month" xml:space="preserve">
 	<value>{0}、1日〜{1}日</value>
   </data>
-  <data name="Community.Sub.Global" xml:space="preserve">
-	<value>最初のXP（{0}）から</value>
+  <data name="Community.Sub.Fallback" xml:space="preserve">
+	<value>今と今日、取り組んでいるメンバー</value>
   </data>
-  <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
-	<value>最初のXPは、5分以上のスプリントを初めて完了したときに手に入ります</value>
+  <data name="Community.Zone.Title" xml:space="preserve">
+	<value>コミュニティの中で</value>
   </data>
-  <data name="Community.Sub.GlobalSince" xml:space="preserve">
-	<value>最初のXPから</value>
+  <data name="Community.Zone.Sub.Global" xml:space="preserve">
+	<value>これまで</value>
+  </data>
+  <data name="Community.MyProgress.Link" xml:space="preserve">
+	<value>プロフィールで自分の進捗を見る</value>
   </data>
   <data name="Community.Announce.Week" xml:space="preserve">
 	<value>週間ランキングを表示しました</value>
@@ -100,16 +103,16 @@
 	<value>総合ランキングを表示しました</value>
   </data>
   <data name="Community.Presence.Now.One" xml:space="preserve">
-	<value>現在{0}人のメンバーがスプリント中</value>
+	<value>現在{0}人がスプリント中</value>
   </data>
   <data name="Community.Presence.Now.Other" xml:space="preserve">
-	<value>現在{0}人のメンバーがスプリント中</value>
+	<value>現在{0}人がスプリント中</value>
   </data>
   <data name="Community.Presence.Today.One" xml:space="preserve">
-	<value>今日、すでに{0}人のメンバーがスプリントを完了</value>
+	<value>今日、すでに{0}人がスプリントを完了</value>
   </data>
   <data name="Community.Presence.Today.Other" xml:space="preserve">
-	<value>今日、すでに{0}人のメンバーがスプリントを完了</value>
+	<value>今日、すでに{0}人がスプリントを完了</value>
   </data>
   <data name="Community.Place.Heading" xml:space="preserve">
 	<value>コミュニティでの順位</value>
@@ -149,15 +152,6 @@
   </data>
   <data name="Community.Place.Unranked.Global" xml:space="preserve">
 	<value>通算ではまだランク外</value>
-  </data>
-  <data name="Community.Place.Join.Title" xml:space="preserve">
-	<value>まだ順位がありません。</value>
-  </data>
-  <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>設定からコミュニティに参加しましょう。他のメンバーにあなたの名前、XP、順位が表示されます。</value>
-  </data>
-  <data name="Community.Place.Join.Link" xml:space="preserve">
-	<value>設定で参加する</value>
   </data>
   <data name="Community.Ordinal.One" xml:space="preserve">
 	<value>{0}位</value>
@@ -233,9 +227,6 @@
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
 	<value>{0}時間{1}分</value>
-  </data>
-  <data name="Community.Progress.Heading" xml:space="preserve">
-	<value>自分の進捗</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>自己ベスト</value>
@@ -320,12 +311,6 @@
   </data>
   <data name="Community.Together.Members.Other" xml:space="preserve">
 	<value>アクティブメンバー{0}人</value>
-  </data>
-  <data name="Community.Together.Mine.One" xml:space="preserve">
-	<value>うち自分は{0}スプリント</value>
-  </data>
-  <data name="Community.Together.Mine.Other" xml:space="preserve">
-	<value>うち自分は{0}スプリント</value>
   </data>
   <data name="Community.Together.Error" xml:space="preserve">
 	<value>コミュニティの集計を読み込めませんでした。</value>
@@ -541,10 +526,10 @@
 	<value>期間を選択</value>
   </data>
   <data name="MyStats.Period.Week" xml:space="preserve">
-	<value>週</value>
+	<value>7日間</value>
   </data>
   <data name="MyStats.Period.Month" xml:space="preserve">
-	<value>月</value>
+	<value>30日間</value>
   </data>
   <data name="MyStats.Range.Week" xml:space="preserve">
 	<value>過去7日間</value>
@@ -676,7 +661,7 @@
 	<value>エラーが発生しました。しばらくしてからもう一度お試しください。</value>
   </data>
   <data name="Settings.Community.Join" xml:space="preserve">
-	<value>コミュニティに参加する</value>
+	<value>コミュニティを有効にする</value>
   </data>
   <data name="Settings.Community.Joining" xml:space="preserve">
 	<value>有効にしています…</value>
@@ -729,9 +714,6 @@
   <data name="OpenSprints.Loading" xml:space="preserve">
 	<value>開いているスプリントを読み込み中…</value>
   </data>
-  <data name="OpenSprints.Empty" xml:space="preserve">
-	<value>現在、開いているスプリントを持つ人はいません。自分で始めれば、他の人が参加できます。</value>
-  </data>
   <data name="OpenSprints.Error" xml:space="preserve">
 	<value>現在、開いているスプリントを読み込めません。</value>
   </data>
@@ -743,6 +725,45 @@
   </data>
   <data name="OpenSprints.Participants.Other" xml:space="preserve">
 	<value>{0}人が参加</value>
+  </data>
+  <data name="OpenSprints.Empty.Title" xml:space="preserve">
+	<value>現在スプリント中の人はいません</value>
+  </data>
+  <data name="OpenSprints.Empty.Body" xml:space="preserve">
+	<value>あなたのスプリントを始めましょう。ほかのメンバーにここで表示され、参加してもらえます。</value>
+  </data>
+  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
+	<value>スプリントを始める</value>
+  </data>
+  <data name="OpenSprints.Alone" xml:space="preserve">
+	<value>まだ誰も参加していません</value>
+  </data>
+  <data name="OpenSprints.More.One" xml:space="preserve">
+	<value>もう1件のスプリントを表示</value>
+  </data>
+  <data name="OpenSprints.More.Other" xml:space="preserve">
+	<value>ほかの{0}件のスプリントを表示</value>
+  </data>
+  <data name="OpenSprints.Less" xml:space="preserve">
+	<value>折りたたむ</value>
+  </data>
+  <data name="ActiveToday.Title" xml:space="preserve">
+	<value>今日アクティブな人</value>
+  </data>
+  <data name="ActiveToday.More.One" xml:space="preserve">
+	<value>ほか{0}人</value>
+  </data>
+  <data name="ActiveToday.More.Other" xml:space="preserve">
+	<value>ほか{0}人</value>
+  </data>
+  <data name="ActiveToday.You" xml:space="preserve">
+	<value>あなた</value>
+  </data>
+  <data name="ActiveToday.Empty" xml:space="preserve">
+	<value>今日はまだスプリントを完了した人がいません。</value>
+  </data>
+  <data name="ActiveToday.Error" xml:space="preserve">
+	<value>今日アクティブなメンバーを読み込めません。</value>
   </data>
   <data name="OpenSprints.Mine" xml:space="preserve">
 	<value>あなたのスプリント</value>
@@ -767,6 +788,9 @@
   </data>
   <data name="Participants.With.Many.Other" xml:space="preserve">
 	<value>{0}さん、{1}さん、{2}さんほか{3}人と</value>
+  </data>
+  <data name="Participants.NewTab" xml:space="preserve">
+	<value>（新しいタブで開きます）</value>
   </data>
   <data name="Participants.Close" xml:space="preserve">
 	<value>このスプリントを閉じる</value>
@@ -796,10 +820,10 @@
 	<value>スプリントに接続中…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>スプリントに参加するには、先にコミュニティに参加してください。</value>
+	<value>スプリントに参加するには、先にコミュニティを有効にしてください。ほかのメンバーにあなたの名前とXPが表示されます。</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
-	<value>コミュニティに参加する</value>
+	<value>コミュニティを有効にする</value>
   </data>
   <data name="Join.ShortWarning" xml:space="preserve">
 	<value>残り5分未満：このスプリントではXPは獲得できません。</value>
@@ -818,5 +842,20 @@
   </data>
   <data name="Join.Error" xml:space="preserve">
 	<value>現在このスプリントに参加できません。しばらくしてからもう一度お試しください。</value>
+  </data>
+  <data name="Profile.Progress.Title" xml:space="preserve">
+	<value>自分の進捗</value>
+  </data>
+  <data name="Profile.Progress.Period.Aria" xml:space="preserve">
+	<value>進捗の期間を選択</value>
+  </data>
+  <data name="Profile.Progress.Period.Week" xml:space="preserve">
+	<value>今週</value>
+  </data>
+  <data name="Profile.Progress.Period.Month" xml:space="preserve">
+	<value>今月</value>
+  </data>
+  <data name="Profile.Progress.Period.Global" xml:space="preserve">
+	<value>これまで</value>
   </data>
 </root>

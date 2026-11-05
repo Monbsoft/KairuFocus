@@ -5,6 +5,7 @@
 @inject CommunityApiClient CommunityClient
 @inject PomodoroApiClient Pomodoro
 @inject CommunityFormatter F
+@inject NavigationManager Navigation
 @inject TimeProvider Clock
 
 <PageTitle>@PageTitleText</PageTitle>
@@ -98,6 +99,13 @@
 
         @if (IsOwnPage)
         {
+            @if (_member.Data is not null)
+            {
+                @* A member: the hero carries the page title, so "Ma progression" (h2) sits right before "Mes statistiques". *@
+                <MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod"
+                                   IsMember="@(_membership.Data is { IsMember: true })" />
+            }
+
             <MyStatsSection Stats="_stats" Loading="_statsLoading" Failed="_statsFailed" OnRetry="LoadStatsAsync"
                             Today="_localToday" AsPageTitle="@(_member.Data is null)" />
 
@@ -105,6 +113,10 @@
             {
                 @* Not a member (or the membership could not be read): the local heatmap still has its place. *@
                 @LocalHeatmap("MyStats.Heatmap")
+
+                @* "Mes statistiques" carries the h1 here: "Ma progression" (h2) comes after it, never before the page title. *@
+                <MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod"
+                                   IsMember="@(_membership.Data is { IsMember: true })" />
             }
 
             @if (_membership.Data is { IsMember: false })
@@ -133,7 +145,13 @@
     /// <summary>The member's name on <c>/membres/{Name}</c>; null on <c>/profil</c> (my own page).</summary>
     [Parameter] public string? Name { get; set; }
 
+    /// <summary>The period of "Ma progression" lives in the URL (<c>?progression=mois</c>) so that Back and a reload keep it.</summary>
+    [Parameter, SupplyParameterFromQuery(Name = "progression")]
+    public string? ProgressQuery { get; set; }
+
     private bool IsOwnPage => Name is null;
+
+    private CommunityPeriod _progressPeriod = CommunityPeriod.Week;
 
     // The membership is read first on my own page; the member zone then reads my own public profile.
     private LoadZone<CommunityMembershipDto> _membership = new();
@@ -179,6 +197,8 @@
 
     protected override void OnParametersSet()
     {
+        _progressPeriod = CommunityPeriodExtensions.FromUrlValue(ProgressQuery);
+
         var key = Name ?? "";
         if (_loadedFor == key) return;
 
@@ -213,6 +233,13 @@
         _statsLoading = false;
         _statsFailed = false;
         _localCounts = new Dictionary<DateOnly, int>();
+    }
+
+    /// <summary>A new history entry, so that Back returns to the previous period.</summary>
+    private void SelectProgressPeriod(CommunityPeriod period)
+    {
+        if (period == _progressPeriod) return;
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameter("progression", period.ToUrlValue()));
     }
 
     // ── Loading ─────────────────────────────────────────────────────────────

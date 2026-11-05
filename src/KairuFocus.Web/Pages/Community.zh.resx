@@ -81,14 +81,17 @@
   <data name="Community.Sub.Month" xml:space="preserve">
 	<value>{0}，1日至{1}日</value>
   </data>
-  <data name="Community.Sub.Global" xml:space="preserve">
-	<value>自你的第一笔 XP 起（{0}）</value>
+  <data name="Community.Sub.Fallback" xml:space="preserve">
+	<value>此刻与今天正在专注的成员</value>
   </data>
-  <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
-	<value>你的第一笔 XP 将在你首次完成至少 5 分钟的冲刺后获得</value>
+  <data name="Community.Zone.Title" xml:space="preserve">
+	<value>社区中</value>
   </data>
-  <data name="Community.Sub.GlobalSince" xml:space="preserve">
-	<value>自你的第一笔 XP 起</value>
+  <data name="Community.Zone.Sub.Global" xml:space="preserve">
+	<value>自开始以来</value>
+  </data>
+  <data name="Community.MyProgress.Link" xml:space="preserve">
+	<value>在个人资料中查看我的进度</value>
   </data>
   <data name="Community.Announce.Week" xml:space="preserve">
 	<value>已显示周排行榜</value>
@@ -100,16 +103,16 @@
 	<value>已显示总排行榜</value>
   </data>
   <data name="Community.Presence.Now.One" xml:space="preserve">
-	<value>此刻有 {0} 位成员正在冲刺</value>
+	<value>此刻有 {0} 人正在冲刺</value>
   </data>
   <data name="Community.Presence.Now.Other" xml:space="preserve">
-	<value>此刻有 {0} 位成员正在冲刺</value>
+	<value>此刻有 {0} 人正在冲刺</value>
   </data>
   <data name="Community.Presence.Today.One" xml:space="preserve">
-	<value>今天已有 {0} 位成员完成了冲刺</value>
+	<value>今天已有 {0} 人完成了冲刺</value>
   </data>
   <data name="Community.Presence.Today.Other" xml:space="preserve">
-	<value>今天已有 {0} 位成员完成了冲刺</value>
+	<value>今天已有 {0} 人完成了冲刺</value>
   </data>
   <data name="Community.Place.Heading" xml:space="preserve">
 	<value>我在社区的排名</value>
@@ -149,15 +152,6 @@
   </data>
   <data name="Community.Place.Unranked.Global" xml:space="preserve">
 	<value>总计尚未上榜</value>
-  </data>
-  <data name="Community.Place.Join.Title" xml:space="preserve">
-	<value>你还没有排名。</value>
-  </data>
-  <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>在设置中加入社区：其他成员将看到你的名称、XP 和排名。</value>
-  </data>
-  <data name="Community.Place.Join.Link" xml:space="preserve">
-	<value>在设置中加入</value>
   </data>
   <data name="Community.Ordinal.One" xml:space="preserve">
 	<value>第{0}名</value>
@@ -233,9 +227,6 @@
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
 	<value>{0} 小时 {1} 分钟</value>
-  </data>
-  <data name="Community.Progress.Heading" xml:space="preserve">
-	<value>我的进度</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>个人纪录</value>
@@ -320,12 +311,6 @@
   </data>
   <data name="Community.Together.Members.Other" xml:space="preserve">
 	<value>{0} 位活跃成员</value>
-  </data>
-  <data name="Community.Together.Mine.One" xml:space="preserve">
-	<value>其中 {0} 次来自你</value>
-  </data>
-  <data name="Community.Together.Mine.Other" xml:space="preserve">
-	<value>其中 {0} 次来自你</value>
   </data>
   <data name="Community.Together.Error" xml:space="preserve">
 	<value>无法加载社区汇总。</value>
@@ -541,10 +526,10 @@
 	<value>选择时间范围</value>
   </data>
   <data name="MyStats.Period.Week" xml:space="preserve">
-	<value>周</value>
+	<value>7 天</value>
   </data>
   <data name="MyStats.Period.Month" xml:space="preserve">
-	<value>月</value>
+	<value>30 天</value>
   </data>
   <data name="MyStats.Range.Week" xml:space="preserve">
 	<value>最近 7 天</value>
@@ -676,7 +661,7 @@
 	<value>出错了。请稍后重试。</value>
   </data>
   <data name="Settings.Community.Join" xml:space="preserve">
-	<value>加入社区</value>
+	<value>启用社区</value>
   </data>
   <data name="Settings.Community.Joining" xml:space="preserve">
 	<value>正在启用…</value>
@@ -729,9 +714,6 @@
   <data name="OpenSprints.Loading" xml:space="preserve">
 	<value>正在加载进行中的冲刺…</value>
   </data>
-  <data name="OpenSprints.Empty" xml:space="preserve">
-	<value>暂时没有人有进行中的冲刺。开始你自己的冲刺：其他人可以加入你。</value>
-  </data>
   <data name="OpenSprints.Error" xml:space="preserve">
 	<value>暂时无法读取进行中的冲刺。</value>
   </data>
@@ -743,6 +725,45 @@
   </data>
   <data name="OpenSprints.Participants.Other" xml:space="preserve">
 	<value>{0} 位参与者</value>
+  </data>
+  <data name="OpenSprints.Empty.Title" xml:space="preserve">
+	<value>此刻没有人在冲刺</value>
+  </data>
+  <data name="OpenSprints.Empty.Body" xml:space="preserve">
+	<value>开启你的冲刺：其他成员会在这里看到，并可以加入你。</value>
+  </data>
+  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
+	<value>开始冲刺</value>
+  </data>
+  <data name="OpenSprints.Alone" xml:space="preserve">
+	<value>还没有人加入</value>
+  </data>
+  <data name="OpenSprints.More.One" xml:space="preserve">
+	<value>查看另一个冲刺</value>
+  </data>
+  <data name="OpenSprints.More.Other" xml:space="preserve">
+	<value>查看其余 {0} 个冲刺</value>
+  </data>
+  <data name="OpenSprints.Less" xml:space="preserve">
+	<value>收起</value>
+  </data>
+  <data name="ActiveToday.Title" xml:space="preserve">
+	<value>今日活跃</value>
+  </data>
+  <data name="ActiveToday.More.One" xml:space="preserve">
+	<value>以及另外 {0} 人</value>
+  </data>
+  <data name="ActiveToday.More.Other" xml:space="preserve">
+	<value>以及另外 {0} 人</value>
+  </data>
+  <data name="ActiveToday.You" xml:space="preserve">
+	<value>你</value>
+  </data>
+  <data name="ActiveToday.Empty" xml:space="preserve">
+	<value>今天还没有人完成冲刺。</value>
+  </data>
+  <data name="ActiveToday.Error" xml:space="preserve">
+	<value>无法加载今日活跃成员。</value>
   </data>
   <data name="OpenSprints.Mine" xml:space="preserve">
 	<value>你的冲刺</value>
@@ -767,6 +788,9 @@
   </data>
   <data name="Participants.With.Many.Other" xml:space="preserve">
 	<value>与 {0}、{1}、{2} 等 {3} 人一起</value>
+  </data>
+  <data name="Participants.NewTab" xml:space="preserve">
+	<value>（在新标签页中打开）</value>
   </data>
   <data name="Participants.Close" xml:space="preserve">
 	<value>关闭此冲刺</value>
@@ -796,10 +820,10 @@
 	<value>正在连接冲刺…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>要加入冲刺，请先加入社区。</value>
+	<value>要加入冲刺，请先启用社区：其他成员将看到你的名字和 XP。</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
-	<value>加入社区</value>
+	<value>启用社区</value>
   </data>
   <data name="Join.ShortWarning" xml:space="preserve">
 	<value>剩余不到 5 分钟：此冲刺不会获得 XP。</value>
@@ -818,5 +842,20 @@
   </data>
   <data name="Join.Error" xml:space="preserve">
 	<value>暂时无法加入此冲刺。请稍后重试。</value>
+  </data>
+  <data name="Profile.Progress.Title" xml:space="preserve">
+	<value>我的进度</value>
+  </data>
+  <data name="Profile.Progress.Period.Aria" xml:space="preserve">
+	<value>选择进度的时间段</value>
+  </data>
+  <data name="Profile.Progress.Period.Week" xml:space="preserve">
+	<value>本周</value>
+  </data>
+  <data name="Profile.Progress.Period.Month" xml:space="preserve">
+	<value>本月</value>
+  </data>
+  <data name="Profile.Progress.Period.Global" xml:space="preserve">
+	<value>自开始以来</value>
   </data>
 </root>

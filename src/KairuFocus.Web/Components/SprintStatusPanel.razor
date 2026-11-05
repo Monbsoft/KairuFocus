@@ -104,9 +104,13 @@
             : (template[..at], template[(at + 3)..]);
     }
 
-    /// <summary>« avec tomtom » / « avec tomtom et 2 autres »: the first name, then how many others.</summary>
-    private string WithText(IReadOnlyList<SprintMemberDto> others) =>
-        others.Count == 1
-            ? F.Format("Profile.With.One", others[0].Name)
-            : F.Plural("Profile.With.Many", others.Count - 1, others[0].Name, F.Number(others.Count - 1));
+    /// <summary>« avec tomtom » / « avec tomtom et 2 autres »: the first name, a link to its profile, then how many others.</summary>
+    private MarkupString WithText(IReadOnlyList<SprintMemberDto> others)
+    {
+        var first = (others[0].Name, (string?)CommunityFormatter.ProfileHref(others[0].Name));
+        return others.Count == 1
+            ? CommunityFormatter.WithLinks(F["Profile.With.One"], first)
+            : CommunityFormatter.WithLinks(F.PluralTemplate("Profile.With.Many", others.Count - 1),
+                first, (F.Number(others.Count - 1), null));
+    }
 }

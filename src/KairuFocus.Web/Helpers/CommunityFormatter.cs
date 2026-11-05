@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using System.Text.RegularExpressions;
 using KairuFocus.Web.Pages;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
@@ -67,6 +68,48 @@ public sealed class CommunityFormatter
 
     /// <summary>The plural form with the count in bold.</summary>
     public MarkupString BoldPlural(string key, int count) => Bold(PluralTemplate(key, count), Number(count));
+
+    // ── Links in a sentence ─────────────────────────────────────────────────
+
+    // ASCII digits only (\d would also match other scripts' digits), and short enough to always parse.
+    private static readonly Regex Placeholder = new(@"\{([0-9]{1,3})\}", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// The template with each <c>{i}</c> replaced by <paramref name="args"/>[i]: a link when it has an address, plain
+    /// text otherwise. One pass, so a name that looks like a placeholder stays a name. Everything is HTML-encoded.
+    /// The links carry no class: style them from the component with <c>::deep a</c>.
+    /// </summary>
+    public static MarkupString WithLinks(string template, params (string Text, string? Href)[] args) =>
+        Linked(template, newTabText: null, args);
+
+    /// <summary>
+    /// Same as <see cref="WithLinks"/>, the links opening in a new tab, so that the page showing them keeps running (the
+    /// Pomodoro page plays the ringtone, records the end of the sprint and asks for the group break). A small arrow says
+    /// it on screen; <paramref name="newTabText"/> says it to screen readers, after each name.
+    /// </summary>
+    public static MarkupString WithNewTabLinks(string template, string newTabText, params (string Text, string? Href)[] args) =>
+        Linked(template, newTabText, args);
+
+    private static MarkupString Linked(string template, string? newTabText, (string Text, string? Href)[] args) =>
+        new(Placeholder.Replace(WebUtility.HtmlEncode(template), match =>
+        {
+            if (!int.TryParse(match.Groups[1].Value, NumberStyles.None, CultureInfo.InvariantCulture, out var index)
+                || index >= args.Length)
+                return match.Value;
+
+            var (text, href) = args[index];
+            var value = WebUtility.HtmlEncode(text);
+            if (href is null) return value;
+
+            var address = WebUtility.HtmlEncode(href);
+            return newTabText is null
+                ? $"<a href=\"{address}\">{value}</a>"
+                : $"<a href=\"{address}\" target=\"_blank\" rel=\"noopener\">{value}<span aria-hidden=\"true\"> ↗</span>"
+                  + $"<span class=\"visually-hidden\"> {WebUtility.HtmlEncode(newTabText)}</span></a>";
+        }));
+
+    /// <summary>The address of a member's public profile.</summary>
+    public static string ProfileHref(string name) => $"/membres/{Uri.EscapeDataString(name)}";
 
     // ── Ordinals ────────────────────────────────────────────────────────────
 

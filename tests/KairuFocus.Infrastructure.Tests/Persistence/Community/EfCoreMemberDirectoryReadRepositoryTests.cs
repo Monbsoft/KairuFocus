@@ -10,6 +10,8 @@ public sealed class EfCoreMemberDirectoryReadRepositoryTests
 {
     private static readonly DateTime Since = new(2025, 10, 25, 0, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime Start = new(2026, 10, 20, 9, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime From = new(2026, 11, 5, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime To = From.AddDays(1);
     private static readonly DateTime JoinedAtUtc = new(2026, 3, 17, 8, 0, 0, DateTimeKind.Utc);
 
     private static readonly ProfileName LeaName = ProfileName.Create("Lea_Dev").Value;
@@ -18,6 +20,7 @@ public sealed class EfCoreMemberDirectoryReadRepositoryTests
     private readonly InMemoryDatabase _database = new();
     private readonly UserId _lea = UserId.New();
     private readonly UserId _tom = UserId.New();
+    private readonly UserId _outsider = UserId.New();
 
     // --- FindByName -----------------------------------------------------------------------------
 
@@ -221,6 +224,168 @@ public sealed class EfCoreMemberDirectoryReadRepositoryTests
 
         AssertEmpty(activity);
     }
+
+    // --- Active members today -------------------------------------------------------------------
+
+    [Fact]
+    public async Task Should_ListMember_When_SprintCompletedInWindow()
+    {
+        await SeedMembersAsync(EndedAt(_lea, From.AddHours(10)));
+
+        var active = await ActiveAsync();
+
+        Assert.Equal(1, active.Total);
+        var member = Assert.Single(active.Members);
+        Assert.Equal("Lea_Dev", member.Name.Value);
+    }
+
+    [Fact]
+    public async Task Should_CountSprint_When_EndedAtWindowStart()
+    {
+        await SeedMembersAsync(EndedAt(_lea, From));
+
+        var active = await ActiveAsync();
+
+        Assert.Equal(1, active.Total);
+        Assert.Single(active.Members);
+    }
+
+    [Fact]
+    public async Task Should_IgnoreSprint_When_EndedJustBeforeWindow()
+    {
+        await SeedMembersAsync(EndedAt(_lea, From.AddSeconds(-1)));
+
+        var active = await ActiveAsync();
+
+        AssertNoActiveMember(active);
+    }
+
+    [Fact]
+    public async Task Should_IgnoreSprint_When_EndedAtWindowEnd()
+    {
+        await SeedMembersAsync(EndedAt(_lea, To));
+
+        var active = await ActiveAsync();
+
+        AssertNoActiveMember(active);
+    }
+
+    // A session owner without a profile is invisible in any cross-user read (spec §9).
+    [Fact]
+    public async Task Should_IgnoreNonMember_When_SprintCompletedInWindow()
+    {
+        await SeedMembersAsync(EndedAt(_outsider, From.AddHours(10)));
+
+        var active = await ActiveAsync();
+
+        AssertNoActiveMember(active);
+    }
+
+    [Fact]
+    public async Task Should_IgnoreBreaksInterruptedAndActive_When_InWindow()
+    {
+        var shortBreak = PomodoroSession.Create(PomodoroSessionType.ShortBreak, 5, _lea);
+        Assert.True(shortBreak.Start(From.AddHours(9)).IsSuccess);
+        Assert.True(shortBreak.Complete(From.AddHours(9).AddMinutes(5)).IsSuccess);
+
+        var interrupted = PomodoroSession.Create(PomodoroSessionType.Sprint, 25, _lea);
+        Assert.True(interrupted.Start(From.AddHours(10)).IsSuccess);
+        Assert.True(interrupted.Interrupt(From.AddHours(10).AddMinutes(10)).IsSuccess);
+
+        var active = PomodoroSession.Create(PomodoroSessionType.Sprint, 25, _lea);
+        Assert.True(active.Start(From.AddHours(11)).IsSuccess);
+
+        await SeedMembersAsync(shortBreak, interrupted, active);
+
+        var result = await ActiveAsync();
+
+        AssertNoActiveMember(result);
+    }
+
+    [Fact]
+    public async Task Should_CountMemberOnce_When_SeveralSprints()
+    {
+        await SeedMembersAsync(
+            EndedAt(_lea, From.AddHours(9)),
+            EndedAt(_lea, From.AddHours(11)),
+            EndedAt(_lea, From.AddHours(13)));
+
+        var active = await ActiveAsync();
+
+        Assert.Equal(1, active.Total);
+        Assert.Single(active.Members);
+    }
+
+    // The order follows the LAST end of each member, ties are broken by the ordinal name.
+    [Fact]
+    public async Task Should_OrderByLastSprintEnd_When_SeveralMembers()
+    {
+        var zoe = UserId.New();
+        var ada = UserId.New();
+        await _database.SeedAsync(
+            Member(_lea, LeaName),
+            Member(_tom, TomName),
+            Member(zoe, ProfileName.Create("Zoe_Dev").Value),
+            Member(ada, ProfileName.Create("ada_dev").Value),
+            EndedAt(_lea, From.AddHours(8)),
+            EndedAt(_lea, From.AddHours(15)),
+            EndedAt(_tom, From.AddHours(12)),
+            EndedAt(zoe, From.AddHours(10)),
+            EndedAt(ada, From.AddHours(10)),
+            EndedAt(ada, From.AddHours(7)));
+
+        var active = await ActiveAsync();
+
+        Assert.Equal(4, active.Total);
+        // Zoe_Dev before ada_dev: ordinal ('Z' < 'a'), not culture-sensitive.
+        Assert.Equal(["Lea_Dev", "tomtom", "Zoe_Dev", "ada_dev"], active.Members.Select(m => m.Name.Value));
+    }
+
+    [Fact]
+    public async Task Should_KeepTotal_When_MoreMembersThanMax()
+    {
+        var entities = new List<object>();
+        for (var i = 1; i <= 7; i++)
+        {
+            var id = UserId.New();
+            entities.Add(Member(id, ProfileName.Create($"Member{i:00}").Value));
+            entities.Add(EndedAt(id, From.AddHours(i)));
+        }
+
+        await _database.SeedAsync([.. entities]);
+
+        var active = await QueryAsync(r => r.GetActiveMembersAsync(From, To, 5));
+
+        Assert.Equal(7, active.Total);
+        Assert.Equal(["Member07", "Member06", "Member05", "Member04", "Member03"], active.Members.Select(m => m.Name.Value));
+    }
+
+    [Fact]
+    public async Task Should_ReturnAvatar_When_Present()
+    {
+        await _database.SeedAsync(
+            MemberProfile.Join(_lea, LeaName, ProfileNameSource.GitHub, "https://avatars.githubusercontent.com/u/1", JoinedAtUtc),
+            Member(_tom, TomName),
+            EndedAt(_lea, From.AddHours(10)),
+            EndedAt(_tom, From.AddHours(9)));
+
+        var active = await ActiveAsync();
+
+        Assert.Equal("https://avatars.githubusercontent.com/u/1", active.Members.Single(m => m.Name.Value == "Lea_Dev").AvatarUrl);
+        Assert.Null(active.Members.Single(m => m.Name.Value == "tomtom").AvatarUrl);
+    }
+
+    private Task<ActiveMembers> ActiveAsync() =>
+        QueryAsync(r => r.GetActiveMembersAsync(From, To, 10));
+
+    private static void AssertNoActiveMember(ActiveMembers active)
+    {
+        Assert.Equal(0, active.Total);
+        Assert.Empty(active.Members);
+    }
+
+    private static PomodoroSession EndedAt(UserId owner, DateTime endedAt) =>
+        CompletedFree(owner, endedAt.AddMinutes(-25), endedAt);
 
     private Task<MemberActivity> ActivityOfAsync(ProfileName name) =>
         QueryAsync(r => r.GetActivityAsync(name, Since));

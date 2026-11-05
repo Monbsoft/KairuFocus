@@ -1,7 +1,9 @@
 @* "Avec lea_dev, tomtom et 2 autres": the other members of my sprint, on the Pomodoro page.
    Meant to be mounted only while a timed sprint is active. It reads the list when it appears, then every 30 seconds
-   while the tab is visible. A quiet line: no link, no live region, no animation, nothing announced when someone
-   arrives. An empty list or a failed read shows nothing at all. *@
+   while the tab is visible. A quiet line: no live region, no animation, nothing announced when someone arrives.
+   Each name opens the member's profile in a new tab (#45): this page must keep running, since it plays the ringtone,
+   records the end of the sprint and asks for the group break when its countdown reaches zero.
+   An empty list or a failed read shows nothing at all. *@
 @implements IAsyncDisposable
 @inject CommunityApiClient CommunityApi
 @inject CommunityFormatter F
@@ -23,15 +25,25 @@
     private DotNetObjectReference<SprintParticipants>? _selfReference;
     private bool _disposed;
 
-    private string? Sentence => _others.Count switch
+    private MarkupString? Sentence => _others.Count switch
     {
         0 => null,
-        1 => F.Format("Participants.With.One", _others[0].Name),
-        2 => F.Format("Participants.With.Two", _others[0].Name, _others[1].Name),
-        3 => F.Format("Participants.With.Three", _others[0].Name, _others[1].Name, _others[2].Name),
-        var count => F.Plural("Participants.With.Many", count - MaxNames,
-            _others[0].Name, _others[1].Name, _others[2].Name, F.Number(count - MaxNames))
+        1 => Linked(F["Participants.With.One"]),
+        2 => Linked(F["Participants.With.Two"]),
+        3 => Linked(F["Participants.With.Three"]),
+        var count => Linked(F.PluralTemplate("Participants.With.Many", count - MaxNames), F.Number(count - MaxNames))
     };
+
+    /// <summary>The template with the first names (three at most) as links, then <paramref name="more"/> as text.</summary>
+    private MarkupString Linked(string template, string? more = null)
+    {
+        var args = _others.Take(MaxNames)
+            .Select(m => (m.Name, (string?)CommunityFormatter.ProfileHref(m.Name)))
+            .ToList();
+        if (more is not null) args.Add((more, null));
+
+        return CommunityFormatter.WithNewTabLinks(template, F["Participants.NewTab"], [.. args]);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

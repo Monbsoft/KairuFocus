@@ -8,3 +8,16 @@
     font-size: 0.9375rem;
     overflow-wrap: anywhere;
 }
+
+/* The names, links to the profiles inside the localized sentence (hence ::deep). Inline links in a sentence:
+   exempt from the 24 px target size (WCAG 2.5.8). Bootstrap's hover blue rather than its link blue: 6.4:1 on white
+   and 7.7:1 on the dark body, where the link blue is only 4.50:1 on white. */
+.kf-participants ::deep a {
+    color: var(--bs-link-hover-color);
+    font-weight: 600;
+    text-underline-offset: 2px;
+}
+
+.kf-participants ::deep a:hover {
+    text-decoration-thickness: 2px;
+}
