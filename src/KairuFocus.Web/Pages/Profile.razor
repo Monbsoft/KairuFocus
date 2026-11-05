@@ -99,8 +99,11 @@
 
         @if (IsOwnPage)
         {
-            @* Member or not: the XP is personal. Absent from another member's page. *@
-            <MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod" />
+            @if (_member.Data is not null)
+            {
+                @* A member: the hero carries the page title, so "Ma progression" (h2) sits right before "Mes statistiques". *@
+                <MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod" />
+            }
 
             <MyStatsSection Stats="_stats" Loading="_statsLoading" Failed="_statsFailed" OnRetry="LoadStatsAsync"
                             Today="_localToday" AsPageTitle="@(_member.Data is null)" />
@@ -109,6 +112,9 @@
             {
                 @* Not a member (or the membership could not be read): the local heatmap still has its place. *@
                 @LocalHeatmap("MyStats.Heatmap")
+
+                @* "Mes statistiques" carries the h1 here: "Ma progression" (h2) comes after it, never before the page title. *@
+                <MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod" />
             }
 
             @if (_membership.Data is { IsMember: false })
