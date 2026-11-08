@@ -1,3 +1,4 @@
+using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
 using KairuFocus.Application.Gamification.Commands.CreditSprintXp;
 using KairuFocus.Application.Journal.Commands.CreateEntry;
 using KairuFocus.Application.Pomodoro.Commands.CompleteSession;
@@ -24,6 +25,7 @@ public sealed class FakeMediator : IMediator
     private readonly CreditSprintXpCommandHandler? _creditSprintXpHandler;
     private readonly CompleteSessionCommandHandler? _completeSessionHandler;
     private readonly InterruptSessionCommandHandler? _interruptSessionHandler;
+    private readonly LeaveOrStopGroupSessionCommandHandler? _leaveOrStopHandler;
 
     /// <summary>When true, dispatching CreditSprintXpCommand throws (simulated credit failure).</summary>
     public bool ThrowOnCreditSprintXp { get; set; }
@@ -38,7 +40,8 @@ public sealed class FakeMediator : IMediator
         IJournalEntryRepository journalRepository,
         CreditSprintXpCommandHandler? creditSprintXpHandler = null,
         CompleteSessionCommandHandler? completeSession = null,
-        InterruptSessionCommandHandler? interruptSession = null)
+        InterruptSessionCommandHandler? interruptSession = null,
+        LeaveOrStopGroupSessionCommandHandler? leaveOrStop = null)
     {
         _createEntryHandler = new CreateEntryCommandHandler(
             journalRepository,
@@ -46,6 +49,7 @@ public sealed class FakeMediator : IMediator
         _creditSprintXpHandler = creditSprintXpHandler;
         _completeSessionHandler = completeSession;
         _interruptSessionHandler = interruptSession;
+        _leaveOrStopHandler = leaveOrStop;
     }
 
     public Task DispatchAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default)
@@ -91,6 +95,12 @@ public sealed class FakeMediator : IMediator
         if (command is InterruptSessionCommand interruptSessionCommand && _interruptSessionHandler is not null)
         {
             var result = await _interruptSessionHandler.Handle(interruptSessionCommand, cancellationToken);
+            return (TResponse)(object)result;
+        }
+
+        if (command is LeaveOrStopGroupSessionCommand leaveOrStopCommand && _leaveOrStopHandler is not null)
+        {
+            var result = await _leaveOrStopHandler.Handle(leaveOrStopCommand, cancellationToken);
             return (TResponse)(object)result;
         }
 

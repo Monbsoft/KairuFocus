@@ -3,6 +3,7 @@ using KairuFocus.Application.Community.Commands.ChangeProfileName;
 using KairuFocus.Application.Community.Commands.JoinCommunity;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
+using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetActiveToday;
@@ -126,6 +127,17 @@ public sealed class CommunityController : ControllerBase
         var result = await _mediator.SendAsync<GetCurrentSessionQuery, GetCurrentSessionResult?>(
             new GetCurrentSessionQuery(), ct);
         return result is null ? NoContent() : Ok(result);
+    }
+
+    [HttpDelete("current-session")]
+    public async Task<IActionResult> LeaveOrStopCurrentSession(CancellationToken ct)
+    {
+        var result = await _mediator.DispatchAsync<LeaveOrStopGroupSessionCommand, LeaveOrStopGroupSessionResult>(
+            new LeaveOrStopGroupSessionCommand(), ct);
+
+        return result.IsSuccess
+            ? NoContent()
+            : ErrorResponse(result.Error!, notMemberStatus: StatusCodes.Status403Forbidden);
     }
 
     [HttpPut("current-sprint/closed")]

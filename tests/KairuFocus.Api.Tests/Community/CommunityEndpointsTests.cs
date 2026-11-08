@@ -8,6 +8,7 @@ using KairuFocus.Application.Community.Commands.ChangeProfileName;
 using KairuFocus.Application.Community.Commands.JoinCommunity;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
+using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
@@ -412,6 +413,46 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
         Assert.Null(body["userId"]);
         Assert.Equal("WaitingForHost", body["phase"]!.GetValue<string>());
         Assert.Equal("LoutreTenace", body["others"]![0]!["name"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Should_Return401_When_LeavingGroupSessionAnonymously()
+    {
+        var response = await _anonymousClient.DeleteAsync(CurrentSessionUrl);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Should_Return204_When_GroupSessionIsLeftOrStopped(bool stopped)
+    {
+        LeaveOrStopGroupSessionCommand? sent = null;
+        _mediator.DispatchResult = command =>
+        {
+            sent = (LeaveOrStopGroupSessionCommand)command;
+            return LeaveOrStopGroupSessionResult.Success(stopped);
+        };
+
+        var response = await _client.DeleteAsync(CurrentSessionUrl);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(new LeaveOrStopGroupSessionCommand(), sent);
+    }
+
+    [Theory]
+    [InlineData(CommunityErrors.Community.NotInGroup, HttpStatusCode.NotFound, "not-in-group")]
+    [InlineData(CommunityErrors.Community.GroupStepRunning, HttpStatusCode.Conflict, "step-running")]
+    [InlineData(CommunityErrors.Community.NotMember, HttpStatusCode.Forbidden, "not-member")]
+    public async Task Should_MapError_When_LeavingGroupSessionFails(string error, HttpStatusCode status, string code)
+    {
+        _mediator.DispatchResult = _ => LeaveOrStopGroupSessionResult.Failure(error);
+
+        var response = await _client.DeleteAsync(CurrentSessionUrl);
+
+        Assert.Equal(status, response.StatusCode);
+        await AssertCodeAsync(code, response);
     }
 
     [Fact]
