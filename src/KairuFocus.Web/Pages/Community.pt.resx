@@ -81,14 +81,17 @@
   <data name="Community.Sub.Month" xml:space="preserve">
 	<value>{0}, de 1 a {1}</value>
   </data>
-  <data name="Community.Sub.Global" xml:space="preserve">
-	<value>Desde o seu primeiro XP, em {0}</value>
+  <data name="Community.Sub.Fallback" xml:space="preserve">
+	<value>Os membros em ação, agora e hoje</value>
   </data>
-  <data name="Community.Sub.GlobalNoGain" xml:space="preserve">
-	<value>O seu primeiro XP virá com o seu primeiro sprint de pelo menos 5 minutos</value>
+  <data name="Community.Zone.Title" xml:space="preserve">
+	<value>Na comunidade</value>
   </data>
-  <data name="Community.Sub.GlobalSince" xml:space="preserve">
-	<value>Desde o seu primeiro XP</value>
+  <data name="Community.Zone.Sub.Global" xml:space="preserve">
+	<value>Desde o início</value>
+  </data>
+  <data name="Community.MyProgress.Link" xml:space="preserve">
+	<value>Meu progresso no meu perfil</value>
   </data>
   <data name="Community.Announce.Week" xml:space="preserve">
 	<value>Ranking da semana exibido</value>
@@ -100,16 +103,16 @@
 	<value>Ranking geral exibido</value>
   </data>
   <data name="Community.Presence.Now.One" xml:space="preserve">
-	<value>{0} membro em sprint agora</value>
+	<value>{0} pessoa em sprint agora</value>
   </data>
   <data name="Community.Presence.Now.Other" xml:space="preserve">
-	<value>{0} membros em sprint agora</value>
+	<value>{0} pessoas em sprint agora</value>
   </data>
   <data name="Community.Presence.Today.One" xml:space="preserve">
-	<value>Hoje, {0} membro já fez um sprint</value>
+	<value>Hoje, {0} pessoa já fez um sprint</value>
   </data>
   <data name="Community.Presence.Today.Other" xml:space="preserve">
-	<value>Hoje, {0} membros já fizeram um sprint</value>
+	<value>Hoje, {0} pessoas já fizeram um sprint</value>
   </data>
   <data name="Community.Place.Heading" xml:space="preserve">
 	<value>Minha posição na comunidade</value>
@@ -149,15 +152,6 @@
   </data>
   <data name="Community.Place.Unranked.Global" xml:space="preserve">
 	<value>Ainda sem classificação no geral</value>
-  </data>
-  <data name="Community.Place.Join.Title" xml:space="preserve">
-	<value>Você ainda não tem uma posição.</value>
-  </data>
-  <data name="Community.Place.Join.Body" xml:space="preserve">
-	<value>Entre na comunidade pelas suas configurações: os outros membros verão seu nome, seu XP e sua posição.</value>
-  </data>
-  <data name="Community.Place.Join.Link" xml:space="preserve">
-	<value>Entrar pelas configurações</value>
   </data>
   <data name="Community.Ordinal.One" xml:space="preserve">
 	<value>{0}º</value>
@@ -233,9 +227,6 @@
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
 	<value>{0} h {1} min</value>
-  </data>
-  <data name="Community.Progress.Heading" xml:space="preserve">
-	<value>Meu progresso</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>Recorde pessoal</value>
@@ -320,12 +311,6 @@
   </data>
   <data name="Community.Together.Members.Other" xml:space="preserve">
 	<value>{0} membros ativos</value>
-  </data>
-  <data name="Community.Together.Mine.One" xml:space="preserve">
-	<value>dos quais {0} sprint seu</value>
-  </data>
-  <data name="Community.Together.Mine.Other" xml:space="preserve">
-	<value>dos quais {0} sprints seus</value>
   </data>
   <data name="Community.Together.Error" xml:space="preserve">
 	<value>Não foi possível carregar o balanço da comunidade.</value>
@@ -541,10 +526,10 @@
 	<value>Escolher o período</value>
   </data>
   <data name="MyStats.Period.Week" xml:space="preserve">
-	<value>Semana</value>
+	<value>7 dias</value>
   </data>
   <data name="MyStats.Period.Month" xml:space="preserve">
-	<value>Mês</value>
+	<value>30 dias</value>
   </data>
   <data name="MyStats.Range.Week" xml:space="preserve">
 	<value>Últimos 7 dias</value>
@@ -676,7 +661,7 @@
 	<value>Ocorreu um erro. Tente novamente em instantes.</value>
   </data>
   <data name="Settings.Community.Join" xml:space="preserve">
-	<value>Entrar na comunidade</value>
+	<value>Ativar a comunidade</value>
   </data>
   <data name="Settings.Community.Joining" xml:space="preserve">
 	<value>Ativando…</value>
@@ -729,9 +714,6 @@
   <data name="OpenSprints.Loading" xml:space="preserve">
 	<value>Carregando os sprints abertos…</value>
   </data>
-  <data name="OpenSprints.Empty" xml:space="preserve">
-	<value>Ninguém tem um sprint aberto no momento. Inicie o seu: outros poderão entrar.</value>
-  </data>
   <data name="OpenSprints.Error" xml:space="preserve">
 	<value>Não foi possível ler os sprints abertos no momento.</value>
   </data>
@@ -743,6 +725,45 @@
   </data>
   <data name="OpenSprints.Participants.Other" xml:space="preserve">
 	<value>{0} participantes</value>
+  </data>
+  <data name="OpenSprints.Empty.Title" xml:space="preserve">
+	<value>Ninguém está em sprint agora</value>
+  </data>
+  <data name="OpenSprints.Empty.Body" xml:space="preserve">
+	<value>Inicie o seu: os outros membros vão vê-lo aqui e poderão entrar.</value>
+  </data>
+  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
+	<value>Iniciar um sprint</value>
+  </data>
+  <data name="OpenSprints.Alone" xml:space="preserve">
+	<value>Ninguém entrou ainda</value>
+  </data>
+  <data name="OpenSprints.More.One" xml:space="preserve">
+	<value>Ver o outro sprint</value>
+  </data>
+  <data name="OpenSprints.More.Other" xml:space="preserve">
+	<value>Ver os outros {0} sprints</value>
+  </data>
+  <data name="OpenSprints.Less" xml:space="preserve">
+	<value>Mostrar menos</value>
+  </data>
+  <data name="ActiveToday.Title" xml:space="preserve">
+	<value>Ativos hoje</value>
+  </data>
+  <data name="ActiveToday.More.One" xml:space="preserve">
+	<value>e mais {0}</value>
+  </data>
+  <data name="ActiveToday.More.Other" xml:space="preserve">
+	<value>e mais {0}</value>
+  </data>
+  <data name="ActiveToday.You" xml:space="preserve">
+	<value>você</value>
+  </data>
+  <data name="ActiveToday.Empty" xml:space="preserve">
+	<value>Ninguém terminou um sprint hoje ainda.</value>
+  </data>
+  <data name="ActiveToday.Error" xml:space="preserve">
+	<value>Não foi possível carregar os membros ativos hoje.</value>
   </data>
   <data name="OpenSprints.Mine" xml:space="preserve">
 	<value>Seu sprint</value>
@@ -767,6 +788,9 @@
   </data>
   <data name="Participants.With.Many.Other" xml:space="preserve">
 	<value>Com {0}, {1}, {2} e mais {3}</value>
+  </data>
+  <data name="Participants.NewTab" xml:space="preserve">
+	<value>(abre em uma nova aba)</value>
   </data>
   <data name="Participants.Close" xml:space="preserve">
 	<value>Fechar este sprint</value>
@@ -796,10 +820,10 @@
 	<value>Conectando ao sprint…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>Para entrar em um sprint, entre primeiro na comunidade.</value>
+	<value>Ative a comunidade para entrar em um sprint: os outros membros verão seu nome e seu XP.</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
-	<value>Entrar na comunidade</value>
+	<value>Ativar a comunidade</value>
   </data>
   <data name="Join.ShortWarning" xml:space="preserve">
 	<value>Restam menos de 5 minutos: este sprint não renderá XP.</value>
@@ -818,5 +842,20 @@
   </data>
   <data name="Join.Error" xml:space="preserve">
 	<value>Não foi possível entrar neste sprint no momento. Tente novamente em instantes.</value>
+  </data>
+  <data name="Profile.Progress.Title" xml:space="preserve">
+	<value>Meu progresso</value>
+  </data>
+  <data name="Profile.Progress.Period.Aria" xml:space="preserve">
+	<value>Escolher o período do seu progresso</value>
+  </data>
+  <data name="Profile.Progress.Period.Week" xml:space="preserve">
+	<value>Esta semana</value>
+  </data>
+  <data name="Profile.Progress.Period.Month" xml:space="preserve">
+	<value>Este mês</value>
+  </data>
+  <data name="Profile.Progress.Period.Global" xml:space="preserve">
+	<value>Desde o início</value>
   </data>
 </root>

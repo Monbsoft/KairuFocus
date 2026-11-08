@@ -129,7 +129,7 @@ KairuFocus uses **three** icon registers, in this order of preference:
 - `forms/` — `Input`, `Textarea`, `Select`, `Checkbox`
 - `data-display/` — `Badge`, `Tag`, `Card`, `StatCard`, `Avatar`
 - `feedback/` — `Alert`, `ProgressRing` (Pomodoro), `Skeleton`
-- `community/` — `ProfileHero` (profile banner on the brand hero), `SprintStatus` (open sprint / no open sprint panel, sits in the hero), `AvatarStack` (overlapping avatars, "+N"), `OpenSprintRow` (one row of "En sprint maintenant"). Reference: layout A of the profile mock-up (iteration 44). Mock data must stay fictitious; a chosen name never shows a GitHub avatar or link.
+- `community/` — `ProfileHero` (profile banner on the brand hero), `SprintStatus` (open sprint / no open sprint panel, sits in the hero), `AvatarStack` (overlapping avatars, "+N"), `OpenSprintRow` (one row of "En sprint maintenant", no longer used by the app since iteration 45). Reference: layout A of the profile mock-up (iteration 44). Iteration 45, live strip of the Community page (layout B of `communaute-dispositions.html`): `OpenSprintCard` (one card per open sprint, countdown in big, one action at most) and `ActiveTodayStrip` ("Actifs aujourd'hui", last line of the strip). Mock data must stay fictitious; a chosen name never shows a GitHub avatar or link.
 
 **UI kit** (`ui_kits/kairufocus-web/`) — interactive recreation: Landing, Dashboard, Tasks, Pomodoro, Journal, Settings.
 

@@ -25,7 +25,7 @@ else
                     <li class="kf-row @(row.IsMe ? "kf-row--me" : "")" aria-current="@(row.IsMe ? "true" : null)">
                         <span class="kf-row__rank">@F.Number(row.Rank)</span>
                         <span class="kf-row__who">
-                            <a class="kf-row__link" href="@ProfileHref(row.Name)" title="@row.Name">
+                            <a class="kf-row__link" href="@CommunityFormatter.ProfileHref(row.Name)" title="@row.Name">
                                 <MemberAvatar Name="@row.Name" AvatarUrl="@row.AvatarUrl" Size="28" />
                                 <span class="kf-row__name">@row.Name</span>
                             </a>
@@ -45,8 +45,6 @@ else
 
 @code {
     private sealed record RowView(int Rank, string Name, string? AvatarUrl, int Xp, bool IsMe, bool IsGap = false);
-
-    private static string ProfileHref(string name) => $"/membres/{Uri.EscapeDataString(name)}";
 
     [Parameter, EditorRequired] public CommunityLeaderboardDto Board { get; set; } = default!;
 

@@ -14,30 +14,34 @@
     <div class="kf-community-page__head">
         <div>
             <h1 class="kf-community-page__title">@F["Community.Title"]</h1>
-            <p class="kf-community-page__sub">
-                @SubtitleText
-                <PresenceIndicator Presence="_presence" />
-            </p>
+            <p class="kf-community-page__sub"><PresenceIndicator Presence="_presence" /></p>
         </div>
-        <PeriodSelector Value="_period" ValueChanged="SelectPeriod" />
     </div>
 
-    <CommunityHero Place="_leaderboard" Xp="_progress" Period="_period"
-                   OnRetryPlace="() => LoadLeaderboardAsync(_period)"
-                   OnRetryXp="() => LoadProgressAsync(_period)" />
-
-    @* Open sprints: independent of the period, and of the other sections (its failure shows its own error). *@
+    @* The live strip: independent of the period and of the other sections (each of its two parts shows its own error). *@
     <OpenSprintsSection Data="_openSprints" Failed="_openSprintsFailed"
-                        OnRetry="RetryOpenSprintsAsync" OnChanged="LoadOpenSprintsAsync" />
+                        OnRetry="RetryOpenSprintsAsync" OnChanged="HandleStripChanged">
+        <Footer>
+            <ActiveTodayStrip Data="_activeToday" Failed="_activeTodayFailed" OnRetry="RetryActiveTodayAsync" />
+        </Footer>
+    </OpenSprintsSection>
 
-    <CommunityProgress Zone="_progress" Period="_period"
-                       OnRetry="() => LoadProgressAsync(_period)" />
+    @* The only zone the period selector drives, so the selector sits in it. *@
+    <section class="kf-zone" aria-labelledby="community-zone-title">
+        <div class="kf-community-page__head">
+            <h2 class="kf-section-title kf-zone__title" id="community-zone-title">@F["Community.Zone.Title"]</h2>
+            <PeriodSelector Value="_period" ValueChanged="SelectPeriod" />
+        </div>
+        <p class="kf-community-page__sub kf-zone__sub">@SubtitleText</p>
 
-    <CommunityRecap Zone="_recap" Period="_period"
-                    OnRetry="() => LoadRecapAsync(_period)" />
+        <CommunityRecap Zone="_recap" Period="_period"
+                        OnRetry="() => LoadRecapAsync(_period)" />
 
-    <CommunityBoard Zone="_leaderboard" Period="_period"
-                    OnRetry="() => LoadLeaderboardAsync(_period)" />
+        <CommunityBoard Zone="_leaderboard" Period="_period"
+                        OnRetry="() => LoadLeaderboardAsync(_period)" />
+
+        <a class="kf-zone__link" href="profil#progression">@F["Community.MyProgress.Link"]</a>
+    </section>
 </div>
 
 @* One polite live region, always mounted so that later changes are announced:
@@ -51,8 +55,7 @@
 
     private static readonly TimeSpan PresenceInterval = TimeSpan.FromSeconds(60);
 
-    // The three sections that depend on the period: independent states, loaded in parallel.
-    private readonly LoadZone<CommunityProgressDto> _progress = new();
+    // The two sections that depend on the period: independent states, loaded in parallel.
     private readonly LoadZone<CommunityLeaderboardDto> _leaderboard = new();
     private readonly LoadZone<CommunityRecapDto> _recap = new();
 
@@ -66,20 +69,37 @@
     private DotNetObjectReference<Community>? _selfReference;
     private bool _disposed;
 
+    // A read that started less than this ago is not started again by the presence loop (the first read of the page just ran).
+    private static readonly TimeSpan ReadFreshness = TimeSpan.FromSeconds(5);
+
     // Open sprints: independent of the period, read at the first render and then with the presence loop.
     // A failed refresh keeps the last list; the error only shows when there is nothing to keep.
-    private static readonly TimeSpan OpenSprintsFreshness = TimeSpan.FromSeconds(5);
     private OpenSprintsDto? _openSprints;
     private bool _openSprintsFailed;
     private CancellationTokenSource? _openSprintsCts;
     private DateTimeOffset _openSprintsRequestedAt = DateTimeOffset.MinValue;
+
+    // "Actifs aujourd'hui": same model as the open sprints (read at the first render, then with the presence loop,
+    // a failed refresh keeps the last list, a newer read cancels the one in flight).
+    private ActiveTodayDto? _activeToday;
+    private bool _activeTodayFailed;
+    private CancellationTokenSource? _activeTodayCts;
+    private DateTimeOffset _activeTodayRequestedAt = DateTimeOffset.MinValue;
+
+    // A sprint ends on the clients: each participant's Pomodoro page records it when its own countdown reaches zero.
+    // After a card of the strip ends, "Actifs aujourd'hui" is read again once they had the time to do so.
+    private static readonly TimeSpan CompletionGrace = TimeSpan.FromSeconds(5);
+    private CancellationTokenSource? _stripChangedCts;
+
+    // Incremented by each presence read: an answer is applied only if no newer read started meanwhile.
+    private int _presenceVersion;
 
     /// <summary>The period lives in the URL (<c>?periode=mois</c>) so that Back and a reload keep it.</summary>
     [Parameter, SupplyParameterFromQuery(Name = "periode")]
     public string? PeriodQuery { get; set; }
 
     private string LiveMessage =>
-        _progress.IsInitialLoad || _leaderboard.IsInitialLoad || _recap.IsInitialLoad
+        _leaderboard.IsInitialLoad || _recap.IsInitialLoad
             ? F["Community.Loading"]
             : _announcement ?? "";
 
@@ -87,7 +107,7 @@
     {
         CommunityPeriod.Week => F.Format("Community.Sub.Week", F.WeekdayDayMonth(CurrentWeekStart())),
         CommunityPeriod.Month => MonthSubtitle(),
-        _ => GlobalSubtitle()
+        _ => F["Community.Zone.Sub.Global"]
     };
 
     // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -102,7 +122,6 @@
         _periodApplied = true;
 
         // Started here rather than after the first render: the first render already shows the skeletons.
-        _ = LoadProgressAsync(period);
         _ = LoadLeaderboardAsync(period, announce: changed);
         _ = LoadRecapAsync(period);
     }
@@ -111,6 +130,7 @@
     {
         // Not tied to the period: read once here, then refreshed by the presence loop.
         _ = LoadOpenSprintsAsync();
+        _ = LoadActiveTodayAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -135,10 +155,11 @@
     {
         _disposed = true;
         StopPresence();
-        _progress.Cancel();
         _leaderboard.Cancel();
         _recap.Cancel();
         _openSprintsCts?.Cancel();
+        _activeTodayCts?.Cancel();
+        _stripChangedCts?.Cancel();
 
         try
         {
@@ -165,9 +186,6 @@
     }
 
     // ── Loading of the period sections ──────────────────────────────────────
-
-    private Task LoadProgressAsync(CommunityPeriod period) =>
-        RunAsync(_progress, ct => Gamification.GetCommunityProgressAsync(period, ct), period);
 
     private Task LoadRecapAsync(CommunityPeriod period) =>
         RunAsync(_recap, ct => Gamification.GetCommunityRecapAsync(period, ct), period);
@@ -242,8 +260,17 @@
     {
         if (_disposed) return;
 
-        if (hidden) StopPresence();
-        else StartPresence(); // refreshes right away, then every minute
+        if (hidden)
+        {
+            StopPresence();
+
+            // The reads planned after a sprint ended belong to the visible tab: once it is shown, the loop reads everything again.
+            _stripChangedCts?.Cancel();
+        }
+        else
+        {
+            StartPresence(); // refreshes right away, then every minute
+        }
     }
 
     private void StartPresence()
@@ -278,17 +305,67 @@
 
     private async Task RefreshPresenceAsync(CancellationToken ct)
     {
-        // The open sprints ride on the same loop (same pace, same stop when the tab is hidden). They are not awaited
-        // here: a slow or failing read must not delay the presence. The first read of the page just started: no second one.
-        if (Clock.GetUtcNow() - _openSprintsRequestedAt >= OpenSprintsFreshness)
+        // The open sprints and the active members ride on the same loop (same pace, same stop when the tab is hidden).
+        // They are not awaited here: a slow or failing read must not delay the presence.
+        // The first read of the page just started: no second one.
+        var now = Clock.GetUtcNow();
+        if (now - _openSprintsRequestedAt >= ReadFreshness)
             _ = LoadOpenSprintsAsync();
+        if (now - _activeTodayRequestedAt >= ReadFreshness)
+            _ = LoadActiveTodayAsync();
 
+        await ReadPresenceAsync(ct);
+    }
+
+    private async Task ReadPresenceAsync(CancellationToken ct)
+    {
+        // The loop and the read after a sprint ends can overlap: only the last one started is applied, so that an
+        // older answer arriving late never brings back a count the strip already contradicts.
+        var version = ++_presenceVersion;
         var presence = await Gamification.GetCommunityPresenceAsync(ct);
-        if (ct.IsCancellationRequested) return;
+        if (ct.IsCancellationRequested || _disposed || version != _presenceVersion) return;
 
         // A failure hides the line: the presence is nice to have, not worth an error message.
         _presence = presence;
         await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// A card of the strip reached zero, or its sprint turned out to be no longer open (410). The strip, the subtitle and
+    /// "Actifs aujourd'hui" must not contradict each other until the next tick of the presence loop: the list and the
+    /// presence are read at once, "Actifs aujourd'hui" a little later (see <see cref="CompletionGrace"/>). While the tab is
+    /// hidden only the list is read: the loop is stopped, and reads everything again once the tab is shown.
+    /// Not awaited by the caller: the countdown that raised it must not wait for the reads.
+    /// </summary>
+    private void HandleStripChanged()
+    {
+        if (_disposed) return;
+
+        _ = LoadOpenSprintsAsync();
+
+        _stripChangedCts?.Cancel();
+
+        // Tab hidden (the loop is stopped): nothing more to read now, the loop reads everything again once it is shown.
+        if (_presenceCts is null) return;
+
+        var cts = new CancellationTokenSource();
+        _stripChangedCts = cts;
+        _ = ReadAfterSprintEndedAsync(cts.Token);
+    }
+
+    private async Task ReadAfterSprintEndedAsync(CancellationToken ct)
+    {
+        try
+        {
+            await ReadPresenceAsync(ct);
+            await Task.Delay(CompletionGrace, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (!_disposed) await LoadActiveTodayAsync();
     }
 
     // ── Open sprints ────────────────────────────────────────────────────────
@@ -337,6 +414,52 @@
         await InvokeAsync(StateHasChanged);
     }
 
+    // ── Active today ────────────────────────────────────────────────────────
+
+    private Task RetryActiveTodayAsync()
+    {
+        _activeTodayFailed = false; // back to the skeleton while the new read runs
+        return LoadActiveTodayAsync();
+    }
+
+    /// <summary>Reads the members active today. A newer read cancels the one in flight, whose result is then dropped.</summary>
+    private async Task LoadActiveTodayAsync()
+    {
+        _activeTodayCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _activeTodayCts = cts;
+        _activeTodayRequestedAt = Clock.GetUtcNow();
+
+        ActiveTodayDto? result;
+        try
+        {
+            result = await CommunityApi.GetActiveTodayAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            // Whatever went wrong, this line shows its own error and the rest of the page carries on.
+            result = null;
+        }
+
+        if (cts.IsCancellationRequested || _disposed) return;
+
+        if (result is not null)
+        {
+            _activeToday = result;
+            _activeTodayFailed = false;
+        }
+        else if (_activeToday is null)
+        {
+            _activeTodayFailed = true;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
     // ── Subtitle ────────────────────────────────────────────────────────────
     // The windows are UTC calendar weeks and months, like the server's. The week and the month are derived
     // from the clock so that the subtitle follows the selector at once, whatever the sections are doing.
@@ -353,20 +476,5 @@
     {
         var today = TodayUtc;
         return F.Format("Community.Sub.Month", CommunityFormatter.Capitalize(F.MonthName(today)), F.Number(today.Day));
-    }
-
-    /// <summary>
-    /// The date is the local date of the very first XP, the one the progression section shows too (same fact, same date).
-    /// "No XP yet" is only said once the global progression is loaded and says so; before that (or if it failed)
-    /// we do not know, so the line stays neutral.
-    /// </summary>
-    private string GlobalSubtitle()
-    {
-        if (_progress.Period != CommunityPeriod.Global || _progress.Data is not { } progress)
-            return F["Community.Sub.GlobalSince"];
-
-        return progress.AllTime.FirstGainAt is { } first
-            ? F.Format("Community.Sub.Global", F.DayMonth(CommunityFormatter.LocalDate(first)))
-            : F["Community.Sub.GlobalNoGain"];
     }
 }

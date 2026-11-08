@@ -1,0 +1,62 @@
+@* One open sprint, as a card of the live strip: who, time left (the countdown, big), how many are in, and the way in.
+   One filled action at most: "Join this sprint" for a member, nothing for a visitor outside the community (the strip
+   says it once), a link to my own session on my own card. The root is the list item: the strip owns the list.
+   Nothing here is announced: the countdown has no live region. *@
+@inject CommunityFormatter F
+
+<li class="kf-sprint @(Group.IsMine ? "kf-sprint--mine" : "")">
+    <a class="kf-sprint__who" href="@ProfileHref" aria-label="@F.Format("OpenSprints.Profile.Aria", Group.Name)">
+        <MemberAvatar Name="@Group.Name" AvatarUrl="@Group.AvatarUrl" Size="48" />
+        <span class="kf-sprint__name">@Group.Name</span>
+    </a>
+
+    <p class="kf-sprint__time">
+        @(Remaining.Before)<span class="kf-sprint__clock"><SprintCountdown EndsAt="Group.EndsAt" OnElapsed="OnElapsed" /></span>@(Remaining.After)
+    </p>
+
+    <p class="kf-sprint__with">
+        @(Group.ParticipantCount <= 1
+            ? F["OpenSprints.Alone"]
+            : F.Plural("OpenSprints.Participants", Group.ParticipantCount, F.Number(Group.ParticipantCount)))
+    </p>
+
+    @if (Group.IsMine)
+    {
+        <p class="kf-sprint__mine">
+            <span>@F["OpenSprints.Mine"]</span>
+            <a href="pomodoro">@F["Join.SprintActive.Link"]</a>
+        </p>
+    }
+    else if (ViewerIsMember)
+    {
+        <div class="kf-sprint__action">
+            <JoinSprintButton @key="Group.EndsAt" TargetName="@Group.Name" EndsAt="Group.EndsAt"
+                              ViewerIsMember="true" Compact="true" OnNoLongerOpen="OnNoLongerOpen" />
+        </div>
+    }
+</li>
+
+@code {
+    [Parameter, EditorRequired] public OpenSprintRowDto Group { get; set; } = default!;
+
+    /// <summary>A visitor outside the community gets no button: the strip explains it once.</summary>
+    [Parameter] public bool ViewerIsMember { get; set; }
+
+    /// <summary>The sprint turned out to be no longer open (410): the strip reads the list again.</summary>
+    [Parameter] public EventCallback OnNoLongerOpen { get; set; }
+
+    /// <summary>The countdown reached zero: the strip reads the list again.</summary>
+    [Parameter] public EventCallback OnElapsed { get; set; }
+
+    private string ProfileHref => CommunityFormatter.ProfileHref(Group.Name);
+
+    /// <summary>The "encore {0}" template cut around its placeholder, so that the countdown can take its place.</summary>
+    private (string Before, string After) Remaining
+    {
+        get
+        {
+            var template = F["OpenSprints.Remaining"];
+            return CommunityFormatter.SplitAtPlaceholder(template) ?? (template + " ", "");
+        }
+    }
+}

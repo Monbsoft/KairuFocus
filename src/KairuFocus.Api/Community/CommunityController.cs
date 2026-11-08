@@ -6,6 +6,7 @@ using KairuFocus.Application.Community.Commands.LeaveCommunity;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
 using KairuFocus.Application.Community.Commands.StartGroupBreak;
 using KairuFocus.Application.Community.Common;
+using KairuFocus.Application.Community.Queries.GetActiveToday;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
 using KairuFocus.Application.Community.Queries.GetOpenSprints;
@@ -152,6 +153,16 @@ public sealed class CommunityController : ControllerBase
         return result.IsSuccess
             ? NoContent()
             : ErrorResponse(result.Error!);
+    }
+
+    // ── Active today (UC-CO-13) ────────────────────────────────────────────
+
+    [HttpGet("active-today")]
+    public async Task<IActionResult> GetActiveToday(CancellationToken ct)
+    {
+        var result = await _mediator.SendAsync<GetActiveTodayQuery, GetActiveTodayResult>(
+            new GetActiveTodayQuery(), ct);
+        return Ok(result);
     }
 
     // ── Error mapping (spec §8) ────────────────────────────────────────────

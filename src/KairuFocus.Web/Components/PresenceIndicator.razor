@@ -1,11 +1,11 @@
-@* Live presence, on the subtitle line: how many members are in a sprint right now, or (nobody is)
-   how many already did one today. Nothing when both are 0 or when the presence is unavailable.
+@* Live presence, the subtitle of the page: how many members are in a sprint right now, or (nobody is)
+   how many already did one today. With both at 0, or when the presence is unavailable or still loading,
+   the fixed line stands in: the subtitle is never empty.
    Deliberately not an aria-live region: an announcement every minute would be noise. *@
 @inject CommunityFormatter F
 
 @if (Presence is { InSprintNow: > 0 })
 {
-    <span class="kf-presence-sep" aria-hidden="true"> · </span>
     <span class="kf-presence">
         <span class="kf-presence__dot" aria-hidden="true"></span>
         <span>@F.BoldPlural("Community.Presence.Now", Presence.InSprintNow)</span>
@@ -13,10 +13,13 @@
 }
 else if (Presence is { SprintedToday: > 0 })
 {
-    <span class="kf-presence-sep" aria-hidden="true"> · </span>
     <span class="kf-presence">
         <span>@F.BoldPlural("Community.Presence.Today", Presence.SprintedToday)</span>
     </span>
+}
+else
+{
+    <span>@F["Community.Sub.Fallback"]</span>
 }
 
 @code {

@@ -1,0 +1,292 @@
+@* "Ma progression" of my own profile: the XP of the period, its gap with the previous one, my rank (week and month only),
+   then the records and the XP history. The period lives in the URL (the page owns it); this section loads its own two
+   data sources (progression and leaderboard), each with its skeleton, its error and its retry. Facts, never targets. *@
+@implements IDisposable
+@inject GamificationApiClient Gamification
+@inject IJSRuntime JS
+@inject CommunityFormatter F
+@inject TimeProvider Clock
+
+<section id="progression" class="kf-progress" aria-labelledby="progression-title"
+         aria-busy="@(_place.Busy || _xp.Busy ? "true" : "false")">
+    <div class="kf-progress__head">
+        @* Focusable (tabindex -1) so that an arrival through /profil#progression can move the focus here. *@
+        <h2 id="progression-title" class="kf-progress__title" tabindex="-1">@F["Profile.Progress.Title"]</h2>
+        <PeriodSelector Value="Period" ValueChanged="PeriodChanged"
+                        LabelPrefix="Profile.Progress.Period." AriaKey="Profile.Progress.Period.Aria" />
+    </div>
+
+    @if (ShowSummary)
+    {
+        <div class="kf-card kf-progress__summary">
+            @if (ShowXpHalf)
+            {
+                <div class="kf-progress__half">
+                    <h3 class="kf-progress__eyebrow">@F["Community.Xp.Heading." + PeriodOf(_xp)]</h3>
+                    @if (_xp.ShowSkeleton)
+                    {
+                        <div class="kf-progress__skel" aria-hidden="true">
+                            <div class="kf-skel kf-skel--xp"></div>
+                            <div class="kf-skel kf-skel--line"></div>
+                        </div>
+                    }
+                    else if (_xp.Data is { } progress)
+                    {
+                        @XpContent(progress, PeriodOf(_xp))
+                    }
+                </div>
+            }
+
+            @if (ShowRankHalf)
+            {
+                <div class="kf-progress__half">
+                    <h3 class="kf-progress__eyebrow">@F["Community.Place.Heading"]</h3>
+                    @if (_place.ShowSkeleton)
+                    {
+                        <div class="kf-progress__skel" aria-hidden="true">
+                            <div class="kf-skel kf-skel--xp"></div>
+                            <div class="kf-skel kf-skel--line"></div>
+                        </div>
+                    }
+                    else if (_place.ShowError)
+                    {
+                        <ZoneAlert Message="@F["Community.Board.Error"]" OnRetry="() => LoadPlaceAsync(Period)" />
+                    }
+                    else if (_place.Data is { } board)
+                    {
+                        @RankContent(board, PeriodOf(_place))
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @* Records and history: the same source as the figures above. This section carries its own skeleton and its own
+       error (the only announced one for the progression), which is why the summary stays empty when it fails. *@
+    <CommunityProgress Zone="_xp" Period="Period" OnRetry="() => LoadXpAsync(Period)" />
+</section>
+
+@code {
+    /// <summary>A reload that lasts longer than this replaces the previous content with a skeleton.</summary>
+    private static readonly TimeSpan SkeletonDelay = TimeSpan.FromMilliseconds(300);
+
+    private readonly LoadZone<CommunityProgressDto> _xp = new();
+    private readonly LoadZone<CommunityLeaderboardDto> _place = new();
+
+    private CommunityPeriod? _loadedPeriod;
+    private bool _rankShown;
+    private bool _disposed;
+
+    /// <summary>The selected period, kept in the URL by the page.</summary>
+    [Parameter, EditorRequired] public CommunityPeriod Period { get; set; }
+
+    [Parameter] public EventCallback<CommunityPeriod> PeriodChanged { get; set; }
+
+    /// <summary>The rank half is for members only: a non-member never sees it, not even while loading.</summary>
+    [Parameter] public bool IsMember { get; set; }
+
+    /// <summary>The XP figures are shown unless they failed: the progression below then carries the one error.</summary>
+    private bool ShowXpHalf => !_xp.ShowError;
+
+    /// <summary>The rank is read from the leaderboard: week and month only (the global rank is a key figure of the profile), and members only.</summary>
+    private bool ShowRankHalf => Period != CommunityPeriod.Global && IsMember;
+
+    private bool ShowSummary => ShowXpHalf || ShowRankHalf;
+
+    private DateOnly TodayUtc => DateOnly.FromDateTime(Clock.GetUtcNow().UtcDateTime);
+
+    /// <summary>The period a section's data belongs to, so that labels never contradict the figures during a reload.</summary>
+    private CommunityPeriod PeriodOf<T>(LoadZone<T> zone) where T : class => zone.Period ?? Period;
+
+    // ── Lifecycle ───────────────────────────────────────────────────────────
+
+    protected override void OnParametersSet()
+    {
+        // Started here rather than after the first render: the first render already shows the skeletons.
+        var periodChanged = _loadedPeriod != Period;
+        if (periodChanged)
+        {
+            _loadedPeriod = Period;
+            _ = LoadXpAsync(Period);
+        }
+
+        // The rank is read only while it is shown (members, week and month): with the figures when the period changes,
+        // or as soon as it appears. Never for Global nor for a non-member, whose leaderboard would be thrown away.
+        var rankAppears = ShowRankHalf && !_rankShown;
+        _rankShown = ShowRankHalf;
+        if (ShowRankHalf && (periodChanged || rankAppears))
+            _ = LoadPlaceAsync(Period);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // The page renders this section once its profile has loaded, which is after the first render of the page:
+        // the browser has already looked for #progression and found nothing. A single scroll, only when the URL asks for it.
+        try
+        {
+            await JS.InvokeAsync<bool>("kairufocusCommunity.focusSectionIfRequested", "progression", "progression-title");
+        }
+        catch (JSException)
+        {
+            // Without the script the section simply is not scrolled into view.
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _xp.Cancel();
+        _place.Cancel();
+    }
+
+    // ── Loading ─────────────────────────────────────────────────────────────
+
+    private Task LoadXpAsync(CommunityPeriod period) =>
+        RunAsync(_xp, ct => Gamification.GetCommunityProgressAsync(period, ct), period);
+
+    private Task LoadPlaceAsync(CommunityPeriod period) =>
+        RunAsync(_place, ct => Gamification.GetCommunityLeaderboardAsync(period, ct), period);
+
+    /// <summary>
+    /// Loads one zone. The previous content stays displayed; the skeleton only takes over if the call is slow.
+    /// A newer load of the same zone cancels this one, whose result is then dropped.
+    /// </summary>
+    private async Task RunAsync<T>(LoadZone<T> zone, Func<CancellationToken, Task<T?>> fetch, CommunityPeriod period)
+        where T : class
+    {
+        var ct = zone.Begin();
+        _ = RevealSkeletonLaterAsync(zone, ct);
+
+        T? result;
+        try
+        {
+            result = await fetch(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            // Whatever went wrong, this zone shows its own error and the other carries on.
+            result = null;
+        }
+
+        if (ct.IsCancellationRequested || _disposed) return;
+
+        zone.Complete(result, period);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RevealSkeletonLaterAsync<T>(LoadZone<T> zone, CancellationToken ct) where T : class
+    {
+        try
+        {
+            await Task.Delay(SkeletonDelay, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (_disposed) return;
+
+        zone.MarkSlow(ct);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // ── Content ─────────────────────────────────────────────────────────────
+
+    private RenderFragment XpContent(CommunityProgressDto progress, CommunityPeriod period) => @<text>
+        @if (progress.AllTime.FirstGainAt is null)
+        {
+            @* Never earned any XP: say how to start rather than showing empty figures. *@
+            <div class="kf-progress__xp">
+                <span class="kf-progress__xpval">0</span><span class="kf-progress__xpunit">XP</span>
+            </div>
+            <p class="kf-progress__text">@F["Community.Xp.Empty"]</p>
+        }
+        else
+        {
+            <div class="kf-progress__xp">
+                <span class="kf-progress__xpval">@F.Number(progress.Xp)</span><span class="kf-progress__xpunit">XP</span>
+            </div>
+            <div class="kf-progress__activity">@F.Plural("Community.Xp.Activity", progress.Sprints, F.Number(progress.Sprints), F.Duration(progress.FocusMinutes))</div>
+
+            @if (progress.Comparison is { } comparison)
+            {
+                <div class="kf-progress__compare">
+                    @if (progress.Xp == 0 && comparison.PreviousXp == 0)
+                    {
+                        @* Both at 0, nothing to compare. "Just begun" is true only on the first UTC day of the period
+                           (the server's windows are UTC); later it would be wrong, so we state the fact instead. *@
+                        <span>@F[(period.IsFirstDay(TodayUtc) ? "Community.Xp.Starting." : "Community.Xp.NoneYet.") + period]</span>
+                    }
+                    else if (comparison.DeltaXp == 0)
+                    {
+                        <span>@F.Format("Community.Xp.Equal." + period, ComparedMoment(comparison, period), F.Number(comparison.PreviousXp))</span>
+                    }
+                    else
+                    {
+                        <TrendChip DeltaXp="comparison.DeltaXp" />
+                        <span>@F.Format("Community.Xp.Compare." + period, ComparedMoment(comparison, period), F.Number(comparison.PreviousXp))</span>
+                    }
+                </div>
+            }
+            else if (progress.AverageWeeklyXp is { } average)
+            {
+                @* Global: no previous period to compare with, so no arrow. *@
+                <div class="kf-progress__compare">
+                    <span>@F.Format("Community.Xp.Average", F.Number(average))</span>
+                </div>
+            }
+        }
+    </text>;
+
+    private RenderFragment RankContent(CommunityLeaderboardDto board, CommunityPeriod period) => @<text>
+        @if (board.Me is not { } me)
+        {
+            <p class="kf-progress__unranked">@F["Community.Place.Unranked." + period]</p>
+        }
+        else
+        {
+            var ordinal = F.Ordinal(me.Rank);
+
+            <div class="kf-progress__rankline">
+                @* The figure is monospace, its marker (er, th, 位...) a small proportional span: no whitespace between the spans. *@
+                <span class="kf-progress__rank" aria-hidden="true">@if (ordinal.Prefix.Length > 0) {<span class="kf-progress__ord">@ordinal.Prefix</span>}<span class="kf-progress__fig">@ordinal.Number</span>@if (ordinal.Suffix.Length > 0) {<span class="kf-progress__ord@(MarkerModifier(ordinal.MarkerStyle))">@ordinal.Suffix</span>}</span>
+                @if (me.IsTied)
+                {
+                    <span class="kf-progress__tie" aria-hidden="true">@F["Community.Place.Tie"]</span>
+                }
+                <span class="kf-progress__period" aria-hidden="true">@F["Community.Place.Period." + period]</span>
+            </div>
+            <span class="visually-hidden">@RankForScreenReaders(me, board.RankedCount, period)</span>
+            <p class="kf-progress__meta" aria-hidden="true">@F.Plural("Community.Place.Of", board.RankedCount, F.Number(board.RankedCount))</p>
+        }
+    </text>;
+
+    /// <summary>The CSS modifier of the ordinal marker (the base class is always <c>kf-progress__ord</c>).</summary>
+    private static string MarkerModifier(OrdinalMarkerStyle style) => style switch
+    {
+        OrdinalMarkerStyle.Raised => " kf-progress__ord--raised",
+        OrdinalMarkerStyle.FigureSized => " kf-progress__ord--figure",
+        _ => ""
+    };
+
+    /// <summary>The day (week) or the date (month) of the previous period that the gap is measured against.</summary>
+    private string ComparedMoment(CommunityComparisonDto comparison, CommunityPeriod period) =>
+        period == CommunityPeriod.Month
+            ? F.DayMonth(CommunityFormatter.LocalDate(comparison.PreviousCutoffAt))
+            : F.WeekdayName(comparison.PreviousCutoffAt);
+
+    private string RankForScreenReaders(CommunityStandingDto me, int rankedCount, CommunityPeriod period)
+    {
+        var text = F.Plural("Community.Place.Sr", rankedCount,
+            F.Number(me.Rank), F.Number(rankedCount), F["Community.Place.Period." + period]);
+
+        return me.IsTied ? $"{text} {F["Community.Place.TiedSr"]}" : text;
+    }
+}

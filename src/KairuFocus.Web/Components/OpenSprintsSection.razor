@@ -1,19 +1,19 @@
-@* "En sprint maintenant": one row per open group, with the time left, the number of participants and a way in.
+@* The live strip, first block of the page: "En sprint maintenant", one card per open group, then (Footer) "Actifs aujourd'hui".
    The data comes from the page (it refreshes them with its presence loop); this component only shows them.
-   Nothing here is announced: rows come and go quietly, and the countdowns have no live region.
+   Nothing here is announced: cards come and go quietly, and the countdowns have no live region.
    Independent of the period selector. *@
 @implements IDisposable
 @inject CommunityFormatter F
 
-<section class="kf-zone" aria-labelledby="open-sprints-title" aria-busy="@(Data is null && !Failed ? "true" : "false")">
-    <h2 class="kf-section-title" id="open-sprints-title">@F["OpenSprints.Title"]</h2>
-    <div>
-        <p class="kf-open__sub">@F["OpenSprints.Sub"]</p>
+<section class="kf-hero kf-live" aria-labelledby="open-sprints-title" aria-busy="@(Data is null && !Failed ? "true" : "false")">
+    <div class="kf-live__head">
+        <h2 id="open-sprints-title" tabindex="-1" @ref="_title">@F["OpenSprints.Title"]</h2>
+        <p class="kf-live__sub">@F["OpenSprints.Sub"]</p>
         @* Always mounted so that the message is announced when it appears. *@
         <div role="status">
             @if (_showClosedNotice)
             {
-                <p class="kf-open__notice">@F["Join.Closed"]</p>
+                <p class="kf-live__closed">@F["Join.Closed"]</p>
             }
         </div>
     </div>
@@ -24,57 +24,69 @@
     }
     else if (Data is null)
     {
-        <div class="kf-card">
-            <p class="kf-empty">@F["OpenSprints.Loading"]</p>
+        <div class="kf-live__grid" aria-hidden="true">
+            <div class="kf-skel kf-live__skel"></div>
+            <div class="kf-skel kf-live__skel"></div>
         </div>
+        <span class="visually-hidden">@F["OpenSprints.Loading"]</span>
     }
     else if (Data.Groups.Count == 0)
     {
-        <div class="kf-card">
-            <p class="kf-empty">@F["OpenSprints.Empty"]</p>
+        <div class="kf-live__empty">
+            <div class="kf-live__emptytext">
+                <p class="kf-live__emptytitle">@F["OpenSprints.Empty.Title"]</p>
+                @if (Data.ViewerIsMember)
+                {
+                    <p class="kf-live__sub">@F["OpenSprints.Empty.Body"]</p>
+                }
+                else
+                {
+                    @* A non-member's sprint is never listed: no invitation to start one, only the way to join. *@
+                    <p class="kf-live__notice">
+                        <span>@F["Join.NeedMember.Body"]</span>
+                        <a href="settings#communaute">@F["Join.NeedMember.Link"]</a>
+                    </p>
+                }
+            </div>
+            @if (Data.ViewerIsMember)
+            {
+                <a class="kf-btn-light" href="pomodoro?type=sprint">@F["OpenSprints.Empty.Cta"]</a>
+            }
         </div>
     }
     else
     {
-        var (before, after) = SplitRemaining();
+        var hidden = Data.Groups.Count - VisibleCards;
+        var canFold = hidden > 0;
 
         if (!Data.ViewerIsMember)
         {
-            @* Said once for the whole list; each row only carries its link. *@
-            <p class="kf-open__sub">@F["Join.NeedMember.Body"]</p>
+            @* Said once for the whole strip; the cards carry no button. *@
+            <p class="kf-live__notice">
+                <span>@F["Join.NeedMember.Body"]</span>
+                <a href="settings#communaute">@F["Join.NeedMember.Link"]</a>
+            </p>
         }
 
-        <div class="kf-card">
-            <ul class="kf-open__list">
-                @foreach (var group in Data.Groups)
-                {
-                    <li class="kf-open__row" @key="group.Name">
-                        <a class="kf-open__who" href="@ProfileHref(group.Name)" aria-label="@F.Format("OpenSprints.Profile.Aria", group.Name)">
-                            <MemberAvatar Name="@group.Name" AvatarUrl="@group.AvatarUrl" Size="32" />
-                            <span class="kf-open__name">@group.Name</span>
-                        </a>
-                        <p class="kf-open__meta">
-                            <span>@before<SprintCountdown EndsAt="group.EndsAt" OnElapsed="OnChanged" />@after</span>
-                            <span class="kf-open__dot" aria-hidden="true">·</span>
-                            <span>@F.Plural("OpenSprints.Participants", group.ParticipantCount, F.Number(group.ParticipantCount))</span>
-                        </p>
-                        <div class="kf-open__action">
-                            @if (group.IsMine)
-                            {
-                                <span class="kf-open__mine">@F["OpenSprints.Mine"]</span>
-                            }
-                            else
-                            {
-                                <JoinSprintButton @key="group.EndsAt" TargetName="@group.Name" EndsAt="group.EndsAt"
-                                                  ViewerIsMember="Data.ViewerIsMember" Compact="true"
-                                                  OnNoLongerOpen="HandleNoLongerOpenAsync" />
-                            }
-                        </div>
-                    </li>
-                }
-            </ul>
-        </div>
+        <ul class="kf-live__grid" id="open-sprints-list">
+            @foreach (var group in (canFold && !_expanded ? Data.Groups.Take(VisibleCards) : Data.Groups))
+            {
+                <OpenSprintCard @key="group.Name" Group="group" ViewerIsMember="Data.ViewerIsMember"
+                                OnNoLongerOpen="HandleNoLongerOpenAsync" OnElapsed="OnChanged" />
+            }
+        </ul>
+
+        @if (canFold)
+        {
+            <button type="button" class="kf-linkbtn kf-live__more" aria-expanded="@(_expanded ? "true" : "false")"
+                    aria-controls="open-sprints-list" @onclick="ToggleExpanded"
+                    @onfocus="() => _moreFocused = true" @onblur="() => _moreFocused = false">
+                @(_expanded ? F["OpenSprints.Less"] : F.Plural("OpenSprints.More", hidden, F.Number(hidden)))
+            </button>
+        }
     }
+
+    @Footer
 </section>
 
 @code {
@@ -86,13 +98,45 @@
 
     [Parameter] public EventCallback OnRetry { get; set; }
 
-    /// <summary>A sprint turned out to be no longer open (410): the page reads the list again.</summary>
+    /// <summary>A sprint turned out to be no longer open (410) or elapsed: the page reads the list again.</summary>
     [Parameter] public EventCallback OnChanged { get; set; }
+
+    /// <summary>The last line of the strip ("Actifs aujourd'hui"), set by the page.</summary>
+    [Parameter] public RenderFragment? Footer { get; set; }
+
+    /// <summary>Two rows of cards on a wide screen; the rest is folded behind a button.</summary>
+    private const int VisibleCards = 6;
 
     private static readonly TimeSpan NoticeDuration = TimeSpan.FromSeconds(10);
 
     private readonly CancellationTokenSource _cts = new();
+    private ElementReference _title;
     private bool _showClosedNotice;
+
+    // The unfolded state survives the reads of the page. If a read brings the list back to six or less while the
+    // button has the focus, the button goes away: the focus then moves to the title, never to the body.
+    private bool _expanded;
+    private bool _moreFocused;
+    private bool _focusTitle;
+
+    protected override void OnParametersSet()
+    {
+        if (Data is not { } data || data.Groups.Count > VisibleCards) return;
+
+        if (_moreFocused) _focusTitle = true;
+        _expanded = false;
+        _moreFocused = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_focusTitle) return;
+
+        _focusTitle = false;
+        await _title.FocusAsync();
+    }
+
+    private void ToggleExpanded() => _expanded = !_expanded;
 
     /// <summary>The sprint just closed or ended (410): say it, read the list again, and let the message fade after a while.</summary>
     private async Task HandleNoLongerOpenAsync()
@@ -118,14 +162,4 @@
     }
 
     public void Dispose() => _cts.Cancel();
-
-    private static string ProfileHref(string name) => $"/membres/{Uri.EscapeDataString(name)}";
-
-    /// <summary>The "encore {0}" template cut around its placeholder, so that the countdown can take its place.</summary>
-    private (string Before, string After) SplitRemaining()
-    {
-        var template = F["OpenSprints.Remaining"];
-        var at = template.IndexOf("{0}", StringComparison.Ordinal);
-        return at < 0 ? (template + " ", "") : (template[..at], template[(at + 3)..]);
-    }
 }

@@ -270,6 +270,9 @@ else
         Nav.NavigateTo("/pomodoro/libre");
     }
 
+    /// <summary>Optional <c>?type=sprint</c> from the Community page: preselects the sprint when no session is running.</summary>
+    [Parameter, SupplyParameterFromQuery(Name = "type")] public string? TypeQuery { get; set; }
+
     // ── État ──────────────────────────────────────────────────────────────
     private bool _loaded;
     private PomodoroSessionDto? _session;
@@ -389,6 +392,12 @@ else
             _sprintDuration = suggested.SprintDurationMinutes;
             _shortBreakDuration = suggested.ShortBreakDurationMinutes;
             _longBreakDuration = suggested.LongBreakDurationMinutes;
+        }
+
+        // A running session always wins; any value other than "sprint" is ignored.
+        if (_session is null && string.Equals(TypeQuery, "sprint", StringComparison.OrdinalIgnoreCase))
+        {
+            _selectedSessionType = "Sprint";
         }
 
         // Settings only drive the ringtone and volume here: silent fallback to the field defaults.

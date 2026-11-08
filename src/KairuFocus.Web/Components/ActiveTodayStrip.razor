@@ -1,0 +1,61 @@
+@* "Actifs aujourd'hui": the members who finished a sprint today, as a line at the bottom of the live strip, under a rule.
+   Up to five avatars with their names, then "et N autres". I am in the list when I am one of them (named "toi", linking to my profile).
+   The data comes from the page (it refreshes it with its presence loop); this component only shows it. *@
+@inject CommunityFormatter F
+
+<div class="kf-today" aria-busy="@(Data is null && !Failed ? "true" : "false")">
+    <p class="kf-today__title" id="active-today-title">@F["ActiveToday.Title"]</p>
+
+    @if (Data is { } today)
+    {
+        if (today.Members.Count == 0)
+        {
+            <p class="kf-today__empty">@F["ActiveToday.Empty"]</p>
+        }
+        else
+        {
+            <ul class="kf-today__list" aria-labelledby="active-today-title">
+                @foreach (var member in today.Members)
+                {
+                    <li @key="member.Name">
+                        <a class="kf-today__chip" href="@Href(member)">
+                            <MemberAvatar Name="@member.Name" AvatarUrl="@member.AvatarUrl" Size="28" />
+                            <span class="kf-today__name">@Label(member)</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+
+            var others = today.Total - today.Members.Count;
+            if (others > 0)
+            {
+                <span class="kf-today__more">@F.Plural("ActiveToday.More", others, F.Number(others))</span>
+            }
+        }
+    }
+    else if (Failed)
+    {
+        @* Visual only: the page keeps one live region, and a refresh failure is not worth an interruption. *@
+        <ZoneAlert Message="@F["ActiveToday.Error"]" OnRetry="OnRetry" Announce="false" />
+    }
+    else
+    {
+        <div class="kf-skel kf-today__skel" aria-hidden="true"></div>
+    }
+</div>
+
+@code {
+    /// <summary>The last successful read; null while the first one is pending (or failed).</summary>
+    [Parameter] public ActiveTodayDto? Data { get; set; }
+
+    /// <summary>The read failed and there is nothing to show yet.</summary>
+    [Parameter] public bool Failed { get; set; }
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+
+    private string Label(ActiveMemberDto member) =>
+        member.IsMe ? $"{member.Name} ({F["ActiveToday.You"]})" : member.Name;
+
+    private static string Href(ActiveMemberDto member) =>
+        member.IsMe ? "profil" : CommunityFormatter.ProfileHref(member.Name);
+}

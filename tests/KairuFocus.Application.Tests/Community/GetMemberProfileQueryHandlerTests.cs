@@ -448,5 +448,8 @@ public sealed class GetMemberProfileQueryHandlerTests
 
         public Task<MemberActivity> GetActivityAsync(ProfileName name, DateTime heatmapSinceUtc, CancellationToken ct = default) =>
             throw failure;
+
+        public Task<ActiveMembers> GetActiveMembersAsync(DateTime fromUtc, DateTime toUtc, int maxMembers, CancellationToken ct = default) =>
+            inner.GetActiveMembersAsync(fromUtc, toUtc, maxMembers, ct);
     }
 }

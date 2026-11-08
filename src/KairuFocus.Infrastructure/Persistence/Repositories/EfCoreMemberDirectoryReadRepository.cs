@@ -7,7 +7,7 @@ namespace KairuFocus.Infrastructure.Persistence.Repositories;
 
 /// <summary>
 /// CROSS-USERS read (ADR-026): the public profile and the aggregated activity of a community member, found
-/// by the normalized key of the name. The Users table is never read, and neither a user identifier nor a
+/// by the normalized key of the name, and the members active in a window. The Users table is never read, and neither a user identifier nor a
 /// session identifier leaves a query: <c>OwnerId</c> is only the join condition with the member profile,
 /// which also keeps non-members out.
 /// <para>
@@ -30,6 +30,35 @@ internal sealed class EfCoreMemberDirectoryReadRepository : IMemberDirectoryRead
             .Where(p => p.NameKey == name.Key)
             .Select(p => new PublicMemberProfile(p.Name, p.NameSource, p.AvatarUrl, p.JoinedAtUtc))
             .FirstOrDefaultAsync(ct);
+
+    public async Task<ActiveMembers> GetActiveMembersAsync(DateTime fromUtc, DateTime toUtc, int maxMembers, CancellationToken ct = default)
+    {
+        // CROSS-USERS read (ADR-026), same join debt as GetActivityAsync: PomodoroSessions.OwnerId is
+        // nvarchar(50) and MemberProfiles.UserId uniqueidentifier, converted implicitly by SQL Server.
+        // The join keeps non-members out; no identifier is projected, only the public name, its key, the avatar
+        // and the last end of a sprint. Grouped in SQL (one row per member, a MAX over a plain column: no per-row
+        // rule, ADR-024), so the read stays as small as the number of members active today. Ordering by name runs
+        // in memory, to keep the ordinal comparison whatever the collation.
+        var rows = await (
+                from s in _context.PomodoroSessions.AsNoTracking()
+                join p in _context.MemberProfiles.AsNoTracking() on s.OwnerId equals p.Id
+                where s.SessionType == PomodoroSessionType.Sprint
+                      && s.Status == PomodoroSessionStatus.Completed
+                      && s.EndedAt >= fromUtc
+                      && s.EndedAt < toUtc
+                group s.EndedAt by new { p.Name, p.NameKey, p.AvatarUrl } into member
+                select new { ProfileName = member.Key.Name, member.Key.AvatarUrl, LastEnd = member.Max() })
+            .ToListAsync(ct);
+
+        var members = rows
+            .OrderByDescending(m => m.LastEnd)
+            .ThenBy(m => m.ProfileName.Value, StringComparer.Ordinal)
+            .Take(maxMembers)
+            .Select(m => new SprintMember(m.ProfileName, m.AvatarUrl))
+            .ToList();
+
+        return new ActiveMembers(rows.Count, members);
+    }
 
     public async Task<MemberActivity> GetActivityAsync(ProfileName name, DateTime heatmapSinceUtc, CancellationToken ct = default)
     {

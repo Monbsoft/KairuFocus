@@ -1,9 +1,9 @@
-@* "Ensemble": what the whole community did over the period, and my part in it. Anonymous totals only:
+@* "Ensemble": what the whole community did over the period. Anonymous totals only:
    no name, no row. No target, no gauge. *@
 @inject CommunityFormatter F
 
 <div class="kf-zone" aria-busy="@(Zone.Busy ? "true" : "false")">
-    <h2 class="kf-section-title">@F["Community.Together.Heading"]</h2>
+    <h3 class="kf-section-title">@F["Community.Together.Heading"]</h3>
 
     @if (Zone.ShowSkeleton)
     {
@@ -26,10 +26,6 @@
                 <span class="kf-recap__sep" aria-hidden="true">·</span>
                 <span>@F.BoldPlural("Community.Together.Members", recap.ActiveMembers)</span>
             </p>
-            @if (recap.MySprints > 0)
-            {
-                <p class="kf-recap__mine">@F.Plural("Community.Together.Mine", recap.MySprints, F.Number(recap.MySprints))</p>
-            }
         </div>
     }
 </div>
