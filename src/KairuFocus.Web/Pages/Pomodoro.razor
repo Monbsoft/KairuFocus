@@ -134,12 +134,6 @@ else
             </div>
         }
 
-        @* Group break (UC-CO-10): started by the server at the end of a shared sprint, with a shared end for everyone *@
-        @if (_session is { Status: "Active", SharedEndAt: not null } && _session.SessionType != "Sprint")
-        {
-            <small role="status" class="text-body-secondary text-center" style="max-width:480px">@F["Participants.GroupBreak"]</small>
-        }
-
         <!-- Résultat après fin de session -->
         @if (_completedSessionType is not null)
         {
@@ -297,7 +291,7 @@ else
     /// <summary>"Fermer / Rouvrir ce sprint": only the host of a timed sprint, and only when a community member.
     /// A free sprint never reaches <c>_session</c> (see <see cref="TryAdoptTimedSession"/>), so it never shows it.</summary>
     private bool CanManageGroup =>
-        _isMember && _session is { Status: "Active", SessionType: "Sprint", IsGroupHost: true };
+        false; // T9 rewrites this (host of a group session)
 
     // ── Session type selection ────────────────────────────────────────────
     private string _selectedSessionType = "Sprint";
@@ -622,10 +616,6 @@ else
 
             if (xpAwarded.Value > 0 && _xpToast is not null)
                 _ = _xpToast.ShowAsync(xpAwarded.Value);
-
-            // The sprint is recorded and credited: the group break is a bonus that never turns this into a failure.
-            if (completedType == "Sprint")
-                await TryFollowGroupBreakAsync();
         }
         catch (Exception)
         {
@@ -637,30 +627,6 @@ else
         {
             _completing = false;
             StateHasChanged();
-        }
-    }
-
-    /// <summary>After a finished sprint, asks the server for the group break; when one started, shows its countdown
-    /// instead of the "Sprint terminé" banner. Any failure leaves the screen as the completion left it, with no error:
-    /// the sprint itself is already recorded.</summary>
-    private async Task TryFollowGroupBreakAsync()
-    {
-        try
-        {
-            if (!await CommunityApi.StartGroupBreakAsync()) return;
-
-            var current = await PomodoroApi.GetCurrentSessionAsync();
-            if (current is not { Status: "Active" } || !TryAdoptTimedSession(current)) return;
-
-            _selectedSessionType = current.SessionType;
-            _completedSessionType = null;
-            _suggestedNextSessionType = null;
-            RefreshLinkedTasks();
-            await StartTimerLoop();
-        }
-        catch (Exception)
-        {
-            // Accessory: the "Sprint terminé" screen stays.
         }
     }
 

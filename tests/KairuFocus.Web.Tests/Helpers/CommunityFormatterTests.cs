@@ -130,4 +130,30 @@ public sealed class CommunityFormatterTests
     {
         Assert.Null(CommunityFormatter.SplitAtPlaceholder("OpenSprints.Remaining"));
     }
+
+    // --- GroupStepKey ---------------------------------------------------------------------------
+
+    [Fact]
+    public void Should_ReturnSprintKey_When_StepIsSprint()
+    {
+        Assert.Equal("Group.Step.Sprint", CommunityFormatter.GroupStepKey("Sprint"));
+    }
+
+    [Fact]
+    public void Should_ReturnShortBreakKey_When_StepIsShortBreak()
+    {
+        Assert.Equal("Group.Step.ShortBreak", CommunityFormatter.GroupStepKey("ShortBreak"));
+    }
+
+    [Fact]
+    public void Should_ReturnLongBreakKey_When_StepIsLongBreak()
+    {
+        Assert.Equal("Group.Step.LongBreak", CommunityFormatter.GroupStepKey("LongBreak"));
+    }
+
+    [Fact]
+    public void Should_Throw_When_StepTypeUnknown()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => CommunityFormatter.GroupStepKey("Nap"));
+    }
 }

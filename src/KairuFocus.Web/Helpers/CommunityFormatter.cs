@@ -60,6 +60,17 @@ public sealed class CommunityFormatter
     public string Plural(string key, int count, params object[] args) =>
         string.Format(Culture, PluralTemplate(key, count), args);
 
+    // ── Group session steps ─────────────────────────────────────────────────
+
+    /// <summary>The resource key naming a step of a group session; the sprint one takes the sprint number as <c>{0}</c>.</summary>
+    public static string GroupStepKey(string stepType) => stepType switch
+    {
+        "Sprint" => "Group.Step.Sprint",
+        "ShortBreak" => "Group.Step.ShortBreak",
+        "LongBreak" => "Group.Step.LongBreak",
+        _ => throw new ArgumentOutOfRangeException(nameof(stepType), stepType, "Unknown group step type.")
+    };
+
     // ── Emphasis ────────────────────────────────────────────────────────────
 
     /// <summary>The template with <c>{0}</c> replaced by <paramref name="value"/> in bold. Everything is HTML-encoded.</summary>

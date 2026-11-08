@@ -105,11 +105,8 @@
 
     private async Task RefreshAsync(CancellationToken ct)
     {
-        var result = await CommunityApi.GetParticipantsAsync(ct);
-        if (ct.IsCancellationRequested) return;
-
-        // A failure hides the line, like the presence of the Community page: nice to have, not worth a message.
-        _others = result?.Others ?? [];
+        // T8 stub: the participants read is gone (replaced by GET current-session, wired by T9). Shows nothing meanwhile.
+        _others = [];
         await InvokeAsync(StateHasChanged);
     }
 
