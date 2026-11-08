@@ -112,7 +112,8 @@ public sealed class GetMemberProfileQueryHandler
         if (sprint is null)
             return null;
 
-        var participants = await _openSprintRepository.GetParticipantsAsync(sprint.RootSessionId, now, cancellationToken);
+        // Empty for a sprint nobody joined (no group): the target, found as its owner, is then alone in it.
+        var participants = await _openSprintRepository.GetGroupMembersAsync(sprint.RootSessionId, cancellationToken);
 
         // EF Core reads datetime2 as DateTimeKind.Unspecified: pinned to UTC so that the conversion to
         // DateTimeOffset never interprets it as local time.
@@ -122,7 +123,10 @@ public sealed class GetMemberProfileQueryHandler
                 .Where(p => p.Name.Key != name.Key && p.Name.Key != viewerName?.Key)
                 .Select(p => new SprintMemberViewModel(p.Name.Value, p.AvatarUrl))
                 .ToList(),
-            IncludesViewer: participants.Any(p => p.Name.Key == viewerName?.Key));
+            IncludesViewer: viewerName is not null
+                            && (viewerName.Key == name.Key || participants.Any(p => p.Name.Key == viewerName.Key)),
+            sprint.StepType.ToString(),
+            sprint.Phase.ToString());
     }
 
     private async Task<(T? Value, bool Failed)> LoadZoneAsync<T>(string zone, Func<Task<T>> read)

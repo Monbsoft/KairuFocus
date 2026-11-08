@@ -92,7 +92,7 @@ public sealed class GroupSessionConfiguration : IEntityTypeConfiguration<GroupSe
 
         builder.HasMany<GroupMember>(MembersField)
             .WithOne()
-            .HasForeignKey("GroupSessionId")
+            .HasForeignKey(GroupMemberConfiguration.GroupField)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Ignore(g => g.ActiveMemberCount);
@@ -103,6 +103,9 @@ public sealed class GroupSessionConfiguration : IEntityTypeConfiguration<GroupSe
 public sealed class GroupMemberConfiguration : IEntityTypeConfiguration<GroupMember>
 {
     internal const string UserField = "_userId";
+
+    // Shadow foreign key to the group: the reads filter and group the members on it.
+    internal const string GroupField = "GroupSessionId";
 
     public void Configure(EntityTypeBuilder<GroupMember> builder)
     {
@@ -117,9 +120,9 @@ public sealed class GroupMemberConfiguration : IEntityTypeConfiguration<GroupMem
             .HasColumnType("uniqueidentifier")
             .IsRequired();
 
-        builder.Property<Guid>("GroupSessionId").HasColumnType("uniqueidentifier");
+        builder.Property<Guid>(GroupField).HasColumnType("uniqueidentifier");
 
-        builder.HasKey("GroupSessionId", UserField);
+        builder.HasKey(GroupField, UserField);
 
         builder.HasIndex(UserField)
             .HasDatabaseName("IX_GroupSessionMembers_UserId");

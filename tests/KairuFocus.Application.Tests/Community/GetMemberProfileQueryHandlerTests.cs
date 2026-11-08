@@ -95,8 +95,8 @@ public sealed class GetMemberProfileQueryHandlerTests
         _standings.Add("first", 200);
         _standings.Add(Target, 100);
         _standings.Add("third", 50);
-        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, endsAt));
-        _openSprints.SeedParticipants(rootId, Participant(Target, TargetAvatar), Participant("tomtom", "https://avatars.githubusercontent.com/u/2"));
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, endsAt, GroupStepType.Sprint, GroupPhase.Running));
+        _openSprints.SeedGroupMembers(rootId, Participant(Target, TargetAvatar), Participant("tomtom", "https://avatars.githubusercontent.com/u/2"));
         _profiles.Seed(FakeCurrentUserService.TestUserId, "viewer");
 
         var result = await Query();
@@ -158,8 +158,8 @@ public sealed class GetMemberProfileQueryHandlerTests
         var rootId = Guid.NewGuid();
         _directory.Seed(PublicProfile());
         _standings.Add(Target, 100);
-        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18)));
-        _openSprints.SeedParticipants(rootId, Participant(Target), Participant("tomtom"));
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18), GroupStepType.Sprint, GroupPhase.Running));
+        _openSprints.SeedGroupMembers(rootId, Participant(Target), Participant("tomtom"));
 
         var result = await Query("LEA_DEV");
 
@@ -194,8 +194,8 @@ public sealed class GetMemberProfileQueryHandlerTests
     {
         var rootId = Guid.NewGuid();
         _directory.Seed(PublicProfile());
-        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18)));
-        _openSprints.SeedParticipants(rootId, Participant("tomtom"), Participant(Target), Participant("zoe_ux"));
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18), GroupStepType.Sprint, GroupPhase.Running));
+        _openSprints.SeedGroupMembers(rootId, Participant("tomtom"), Participant(Target), Participant("zoe_ux"));
 
         var profile = (await Query()).Profile!;
 
@@ -208,8 +208,8 @@ public sealed class GetMemberProfileQueryHandlerTests
     {
         var rootId = Guid.NewGuid();
         _directory.Seed(PublicProfile());
-        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18)));
-        _openSprints.SeedParticipants(rootId, Participant(Target));
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18), GroupStepType.Sprint, GroupPhase.Running));
+        _openSprints.SeedGroupMembers(rootId, Participant(Target));
 
         var profile = (await Query()).Profile!;
 
@@ -223,7 +223,7 @@ public sealed class GetMemberProfileQueryHandlerTests
         var rootId = Guid.NewGuid();
         var stored = DateTime.SpecifyKind(Now.UtcDateTime.AddMinutes(18), DateTimeKind.Unspecified);
         _directory.Seed(PublicProfile());
-        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, stored));
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, stored, GroupStepType.Sprint, GroupPhase.Running));
 
         var profile = (await Query()).Profile!;
 
@@ -259,8 +259,8 @@ public sealed class GetMemberProfileQueryHandlerTests
         var rootId = Guid.NewGuid();
         _directory.Seed(PublicProfile());
         _standings.Add(Target, 100);
-        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18)));
-        _openSprints.SeedParticipants(rootId, Participant(Target), Participant("tomtom"));
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18), GroupStepType.Sprint, GroupPhase.Running));
+        _openSprints.SeedGroupMembers(rootId, Participant(Target), Participant("tomtom"));
         _profiles.Seed(FakeCurrentUserService.TestUserId, "viewer");
 
         var json = JsonSerializer.Serialize(await Query());
@@ -318,6 +318,56 @@ public sealed class GetMemberProfileQueryHandlerTests
         Assert.True(profile.IsMe);
         Assert.True(profile.OpenSprint!.IncludesViewer);
         Assert.Equal(["tomtom"], profile.OpenSprint.Others.Select(o => o.Name));
+    }
+
+    [Fact]
+    public async Task Should_ReportBreakPhase_When_TargetGroupInBreak()
+    {
+        var rootId = Guid.NewGuid();
+        var breakEnd = Now.UtcDateTime.AddMinutes(3);
+        _directory.Seed(PublicProfile());
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, breakEnd, GroupStepType.ShortBreak, GroupPhase.Running));
+        _openSprints.SeedGroupMembers(rootId, Participant("tomtom"), Participant(Target));
+        _profiles.Seed(FakeCurrentUserService.TestUserId, "viewer");
+
+        var sprint = (await Query()).Profile!.OpenSprint!;
+
+        Assert.Equal("ShortBreak", sprint.StepType);
+        Assert.Equal("Running", sprint.Phase);
+        Assert.Equal(new DateTimeOffset(breakEnd), sprint.EndsAt);
+        Assert.Equal(["tomtom"], sprint.Others.Select(o => o.Name));
+        Assert.False(sprint.IncludesViewer);
+    }
+
+    [Fact]
+    public async Task Should_ReportWaitingPhase_When_TargetGroupWaitsForHost()
+    {
+        var rootId = Guid.NewGuid();
+        _directory.Seed(PublicProfile());
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(-2), GroupStepType.Sprint, GroupPhase.WaitingForHost));
+        _openSprints.SeedGroupMembers(rootId, Participant(Target), Participant("tomtom"));
+
+        var sprint = (await Query()).Profile!.OpenSprint!;
+
+        Assert.Equal("Sprint", sprint.StepType);
+        Assert.Equal("WaitingForHost", sprint.Phase);
+        Assert.Equal(["tomtom"], sprint.Others.Select(o => o.Name));
+    }
+
+    // A sprint nobody joined has no group: the member list is empty, yet the target takes part in it.
+    [Fact]
+    public async Task Should_FlagViewer_When_ViewerIsTargetOfSoloSprint()
+    {
+        _directory.Seed(PublicProfile());
+        _openSprints.SeedJoinable(Target, new JoinableSprint(Guid.NewGuid(), Now.UtcDateTime.AddMinutes(18), GroupStepType.Sprint, GroupPhase.Running));
+        _profiles.Seed(FakeCurrentUserService.TestUserId, Target);
+
+        var sprint = (await Query()).Profile!.OpenSprint!;
+
+        Assert.True(sprint.IncludesViewer);
+        Assert.Empty(sprint.Others);
+        Assert.Equal("Sprint", sprint.StepType);
+        Assert.Equal("Running", sprint.Phase);
     }
 
     [Fact]
@@ -414,8 +464,8 @@ public sealed class GetMemberProfileQueryHandlerTests
     {
         var rootId = Guid.NewGuid();
         _directory.Seed(PublicProfile());
-        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18)));
-        _openSprints.SeedParticipants(rootId, participants);
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18), GroupStepType.Sprint, GroupPhase.Running));
+        _openSprints.SeedGroupMembers(rootId, participants);
     }
 
     private void SeedAllZones()
@@ -423,8 +473,8 @@ public sealed class GetMemberProfileQueryHandlerTests
         var rootId = Guid.NewGuid();
         _directory.Seed(PublicProfile(), new MemberActivity(1, TimeSpan.FromMinutes(25), 0, []));
         _standings.Add(Target, 100);
-        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18)));
-        _openSprints.SeedParticipants(rootId, Participant(Target));
+        _openSprints.SeedJoinable(Target, new JoinableSprint(rootId, Now.UtcDateTime.AddMinutes(18), GroupStepType.Sprint, GroupPhase.Running));
+        _openSprints.SeedGroupMembers(rootId, Participant(Target));
     }
 
     /// <summary>Standings whose reads fail: <see cref="FakeLeaderboardStandingsRepository"/> cannot fail.</summary>

@@ -33,6 +33,26 @@ internal static class SqlCommandCapture
         return capture.Command;
     }
 
+    /// <summary>
+    /// Captures every command of a repository call that sends several queries. Each command is recorded and
+    /// answered with an empty result instead of being executed: the call goes on as if the database were
+    /// empty, so the commands that depend on a non-empty earlier result are not sent.
+    /// </summary>
+    public static async Task<IReadOnlyList<CapturedCommand>> CaptureAllAsync(Func<KairuFocusDbContext, Task> query)
+    {
+        var capture = new AllCommandsCaptureInterceptor();
+        var options = new DbContextOptionsBuilder<KairuFocusDbContext>()
+            .UseSqlServer(FakeConnectionString)
+            .AddInterceptors(new SuppressConnectionOpeningInterceptor(), capture)
+            .Options;
+        await using var context = new KairuFocusDbContext(options);
+
+        await query(context);
+
+        Assert.True(capture.Commands.Count > 0, "No command was captured.");
+        return capture.Commands;
+    }
+
     private sealed class CommandCapturedException() : Exception("Command captured: execution aborted on purpose.");
 
     /// <summary>Never lets EF open the (non-existent) connection.</summary>
@@ -88,14 +108,49 @@ internal static class SqlCommandCapture
 
         private CommandCapturedException Capture(DbCommand command)
         {
-            Command ??= new CapturedCommand(
-                command.CommandText,
-                command.Parameters
-                    .Cast<DbParameter>()
-                    .Select(p => new CapturedParameter(p.ParameterName, p.Value, p.DbType))
-                    .ToList());
+            Command ??= CapturedCommand.From(command);
             return new CommandCapturedException();
         }
+    }
+
+    /// <summary>Records every command and answers it with an empty reader (or a null scalar).</summary>
+    private sealed class AllCommandsCaptureInterceptor : DbCommandInterceptor
+    {
+        private readonly List<CapturedCommand> _commands = [];
+
+        public IReadOnlyList<CapturedCommand> Commands => _commands;
+
+        public override InterceptionResult<DbDataReader> ReaderExecuting(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result)
+        {
+            _commands.Add(CapturedCommand.From(command));
+            return InterceptionResult<DbDataReader>.SuppressWithResult(new DataTable().CreateDataReader());
+        }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken = default)
+            => ValueTask.FromResult(ReaderExecuting(command, eventData, result));
+
+        public override InterceptionResult<object> ScalarExecuting(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<object> result)
+        {
+            _commands.Add(CapturedCommand.From(command));
+            return InterceptionResult<object>.SuppressWithResult(DBNull.Value);
+        }
+
+        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(
+            DbCommand command,
+            CommandEventData eventData,
+            InterceptionResult<object> result,
+            CancellationToken cancellationToken = default)
+            => ValueTask.FromResult(ScalarExecuting(command, eventData, result));
     }
 }
 
@@ -103,6 +158,14 @@ internal sealed record CapturedParameter(string Name, object? Value, DbType DbTy
 
 internal sealed record CapturedCommand(string Text, IReadOnlyList<CapturedParameter> Parameters)
 {
+    public static CapturedCommand From(DbCommand command) =>
+        new(
+            command.CommandText,
+            command.Parameters
+                .Cast<DbParameter>()
+                .Select(p => new CapturedParameter(p.ParameterName, p.Value, p.DbType))
+                .ToList());
+
     /// <summary>
     /// Expressions of the outermost SELECT list: the text between the first <c>SELECT</c> and the first
     /// <c>FROM</c>, split on top-level commas. Enough for the shapes asserted here (no subquery in a

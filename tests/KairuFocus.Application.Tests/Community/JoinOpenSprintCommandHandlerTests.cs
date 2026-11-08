@@ -47,7 +47,7 @@ public sealed class JoinOpenSprintCommandHandlerTests
     private void GivenVisitorIsMember() => _profiles.Seed(Visitor, VisitorName);
 
     private void GivenTargetIsJoinable(DateTime? endsAtUtc = null) =>
-        _openSprints.SeedJoinable(TargetName, new JoinableSprint(RootId, endsAtUtc ?? EndsAtUtc));
+        _openSprints.SeedJoinable(TargetName, new JoinableSprint(RootId, endsAtUtc ?? EndsAtUtc, GroupStepType.Sprint, GroupPhase.Running));
 
     private static PomodoroSession JoinedSession(Guid rootId, DateTime startedAt, DateTime? sharedEndAt = null)
     {
@@ -125,7 +125,45 @@ public sealed class JoinOpenSprintCommandHandlerTests
         Assert.Empty(_journal.Entries);
     }
 
+    // V5: joining during a break enters the break, with the same end as the group.
+    [Theory]
+    [InlineData(GroupStepType.ShortBreak, PomodoroSessionType.ShortBreak)]
+    [InlineData(GroupStepType.LongBreak, PomodoroSessionType.LongBreak)]
+    public async Task Should_JoinBreak_When_GroupInBreak(GroupStepType stepType, PomodoroSessionType expectedType)
+    {
+        GivenVisitorIsMember();
+        _openSprints.SeedJoinable(TargetName, new JoinableSprint(RootId, EndsAtUtc, stepType, GroupPhase.Running));
+
+        var result = await CreateSut().Handle(new JoinOpenSprintCommand(TargetName));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new DateTimeOffset(EndsAtUtc, TimeSpan.Zero), result.SharedEndAt);
+        var session = Assert.Single(_sessions.Sessions);
+        Assert.Equal(expectedType, session.SessionType);
+        Assert.Equal(PomodoroSessionStatus.Active, session.Status);
+        Assert.Equal(PomodoroSessionId.From(RootId), session.SharedSprintId);
+        Assert.Equal(EndsAtUtc, session.SharedEndAt);
+        var entry = Assert.Single(_journal.Entries);
+        Assert.Equal(JournalEventType.BreakStarted, entry.EventType);
+        Assert.Equal(session.Id.Value, entry.ResourceId);
+    }
+
     // --- Refusals ------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Should_RefuseJoin_When_GroupWaitsForHost()
+    {
+        GivenVisitorIsMember();
+        _openSprints.SeedJoinable(TargetName, new JoinableSprint(RootId, NowUtc.AddMinutes(-2), GroupStepType.Sprint, GroupPhase.WaitingForHost));
+
+        var result = await CreateSut().Handle(new JoinOpenSprintCommand(TargetName));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(CommunityErrors.Community.GroupWaitingForHost, result.Error);
+        Assert.Null(result.SharedEndAt);
+        Assert.Empty(_sessions.Sessions);
+        Assert.Empty(_journal.Entries);
+    }
 
     [Fact]
     public async Task Should_ReturnNotMember_When_VisitorHasNoProfile()
@@ -165,7 +203,7 @@ public sealed class JoinOpenSprintCommandHandlerTests
     public async Task Should_ReturnOwnSprint_When_TargetIsVisitor(string target)
     {
         GivenVisitorIsMember();
-        _openSprints.SeedJoinable(VisitorName, new JoinableSprint(RootId, EndsAtUtc));
+        _openSprints.SeedJoinable(VisitorName, new JoinableSprint(RootId, EndsAtUtc, GroupStepType.Sprint, GroupPhase.Running));
 
         var result = await CreateSut().Handle(new JoinOpenSprintCommand(target));
 
@@ -255,7 +293,7 @@ public sealed class JoinOpenSprintCommandHandlerTests
         GivenVisitorIsMember();
         var hosted = OwnSprint(NowUtc.AddSeconds(-2));
         _sessions.Sessions.Add(hosted);
-        _openSprints.SeedJoinable(TargetName, new JoinableSprint(hosted.Id.Value, EndsAtUtc));
+        _openSprints.SeedJoinable(TargetName, new JoinableSprint(hosted.Id.Value, EndsAtUtc, GroupStepType.Sprint, GroupPhase.Running));
 
         var result = await CreateSut().Handle(new JoinOpenSprintCommand(TargetName));
 

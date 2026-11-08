@@ -3,16 +3,16 @@ using KairuFocus.Domain.Community;
 namespace KairuFocus.Application.Tests.Community;
 
 /// <summary>
-/// In-memory open sprints. A sprint whose end is reached is no longer returned, and joinable sprints are
-/// looked up by <see cref="ProfileName.Key"/>. Which sprints are open or closed to join is decided by the
-/// seed: this fake holds no session.
+/// In-memory open sprints. A running step whose end is reached is no longer returned (a seeded
+/// <see cref="GroupPhase.WaitingForHost"/> row is), and joinable sprints are looked up by
+/// <see cref="ProfileName.Key"/>. Which sprints are open or closed to join is decided by the seed: this
+/// fake holds no session.
 /// </summary>
 internal sealed class FakeOpenSprintReadRepository : IOpenSprintReadRepository
 {
     private readonly List<OpenSprintGroup> _groups = [];
     private readonly Dictionary<string, JoinableSprint> _joinable = [];
-    private readonly Dictionary<Guid, IReadOnlyList<SprintMember>> _participants = [];
-    private readonly Dictionary<Guid, GroupBreakRules> _groupBreaks = [];
+    private readonly Dictionary<Guid, IReadOnlyList<SprintMember>> _members = [];
 
     /// <summary>Thrown by every read when set.</summary>
     public Exception? ThrowOnRead { get; set; }
@@ -27,11 +27,9 @@ internal sealed class FakeOpenSprintReadRepository : IOpenSprintReadRepository
     public void SeedJoinable(string targetName, JoinableSprint sprint) =>
         _joinable[ProfileName.Create(targetName).Value.Key] = sprint;
 
-    /// <summary>Makes the group rooted at <paramref name="rootSessionId"/> a group that takes a break.</summary>
-    public void SeedGroupBreak(Guid rootSessionId, GroupBreakRules rules) => _groupBreaks[rootSessionId] = rules;
-
-    public void SeedParticipants(Guid rootSessionId, params SprintMember[] participants) =>
-        _participants[rootSessionId] = participants;
+    /// <summary>The host then the active members of the group <paramref name="rootSessionId"/>, in that order.</summary>
+    public void SeedGroupMembers(Guid rootSessionId, params SprintMember[] members) =>
+        _members[rootSessionId] = members;
 
     public Task<IReadOnlyList<OpenSprintGroup>> GetOpenGroupsAsync(DateTime nowUtc, int maxGroups, CancellationToken ct = default)
     {
@@ -40,7 +38,7 @@ internal sealed class FakeOpenSprintReadRepository : IOpenSprintReadRepository
         LastMaxGroups = maxGroups;
 
         IReadOnlyList<OpenSprintGroup> groups = _groups
-            .Where(g => g.EndsAtUtc > nowUtc)
+            .Where(g => IsVisible(g.Phase, g.EndsAtUtc, nowUtc))
             .Take(maxGroups)
             .ToList();
 
@@ -53,22 +51,23 @@ internal sealed class FakeOpenSprintReadRepository : IOpenSprintReadRepository
 
         var sprint = _joinable.GetValueOrDefault(targetName.Key);
 
-        return Task.FromResult(sprint is not null && sprint.EndsAtUtc > nowUtc ? sprint : null);
+        return Task.FromResult(sprint is not null && IsVisible(sprint.Phase, sprint.EndsAtUtc, nowUtc) ? sprint : null);
     }
 
-    public Task<IReadOnlyList<SprintMember>> GetParticipantsAsync(Guid rootSessionId, DateTime nowUtc, CancellationToken ct = default)
+    public Task<IReadOnlyList<SprintMember>> GetGroupMembersAsync(Guid rootSessionId, CancellationToken ct = default)
     {
         ThrowIfReadFails();
 
-        return Task.FromResult(_participants.GetValueOrDefault(rootSessionId, []));
+        return Task.FromResult(_members.GetValueOrDefault(rootSessionId, []));
     }
 
-    public Task<GroupBreakRules?> FindGroupBreakAsync(Guid rootSessionId, CancellationToken ct = default)
-    {
-        ThrowIfReadFails();
-
-        return Task.FromResult(_groupBreaks.GetValueOrDefault(rootSessionId));
-    }
+    private static bool IsVisible(GroupPhase phase, DateTime endsAtUtc, DateTime nowUtc) =>
+        phase switch
+        {
+            GroupPhase.Running => endsAtUtc > nowUtc,
+            GroupPhase.WaitingForHost => true,
+            _ => false,
+        };
 
     private void ThrowIfReadFails()
     {

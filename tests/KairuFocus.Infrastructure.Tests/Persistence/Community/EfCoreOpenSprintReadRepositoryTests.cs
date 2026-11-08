@@ -6,110 +6,32 @@ using KairuFocus.Infrastructure.Tests.Persistence.TestSupport;
 
 namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
 
+/// <summary>
+/// The open sprints nobody joined yet (no <c>GroupSessions</c> row). Groups are covered by
+/// <see cref="OpenSprintGroupReadTests"/>.
+/// </summary>
 public sealed class EfCoreOpenSprintReadRepositoryTests
 {
     private const int MaxGroups = 10;
 
     private static readonly DateTime Now = new(2026, 10, 30, 14, 0, 0, DateTimeKind.Utc);
-    private static readonly DateTime SharedEnd = Now.AddMinutes(18).AddSeconds(24);
 
     private readonly InMemoryDatabase _database = new();
 
-    // --- Open groups ----------------------------------------------------------------------------
+    // --- Open sprints without group -------------------------------------------------------------
 
     [Fact]
-    public async Task Should_ListGroupOnce_When_ThreeSessionsShareRoot()
+    public async Task Should_Exclude_When_SoloSprintIsClosed()
     {
-        var (host, first, second) = (UserId.New(), UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev", "https://avatars.githubusercontent.com/u/1"),
-            Profile(first, "tomtom"),
-            Profile(second, "noa_42"),
-            root,
-            Joined(first, root.Id, Now.AddMinutes(20), Now.AddMinutes(-3)),
-            Joined(second, root.Id, Now.AddMinutes(20), Now.AddMinutes(-1)));
-
-        var groups = await QueryAsync(r => r.GetOpenGroupsAsync(Now, MaxGroups));
-
-        var group = Assert.Single(groups);
-        Assert.Equal(root.Id.Value, group.RootSessionId);
-        Assert.Equal("lea_dev", group.Lead.Name.Value);
-        Assert.Equal("https://avatars.githubusercontent.com/u/1", group.Lead.AvatarUrl);
-        Assert.Equal(Now.AddMinutes(20), group.EndsAtUtc);
-        Assert.Equal(3, group.ParticipantCount);
-    }
-
-    [Fact]
-    public async Task Should_LeadWithHost_When_HostStartedAfterAParticipant()
-    {
-        var (host, participant) = (UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-1), plannedMinutes: 25);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(participant, "tomtom"),
-            root,
-            Joined(participant, root.Id, Now.AddMinutes(24), Now.AddMinutes(-3)));
-
-        var group = Assert.Single(await QueryAsync(r => r.GetOpenGroupsAsync(Now, MaxGroups)));
-
-        Assert.Equal("lea_dev", group.Lead.Name.Value);
-    }
-
-    [Fact]
-    public async Task Should_LeadWithOldestParticipant_When_HostLeft()
-    {
-        var (host, older, younger) = (UserId.New(), UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        Assert.True(root.Interrupt(Now.AddMinutes(-1)).IsSuccess);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(younger, "aaa_younger"),
-            Profile(older, "zzz_older"),
-            root,
-            Joined(younger, root.Id, SharedEnd, Now.AddMinutes(-2)),
-            Joined(older, root.Id, SharedEnd, Now.AddMinutes(-4)));
-
-        var group = Assert.Single(await QueryAsync(r => r.GetOpenGroupsAsync(Now, MaxGroups)));
-
-        Assert.Equal(root.Id.Value, group.RootSessionId);
-        Assert.Equal("zzz_older", group.Lead.Name.Value);
-        Assert.Equal(SharedEnd, group.EndsAtUtc);
-        Assert.Equal(2, group.ParticipantCount);
-    }
-
-    [Fact]
-    public async Task Should_CountOnlyMembers_When_ParticipantLeftCommunity()
-    {
-        var (host, member, leftCommunity) = (UserId.New(), UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(member, "tomtom"),
-            root,
-            Joined(member, root.Id, Now.AddMinutes(20), Now.AddMinutes(-3)),
-            Joined(leftCommunity, root.Id, Now.AddMinutes(20), Now.AddMinutes(-2)));
-
-        var group = Assert.Single(await QueryAsync(r => r.GetOpenGroupsAsync(Now, MaxGroups)));
-
-        Assert.Equal(2, group.ParticipantCount);
-    }
-
-    [Fact]
-    public async Task Should_Exclude_When_GroupIsClosed()
-    {
-        var (host, participant) = (UserId.New(), UserId.New());
+        var host = UserId.New();
         var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
         Assert.True(root.CloseToJoin().IsSuccess);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(participant, "tomtom"),
-            root,
-            Joined(participant, root.Id, Now.AddMinutes(20), Now.AddMinutes(-3)));
+        await _database.SeedAsync(Profile(host, "lea_dev"), root);
 
         var groups = await QueryAsync(r => r.GetOpenGroupsAsync(Now, MaxGroups));
 
         Assert.Empty(groups);
+        Assert.Null(await QueryAsync(r => r.FindJoinableAsync(Name("lea_dev"), Now)));
     }
 
     [Fact]
@@ -224,7 +146,7 @@ public sealed class EfCoreOpenSprintReadRepositoryTests
 
         var sprint = await QueryAsync(r => r.FindJoinableAsync(Name("lea_dev"), Now));
 
-        Assert.Equal(new JoinableSprint(root.Id.Value, Now.AddMinutes(20)), sprint);
+        Assert.Equal(new JoinableSprint(root.Id.Value, Now.AddMinutes(20), GroupStepType.Sprint, GroupPhase.Running), sprint);
     }
 
     [Fact]
@@ -236,95 +158,6 @@ public sealed class EfCoreOpenSprintReadRepositoryTests
         var sprint = await QueryAsync(r => r.FindJoinableAsync(Name("LEA_DEV"), Now));
 
         Assert.NotNull(sprint);
-    }
-
-    [Fact]
-    public async Task Should_FindRootAndSameEnd_When_TargetIsParticipant()
-    {
-        var (host, participant) = (UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(participant, "tomtom"),
-            root,
-            Joined(participant, root.Id, Now.AddMinutes(20), Now.AddMinutes(-3)));
-
-        var sprint = await QueryAsync(r => r.FindJoinableAsync(Name("tomtom"), Now));
-
-        Assert.Equal(new JoinableSprint(root.Id.Value, Now.AddMinutes(20)), sprint);
-    }
-
-    [Fact]
-    public async Task Should_FindRootAndSameEnd_When_HostLeft()
-    {
-        var (host, participant) = (UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        Assert.True(root.Interrupt(Now.AddMinutes(-1)).IsSuccess);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(participant, "tomtom"),
-            root,
-            Joined(participant, root.Id, SharedEnd, Now.AddMinutes(-3)));
-
-        var sprint = await QueryAsync(r => r.FindJoinableAsync(Name("tomtom"), Now));
-
-        Assert.Equal(new JoinableSprint(root.Id.Value, SharedEnd), sprint);
-    }
-
-    [Fact]
-    public async Task Should_NotFind_When_ClosedAndTargetIsParticipant()
-    {
-        var (host, participant) = (UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        Assert.True(root.CloseToJoin().IsSuccess);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(participant, "tomtom"),
-            root,
-            Joined(participant, root.Id, Now.AddMinutes(20), Now.AddMinutes(-3)));
-
-        var targetingHost = await QueryAsync(r => r.FindJoinableAsync(Name("lea_dev"), Now));
-        var targetingParticipant = await QueryAsync(r => r.FindJoinableAsync(Name("tomtom"), Now));
-
-        Assert.Null(targetingHost);
-        Assert.Null(targetingParticipant);
-    }
-
-    // The closure is read on the root session, whatever its status.
-    [Fact]
-    public async Task Should_NotFind_When_HostClosedThenLeft()
-    {
-        var (host, participant) = (UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        Assert.True(root.CloseToJoin().IsSuccess);
-        Assert.True(root.Interrupt(Now.AddMinutes(-1)).IsSuccess);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(participant, "tomtom"),
-            root,
-            Joined(participant, root.Id, SharedEnd, Now.AddMinutes(-3)));
-
-        var sprint = await QueryAsync(r => r.FindJoinableAsync(Name("tomtom"), Now));
-
-        Assert.Null(sprint);
-    }
-
-    // No foreign key on SharedSprintId: a joined session may keep a dangling reference to its root.
-    [Fact]
-    public async Task Should_StayOpen_When_RootSessionIsGone()
-    {
-        var participant = UserId.New();
-        var goneRootId = PomodoroSessionId.New();
-        await _database.SeedAsync(
-            Profile(participant, "tomtom"),
-            Joined(participant, goneRootId, SharedEnd, Now.AddMinutes(-3)));
-
-        var sprint = await QueryAsync(r => r.FindJoinableAsync(Name("tomtom"), Now));
-        var group = Assert.Single(await QueryAsync(r => r.GetOpenGroupsAsync(Now, MaxGroups)));
-
-        Assert.Equal(new JoinableSprint(goneRootId.Value, SharedEnd), sprint);
-        Assert.Equal(goneRootId.Value, group.RootSessionId);
-        Assert.Equal("tomtom", group.Lead.Name.Value);
     }
 
     [Fact]
@@ -352,77 +185,6 @@ public sealed class EfCoreOpenSprintReadRepositoryTests
         Assert.Null(await QueryAsync(r => r.FindJoinableAsync(Name("lea_dev"), Now)));
         Assert.Null(await QueryAsync(r => r.FindJoinableAsync(Name("tomtom"), Now)));
         Assert.Null(await QueryAsync(r => r.FindJoinableAsync(Name("noa_42"), Now)));
-    }
-
-    // --- Participants ---------------------------------------------------------------------------
-
-    [Fact]
-    public async Task Should_ReturnOnlyActiveMembers_When_ReadingParticipants()
-    {
-        var (host, active, leftSprint, leftCommunity, otherGroup) =
-            (UserId.New(), UserId.New(), UserId.New(), UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        var interrupted = Joined(leftSprint, root.Id, Now.AddMinutes(20), Now.AddMinutes(-4));
-        Assert.True(interrupted.Interrupt(Now.AddMinutes(-1)).IsSuccess);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(active, "tomtom", "https://avatars.githubusercontent.com/u/2"),
-            Profile(leftSprint, "noa_42"),
-            Profile(otherGroup, "other_one"),
-            root,
-            Joined(active, root.Id, Now.AddMinutes(20), Now.AddMinutes(-3)),
-            interrupted,
-            Joined(leftCommunity, root.Id, Now.AddMinutes(20), Now.AddMinutes(-2)),
-            Sprint(otherGroup, Now.AddMinutes(-5), plannedMinutes: 25));
-
-        var participants = await QueryAsync(r => r.GetParticipantsAsync(root.Id.Value, Now));
-
-        Assert.Equal(
-            [
-                new SprintMember(Name("lea_dev"), null),
-                new SprintMember(Name("tomtom"), "https://avatars.githubusercontent.com/u/2"),
-            ],
-            participants);
-    }
-
-    // Those already present stay together after the host closes the group.
-    [Fact]
-    public async Task Should_ReturnParticipants_When_GroupIsClosed()
-    {
-        var (host, participant) = (UserId.New(), UserId.New());
-        var root = Sprint(host, Now.AddMinutes(-5), plannedMinutes: 25);
-        Assert.True(root.CloseToJoin().IsSuccess);
-        await _database.SeedAsync(
-            Profile(host, "lea_dev"),
-            Profile(participant, "tomtom"),
-            root,
-            Joined(participant, root.Id, Now.AddMinutes(20), Now.AddMinutes(-3)));
-
-        var participants = await QueryAsync(r => r.GetParticipantsAsync(root.Id.Value, Now));
-
-        Assert.Equal(["lea_dev", "tomtom"], participants.Select(p => p.Name.Value));
-    }
-
-    [Fact]
-    public async Task Should_ExcludeExpiredParticipants_When_ReadingParticipants()
-    {
-        var participant = UserId.New();
-        var rootId = PomodoroSessionId.New();
-        await _database.SeedAsync(
-            Profile(participant, "tomtom"),
-            Joined(participant, rootId, Now.AddSeconds(-1), Now.AddMinutes(-3)));
-
-        var participants = await QueryAsync(r => r.GetParticipantsAsync(rootId.Value, Now));
-
-        Assert.Empty(participants);
-    }
-
-    [Fact]
-    public async Task Should_ReturnEmpty_When_RootIsUnknown()
-    {
-        var participants = await QueryAsync(r => r.GetParticipantsAsync(Guid.NewGuid(), Now));
-
-        Assert.Empty(participants);
     }
 
     // --- Helpers --------------------------------------------------------------------------------

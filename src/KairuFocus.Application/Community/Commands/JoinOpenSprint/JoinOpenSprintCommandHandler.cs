@@ -1,4 +1,5 @@
 using KairuFocus.Application.Common;
+using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Journal.Commands.CreateEntry;
 using KairuFocus.Application.Pomodoro.Common;
 using KairuFocus.Domain.Community;
@@ -63,6 +64,10 @@ public sealed class JoinOpenSprintCommandHandler : ICommandHandler<JoinOpenSprin
         if (sprint is null)
             return JoinOpenSprintResult.Failure(CommunityErrors.Community.SprintNotJoinable);
 
+        // No step to enter until the host launches the next one.
+        if (sprint.Phase == GroupPhase.WaitingForHost)
+            return JoinOpenSprintResult.Failure(CommunityErrors.Community.GroupWaitingForHost);
+
         var rootId = PomodoroSessionId.From(sprint.RootSessionId);
 
         var active = await _sessionRepository.GetActiveAsync(userId, cancellationToken);
@@ -73,7 +78,8 @@ public sealed class JoinOpenSprintCommandHandler : ICommandHandler<JoinOpenSprin
         // the client derives the elapsed time from StartedAt. Same instant for the planned duration and the
         // start, so that the duration is the time actually left.
         var now = UtcNow;
-        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, userId, rootId, sprint.EndsAtUtc, now);
+        var sessionType = sprint.StepType.ToSessionType();
+        var joined = PomodoroSession.CreateJoinedStep(sessionType, userId, rootId, sprint.EndsAtUtc, now);
         if (joined.IsFailure)
             return JoinOpenSprintResult.Failure(CommunityErrors.Community.SprintNotJoinable);
 
@@ -86,14 +92,21 @@ public sealed class JoinOpenSprintCommandHandler : ICommandHandler<JoinOpenSprin
         if (!await _sessionRepository.TryAddAsync(session, cancellationToken))
             return await HandleRejectedInsertAsync(userId, rootId, cancellationToken);
 
-        _logger.LogInformation("Session {SessionId} joined a shared sprint for user {UserId}", session.Id.Value, userId);
+        _logger.LogInformation(
+            "Session {SessionId} of type {SessionType} joined a shared step for user {UserId}",
+            session.Id.Value, sessionType, userId);
+
+        // Same entry as a start on the Pomodoro page (ADR-023): a break joined is a break started.
+        var eventType = sessionType == PomodoroSessionType.Sprint
+            ? JournalEventType.SprintStarted
+            : JournalEventType.BreakStarted;
 
         // The session is already persisted: a failing journal must NEVER fail the join (ADR-023), and a
         // client disconnect must not abort the entry, which would be lost with no automatic replay.
         try
         {
             await _mediator.DispatchAsync<CreateEntryCommand, CreateEntryResult>(
-                new CreateEntryCommand(JournalEventType.SprintStarted, session.Id.Value, now, userId),
+                new CreateEntryCommand(eventType, session.Id.Value, now, userId),
                 CancellationToken.None);
         }
         catch (Exception ex)

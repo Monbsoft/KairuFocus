@@ -7,7 +7,8 @@ namespace KairuFocus.Domain.Gamification;
 /// </summary>
 public interface ICommunityActivityRepository
 {
-    /// <summary>Active sprints for which <see cref="CommunityRules.IsSprintInProgress"/>(…, nowUtc) is true.</summary>
+    /// <summary>Active sprints, and active steps of a group session (breaks included), for which
+    /// <see cref="CommunityRules.IsSprintInProgress"/>(…, nowUtc) is true.</summary>
     Task<int> CountSprintsInProgressAsync(DateTime nowUtc, CancellationToken cancellationToken = default);
 
     /// <summary>Distinct members who completed at least one sprint with EndedAt within [startUtc, endUtc).</summary>

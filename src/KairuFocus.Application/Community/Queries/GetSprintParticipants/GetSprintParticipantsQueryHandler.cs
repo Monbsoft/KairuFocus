@@ -15,20 +15,17 @@ public sealed class GetSprintParticipantsQueryHandler
     private readonly IOpenSprintReadRepository _openSprintRepository;
     private readonly IPomodoroSessionRepository _sessionRepository;
     private readonly ICurrentUserService _currentUserService;
-    private readonly TimeProvider _timeProvider;
 
     public GetSprintParticipantsQueryHandler(
         IMemberProfileRepository profileRepository,
         IOpenSprintReadRepository openSprintRepository,
         IPomodoroSessionRepository sessionRepository,
-        ICurrentUserService currentUserService,
-        TimeProvider timeProvider)
+        ICurrentUserService currentUserService)
     {
         _profileRepository = profileRepository;
         _openSprintRepository = openSprintRepository;
         _sessionRepository = sessionRepository;
         _currentUserService = currentUserService;
-        _timeProvider = timeProvider;
     }
 
     public async Task<GetSprintParticipantsResult> Handle(
@@ -46,9 +43,10 @@ public sealed class GetSprintParticipantsQueryHandler
         if (active is null)
             return Nobody;
 
-        var members = await _openSprintRepository.GetParticipantsAsync(
+        // Replaced by GET current-session in the next step of #46. Until then: the members of the group of the
+        // active session (empty for a sprint nobody joined, which has no group).
+        var members = await _openSprintRepository.GetGroupMembersAsync(
             (active.SharedSprintId ?? active.Id).Value,
-            _timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
 
         // The read knows no user: the current member is recognised by the unique key of the name.

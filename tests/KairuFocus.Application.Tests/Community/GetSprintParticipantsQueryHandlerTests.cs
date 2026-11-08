@@ -27,8 +27,7 @@ public sealed class GetSprintParticipantsQueryHandlerTests
             _profiles,
             _openSprints,
             _sessions,
-            new FakeCurrentUserService(),
-            new FixedTimeProvider(Now));
+            new FakeCurrentUserService());
     }
 
     private static SprintMember Member(string name, string? avatarUrl = null) =>
@@ -56,7 +55,7 @@ public sealed class GetSprintParticipantsQueryHandlerTests
         _profiles.Seed(Visitor, VisitorName);
         var rootId = Guid.NewGuid();
         GivenJoinedSession(rootId);
-        _openSprints.SeedParticipants(rootId, Member("lea_dev", avatarUrl), Member("noa_42"));
+        _openSprints.SeedGroupMembers(rootId, Member("lea_dev", avatarUrl), Member("noa_42"));
 
         var result = await _sut.Handle(new GetSprintParticipantsQuery());
 
@@ -70,7 +69,7 @@ public sealed class GetSprintParticipantsQueryHandlerTests
     {
         _profiles.Seed(Visitor, VisitorName);
         var hosted = GivenHostSession();
-        _openSprints.SeedParticipants(hosted.Id.Value, Member(VisitorName), Member("lea_dev"));
+        _openSprints.SeedGroupMembers(hosted.Id.Value, Member(VisitorName), Member("lea_dev"));
 
         var result = await _sut.Handle(new GetSprintParticipantsQuery());
 
@@ -81,7 +80,7 @@ public sealed class GetSprintParticipantsQueryHandlerTests
     public async Task Should_ReturnEmpty_When_NoSessionOrNotMemberOrAlone()
     {
         var rootId = Guid.NewGuid();
-        _openSprints.SeedParticipants(rootId, Member(VisitorName), Member("lea_dev"));
+        _openSprints.SeedGroupMembers(rootId, Member(VisitorName), Member("lea_dev"));
 
         // Not a member, even with a session in a group: the sprint continues in private.
         GivenJoinedSession(rootId);
@@ -94,7 +93,7 @@ public sealed class GetSprintParticipantsQueryHandlerTests
 
         // Alone in the group.
         var hosted = GivenHostSession();
-        _openSprints.SeedParticipants(hosted.Id.Value, Member(VisitorName));
+        _openSprints.SeedGroupMembers(hosted.Id.Value, Member(VisitorName));
         var alone = await _sut.Handle(new GetSprintParticipantsQuery());
 
         Assert.Empty(notMember.Others);
@@ -109,7 +108,7 @@ public sealed class GetSprintParticipantsQueryHandlerTests
         _profiles.Seed(Visitor, VisitorName);
         var rootId = Guid.NewGuid();
         GivenJoinedSession(rootId);
-        _openSprints.SeedParticipants(rootId, Member("TomTom"), Member("lea_dev"));
+        _openSprints.SeedGroupMembers(rootId, Member("TomTom"), Member("lea_dev"));
 
         var result = await _sut.Handle(new GetSprintParticipantsQuery());
 

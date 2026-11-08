@@ -9,7 +9,6 @@ using KairuFocus.Application.Community.Commands.JoinCommunity;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
-using KairuFocus.Application.Community.Commands.StartGroupBreak;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
@@ -39,7 +38,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     private const string JoinUrl = "api/community/open-sprints/LoutreTenace/join";
     private const string ParticipantsUrl = "api/community/current-sprint/participants";
     private const string ClosedUrl = "api/community/current-sprint/closed";
-    private const string BreakUrl = "api/community/current-sprint/break";
     private const string SessionUrl = "api/pomodoro/session";
 
     private const string NameUnavailableText = "This name is not available.";
@@ -80,7 +78,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [InlineData("POST", JoinUrl)]
     [InlineData("GET", ParticipantsUrl)]
     [InlineData("PUT", ClosedUrl)]
-    [InlineData("POST", BreakUrl)]
     public async Task Should_Return401_When_CommunityEndpointIsCalledAnonymously(string method, string url)
     {
         var response = await _anonymousClient.SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
@@ -307,7 +304,9 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
               "openSprint": {
                 "endsAt": "2026-10-30T14:25:00+00:00",
                 "others": [ { "name": "LoutreTenace", "avatarUrl": null } ],
-                "includesViewer": false
+                "includesViewer": false,
+                "stepType": "Sprint",
+                "phase": "Running"
               },
               "openSprintFailed": false
             }
@@ -340,7 +339,8 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     {
         _mediator.SendResult = _ => new GetOpenSprintsResult(
             ViewerIsMember: true,
-            Groups: [new OpenSprintRowViewModel("LoutreTenace", null, SharedEnd, 3, IsMine: false)]);
+            ViewerInGroup: false,
+            Groups: [new OpenSprintRowViewModel("LoutreTenace", null, SharedEnd, 3, IsMine: false, StepType: "ShortBreak", Phase: "Running")]);
 
         var response = await _client.GetAsync(OpenSprintsUrl);
 
@@ -349,9 +349,10 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
         await AssertJsonAsync("""
             {
               "viewerIsMember": true,
+              "viewerInGroup": false,
               "groups": [ {
                 "name": "LoutreTenace", "avatarUrl": null, "endsAt": "2026-10-30T14:25:00+00:00",
-                "participantCount": 3, "isMine": false
+                "participantCount": 3, "isMine": false, "stepType": "ShortBreak", "phase": "Running"
               } ]
             }
             """, response);
@@ -438,47 +439,16 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    // ── Group break (UC-CO-10) ─────────────────────────────────────────────
-
+    // The common break of #45 is replaced by the steps the host launches (#46): the former route answers like
+    // a route that never existed (the host's fallback decides the status), and reaches no handler.
     [Fact]
-    public async Task Should_Return201WithSharedEnd_When_GroupBreakStarts()
+    public async Task Should_AnswerLikeUnknownRoute_When_FormerGroupBreakRouteIsCalled()
     {
-        StartGroupBreakCommand? sent = null;
-        _mediator.DispatchResult = command =>
-        {
-            sent = (StartGroupBreakCommand)command;
-            return StartGroupBreakResult.Success(SharedEnd);
-        };
+        var former = await _client.PostAsync("api/community/current-sprint/break", content: null);
+        var unknown = await _client.PostAsync("api/community/current-sprint/never-existed", content: null);
 
-        var response = await _client.PostAsync(BreakUrl, content: null);
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        Assert.Equal(new StartGroupBreakCommand(), sent);
-        await AssertJsonAsync("""{ "sharedEndAt": "2026-10-30T14:25:00+00:00" }""", response);
-    }
-
-    [Fact]
-    public async Task Should_Return204_When_NoGroupBreakApplies()
-    {
-        _mediator.DispatchResult = _ => StartGroupBreakResult.NoBreak();
-
-        var response = await _client.PostAsync(BreakUrl, content: null);
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Empty(await response.Content.ReadAsStringAsync());
-    }
-
-    [Theory]
-    [InlineData(PomodoroErrors.Pomodoro.SessionAlreadyActive)]
-    [InlineData(PomodoroErrors.Pomodoro.ConcurrentSessionStart)]
-    public async Task Should_Return409SprintActive_When_GroupBreakFails(string error)
-    {
-        _mediator.DispatchResult = _ => StartGroupBreakResult.Failure(error);
-
-        var response = await _client.PostAsync(BreakUrl, content: null);
-
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        await AssertCodeAsync("sprint-active", response);
+        Assert.False(former.IsSuccessStatusCode);
+        Assert.Equal(unknown.StatusCode, former.StatusCode);
     }
 
     // ── Pomodoro session contract ──────────────────────────────────────────
@@ -530,7 +500,8 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
         StandingFailed: false,
         Activity: new MemberActivityViewModel(124, 3100, 20, [new ActivityDayViewModel(new DateOnly(2026, 10, 29), 3)]),
         ActivityFailed: false,
-        OpenSprint: new OpenSprintStatusViewModel(SharedEnd, [new SprintMemberViewModel("LoutreTenace", null)], IncludesViewer: false),
+        OpenSprint: new OpenSprintStatusViewModel(
+            SharedEnd, [new SprintMemberViewModel("LoutreTenace", null)], IncludesViewer: false, StepType: "Sprint", Phase: "Running"),
         OpenSprintFailed: false);
 
     private Task<HttpResponseMessage> PostJsonAsync(string url, string json) =>

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using KairuFocus.Domain.Community;
 using KairuFocus.Infrastructure.Persistence.Repositories;
 using KairuFocus.Infrastructure.Tests.Persistence.TestSupport;
@@ -5,144 +6,155 @@ using KairuFocus.Infrastructure.Tests.Persistence.TestSupport;
 namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
 
 /// <summary>
-/// ADR-026 guard on the SQL of the reads across users about open sprints: members only, never the Users
-/// table, no email nor real name, no user identifier in the projection. <c>OwnerId</c> only appears in the
-/// join condition. Per-row deadlines stay out of SQL.
+/// ADR-026 guard on the SQL of the reads across users about open sprints and group sessions: members only,
+/// never the Users table, no email nor real name, no user identifier in any projection. <c>OwnerId</c>,
+/// <c>HostId</c> and <c>UserId</c> only appear in join and filter conditions. Per-row deadlines stay out of SQL.
+/// Every command of a call is checked: each read sends several queries.
 /// </summary>
 public sealed class OpenSprintReadSqlTests
 {
     private const string OpenGroups = nameof(IOpenSprintReadRepository.GetOpenGroupsAsync);
     private const string Joinable = nameof(IOpenSprintReadRepository.FindJoinableAsync);
-    private const string Participants = nameof(IOpenSprintReadRepository.GetParticipantsAsync);
+    private const string GroupMembers = nameof(IOpenSprintReadRepository.GetGroupMembersAsync);
 
-    private static readonly DateTime Now = new(2026, 10, 30, 14, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime Now = new(2026, 11, 8, 14, 0, 0, DateTimeKind.Utc);
+
+    private static readonly string[] IdentifierColumns = ["OwnerId", "HostId", "UserId"];
+
+    // Columns a cross-user read may return: session and step columns, public name and avatar, counts.
+    private static readonly Regex AllowedProjection = new(
+        @"^(TOP\([@\w]+\) )?(\[\w+\]\.\[(Id|StartedAt|PlannedDurationMinutes|CurrentStepType|CurrentStepEndsAtUtc|GroupSessionId|JoinedAtUtc|ProfileName|AvatarUrl)\]|COUNT\(\*\))( AS \[\w+\])?$",
+        RegexOptions.CultureInvariant);
 
     [Theory]
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
-    [InlineData(Participants)]
+    [InlineData(GroupMembers)]
     public async Task Should_NotReferenceUsersEmailOrDisplayName_When_Queried(string method)
     {
-        var command = await CaptureAsync(method);
-
-        Assert.DoesNotContain("[Users]", command.Text, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Email", command.Text, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("DisplayName", command.Text, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Theory]
-    [InlineData(OpenGroups)]
-    [InlineData(Joinable)]
-    [InlineData(Participants)]
-    public async Task Should_NotProjectOwnerIdOrUserId_When_Queried(string method)
-    {
-        var command = await CaptureAsync(method);
-
-        Assert.All(command.OuterProjection, expression =>
+        foreach (var command in await CaptureAsync(method))
         {
-            Assert.DoesNotContain("OwnerId", expression, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("UserId", expression, StringComparison.OrdinalIgnoreCase);
-        });
+            Assert.DoesNotContain("[Users]", command.Text, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("Email", command.Text, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("DisplayName", command.Text, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     [Theory]
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
-    [InlineData(Participants)]
-    public async Task Should_ProjectOnlySprintColumnsNameAndAvatar_When_Queried(string method)
+    [InlineData(GroupMembers)]
+    public async Task Should_NotProjectOwnerIdHostIdOrUserId_When_Queried(string method)
     {
-        var command = await CaptureAsync(method);
-
-        Assert.Collection(
-            command.OuterProjection,
-            id => Assert.EndsWith(".[Id]", id, StringComparison.Ordinal),
-            root => Assert.EndsWith(".[SharedSprintId]", root, StringComparison.Ordinal),
-            startedAt => Assert.EndsWith(".[StartedAt]", startedAt, StringComparison.Ordinal),
-            planned => Assert.EndsWith(".[PlannedDurationMinutes]", planned, StringComparison.Ordinal),
-            sharedEnd => Assert.EndsWith(".[SharedEndAt]", sharedEnd, StringComparison.Ordinal),
-            name => Assert.EndsWith(".[ProfileName]", name, StringComparison.Ordinal),
-            avatar => Assert.EndsWith(".[AvatarUrl]", avatar, StringComparison.Ordinal));
+        foreach (var command in await CaptureAsync(method))
+        {
+            Assert.All(command.OuterProjection, expression =>
+            {
+                foreach (var column in IdentifierColumns)
+                    Assert.DoesNotContain(column, expression, StringComparison.OrdinalIgnoreCase);
+            });
+        }
     }
 
-    // OwnerId and UserId appear exactly once each, on either side of the join condition.
     [Theory]
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
-    [InlineData(Participants)]
-    public async Task Should_UseOwnerIdOnlyInJoinCondition_When_Queried(string method)
+    [InlineData(GroupMembers)]
+    public async Task Should_ProjectOnlyStepColumnsNamesAndAvatars_When_Queried(string method)
     {
-        var command = await CaptureAsync(method);
+        foreach (var command in await CaptureAsync(method))
+            Assert.All(command.OuterProjection, expression => Assert.Matches(AllowedProjection, expression));
+    }
 
-        Assert.Matches(
-            @"INNER JOIN \[MemberProfiles\] AS \[\w+\] ON \[\w+\]\.\[OwnerId\] = \[\w+\]\.\[UserId\]",
-            command.Text);
-        Assert.Single(Occurrences(command.Text, "OwnerId"));
-        Assert.Single(Occurrences(command.Text, "UserId"));
+    // The host is recognised in SQL, through the public profile: only its name and avatar come out.
+    [Theory]
+    [InlineData(OpenGroups)]
+    [InlineData(Joinable)]
+    [InlineData(GroupMembers)]
+    public async Task Should_JoinHostOnMemberProfiles_When_ReadingGroups(string method)
+    {
+        var commands = await CaptureAsync(method);
+
+        Assert.Contains(commands, command => Regex.IsMatch(
+            command.Text,
+            @"FROM \[GroupSessions\] AS \[\w+\]\s*INNER JOIN \[MemberProfiles\] AS \[\w+\] ON \[\w+\]\.\[HostId\] = \[\w+\]\.\[UserId\]"));
+    }
+
+    // A sprint nobody joined is still read from PomodoroSessions, joined on its owner.
+    [Theory]
+    [InlineData(OpenGroups)]
+    [InlineData(Joinable)]
+    public async Task Should_JoinOwnerOnMemberProfiles_When_ReadingSoloSprints(string method)
+    {
+        var commands = await CaptureAsync(method);
+
+        Assert.Contains(commands, command => Regex.IsMatch(
+            command.Text,
+            @"INNER JOIN \[MemberProfiles\] AS \[\w+\] ON \[\w+\]\.\[OwnerId\] = \[\w+\]\.\[UserId\]"));
     }
 
     [Theory]
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
-    [InlineData(Participants)]
+    [InlineData(GroupMembers)]
     public async Task Should_KeepDeadlineRulesOutOfSql_When_Queried(string method)
     {
-        var command = await CaptureAsync(method);
-
-        Assert.DoesNotContain("DATEADD", command.Text, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("DATEDIFF", command.Text, StringComparison.OrdinalIgnoreCase);
+        foreach (var command in await CaptureAsync(method))
+        {
+            Assert.DoesNotContain("DATEADD", command.Text, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("DATEDIFF", command.Text, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
+    // A sprint nobody joined is open when not closed; a group, when not closed and not ended.
     [Theory]
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
-    public async Task Should_CheckClosureOnSessionAndRoot_When_ReadingOpenSprints(string method)
+    public async Task Should_CheckClosure_When_ReadingOpenSprintsAndGroups(string method)
     {
-        var command = await CaptureAsync(method);
+        var commands = await CaptureAsync(method);
 
-        Assert.Matches(
-            @"NOT EXISTS \(\s*SELECT 1\s*FROM \[PomodoroSessions\] AS \[(?<root>\w+)\]\s*" +
-            @"WHERE \[\k<root>\]\.\[IsClosedToJoin\] = CAST\(1 AS bit\) AND " +
-            @"\(\[\k<root>\]\.\[Id\] = \[\w+\]\.\[Id\] OR \[\k<root>\]\.\[Id\] = \[\w+\]\.\[SharedSprintId\]\)\)",
-            command.Text);
+        Assert.Contains(commands, command =>
+            command.Text.Contains("FROM [PomodoroSessions]", StringComparison.Ordinal)
+            && command.Text.Contains("[IsClosedToJoin] = CAST(0 AS bit)", StringComparison.Ordinal));
+        Assert.Contains(commands, command =>
+            command.Text.Contains("FROM [GroupSessions]", StringComparison.Ordinal)
+            && command.Text.Contains("[IsClosedToJoin] = CAST(0 AS bit)", StringComparison.Ordinal)
+            && command.Text.Contains("[EndedAtUtc] IS NULL", StringComparison.Ordinal));
     }
 
-    // Those already present stay visible to each other after the host closes the group.
+    // Those already present stay visible to each other after the host closes the group, and once it ended.
     [Fact]
-    public async Task Should_IgnoreClosure_When_ReadingParticipants()
+    public async Task Should_IgnoreClosureAndEnd_When_ReadingGroupMembers()
     {
-        var command = await CaptureAsync(Participants);
-
-        Assert.DoesNotContain("IsClosedToJoin", command.Text, StringComparison.Ordinal);
+        foreach (var command in await CaptureAsync(GroupMembers))
+        {
+            Assert.DoesNotContain("IsClosedToJoin", command.Text, StringComparison.Ordinal);
+            Assert.DoesNotContain("EndedAtUtc", command.Text, StringComparison.Ordinal);
+        }
     }
 
     [Fact]
     public async Task Should_LookUpTheNameKey_When_ReadingJoinableSprint()
     {
-        var command = await CaptureAsync(Joinable);
+        var commands = await CaptureAsync(Joinable);
 
-        Assert.Matches(@"\[\w+\]\.\[NameKey\] = @\w+", command.Text);
-        Assert.Contains(command.Parameters, p => Equals(p.Value, "lea_dev"));
-    }
-
-    private static IEnumerable<int> Occurrences(string text, string term)
-    {
-        for (var index = text.IndexOf(term, StringComparison.OrdinalIgnoreCase);
-             index >= 0;
-             index = text.IndexOf(term, index + term.Length, StringComparison.OrdinalIgnoreCase))
+        Assert.All(commands, command =>
         {
-            yield return index;
-        }
+            Assert.Matches(@"\[\w+\]\.\[NameKey\] = @\w+", command.Text);
+            Assert.Contains(command.Parameters, p => Equals(p.Value, "lea_dev"));
+        });
     }
 
-    private static Task<CapturedCommand> CaptureAsync(string method) =>
-        SqlCommandCapture.CaptureAsync(context =>
+    private static Task<IReadOnlyList<CapturedCommand>> CaptureAsync(string method) =>
+        SqlCommandCapture.CaptureAllAsync(context =>
         {
             var repository = new EfCoreOpenSprintReadRepository(context);
             return method switch
             {
                 OpenGroups => repository.GetOpenGroupsAsync(Now, 10),
                 Joinable => repository.FindJoinableAsync(ProfileName.Create("LEA_dev").Value, Now),
-                Participants => repository.GetParticipantsAsync(Guid.NewGuid(), Now),
+                GroupMembers => repository.GetGroupMembersAsync(Guid.NewGuid()),
                 _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
             };
         });

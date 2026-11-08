@@ -52,6 +52,15 @@ public sealed class CommunityActivitySqlTests
             planned => Assert.EndsWith(".[PlannedDurationMinutes]", planned, StringComparison.Ordinal));
     }
 
+    // #46: sprints, and the steps of a group session (breaks included), are in session.
+    [Fact]
+    public async Task Should_KeepSprintsAndGroupSteps_When_CountingSprintsInProgress()
+    {
+        var command = await CaptureAsync(SprintsInProgress, WeekStart.AddDays(7));
+
+        Assert.Matches(@"\[\w+\]\.\[SessionType\] = N'Sprint' OR \[\w+\]\.\[SharedSprintId\] IS NOT NULL", command.Text);
+    }
+
     // OwnerId may only appear inside the distinct count: the query returns a single number.
     [Fact]
     public async Task Should_ReturnOnlyACount_When_CountingActiveMembers()

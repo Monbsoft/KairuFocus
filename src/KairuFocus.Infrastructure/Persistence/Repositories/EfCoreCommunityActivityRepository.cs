@@ -33,10 +33,12 @@ internal sealed class EfCoreCommunityActivityRepository : ICommunityActivityRepo
         // so StartedAt > now − 4 h is a necessary condition. The exact deadline is CommunityRules'.
         var earliestStart = nowUtc - CommunityRules.MaxCountedSprintDuration;
 
+        // "In session": sprints, and every step of a group session (SharedSprintId set), breaks included,
+        // so that the presence agrees with the cards showing a group in break (#46). A solo break is not counted.
         var activeSprints = _context.PomodoroSessions
             .AsNoTracking()
             .Where(s => s.OwnerId != null
-                        && s.SessionType == PomodoroSessionType.Sprint
+                        && (s.SessionType == PomodoroSessionType.Sprint || s.SharedSprintId != null)
                         && s.Status == PomodoroSessionStatus.Active
                         && s.StartedAt.HasValue
                         && s.StartedAt.Value > earliestStart)
