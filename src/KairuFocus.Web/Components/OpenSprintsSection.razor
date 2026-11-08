@@ -76,7 +76,7 @@
             @foreach (var group in (canFold && !_expanded ? Data.Groups.Take(VisibleCards) : Data.Groups))
             {
                 <OpenSprintCard @key="group.Name" Group="group" ViewerIsMember="Data.ViewerIsMember"
-                                OnNoLongerOpen="HandleNoLongerOpenAsync" OnElapsed="OnChanged" />
+                                OnNoLongerOpen="HandleNoLongerOpenAsync" OnWaiting="OnChanged" OnElapsed="OnChanged" />
             }
         </ul>
 

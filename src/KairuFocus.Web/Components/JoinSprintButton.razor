@@ -4,7 +4,8 @@
    closed sprint, where it is hidden): a refusal can be retried, the server refuses again if nothing changed.
    Under five minutes left, a warning says the sprint will not earn XP (sprints only: a break earns none anyway);
    a single render is scheduled for that instant.
-   A group waiting for its host (409) cannot be joined yet: the message says so, and the parent reads its data again.
+   A group waiting for its host (409) cannot be joined yet: OnWaiting makes the parent read its data again (the group
+   then shows as waiting and this button goes away, without the "no longer open" message of OnNoLongerOpen).
    Nothing here announces an arrival to the people already in the sprint. *@
 @implements IDisposable
 @inject CommunityApiClient Community
@@ -83,6 +84,9 @@
     /// <summary>The sprint was closed, elapsed or finished (410): the parent refreshes its data.</summary>
     [Parameter] public EventCallback OnNoLongerOpen { get; set; }
 
+    /// <summary>The group is waiting for its host (409): the parent reads its data again, without the "no longer open" message.</summary>
+    [Parameter] public EventCallback OnWaiting { get; set; }
+
     private static readonly TimeSpan XpThreshold = TimeSpan.FromMinutes(5);
 
     private bool _busy;
@@ -152,8 +156,10 @@
 
         _outcome = result.Outcome;
 
-        if (result.Outcome is JoinSprintOutcome.SprintClosed or JoinSprintOutcome.WaitingForHost)
+        if (result.Outcome == JoinSprintOutcome.SprintClosed)
             await OnNoLongerOpen.InvokeAsync();
+        else if (result.Outcome == JoinSprintOutcome.WaitingForHost)
+            await OnWaiting.InvokeAsync();
     }
 
     public void Dispose()

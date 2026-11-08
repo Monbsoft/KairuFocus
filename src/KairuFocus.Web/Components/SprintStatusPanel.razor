@@ -53,7 +53,7 @@
             {
                 <JoinSprintButton @key="sprint.EndsAt" TargetName="@Profile.Name" EndsAt="sprint.EndsAt"
                                   ViewerIsMember="Profile.ViewerIsMember" IsSprint="@(sprint.StepType == "Sprint")"
-                                  OnNoLongerOpen="HandleNoLongerOpenAsync" />
+                                  OnNoLongerOpen="HandleNoLongerOpenAsync" OnWaiting="OnReload" />
             }
         }
     }

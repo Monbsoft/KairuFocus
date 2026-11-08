@@ -42,7 +42,8 @@
     {
         <div class="kf-sprint__action">
             <JoinSprintButton @key="Group.EndsAt" TargetName="@Group.Name" EndsAt="Group.EndsAt"
-                              ViewerIsMember="true" Compact="true" IsSprint="IsSprint" OnNoLongerOpen="OnNoLongerOpen" />
+                              ViewerIsMember="true" Compact="true" IsSprint="IsSprint" OnNoLongerOpen="OnNoLongerOpen"
+                              OnWaiting="OnWaiting" />
         </div>
     }
 </li>
@@ -55,6 +56,9 @@
 
     /// <summary>The sprint turned out to be no longer open (410): the strip reads the list again.</summary>
     [Parameter] public EventCallback OnNoLongerOpen { get; set; }
+
+    /// <summary>The group turned out to be waiting for its host (409): the strip reads the list again, silently.</summary>
+    [Parameter] public EventCallback OnWaiting { get; set; }
 
     /// <summary>The countdown reached zero: the strip reads the list again.</summary>
     [Parameter] public EventCallback OnElapsed { get; set; }
