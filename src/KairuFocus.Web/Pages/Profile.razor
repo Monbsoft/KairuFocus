@@ -361,7 +361,6 @@
         return $"{ordinal.Prefix}{ordinal.Number}{ordinal.Suffix}";
     }
 
-    /// <summary>The heatmap of my own days, with its skeleton and its error. The prefix chooses the texts of its title.</summary>
     /// <summary>
     /// "Ma progression", declared once. Its place depends on who carries the page title (see the two call sites): when my
     /// own profile appears after a failed read, the section moves, so it is mounted again and reads its data again.
@@ -369,6 +368,7 @@
     private RenderFragment ProgressSection => @<MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod"
                                                                   IsMember="@(_membership.Data is { IsMember: true })" />;
 
+    /// <summary>The heatmap of my own days, with its skeleton and its error. The prefix chooses the texts of its title.</summary>
     private RenderFragment LocalHeatmap(string textPrefix) => @<text>
         @if (_statsLoading)
         {

@@ -260,8 +260,17 @@
     {
         if (_disposed) return;
 
-        if (hidden) StopPresence();
-        else StartPresence(); // refreshes right away, then every minute
+        if (hidden)
+        {
+            StopPresence();
+
+            // The reads planned after a sprint ended belong to the visible tab: once it is shown, the loop reads everything again.
+            _stripChangedCts?.Cancel();
+        }
+        else
+        {
+            StartPresence(); // refreshes right away, then every minute
+        }
     }
 
     private void StartPresence()
@@ -324,7 +333,8 @@
     /// <summary>
     /// A card of the strip reached zero, or its sprint turned out to be no longer open (410). The strip, the subtitle and
     /// "Actifs aujourd'hui" must not contradict each other until the next tick of the presence loop: the list and the
-    /// presence are read at once, "Actifs aujourd'hui" a little later (see <see cref="CompletionGrace"/>).
+    /// presence are read at once, "Actifs aujourd'hui" a little later (see <see cref="CompletionGrace"/>). While the tab is
+    /// hidden only the list is read: the loop is stopped, and reads everything again once the tab is shown.
     /// Not awaited by the caller: the countdown that raised it must not wait for the reads.
     /// </summary>
     private void HandleStripChanged()
