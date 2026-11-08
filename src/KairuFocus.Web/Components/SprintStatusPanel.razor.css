@@ -36,6 +36,13 @@
     background: currentColor;
 }
 
+/* Waiting for the host: nothing is running, so the neutral tint of the badges (the dot stays, as a fixed marker). */
+.kf-status__pill--waiting {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--kf-blue-100, #cfe2ff);
+}
+
 .kf-status__with {
     display: flex;
     align-items: center;

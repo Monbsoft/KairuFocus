@@ -2,7 +2,9 @@
    During the call the button is aria-disabled (not disabled, so the keyboard focus stays on it) and the handler ignores
    a second click: it cannot start a second session. Once the answer is in, the button is usable again (except for a
    closed sprint, where it is hidden): a refusal can be retried, the server refuses again if nothing changed.
-   Under five minutes left, a warning says the sprint will not earn XP; a single render is scheduled for that instant.
+   Under five minutes left, a warning says the sprint will not earn XP (sprints only: a break earns none anyway);
+   a single render is scheduled for that instant.
+   A group waiting for its host (409) cannot be joined yet: the message says so, and the parent reads its data again.
    Nothing here announces an arrival to the people already in the sprint. *@
 @implements IDisposable
 @inject CommunityApiClient Community
@@ -26,7 +28,7 @@
     }
     else
     {
-        @if (_outcome is null && ShortOnTime)
+        @if (_outcome is null && IsSprint && ShortOnTime)
         {
             <p class="kf-join__note kf-join__note--warning">@F["Join.ShortWarning"]</p>
         }
@@ -53,6 +55,9 @@
             case JoinSprintOutcome.SprintClosed:
                 <p class="kf-join__note kf-join__note--error" role="alert">@F["Join.Closed"]</p>
                 break;
+            case JoinSprintOutcome.WaitingForHost:
+                <p class="kf-join__note kf-join__note--error" role="alert">@F["Join.WaitingForHost"]</p>
+                break;
             case JoinSprintOutcome.Failed:
                 <p class="kf-join__note kf-join__note--error" role="alert">@F["Join.Error"]</p>
                 break;
@@ -68,6 +73,9 @@
     [Parameter, EditorRequired] public DateTimeOffset EndsAt { get; set; }
 
     [Parameter] public bool ViewerIsMember { get; set; }
+
+    /// <summary>The step is a sprint: only then the "under five minutes, no XP" warning applies.</summary>
+    [Parameter] public bool IsSprint { get; set; } = true;
 
     /// <summary>For a list of sprints: a visitor outside the community only gets the link (no explanatory text).</summary>
     [Parameter] public bool Compact { get; set; }
@@ -144,7 +152,7 @@
 
         _outcome = result.Outcome;
 
-        if (result.Outcome == JoinSprintOutcome.SprintClosed)
+        if (result.Outcome is JoinSprintOutcome.SprintClosed or JoinSprintOutcome.WaitingForHost)
             await OnNoLongerOpen.InvokeAsync();
     }
 

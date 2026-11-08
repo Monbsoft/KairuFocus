@@ -35,6 +35,44 @@
     overflow-wrap: anywhere;
 }
 
+/* Under the name: pulled up against the link and aligned with the name (48 px avatar + gap). Same shape in the three
+   states. The strip is dark in both themes: the tints are fixed, like the status pill of the profile. */
+.kf-sprint__badge {
+    margin: calc(-1 * var(--space-2)) 0 0 calc(48px + var(--space-3));
+}
+
+.kf-sprint__state {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+    font-size: var(--text-xs);
+    font-weight: 700;
+}
+
+.kf-sprint__state--sprint {
+    background: rgba(77, 148, 255, 0.22);
+    color: #b8d4ff;
+}
+
+.kf-sprint__state--break {
+    background: rgba(52, 199, 123, 0.18);
+    color: #75d6a3;
+}
+
+.kf-sprint__state--waiting {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--kf-blue-100);
+}
+
+.kf-sprint__hint {
+    margin-top: auto;
+    color: var(--kf-blue-100);
+    font-size: var(--text-sm);
+}
+
 .kf-sprint__time {
     display: flex;
     align-items: baseline;

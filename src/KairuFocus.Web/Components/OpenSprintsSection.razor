@@ -48,7 +48,11 @@
                     </p>
                 }
             </div>
-            @if (Data.ViewerIsMember)
+            @if (Data.ViewerInGroup)
+            {
+                <a class="kf-btn-light" href="pomodoro">@F["OpenSprints.BackToSession"]</a>
+            }
+            else if (Data.ViewerIsMember)
             {
                 <a class="kf-btn-light" href="pomodoro?type=sprint">@F["OpenSprints.Empty.Cta"]</a>
             }

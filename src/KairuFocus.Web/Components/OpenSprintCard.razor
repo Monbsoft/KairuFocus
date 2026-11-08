@@ -1,4 +1,6 @@
-@* One open sprint, as a card of the live strip: who, time left (the countdown, big), how many are in, and the way in.
+@* One open group, as a card of the live strip: who, the state of its step (badge), time left (the countdown, big), how many are in, and the way in.
+   A group waiting for its host has an end time already past: no countdown (it would elapse at once and loop the re-read)
+   and no button, a sentence says when it can be joined.
    One filled action at most: "Join this sprint" for a member, nothing for a visitor outside the community (the strip
    says it once), a link to my own session on my own card. The root is the list item: the strip owns the list.
    Nothing here is announced: the countdown has no live region. *@
@@ -10,9 +12,14 @@
         <span class="kf-sprint__name">@Group.Name</span>
     </a>
 
-    <p class="kf-sprint__time">
-        @(Remaining.Before)<span class="kf-sprint__clock"><SprintCountdown EndsAt="Group.EndsAt" OnElapsed="OnElapsed" /></span>@(Remaining.After)
-    </p>
+    <p class="kf-sprint__badge"><span class="kf-sprint__state @StateClass">@StateText</span></p>
+
+    @if (!IsWaiting)
+    {
+        <p class="kf-sprint__time">
+            @(Remaining.Before)<span class="kf-sprint__clock"><SprintCountdown EndsAt="Group.EndsAt" OnElapsed="OnElapsed" /></span>@(Remaining.After)
+        </p>
+    }
 
     <p class="kf-sprint__with">
         @(Group.ParticipantCount <= 1
@@ -27,11 +34,15 @@
             <a href="pomodoro">@F["Join.SprintActive.Link"]</a>
         </p>
     }
+    else if (IsWaiting)
+    {
+        <p class="kf-sprint__hint">@F["OpenSprints.Waiting.Hint"]</p>
+    }
     else if (ViewerIsMember)
     {
         <div class="kf-sprint__action">
             <JoinSprintButton @key="Group.EndsAt" TargetName="@Group.Name" EndsAt="Group.EndsAt"
-                              ViewerIsMember="true" Compact="true" OnNoLongerOpen="OnNoLongerOpen" />
+                              ViewerIsMember="true" Compact="true" IsSprint="IsSprint" OnNoLongerOpen="OnNoLongerOpen" />
         </div>
     }
 </li>
@@ -47,6 +58,14 @@
 
     /// <summary>The countdown reached zero: the strip reads the list again.</summary>
     [Parameter] public EventCallback OnElapsed { get; set; }
+
+    private bool IsWaiting => Group.Phase == "WaitingForHost";
+
+    private bool IsSprint => Group.StepType == "Sprint";
+
+    private string StateText => F[IsWaiting ? "OpenSprints.Badge.Waiting" : IsSprint ? "OpenSprints.Badge.Sprint" : "OpenSprints.Badge.Break"];
+
+    private string StateClass => IsWaiting ? "kf-sprint__state--waiting" : IsSprint ? "kf-sprint__state--sprint" : "kf-sprint__state--break";
 
     private string ProfileHref => CommunityFormatter.ProfileHref(Group.Name);
 
