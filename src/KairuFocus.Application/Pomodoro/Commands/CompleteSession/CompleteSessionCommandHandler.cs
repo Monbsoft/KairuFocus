@@ -55,7 +55,7 @@ public sealed class CompleteSessionCommandHandler : ICommandHandler<CompleteSess
             return CompleteSessionResult.Failure(PomodoroErrors.Pomodoro.NoActiveSession);
         }
 
-        var result = session.Complete(DateTime.UtcNow);
+        var result = session.Complete(command.EndedAtUtc ?? DateTime.UtcNow);
         if (result.IsFailure)
             return CompleteSessionResult.Failure(result.Error);
 

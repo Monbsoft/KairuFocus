@@ -400,4 +400,33 @@ public sealed class CompleteSessionCommandHandlerTests
         Assert.Null(entry.Sequence);
         Assert.Equal(start.AddMinutes(25), entry.OccurredAt);
     }
+
+    // --- End time supplied by the caller (group session stopped by its host) --------------------
+
+    [Fact]
+    public async Task Should_EndAtGivenTime_When_EndedAtUtcProvided()
+    {
+        var sprint = AddActiveSession(PomodoroSessionType.Sprint, PastStart);
+
+        var result = await _sut.Handle(new CompleteSessionCommand(EndedAtUtc: PastStart.AddMinutes(20)));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(PomodoroSessionStatus.Completed, sprint.Status);
+        Assert.Equal(PastStart.AddMinutes(20), sprint.EndedAt);
+        Assert.Equal(10, result.XpAwarded);
+        var entry = Assert.Single(_journalRepository.Entries);
+        Assert.Equal(PastStart.AddMinutes(20), entry.OccurredAt);
+    }
+
+    [Fact]
+    public async Task Should_ClampToScheduledEnd_When_EndedAtUtcAfterDeadline()
+    {
+        var sprint = AddActiveSession(PomodoroSessionType.Sprint, PastStart);
+
+        var result = await _sut.Handle(new CompleteSessionCommand(EndedAtUtc: PastStart.AddMinutes(40)));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(PastStart.AddMinutes(25), sprint.EndedAt);
+        Assert.Equal(10, result.XpAwarded);
+    }
 }
