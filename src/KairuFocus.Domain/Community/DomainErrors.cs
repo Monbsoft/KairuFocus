@@ -18,5 +18,13 @@ public static class DomainErrors
         public const string NotSprintHost = "Only the host of the sprint can open or close it.";
         public const string NoActiveSprint = "No sprint is currently active.";
         public const string UserNotFound = "User not found.";
+        public const string GroupEnded = "This group session is over.";
+        public const string GroupWaitingForHost = "The group is waiting for its host to launch the next step.";
+        public const string GroupStepRunning = "A step of the group is still running.";
+        public const string GroupClosed = "This group is closed to new members.";
+        public const string AlreadyInGroup = "The user is already in this group.";
+        public const string NotInGroup = "The user is not in this group.";
+        public const string GroupNotAlone = "The group still has members.";
+        public const string InvalidGroupStep = "A group step must be numbered from 1 and end after it starts.";
     }
 }

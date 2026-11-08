@@ -80,7 +80,7 @@ public sealed class StartGroupBreakCommandHandler : ICommandHandler<StartGroupBr
         // Sampled as late as possible before the insert, like when joining a sprint: the reads above go
         // through EF's retry policy. Same instant for the planned duration and the start.
         var now = UtcNow;
-        var created = PomodoroSession.CreateJoinedBreak(userId, rootId, sharedEndAt, now);
+        var created = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, userId, rootId, sharedEndAt, now);
         if (created.IsFailure)
             return StartGroupBreakResult.NoBreak(); // The break is already over.
 

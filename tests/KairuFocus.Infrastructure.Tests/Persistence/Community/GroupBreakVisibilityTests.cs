@@ -202,7 +202,7 @@ public sealed class GroupBreakVisibilityTests
     /// <summary>A break of the group of <paramref name="root"/>, started at <see cref="Now"/> and lasting five minutes.</summary>
     private static PomodoroSession ActiveGroupBreak(UserId owner, PomodoroSession root)
     {
-        var created = PomodoroSession.CreateJoinedBreak(owner, root.Id, Now.AddMinutes(5), Now);
+        var created = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, owner, root.Id, Now.AddMinutes(5), Now);
         Assert.True(created.IsSuccess);
         Assert.True(created.Value.Start(Now).IsSuccess);
         return created.Value;

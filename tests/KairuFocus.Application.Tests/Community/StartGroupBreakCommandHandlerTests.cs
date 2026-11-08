@@ -56,7 +56,7 @@ public sealed class StartGroupBreakCommandHandlerTests
     private static PomodoroSession CompletedJoinedSprint(DateTime sharedEnd)
     {
         var startedAt = sharedEnd.AddMinutes(-10);
-        var joined = PomodoroSession.CreateJoined(Visitor, PomodoroSessionId.From(RootId), sharedEnd, startedAt);
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, Visitor, PomodoroSessionId.From(RootId), sharedEnd, startedAt);
         Assert.True(joined.IsSuccess);
         Assert.True(joined.Value.Start(startedAt).IsSuccess);
         Assert.True(joined.Value.Complete(sharedEnd).IsSuccess);
@@ -74,7 +74,7 @@ public sealed class StartGroupBreakCommandHandlerTests
 
     private static PomodoroSession ActiveGroupBreak(DateTime startedAt, DateTime sharedEnd)
     {
-        var created = PomodoroSession.CreateJoinedBreak(Visitor, PomodoroSessionId.From(RootId), sharedEnd, startedAt);
+        var created = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, Visitor, PomodoroSessionId.From(RootId), sharedEnd, startedAt);
         Assert.True(created.IsSuccess);
         Assert.True(created.Value.Start(startedAt).IsSuccess);
         return created.Value;
@@ -402,8 +402,8 @@ public sealed class StartGroupBreakCommandHandlerTests
     public async Task Should_ReturnAlreadyActive_When_VisitorJoinedAnotherSprint()
     {
         GivenVisitorIsMember();
-        var joined = PomodoroSession.CreateJoined(
-            Visitor, PomodoroSessionId.New(), NowUtc.AddMinutes(10), NowUtc.AddMinutes(-1)).Value;
+        var joined = PomodoroSession.CreateJoinedStep(
+            PomodoroSessionType.Sprint, Visitor, PomodoroSessionId.New(), NowUtc.AddMinutes(10), NowUtc.AddMinutes(-1)).Value;
         Assert.True(joined.Start(NowUtc.AddMinutes(-1)).IsSuccess);
         _sessions.Sessions.Add(joined);
 

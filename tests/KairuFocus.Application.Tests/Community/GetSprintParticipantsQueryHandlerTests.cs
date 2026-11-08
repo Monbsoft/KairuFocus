@@ -44,7 +44,7 @@ public sealed class GetSprintParticipantsQueryHandlerTests
 
     private void GivenJoinedSession(Guid rootId)
     {
-        var joined = PomodoroSession.CreateJoined(Visitor, PomodoroSessionId.From(rootId), NowUtc.AddMinutes(10), NowUtc).Value;
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, Visitor, PomodoroSessionId.From(rootId), NowUtc.AddMinutes(10), NowUtc).Value;
         Assert.True(joined.Start(NowUtc).IsSuccess);
         _sessions.Sessions.Add(joined);
     }

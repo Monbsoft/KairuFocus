@@ -68,7 +68,7 @@ public sealed class PomodoroSessionConfigurationTests
         var database = new InMemoryDatabase();
         var rootId = PomodoroSessionId.New();
         var sharedEndAt = Now.AddMinutes(20);
-        var joined = PomodoroSession.CreateJoined(UserId.New(), rootId, sharedEndAt, Now).Value;
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, UserId.New(), rootId, sharedEndAt, Now).Value;
         await database.SeedAsync(joined);
 
         await using var context = database.CreateContext();

@@ -70,7 +70,7 @@ public sealed class GetOpenSprintsQueryHandlerTests
     public async Task Should_FlagMine_When_MySessionJoinedTheGroup()
     {
         var rootId = Guid.NewGuid();
-        var joined = PomodoroSession.CreateJoined(Viewer, PomodoroSessionId.From(rootId), NowUtc.AddMinutes(10), NowUtc).Value;
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, Viewer, PomodoroSessionId.From(rootId), NowUtc.AddMinutes(10), NowUtc).Value;
         Assert.True(joined.Start(NowUtc).IsSuccess);
         _sessions.Sessions.Add(joined);
         _profiles.Seed(Viewer, "tomtom");

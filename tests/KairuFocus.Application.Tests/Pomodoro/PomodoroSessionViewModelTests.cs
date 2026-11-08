@@ -32,8 +32,7 @@ public sealed class PomodoroSessionViewModelTests
     public void Should_ExposeSharedEndAndHostFlags_When_SessionWasJoined()
     {
         var sharedEndAt = NowUtc.AddMinutes(18).AddSeconds(24);
-        var session = PomodoroSession.CreateJoined(
-            FakeCurrentUserService.TestUserId,
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, FakeCurrentUserService.TestUserId,
             PomodoroSessionId.New(),
             sharedEndAt,
             NowUtc).Value;

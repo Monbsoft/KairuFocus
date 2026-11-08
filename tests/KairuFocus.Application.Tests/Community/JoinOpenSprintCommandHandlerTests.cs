@@ -51,8 +51,7 @@ public sealed class JoinOpenSprintCommandHandlerTests
 
     private static PomodoroSession JoinedSession(Guid rootId, DateTime startedAt, DateTime? sharedEndAt = null)
     {
-        var joined = PomodoroSession.CreateJoined(
-            Visitor,
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, Visitor,
             PomodoroSessionId.From(rootId),
             sharedEndAt ?? EndsAtUtc,
             startedAt);

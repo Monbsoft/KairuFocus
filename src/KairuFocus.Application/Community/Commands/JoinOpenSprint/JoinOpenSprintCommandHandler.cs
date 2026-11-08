@@ -73,7 +73,7 @@ public sealed class JoinOpenSprintCommandHandler : ICommandHandler<JoinOpenSprin
         // the client derives the elapsed time from StartedAt. Same instant for the planned duration and the
         // start, so that the duration is the time actually left.
         var now = UtcNow;
-        var joined = PomodoroSession.CreateJoined(userId, rootId, sprint.EndsAtUtc, now);
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, userId, rootId, sprint.EndsAtUtc, now);
         if (joined.IsFailure)
             return JoinOpenSprintResult.Failure(CommunityErrors.Community.SprintNotJoinable);
 

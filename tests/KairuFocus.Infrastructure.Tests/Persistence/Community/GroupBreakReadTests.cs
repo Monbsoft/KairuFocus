@@ -356,7 +356,7 @@ public sealed class GroupBreakReadTests
 
     private static PomodoroSession StartedJoined(UserId owner, PomodoroSession root)
     {
-        var session = PomodoroSession.CreateJoined(owner, root.Id, SprintEnd, JoinedAt).Value;
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, owner, root.Id, SprintEnd, JoinedAt).Value;
         Assert.True(session.Start(JoinedAt).IsSuccess);
         return session;
     }
@@ -377,7 +377,7 @@ public sealed class GroupBreakReadTests
 
     private static PomodoroSession ActiveGroupBreak(UserId owner, PomodoroSession root)
     {
-        var created = PomodoroSession.CreateJoinedBreak(owner, root.Id, SprintEnd.AddMinutes(5), SprintEnd);
+        var created = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, owner, root.Id, SprintEnd.AddMinutes(5), SprintEnd);
         Assert.True(created.IsSuccess);
         Assert.True(created.Value.Start(SprintEnd).IsSuccess);
         return created.Value;

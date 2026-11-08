@@ -36,7 +36,7 @@ public sealed class SetSprintClosedCommandHandlerTests
 
     private PomodoroSession GivenJoinedSession()
     {
-        var joined = PomodoroSession.CreateJoined(Host, PomodoroSessionId.New(), NowUtc.AddMinutes(10), NowUtc);
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, Host, PomodoroSessionId.New(), NowUtc.AddMinutes(10), NowUtc);
         Assert.True(joined.IsSuccess);
         Assert.True(joined.Value.Start(NowUtc).IsSuccess);
         _sessions.Sessions.Add(joined.Value);

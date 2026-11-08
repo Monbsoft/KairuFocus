@@ -449,7 +449,7 @@ public sealed class EfCoreOpenSprintReadRepositoryTests
 
     private static PomodoroSession Joined(UserId owner, PomodoroSessionId rootId, DateTime sharedEndAt, DateTime startedAt)
     {
-        var joined = PomodoroSession.CreateJoined(owner, rootId, sharedEndAt, startedAt);
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, owner, rootId, sharedEndAt, startedAt);
         Assert.True(joined.IsSuccess);
         Assert.True(joined.Value.Start(startedAt).IsSuccess);
         return joined.Value;

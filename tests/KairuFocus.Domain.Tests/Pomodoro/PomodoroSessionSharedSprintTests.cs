@@ -15,7 +15,7 @@ public sealed class PomodoroSessionSharedSprintTests
 
     private static PomodoroSession CreateJoinedAndStarted()
     {
-        var session = PomodoroSession.CreateJoined(OwnerId, RootId, SharedEnd, Now).Value;
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, OwnerId, RootId, SharedEnd, Now).Value;
         session.Start(Now);
         return session;
     }
@@ -37,7 +37,7 @@ public sealed class PomodoroSessionSharedSprintTests
     {
         var sharedEnd = Now.AddMinutes(remainingMinutes).AddSeconds(remainingSeconds);
 
-        var result = PomodoroSession.CreateJoined(OwnerId, RootId, sharedEnd, Now);
+        var result = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, OwnerId, RootId, sharedEnd, Now);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(expected, result.Value.PlannedDurationMinutes);
@@ -46,7 +46,7 @@ public sealed class PomodoroSessionSharedSprintTests
     [Fact]
     public void Should_SetRootAndEnd_When_Joined()
     {
-        var result = PomodoroSession.CreateJoined(OwnerId, RootId, SharedEnd, Now);
+        var result = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, OwnerId, RootId, SharedEnd, Now);
 
         Assert.True(result.IsSuccess);
         var session = result.Value;
@@ -59,7 +59,7 @@ public sealed class PomodoroSessionSharedSprintTests
     [Fact]
     public void Should_BePlannedSprintNotStarted_When_Joined()
     {
-        var session = PomodoroSession.CreateJoined(OwnerId, RootId, SharedEnd, Now).Value;
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, OwnerId, RootId, SharedEnd, Now).Value;
 
         Assert.Equal(PomodoroSessionType.Sprint, session.SessionType);
         Assert.Equal(PomodoroSessionStatus.Planned, session.Status);
@@ -72,7 +72,7 @@ public sealed class PomodoroSessionSharedSprintTests
     [InlineData(1)]
     public void Should_Fail_When_JoinedAtOrAfterSharedEnd(int secondsAfterEnd)
     {
-        var result = PomodoroSession.CreateJoined(OwnerId, RootId, SharedEnd, SharedEnd.AddSeconds(secondsAfterEnd));
+        var result = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, OwnerId, RootId, SharedEnd, SharedEnd.AddSeconds(secondsAfterEnd));
 
         Assert.True(result.IsFailure);
         Assert.Equal(PomodoroErrors.Pomodoro.SharedSprintEnded, result.Error);
@@ -93,7 +93,7 @@ public sealed class PomodoroSessionSharedSprintTests
     [Fact]
     public void Should_Start_When_JoinedBeforeSharedEnd()
     {
-        var session = PomodoroSession.CreateJoined(OwnerId, RootId, SharedEnd, Now).Value;
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, OwnerId, RootId, SharedEnd, Now).Value;
 
         var result = session.Start(Now);
 
@@ -104,7 +104,7 @@ public sealed class PomodoroSessionSharedSprintTests
     [Fact]
     public void Should_FailToStart_When_SharedEndHasPassed()
     {
-        var session = PomodoroSession.CreateJoined(OwnerId, RootId, SharedEnd, Now).Value;
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, OwnerId, RootId, SharedEnd, Now).Value;
 
         var result = session.Start(SharedEnd);
 
