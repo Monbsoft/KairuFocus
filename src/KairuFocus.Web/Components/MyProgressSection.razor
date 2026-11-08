@@ -41,7 +41,7 @@
             {
                 <div class="kf-progress__half">
                     <h3 class="kf-progress__eyebrow">@F["Community.Place.Heading"]</h3>
-                    @if (_place.ShowSkeleton || (_place.Busy && _place.Period == CommunityPeriod.Global))
+                    @if (_place.ShowSkeleton)
                     {
                         <div class="kf-progress__skel" aria-hidden="true">
                             <div class="kf-skel kf-skel--xp"></div>
@@ -52,7 +52,7 @@
                     {
                         <ZoneAlert Message="@F["Community.Board.Error"]" OnRetry="() => LoadPlaceAsync(Period)" />
                     }
-                    else if (_place.Data is { } board && _place.Period != CommunityPeriod.Global)
+                    else if (_place.Data is { } board)
                     {
                         @RankContent(board, PeriodOf(_place))
                     }
@@ -74,6 +74,7 @@
     private readonly LoadZone<CommunityLeaderboardDto> _place = new();
 
     private CommunityPeriod? _loadedPeriod;
+    private bool _rankShown;
     private bool _disposed;
 
     /// <summary>The selected period, kept in the URL by the page.</summary>
@@ -101,12 +102,20 @@
 
     protected override void OnParametersSet()
     {
-        if (_loadedPeriod == Period) return;
-        _loadedPeriod = Period;
-
         // Started here rather than after the first render: the first render already shows the skeletons.
-        _ = LoadXpAsync(Period);
-        _ = LoadPlaceAsync(Period);
+        var periodChanged = _loadedPeriod != Period;
+        if (periodChanged)
+        {
+            _loadedPeriod = Period;
+            _ = LoadXpAsync(Period);
+        }
+
+        // The rank is read only while it is shown (members, week and month): with the figures when the period changes,
+        // or as soon as it appears. Never for Global nor for a non-member, whose leaderboard would be thrown away.
+        var rankAppears = ShowRankHalf && !_rankShown;
+        _rankShown = ShowRankHalf;
+        if (ShowRankHalf && (periodChanged || rankAppears))
+            _ = LoadPlaceAsync(Period);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

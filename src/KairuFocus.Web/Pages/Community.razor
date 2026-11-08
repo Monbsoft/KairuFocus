@@ -91,6 +91,9 @@
     private static readonly TimeSpan CompletionGrace = TimeSpan.FromSeconds(5);
     private CancellationTokenSource? _stripChangedCts;
 
+    // Incremented by each presence read: an answer is applied only if no newer read started meanwhile.
+    private int _presenceVersion;
+
     /// <summary>The period lives in the URL (<c>?periode=mois</c>) so that Back and a reload keep it.</summary>
     [Parameter, SupplyParameterFromQuery(Name = "periode")]
     public string? PeriodQuery { get; set; }
@@ -307,8 +310,11 @@
 
     private async Task ReadPresenceAsync(CancellationToken ct)
     {
+        // The loop and the read after a sprint ends can overlap: only the last one started is applied, so that an
+        // older answer arriving late never brings back a count the strip already contradicts.
+        var version = ++_presenceVersion;
         var presence = await Gamification.GetCommunityPresenceAsync(ct);
-        if (ct.IsCancellationRequested || _disposed) return;
+        if (ct.IsCancellationRequested || _disposed || version != _presenceVersion) return;
 
         // A failure hides the line: the presence is nice to have, not worth an error message.
         _presence = presence;
@@ -328,6 +334,10 @@
         _ = LoadOpenSprintsAsync();
 
         _stripChangedCts?.Cancel();
+
+        // Tab hidden (the loop is stopped): nothing more to read now, the loop reads everything again once it is shown.
+        if (_presenceCts is null) return;
+
         var cts = new CancellationTokenSource();
         _stripChangedCts = cts;
         _ = ReadAfterSprintEndedAsync(cts.Token);

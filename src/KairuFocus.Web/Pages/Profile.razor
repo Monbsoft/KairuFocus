@@ -102,8 +102,7 @@
             @if (_member.Data is not null)
             {
                 @* A member: the hero carries the page title, so "Ma progression" (h2) sits right before "Mes statistiques". *@
-                <MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod"
-                                   IsMember="@(_membership.Data is { IsMember: true })" />
+                @ProgressSection
             }
 
             <MyStatsSection Stats="_stats" Loading="_statsLoading" Failed="_statsFailed" OnRetry="LoadStatsAsync"
@@ -115,8 +114,7 @@
                 @LocalHeatmap("MyStats.Heatmap")
 
                 @* "Mes statistiques" carries the h1 here: "Ma progression" (h2) comes after it, never before the page title. *@
-                <MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod"
-                                   IsMember="@(_membership.Data is { IsMember: true })" />
+                @ProgressSection
             }
 
             @if (_membership.Data is { IsMember: false })
@@ -364,6 +362,13 @@
     }
 
     /// <summary>The heatmap of my own days, with its skeleton and its error. The prefix chooses the texts of its title.</summary>
+    /// <summary>
+    /// "Ma progression", declared once. Its place depends on who carries the page title (see the two call sites): when my
+    /// own profile appears after a failed read, the section moves, so it is mounted again and reads its data again.
+    /// </summary>
+    private RenderFragment ProgressSection => @<MyProgressSection Period="_progressPeriod" PeriodChanged="SelectProgressPeriod"
+                                                                  IsMember="@(_membership.Data is { IsMember: true })" />;
+
     private RenderFragment LocalHeatmap(string textPrefix) => @<text>
         @if (_statsLoading)
         {

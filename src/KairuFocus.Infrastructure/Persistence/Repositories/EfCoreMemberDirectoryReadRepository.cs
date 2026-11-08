@@ -35,34 +35,29 @@ internal sealed class EfCoreMemberDirectoryReadRepository : IMemberDirectoryRead
     {
         // CROSS-USERS read (ADR-026), same join debt as GetActivityAsync: PomodoroSessions.OwnerId is
         // nvarchar(50) and MemberProfiles.UserId uniqueidentifier, converted implicitly by SQL Server.
-        // The join keeps non-members out; no identifier is projected, only the public name, its key (the
-        // grouping key), the avatar and the end of each sprint. Grouping and ordering run in memory.
-        var sprints = (
+        // The join keeps non-members out; no identifier is projected, only the public name, its key, the avatar
+        // and the last end of a sprint. Grouped in SQL (one row per member, a MAX over a plain column: no per-row
+        // rule, ADR-024), so the read stays as small as the number of members active today. Ordering by name runs
+        // in memory, to keep the ordinal comparison whatever the collation.
+        var rows = await (
                 from s in _context.PomodoroSessions.AsNoTracking()
                 join p in _context.MemberProfiles.AsNoTracking() on s.OwnerId equals p.Id
                 where s.SessionType == PomodoroSessionType.Sprint
                       && s.Status == PomodoroSessionStatus.Completed
                       && s.EndedAt >= fromUtc
                       && s.EndedAt < toUtc
-                select new { ProfileName = p.Name, p.NameKey, p.AvatarUrl, EndedAt = s.EndedAt!.Value })
-            .AsAsyncEnumerable()
-            .WithCancellation(ct);
+                group s.EndedAt by new { p.Name, p.NameKey, p.AvatarUrl } into member
+                select new { ProfileName = member.Key.Name, member.Key.AvatarUrl, LastEnd = member.Max() })
+            .ToListAsync(ct);
 
-        var lastEnds = new Dictionary<string, (SprintMember Member, DateTime LastEnd)>(StringComparer.Ordinal);
-        await foreach (var sprint in sprints)
-        {
-            if (!lastEnds.TryGetValue(sprint.NameKey, out var known) || sprint.EndedAt > known.LastEnd)
-                lastEnds[sprint.NameKey] = (new SprintMember(sprint.ProfileName, sprint.AvatarUrl), sprint.EndedAt);
-        }
-
-        var members = lastEnds.Values
+        var members = rows
             .OrderByDescending(m => m.LastEnd)
-            .ThenBy(m => m.Member.Name.Value, StringComparer.Ordinal)
+            .ThenBy(m => m.ProfileName.Value, StringComparer.Ordinal)
             .Take(maxMembers)
-            .Select(m => m.Member)
+            .Select(m => new SprintMember(m.ProfileName, m.AvatarUrl))
             .ToList();
 
-        return new ActiveMembers(lastEnds.Count, members);
+        return new ActiveMembers(rows.Count, members);
     }
 
     public async Task<MemberActivity> GetActivityAsync(ProfileName name, DateTime heatmapSinceUtc, CancellationToken ct = default)

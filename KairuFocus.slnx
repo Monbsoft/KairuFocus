@@ -17,5 +17,6 @@
     <Project Path="tests/KairuFocus.Application.Tests/KairuFocus.Application.Tests.csproj" />
     <Project Path="tests/KairuFocus.Domain.Tests/KairuFocus.Domain.Tests.csproj" />
     <Project Path="tests/KairuFocus.Infrastructure.Tests/KairuFocus.Infrastructure.Tests.csproj" />
+    <Project Path="tests/KairuFocus.Web.Tests/KairuFocus.Web.Tests.csproj" />
   </Folder>
 </Solution>

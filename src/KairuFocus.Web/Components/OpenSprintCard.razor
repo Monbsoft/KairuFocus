@@ -48,7 +48,7 @@
     /// <summary>The countdown reached zero: the strip reads the list again.</summary>
     [Parameter] public EventCallback OnElapsed { get; set; }
 
-    private string ProfileHref => $"/membres/{Uri.EscapeDataString(Group.Name)}";
+    private string ProfileHref => CommunityFormatter.ProfileHref(Group.Name);
 
     /// <summary>The "encore {0}" template cut around its placeholder, so that the countdown can take its place.</summary>
     private (string Before, string After) Remaining
@@ -56,8 +56,7 @@
         get
         {
             var template = F["OpenSprints.Remaining"];
-            var at = template.IndexOf("{0}", StringComparison.Ordinal);
-            return at < 0 ? (template + " ", "") : (template[..at], template[(at + 3)..]);
+            return CommunityFormatter.SplitAtPlaceholder(template) ?? (template + " ", "");
         }
     }
 }

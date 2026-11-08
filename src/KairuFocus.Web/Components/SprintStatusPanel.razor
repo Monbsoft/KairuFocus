@@ -98,10 +98,7 @@
     protected override void OnParametersSet()
     {
         var template = F["Profile.Status.Open"];
-        var at = template.IndexOf("{0}", StringComparison.Ordinal);
-        (_openBefore, _openAfter) = at < 0
-            ? (template, "")
-            : (template[..at], template[(at + 3)..]);
+        (_openBefore, _openAfter) = CommunityFormatter.SplitAtPlaceholder(template) ?? (template, "");
     }
 
     /// <summary>« avec tomtom » / « avec tomtom et 2 autres »: the first name, a link to its profile, then how many others.</summary>

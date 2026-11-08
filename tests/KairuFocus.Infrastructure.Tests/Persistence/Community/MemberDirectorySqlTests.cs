@@ -104,16 +104,23 @@ public sealed class MemberDirectorySqlTests
     }
 
     [Fact]
-    public async Task Should_ProjectOnlyNameAvatarAndEnd_When_GettingActiveMembers()
+    public async Task Should_ProjectOnlyNameAvatarAndLastEnd_When_GettingActiveMembers()
     {
         var command = await CaptureAsync(GetActive);
 
         Assert.Collection(
             OuterSelectList(command.Text),
             name => Assert.EndsWith(".[ProfileName]", name, StringComparison.Ordinal),
-            key => Assert.EndsWith(".[NameKey]", key, StringComparison.Ordinal),
             avatar => Assert.EndsWith(".[AvatarUrl]", avatar, StringComparison.Ordinal),
-            endedAt => Assert.EndsWith(".[EndedAt]", endedAt, StringComparison.Ordinal));
+            lastEnd => Assert.Matches(@"^MAX\(\[\w+\]\.\[EndedAt\]\)", lastEnd));
+    }
+
+    [Fact]
+    public async Task Should_GroupPerMemberInSql_When_GettingActiveMembers()
+    {
+        var command = await CaptureAsync(GetActive);
+
+        Assert.Matches(@"GROUP BY .*\[NameKey\]", command.Text);
     }
 
     [Theory]

@@ -57,5 +57,5 @@
         member.IsMe ? $"{member.Name} ({F["ActiveToday.You"]})" : member.Name;
 
     private static string Href(ActiveMemberDto member) =>
-        member.IsMe ? "profil" : $"/membres/{Uri.EscapeDataString(member.Name)}";
+        member.IsMe ? "profil" : CommunityFormatter.ProfileHref(member.Name);
 }

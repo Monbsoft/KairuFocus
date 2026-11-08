@@ -111,6 +111,16 @@ public sealed class CommunityFormatter
     /// <summary>The address of a member's public profile.</summary>
     public static string ProfileHref(string name) => $"/membres/{Uri.EscapeDataString(name)}";
 
+    /// <summary>
+    /// The template cut around its first <c>{0}</c>, so that a component can render its own markup there (a countdown,
+    /// a styled figure); null when there is none (a missing resource comes back as its key). The caller picks the fallback.
+    /// </summary>
+    public static (string Before, string After)? SplitAtPlaceholder(string template)
+    {
+        var at = template.IndexOf("{0}", StringComparison.Ordinal);
+        return at < 0 ? null : (template[..at], template[(at + 3)..]);
+    }
+
     // ── Ordinals ────────────────────────────────────────────────────────────
 
     /// <summary>
@@ -121,13 +131,9 @@ public sealed class CommunityFormatter
     /// </summary>
     public OrdinalParts Ordinal(int value)
     {
-        var template = this[$"Community.Ordinal.{OrdinalCategory(value)}"];
-        var at = template.IndexOf("{0}", StringComparison.Ordinal);
-
         // No placeholder (resource missing: the localizer returns the key): the bare number is still right.
-        return at < 0
-            ? new OrdinalParts("", Number(value), "")
-            : new OrdinalParts(template[..at], Number(value), template[(at + 3)..]);
+        var (prefix, suffix) = SplitAtPlaceholder(this[$"Community.Ordinal.{OrdinalCategory(value)}"]) ?? ("", "");
+        return new OrdinalParts(prefix, Number(value), suffix);
     }
 
     private static string OrdinalCategory(int value)
