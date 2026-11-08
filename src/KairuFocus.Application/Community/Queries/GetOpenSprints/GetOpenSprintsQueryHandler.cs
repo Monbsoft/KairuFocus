@@ -45,13 +45,11 @@ public sealed class GetOpenSprintsQueryHandler : IQueryHandler<GetOpenSprintsQue
         var latestGroup = await _groupRepository.FindLatestForUserAsync(userId, cancellationToken);
         var myGroup = latestGroup is not null && latestGroup.StateAt(now).Phase != GroupPhase.Ended ? latestGroup : null;
 
-        // The group makes the row mine even while it waits for the host, when no session is active.
-        Guid? myRootId = myGroup?.Id;
-        if (myRootId is null)
-        {
-            var active = await _sessionRepository.GetActiveAsync(userId, cancellationToken);
-            myRootId = active is null ? null : (active.SharedSprintId ?? active.Id).Value;
-        }
+        // A row is mine through my live group (even while it waits for the host, with no session active) or
+        // through the root of my active session: the read keeps one row per lead, which may be either.
+        var active = await _sessionRepository.GetActiveAsync(userId, cancellationToken);
+        Guid? activeRootId = active is null ? null : (active.SharedSprintId ?? active.Id).Value;
+        Guid? myGroupId = myGroup?.Id;
 
         var groups = await _openSprintRepository.GetOpenGroupsAsync(now, MaxGroups, cancellationToken);
 
@@ -64,7 +62,7 @@ public sealed class GetOpenSprintsQueryHandler : IQueryHandler<GetOpenSprintsQue
                     // A datetime2 column comes back with an unspecified kind: all session instants are UTC.
                     new DateTimeOffset(DateTime.SpecifyKind(g.EndsAtUtc, DateTimeKind.Utc)),
                     g.ParticipantCount,
-                    g.RootSessionId == myRootId,
+                    g.RootSessionId == myGroupId || g.RootSessionId == activeRootId,
                     g.StepType.ToString(),
                     g.Phase.ToString()))
                 .ToList());

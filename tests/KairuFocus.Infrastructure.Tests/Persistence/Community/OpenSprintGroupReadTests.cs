@@ -188,6 +188,53 @@ public sealed class OpenSprintGroupReadTests
         Assert.Equal(GroupPhase.Running, listed.Phase);
     }
 
+    // The join points at the card: the running sprint, not the group that waits.
+    [Fact]
+    public async Task Should_TargetRunningSoloSprint_When_LeadAlsoHasWaitingGroup()
+    {
+        var solo = Sprint(_lea, Now.AddMinutes(-2), plannedMinutes: 25);
+        await SeedAsync(Group(_lea, Now.AddMinutes(-30), Now.AddMinutes(-5), _tom), solo);
+
+        var sprint = await QueryAsync(r => r.FindJoinableAsync(Lea, Now));
+
+        Assert.Equal(new JoinableSprint(solo.Id.Value, Now.AddMinutes(23), GroupStepType.Sprint, GroupPhase.Running), sprint);
+    }
+
+    // A member of a waiting group who starts a sprint alone leads that sprint, and the join goes there.
+    [Fact]
+    public async Task Should_TargetRunningSoloSprint_When_MemberOfWaitingGroupRunsSolo()
+    {
+        var solo = Sprint(_tom, Now.AddMinutes(-2), plannedMinutes: 25);
+        await SeedAsync(Group(_lea, Now.AddMinutes(-30), Now.AddMinutes(-5), _tom), solo);
+
+        var groups = await QueryAsync(r => r.GetOpenGroupsAsync(Now, MaxGroups));
+        var ofMember = await QueryAsync(r => r.FindJoinableAsync(Tom, Now));
+        var ofHost = await QueryAsync(r => r.FindJoinableAsync(Lea, Now));
+
+        Assert.Equal(
+            [("tomtom", GroupPhase.Running), ("lea_dev", GroupPhase.WaitingForHost)],
+            groups.Select(g => (g.Lead.Name.Value, g.Phase)));
+        Assert.Equal(solo.Id.Value, ofMember!.RootSessionId);
+        Assert.Equal(GroupPhase.Running, ofMember.Phase);
+        Assert.Equal(GroupPhase.WaitingForHost, ofHost!.Phase);
+    }
+
+    // A running group carries members: it wins over a running sprint of the same lead, even one ending later.
+    [Fact]
+    public async Task Should_PreferRunningGroup_When_LeadHasTwoRunningRows()
+    {
+        var group = Group(_lea, Now.AddMinutes(-15), Now.AddMinutes(10), _tom);
+        var solo = Sprint(_lea, Now.AddMinutes(-1), plannedMinutes: 25);
+        await SeedAsync(group, solo);
+
+        var listed = Assert.Single(await QueryAsync(r => r.GetOpenGroupsAsync(Now, MaxGroups)));
+        var sprint = await QueryAsync(r => r.FindJoinableAsync(Lea, Now));
+
+        Assert.Equal(group.Id, listed.RootSessionId);
+        Assert.Equal(2, listed.ParticipantCount);
+        Assert.Equal(new JoinableSprint(group.Id, Now.AddMinutes(10), GroupStepType.Sprint, GroupPhase.Running), sprint);
+    }
+
     [Fact]
     public async Task Should_ListSoloSprintAsRunningSprint_When_NobodyJoined()
     {

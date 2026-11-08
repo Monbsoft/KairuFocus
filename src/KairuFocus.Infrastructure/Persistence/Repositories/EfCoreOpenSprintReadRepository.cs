@@ -37,27 +37,21 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
         var groups = await ReadLiveAsync(OpenGroups(nowUtc), nowUtc, ct);
         var memberCounts = await CountActiveMembersAsync(OpenGroups(nowUtc), ct);
 
-        // Most time left first, a waiting group last. One row per lead: a host whose group waits may already run
-        // a sprint of its own (an older client); the row with the most time left wins, as the page keys its
-        // cards on the lead name.
-        return soloSprints
-            .Select(s => new OpenSprintGroup(
-                s.Id.Value,
-                new SprintMember(s.Name, s.AvatarUrl),
-                s.EndsAtUtc,
-                ParticipantCount: 1,
-                GroupStepType.Sprint,
-                GroupPhase.Running))
-            .Concat(groups.Select(g => new OpenSprintGroup(
-                g.Id,
-                new SprintMember(g.HostName, g.HostAvatarUrl),
-                g.EndsAtUtc,
-                ParticipantCount: 1 + memberCounts.GetValueOrDefault(g.Id),
-                g.StepType,
-                g.Phase)))
+        var candidates = soloSprints.Select(Candidate.Solo).Concat(groups.Select(Candidate.Group));
+
+        // One card per lead (see Preferred), then most time left first: a waiting group comes last.
+        return candidates
+            .GroupBy(c => c.Lead.Name.Key)
+            .Select(byLead => Preferred(byLead)!)
+            .Select(c => new OpenSprintGroup(
+                c.RootSessionId,
+                c.Lead,
+                c.EndsAtUtc,
+                ParticipantCount: c.IsGroup ? 1 + memberCounts.GetValueOrDefault(c.RootSessionId) : 1,
+                c.StepType,
+                c.Phase))
             .OrderByDescending(g => g.EndsAtUtc)
             .ThenBy(g => g.Lead.Name.Value, StringComparer.Ordinal)
-            .DistinctBy(g => g.Lead.Name.Key)
             .Take(maxGroups)
             .ToList();
     }
@@ -76,20 +70,23 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
                 && _context.MemberProfiles.Any(p =>
                     p.NameKey == key && p.Id == EF.Property<UserId>(member, GroupMemberConfiguration.UserField))));
 
-        // At most one live group per user (Application invariant): the most recent step wins if not.
-        var group = (await ReadLiveAsync(ofTarget, nowUtc, ct))
-            .OrderByDescending(g => g.EndsAtUtc)
-            .FirstOrDefault();
-        if (group is not null)
-            return new JoinableSprint(group.Id, group.EndsAtUtc, group.StepType, group.Phase);
+        // The lead is the target here: the target's groups (as host or active member) and its sprint nobody
+        // joined compete under the same rule as the cards, so that the card and the join agree.
+        var candidates = (await ReadLiveAsync(ofTarget, nowUtc, ct))
+            .Select(Candidate.Group)
+            .ToList();
 
-        // At most one row: the name key and the active session of an owner are both unique.
-        var sprint = (await ReadSoloSprintsAsync(SoloSprints().Where(m => m.Profile.NameKey == key), nowUtc, ct))
-            .FirstOrDefault();
+        // A running group cannot be beaten: the solo sprint is only read when it could win.
+        if (!candidates.Any(c => c.IsGroup && c.Phase == GroupPhase.Running))
+        {
+            // At most one row: the name key and the active session of an owner are both unique.
+            candidates.AddRange((await ReadSoloSprintsAsync(SoloSprints().Where(m => m.Profile.NameKey == key), nowUtc, ct))
+                .Select(Candidate.Solo));
+        }
 
-        return sprint is null
-            ? null
-            : new JoinableSprint(sprint.Id.Value, sprint.EndsAtUtc, GroupStepType.Sprint, GroupPhase.Running);
+        return Preferred(candidates) is { } preferred
+            ? new JoinableSprint(preferred.RootSessionId, preferred.EndsAtUtc, preferred.StepType, preferred.Phase)
+            : null;
     }
 
     public async Task<IReadOnlyList<SprintMember>> GetGroupMembersAsync(Guid rootSessionId, CancellationToken ct = default)
@@ -253,6 +250,42 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
             .ToListAsync(ct);
 
         return counts.ToDictionary(c => c.GroupId, c => c.Count);
+    }
+
+    /// <summary>
+    /// One row per lead. A member may lead several rows at once (a group that waits for its host while the host
+    /// runs a sprint of its own, a member of a waiting group who starts a sprint alone, a step of a group next
+    /// to another active sprint): what can be joined now comes first. Preference: a running group (it carries
+    /// members), then a running sprint nobody joined, then a group waiting for its host; the latest end breaks a
+    /// tie. Shared by the cards and the join, so that both always point at the same row.
+    /// </summary>
+    private static Candidate? Preferred(IEnumerable<Candidate> ofOneLead) =>
+        ofOneLead
+            .OrderBy(c => c switch
+            {
+                { IsGroup: true, Phase: GroupPhase.Running } => 0,
+                { IsGroup: false } => 1,
+                _ => 2,
+            })
+            .ThenByDescending(c => c.EndsAtUtc)
+            .FirstOrDefault();
+
+    /// <summary>A row competing for its lead: a group (any live phase) or a running sprint nobody joined.</summary>
+    private sealed record Candidate(
+        Guid RootSessionId,
+        bool IsGroup,
+        GroupStepType StepType,
+        GroupPhase Phase,
+        DateTime EndsAtUtc,
+        SprintMember Lead)
+    {
+        public static Candidate Solo(SprintRow sprint) =>
+            new(sprint.Id.Value, IsGroup: false, GroupStepType.Sprint, GroupPhase.Running, sprint.EndsAtUtc,
+                new SprintMember(sprint.Name, sprint.AvatarUrl));
+
+        public static Candidate Group(GroupRow group) =>
+            new(group.Id, IsGroup: true, group.StepType, group.Phase, group.EndsAtUtc,
+                new SprintMember(group.HostName, group.HostAvatarUrl));
     }
 
     /// <summary>Object initializer on purpose: EF Core can compose further filters through its members.</summary>

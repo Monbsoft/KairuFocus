@@ -102,6 +102,26 @@ public sealed class GetOpenSprintsQueryHandlerTests
         Assert.Equal([true, false], result.Groups.Select(g => g.IsMine));
     }
 
+    // The read keeps the host's running sprint, not its waiting group: the kept card is still the viewer's.
+    [Fact]
+    public async Task Should_MarkMine_When_HostRunsSoloSprintWhileGroupWaits()
+    {
+        var waiting = GroupSession.Start(
+            Guid.NewGuid(), Viewer, NowUtc.AddMinutes(-27), NowUtc.AddMinutes(-2), UserId.New(), NowUtc.AddMinutes(-20)).Value;
+        var solo = PomodoroSession.Create(PomodoroSessionType.Sprint, 25, Viewer);
+        Assert.True(solo.Start(NowUtc.AddMinutes(-1)).IsSuccess);
+        _profiles.Seed(Viewer, "tomtom");
+        _groupSessions.Seed(waiting);
+        _sessions.Sessions.Add(solo);
+        _openSprints.SeedGroup(Group(solo.Id.Value, "tomtom"));
+        _openSprints.SeedGroup(Group(Guid.NewGuid(), "lea_dev"));
+
+        var result = await _sut.Handle(new GetOpenSprintsQuery());
+
+        Assert.True(result.ViewerInGroup);
+        Assert.Equal([true, false], result.Groups.Select(g => g.IsMine));
+    }
+
     [Fact]
     public async Task Should_NotReportInGroup_When_LatestGroupEnded()
     {
