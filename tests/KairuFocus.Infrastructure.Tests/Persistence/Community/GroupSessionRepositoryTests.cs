@@ -8,6 +8,8 @@ namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
 /// <summary>
 /// Round trip, lookups and conflicts of <see cref="EfCoreGroupSessionRepository"/>. InMemory enforces no
 /// foreign key and raises no SQL Server error number: the SQL shape is covered by <see cref="GroupSessionSqlTests"/>.
+/// The duplicate-key path of TryAddAsync is not testable under InMemory (a duplicate id surfaces as a raw
+/// ArgumentException) and is checked at acceptance.
 /// </summary>
 public sealed class GroupSessionRepositoryTests
 {

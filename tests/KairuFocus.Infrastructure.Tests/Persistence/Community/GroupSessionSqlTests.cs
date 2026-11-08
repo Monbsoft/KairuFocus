@@ -27,4 +27,25 @@ public sealed class GroupSessionSqlTests
         Assert.Contains("UPDATE [GroupSessions]", command.Text);
         Assert.Contains("[Version] = @", command.Text);
     }
+
+    [Fact]
+    public async Task Should_TranslateToSql_When_FindingLatestForUser()
+    {
+        var command = await SqlCommandCapture.CaptureAsync(context =>
+            new EfCoreGroupSessionRepository(context).FindLatestForUserAsync(UserId.New()));
+
+        Assert.Contains("[GroupSessionMembers]", command.Text);
+        Assert.Contains("EXISTS", command.Text);
+        Assert.DoesNotContain("[Users]", command.Text);
+    }
+
+    [Fact]
+    public async Task Should_TranslateToSql_When_GettingById()
+    {
+        var command = await SqlCommandCapture.CaptureAsync(context =>
+            new EfCoreGroupSessionRepository(context).GetByIdAsync(Guid.NewGuid()));
+
+        Assert.Contains("[GroupSessions]", command.Text);
+        Assert.Contains("[GroupSessionMembers]", command.Text);
+    }
 }
