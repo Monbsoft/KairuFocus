@@ -7,9 +7,9 @@ using KairuFocus.Application.Community.Commands.SetSprintClosed;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetActiveToday;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
+using KairuFocus.Application.Community.Queries.GetCurrentSession;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
 using KairuFocus.Application.Community.Queries.GetOpenSprints;
-using KairuFocus.Application.Community.Queries.GetSprintParticipants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Monbsoft.BrilliantMediator.Abstractions;
@@ -120,12 +120,12 @@ public sealed class CommunityController : ControllerBase
             : ErrorResponse(result.Error!, notMemberStatus: StatusCodes.Status403Forbidden);
     }
 
-    [HttpGet("current-sprint/participants")]
-    public async Task<IActionResult> GetParticipants(CancellationToken ct)
+    [HttpGet("current-session")]
+    public async Task<IActionResult> GetCurrentSession(CancellationToken ct)
     {
-        var result = await _mediator.SendAsync<GetSprintParticipantsQuery, GetSprintParticipantsResult>(
-            new GetSprintParticipantsQuery(), ct);
-        return Ok(result);
+        var result = await _mediator.SendAsync<GetCurrentSessionQuery, GetCurrentSessionResult?>(
+            new GetCurrentSessionQuery(), ct);
+        return result is null ? NoContent() : Ok(result);
     }
 
     [HttpPut("current-sprint/closed")]
@@ -181,6 +181,20 @@ public sealed class CommunityController : ControllerBase
                 Body(StatusCodes.Status403Forbidden, error, "not-host"),
             CommunityErrors.Community.NoActiveSprint =>
                 Body(StatusCodes.Status404NotFound, error, "no-active-sprint"),
+            CommunityErrors.Community.GroupWaitingForHost =>
+                Body(StatusCodes.Status410Gone, error, "waiting-for-host"),
+            CommunityErrors.Community.GroupEnded =>
+                Body(StatusCodes.Status410Gone, error, "group-ended"),
+            CommunityErrors.Community.GroupClosed =>
+                Body(StatusCodes.Status410Gone, error, "sprint-closed"),
+            CommunityErrors.Community.GroupStepRunning =>
+                Body(StatusCodes.Status409Conflict, error, "step-running"),
+            CommunityErrors.Community.AlreadyInGroup =>
+                Body(StatusCodes.Status409Conflict, error, "already-in-group"),
+            CommunityErrors.Community.NotInGroup =>
+                Body(StatusCodes.Status404NotFound, error, "not-in-group"),
+            CommunityErrors.Community.InvalidGroupStep =>
+                Body(StatusCodes.Status400BadRequest, error, "invalid-step"),
             // Not in the contract (UserNotFound, for example): nothing to tell the client.
             _ => StatusCode(StatusCodes.Status500InternalServerError, new { error = UnexpectedErrorText })
         };
