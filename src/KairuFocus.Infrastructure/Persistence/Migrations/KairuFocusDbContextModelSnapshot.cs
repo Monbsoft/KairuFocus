@@ -22,6 +22,66 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("KairuFocus.Domain.Community.GroupMember", b =>
+                {
+                    b.Property<Guid>("GroupSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("_userId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UserId");
+
+                    b.Property<DateTime>("JoinedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LeftAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("GroupSessionId", "_userId");
+
+                    b.HasIndex("_userId")
+                        .HasDatabaseName("IX_GroupSessionMembers_UserId");
+
+                    b.ToTable("GroupSessionMembers", (string)null);
+                });
+
+            modelBuilder.Entity("KairuFocus.Domain.Community.GroupSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("EndedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsClosedToJoin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("SprintCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("_hostId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("HostId");
+
+                    b.HasKey("Id")
+                        .HasName("PK_GroupSessions");
+
+                    b.HasIndex("_hostId")
+                        .HasDatabaseName("IX_GroupSessions_HostId");
+
+                    b.ToTable("GroupSessions", (string)null);
+                });
+
             modelBuilder.Entity("KairuFocus.Domain.Community.MemberProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -372,6 +432,58 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                     b.ToTable("PomodoroSettings", (string)null);
                 });
 
+            modelBuilder.Entity("KairuFocus.Domain.Community.GroupMember", b =>
+                {
+                    b.HasOne("KairuFocus.Domain.Community.GroupSession", null)
+                        .WithMany("_members")
+                        .HasForeignKey("GroupSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KairuFocus.Domain.Community.GroupSession", b =>
+                {
+                    b.HasOne("KairuFocus.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("_hostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("KairuFocus.Domain.Community.GroupStep", "CurrentStep", b1 =>
+                        {
+                            b1.Property<Guid>("GroupSessionId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime>("EndsAtUtc")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("CurrentStepEndsAtUtc");
+
+                            b1.Property<int>("Number")
+                                .HasColumnType("int")
+                                .HasColumnName("CurrentStepNumber");
+
+                            b1.Property<DateTime>("StartedAtUtc")
+                                .HasColumnType("datetime2")
+                                .HasColumnName("CurrentStepStartedAtUtc");
+
+                            b1.Property<string>("Type")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("CurrentStepType");
+
+                            b1.HasKey("GroupSessionId");
+
+                            b1.ToTable("GroupSessions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("GroupSessionId");
+                        });
+
+                    b.Navigation("CurrentStep")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("KairuFocus.Domain.Community.MemberProfile", b =>
                 {
                     b.HasOne("KairuFocus.Domain.Identity.User", null)
@@ -405,6 +517,11 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                         .WithMany("Comments")
                         .HasForeignKey("EntryId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("KairuFocus.Domain.Community.GroupSession", b =>
+                {
+                    b.Navigation("_members");
                 });
 
             modelBuilder.Entity("KairuFocus.Domain.Journal.JournalEntry", b =>
