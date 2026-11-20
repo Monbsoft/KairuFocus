@@ -1,0 +1,55 @@
+@* The session band above the timer of the Pomodoro page (#46): "Session de groupe · Sprint 2 · Avec nora et tomtom".
+   The only group element above the timer, tinted like the step badges: blue for a sprint, green for a break, grey while
+   the group waits for its host. Each name opens the member's profile in a new tab: the Pomodoro page must keep running,
+   since it plays the ringtone, records the end of the step and follows the host.
+   Nothing here is announced: the page owns the single live region (new step, wait, end). *@
+@inject CommunityFormatter F
+
+<p class="kf-group-line @TintClass" role="group" aria-label="@F["Participants.Aria"]">
+    <b class="kf-group-line__step">@F.Format("Group.Line", StepLabel)</b>
+    @if (Sentence is { } sentence)
+    {
+        <span class="kf-group-line__sep" aria-hidden="true">·</span>
+        <span class="kf-group-line__with">@sentence</span>
+    }
+</p>
+
+@code {
+    [Parameter, EditorRequired] public CurrentGroupSessionDto Group { get; set; } = default!;
+
+    /// <summary>Names shown before the "and N others".</summary>
+    private const int MaxNames = 3;
+
+    private bool IsWaiting => Group.Phase == "WaitingForHost";
+
+    /// <summary>The step, or, between two steps, who has to act: the host ("À toi de lancer la suite") or nobody here.</summary>
+    private string StepLabel =>
+        IsWaiting
+            ? F[Group.Role == "Host" ? "Group.YourTurn" : "Group.Waiting"]
+            : F.GroupStepLabel(Group.StepType, Group.SprintNumber);
+
+    private string TintClass =>
+        IsWaiting ? "kf-group-line--wait"
+        : Group.StepType == "Sprint" ? "kf-group-line--sprint"
+        : "kf-group-line--break";
+
+    private MarkupString? Sentence => Group.Others.Count switch
+    {
+        0 => null,
+        1 => Linked(F["Participants.With.One"]),
+        2 => Linked(F["Participants.With.Two"]),
+        3 => Linked(F["Participants.With.Three"]),
+        var count => Linked(F.PluralTemplate("Participants.With.Many", count - MaxNames), F.Number(count - MaxNames))
+    };
+
+    /// <summary>The template with the first names (three at most) as links, then <paramref name="more"/> as text.</summary>
+    private MarkupString Linked(string template, string? more = null)
+    {
+        var args = Group.Others.Take(MaxNames)
+            .Select(m => (m.Name, (string?)CommunityFormatter.ProfileHref(m.Name)))
+            .ToList();
+        if (more is not null) args.Add((more, null));
+
+        return CommunityFormatter.WithNewTabLinks(template, F["Participants.NewTab"], [.. args]);
+    }
+}

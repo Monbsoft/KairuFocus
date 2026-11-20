@@ -71,6 +71,12 @@ public sealed class CommunityFormatter
         _ => throw new ArgumentOutOfRangeException(nameof(stepType), stepType, "Unknown group step type.")
     };
 
+    /// <summary>« Sprint 2 », « Pause courte », « Pause longue »: the name of a step, numbered for a sprint.</summary>
+    public string GroupStepLabel(string stepType, int sprintNumber) =>
+        stepType == "Sprint"
+            ? Format(GroupStepKey(stepType), Number(sprintNumber))
+            : this[GroupStepKey(stepType)];
+
     // ── Emphasis ────────────────────────────────────────────────────────────
 
     /// <summary>The template with <c>{0}</c> replaced by <paramref name="value"/> in bold. Everything is HTML-encoded.</summary>

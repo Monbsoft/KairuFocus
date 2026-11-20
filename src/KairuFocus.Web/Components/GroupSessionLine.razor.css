@@ -1,0 +1,67 @@
+/* Shown on the Pomodoro page, outside the community pages: Bootstrap variables only, no page token.
+   Light and dark come from the variables themselves (the *-bg-subtle tints follow data-bs-theme). */
+.kf-group-line {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    column-gap: 0.5rem;
+    row-gap: 0.125rem;
+    width: 100%;
+    max-width: 480px;
+    margin: 0;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+    color: var(--bs-body-color);
+    font-size: 0.9375rem;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* Same hues as the sprint / break badges. */
+.kf-group-line--sprint {
+    background: var(--bs-primary-bg-subtle);
+    border-color: var(--bs-primary-border-subtle);
+}
+
+.kf-group-line--break {
+    background: var(--bs-success-bg-subtle);
+    border-color: var(--bs-success-border-subtle);
+}
+
+.kf-group-line--wait {
+    background: var(--bs-tertiary-bg);
+}
+
+.kf-group-line__step {
+    font-weight: 700;
+}
+
+.kf-group-line__sep {
+    color: var(--bs-secondary-color);
+}
+
+/* The names, links inside the localized sentence (hence ::deep). Inline links in a sentence: exempt from the 24 px
+   target size (WCAG 2.5.8). Bootstrap's hover blue rather than its link blue: at least 5:1 on the three tints in light,
+   and the light blue of the dark theme on its dark tints. */
+.kf-group-line ::deep a {
+    color: var(--bs-link-hover-color);
+    font-weight: 600;
+    text-underline-offset: 2px;
+}
+
+.kf-group-line ::deep a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* Narrow screens (375 px): the participants sentence goes under the step instead of beside it. */
+@media (max-width: 420px) {
+    .kf-group-line__sep {
+        display: none;
+    }
+
+    .kf-group-line__with {
+        flex-basis: 100%;
+    }
+}
