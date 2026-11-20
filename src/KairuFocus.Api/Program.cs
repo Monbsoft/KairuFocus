@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ModelContextProtocol.AspNetCore;
@@ -248,6 +249,11 @@ if (!app.Environment.IsDevelopment())
     forwardedOptions.KnownProxies.Clear();
     app.UseForwardedHeaders(forwardedOptions);
 }
+
+// Canonical host: www.kairufocus.com → https://kairufocus.com, path and query kept (308).
+// Placed after UseForwardedHeaders so the redirect keeps the https scheme seen by the client.
+// Hosts without "www." (bare domain, *.azurecontainerapps.io, localhost) are left untouched.
+app.UseRewriter(new RewriteOptions().AddRedirectToNonWwwPermanent());
 
 if (app.Environment.IsDevelopment())
 {
