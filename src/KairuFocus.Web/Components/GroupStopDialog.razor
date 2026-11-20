@@ -1,0 +1,113 @@
+@* Confirmation of "Arrêter la session" (#46, UC-CO-12): the host stops the session for the whole group.
+   Same pattern as the dialog of the community settings: role="dialog", aria-modal, focus kept inside (trapFocus).
+   The focus starts on "Continuer", so that Enter does not stop the group; Escape is "Continuer" too.
+   The page gives the focus back to its "Arrêter la session" button on cancel (the button is the page's). *@
+@inject CommunityFormatter F
+@inject IJSRuntime JS
+
+@if (Open)
+{
+    <div class="modal d-block kf-lb-modal kf-group-stop" @ref="_modal" tabindex="-1"
+         role="dialog" aria-modal="true" aria-labelledby="group-stop-title" aria-describedby="group-stop-body"
+         aria-busy="@(_busy ? "true" : null)"
+         @onkeydown="OnKeyDown">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="group-stop-title">@F["Group.Stop.Title"]</h5>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0" id="group-stop-body">@F[DuringSprint ? "Group.Stop.Body.Sprint" : "Group.Stop.Body"]</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @ref="_cancelButton" @onclick="CancelAsync"
+                            disabled="@_busy">@F["Group.Stop.Cancel"]</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmAsync"
+                            disabled="@_busy">@F["Group.Stop"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Open { get; set; }
+
+    /// <summary>A sprint is running: the text adds that it will bring no XP.</summary>
+    [Parameter] public bool DuringSprint { get; set; }
+
+    [Parameter] public EventCallback OnConfirm { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private enum FocusTarget { None, Cancel, Dialog }
+
+    private ElementReference _modal;
+    private ElementReference _cancelButton;
+    private bool _wasOpen;
+    private bool _busy;
+    private FocusTarget _pendingFocus;
+
+    protected override void OnParametersSet()
+    {
+        if (Open && !_wasOpen)
+        {
+            _busy = false;
+            _pendingFocus = FocusTarget.Cancel;
+        }
+
+        _wasOpen = Open;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_pendingFocus == FocusTarget.None || !Open) return;
+
+        var target = _pendingFocus;
+        _pendingFocus = FocusTarget.None;
+        try
+        {
+            if (target == FocusTarget.Cancel)
+            {
+                await _cancelButton.FocusAsync();
+                await JS.InvokeVoidAsync("kairufocusCommunity.trapFocus", _modal);
+            }
+            else
+            {
+                await _modal.FocusAsync();
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or JSException)
+        {
+            // The dialog closed meanwhile, or the script is missing: leave the focus where it is.
+        }
+    }
+
+    private async Task ConfirmAsync()
+    {
+        if (_busy) return;
+        _busy = true;
+        // Both buttons are disabled while the request runs and would drop the focus: park it on the dialog itself,
+        // so that Tab stays inside (see trapFocus). aria-busy keeps a screen reader from reading it all out again.
+        _pendingFocus = FocusTarget.Dialog;
+        try
+        {
+            await OnConfirm.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        if (_busy) return;
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") await CancelAsync();
+    }
+}

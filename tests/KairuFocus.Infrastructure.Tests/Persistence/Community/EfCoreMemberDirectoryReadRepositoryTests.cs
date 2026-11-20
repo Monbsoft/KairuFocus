@@ -435,7 +435,7 @@ public sealed class EfCoreMemberDirectoryReadRepositoryTests
     {
         var startedAt = root.StartedAt!.Value.AddMinutes(5);
         var session = PomodoroSession
-            .CreateJoined(owner, root.Id, root.StartedAt.Value.AddMinutes(25), startedAt)
+            .CreateJoinedStep(PomodoroSessionType.Sprint, owner, root.Id, root.StartedAt.Value.AddMinutes(25), startedAt)
             .Value;
         Assert.True(session.Start(startedAt).IsSuccess);
         return session;

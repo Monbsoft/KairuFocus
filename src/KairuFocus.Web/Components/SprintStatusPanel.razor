@@ -1,4 +1,5 @@
-@* The status panel of a profile: in an open sprint (time left, who is in it, a way to join), or "no open sprint".
+@* The status panel of a profile: in an open sprint or break (time left, who is in it, a way to join), waiting for the
+   host of the group to launch the next step (no countdown, no button), or "no open sprint".
    The wording never says "not in a sprint": that would be false for a closed sprint, a free sprint or a break.
    The only live part is the "this sprint is no longer open" message after a refused join: a status zone, always mounted.
    Otherwise the panel is not announced, and the only moving part is the countdown. *@
@@ -12,27 +13,48 @@
     }
     else if (Profile.OpenSprint is { } sprint)
     {
-        <span class="kf-status__pill">@_openBefore<SprintCountdown EndsAt="sprint.EndsAt" OnElapsed="OnReload" />@_openAfter</span>
-
-        @if (sprint.Others.Count > 0)
+        @if (sprint.Phase == "WaitingForHost")
         {
-            <div class="kf-status__with">
-                <AvatarStack Members="sprint.Others" MaxShown="3" Size="32" />
-                <span class="kf-status__names">@WithText(sprint.Others)</span>
-            </div>
-        }
+            @* The end time is past: no countdown (it would elapse at once and loop the reload), no button. *@
+            <span class="kf-status__pill kf-status__pill--waiting">@F["Profile.Status.Waiting"]</span>
 
-        @if (sprint.IncludesViewer)
-        {
-            @if (!Profile.IsMe)
+            @if (sprint.IncludesViewer)
             {
-                <p class="kf-status__note">@F["Profile.Status.IncludesViewer"]</p>
+                @if (!Profile.IsMe)
+                {
+                    <p class="kf-status__note">@F["Profile.Status.IncludesViewer"]</p>
+                }
+            }
+            else
+            {
+                <p class="kf-status__note">@F["OpenSprints.Waiting.Hint"]</p>
             }
         }
         else
         {
-            <JoinSprintButton @key="sprint.EndsAt" TargetName="@Profile.Name" EndsAt="sprint.EndsAt"
-                              ViewerIsMember="Profile.ViewerIsMember" OnNoLongerOpen="HandleNoLongerOpenAsync" />
+            <span class="kf-status__pill">@_openBefore<SprintCountdown EndsAt="sprint.EndsAt" OnElapsed="OnReload" />@_openAfter</span>
+
+            @if (sprint.Others.Count > 0)
+            {
+                <div class="kf-status__with">
+                    <AvatarStack Members="sprint.Others" MaxShown="3" Size="32" />
+                    <span class="kf-status__names">@WithText(sprint.Others)</span>
+                </div>
+            }
+
+            @if (sprint.IncludesViewer)
+            {
+                @if (!Profile.IsMe)
+                {
+                    <p class="kf-status__note">@F["Profile.Status.IncludesViewer"]</p>
+                }
+            }
+            else
+            {
+                <JoinSprintButton @key="sprint.EndsAt" TargetName="@Profile.Name" EndsAt="sprint.EndsAt"
+                                  ViewerIsMember="Profile.ViewerIsMember" IsSprint="@(sprint.StepType == "Sprint")"
+                                  OnNoLongerOpen="HandleNoLongerOpenAsync" OnWaiting="OnReload" />
+            }
         }
     }
     else
@@ -97,7 +119,8 @@
 
     protected override void OnParametersSet()
     {
-        var template = F["Profile.Status.Open"];
+        var isSprint = Profile.OpenSprint is null || Profile.OpenSprint.StepType == "Sprint";
+        var template = F[isSprint ? "Profile.Status.Open" : "Profile.Status.Break"];
         (_openBefore, _openAfter) = CommunityFormatter.SplitAtPlaceholder(template) ?? (template, "");
     }
 

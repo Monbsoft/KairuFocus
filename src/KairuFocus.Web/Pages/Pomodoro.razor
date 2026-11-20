@@ -12,16 +12,24 @@
 
 <div class="d-flex align-items-center justify-content-between mb-1">
     <h2 class="mb-0">Pomodoro</h2>
-    <div style="position:relative">
-        <button class="btn-more" @onclick="ToggleMoreMenu" title="Plus d'options">&#xB7;&#xB7;&#xB7;</button>
-        @if (_moreMenuOpen)
-        {
-            <div class="dropdown-menu-simple">
-                <button @onclick="NavigateToSprintLibre">Sprint libre</button>
-            </div>
-        }
-    </div>
+    @* No free sprint in a group session (its steps are timed): the menu only holds it, so it goes away meanwhile. *@
+    @if (!IsGroupLive)
+    {
+        <div style="position:relative">
+            <button class="btn-more" @onclick="ToggleMoreMenu" title="Plus d'options">&#xB7;&#xB7;&#xB7;</button>
+            @if (_moreMenuOpen)
+            {
+                <div class="dropdown-menu-simple">
+                    <button @onclick="NavigateToSprintLibre">Sprint libre</button>
+                </div>
+            }
+        </div>
+    }
 </div>
+
+@* Always mounted, so that what is set later is announced: a new step of the group, the wait, the end of the group.
+   Never the countdown. *@
+<div class="visually-hidden" role="status" aria-live="polite">@_groupAnnouncement</div>
 
 @if (!_loaded)
 {
@@ -31,8 +39,36 @@ else
 {
     <div class="d-flex flex-column align-items-center gap-3">
 
-        <!-- Sélection du type de session (onglets) -->
-        @if (_session is null || _session.Status is "Completed" or "Interrupted")
+        <!-- Fin du groupe : la raison, le bilan et la Communauté, au-dessus de l'écran habituel (jusqu'au prochain démarrage) -->
+        @if (_groupEnd is { } end)
+        {
+            <div class="alert alert-info kf-group-ended mb-0">
+                <strong>@end.Reason</strong>
+                @if (end.SprintsTogether > 0)
+                {
+                    <span>@F.Plural("Profile.Status.Together", end.SprintsTogether, F.Number(end.SprintsTogether))</span>
+                }
+                <a class="alert-link" href="communaute">@F["Group.Ended.Community"]</a>
+            </div>
+        }
+
+        <!-- Session de groupe : la bande au-dessus du minuteur, pendant l'étape et l'attente -->
+        @if (IsGroupLive)
+        {
+            <GroupSessionLine Group="_group!" />
+            @if (_groupFailures >= MaxSilentGroupFailures)
+            {
+                <p class="kf-group-note mb-0">@F["Group.Error"]</p>
+            }
+        }
+
+        @if (IsHostWaiting)
+        {
+            <p class="kf-group-yourturn mb-0">@F["Group.YourTurn.Title"]</p>
+        }
+
+        <!-- Sélection du type de session (onglets) : jamais pour un participant, qui suit l'hôte -->
+        @if (ShowTypeTabs)
         {
             <div class="btn-group mb-3" role="group" aria-label="Type de session">
                 <input type="radio" class="btn-check" name="sessionType" id="typeSprint" value="Sprint" 
@@ -55,50 +91,85 @@ else
             </div>
         }
 
-        <!-- Horloge circulaire -->
-        <svg viewBox="0 0 220 220" width="220" height="220" style="overflow:visible">
-            <!-- Cercle de fond -->
-            <circle cx="110" cy="110" r="95"
-                    fill="none"
-                    stroke="#e9ecef"
-                    stroke-width="14" />
-            <!-- Arc de progression -->
-            <circle cx="110" cy="110" r="95"
-                    fill="none"
-                    stroke="@ArcColor"
-                    stroke-width="14"
-                    stroke-linecap="round"
-                    stroke-dasharray="@_circumference.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
-                    stroke-dashoffset="@DashOffset.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
-                    transform="rotate(-90 110 110)"
-                    style="transition: stroke-dashoffset 0.8s linear, stroke 0.4s ease;" />
-            <!-- Temps restant -->
-            <text x="110" y="105"
-                  text-anchor="middle"
-                  dominant-baseline="middle"
-                  font-size="42"
-                  font-family="monospace"
-                  fill="currentColor">
-                @TimeDisplay
-            </text>
-            <!-- Statut -->
-            <text x="110" y="148"
-                  text-anchor="middle"
-                  font-size="15"
-                  fill="#6c757d">
-                @StatusLabel
-            </text>
-        </svg>
+        @if (IsParticipantWaiting)
+        {
+            <!-- Participant en attente de l'hôte : un panneau d'attente à la place du minuteur (pas de 00:00 figé) -->
+            <div class="kf-group-wait">
+                <span class="kf-group-wait__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <strong>@F["Group.Waiting"]</strong>
+                @if (HostName is { } waitedHost)
+                {
+                    <span class="kf-group-wait__body">@F.Format("Group.Waiting.Body", waitedHost)</span>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Horloge circulaire -->
+            <svg viewBox="0 0 220 220" width="220" height="220" style="overflow:visible">
+                <!-- Cercle de fond -->
+                <circle cx="110" cy="110" r="95"
+                        fill="none"
+                        stroke="#e9ecef"
+                        stroke-width="14" />
+                <!-- Arc de progression -->
+                <circle cx="110" cy="110" r="95"
+                        fill="none"
+                        stroke="@ArcColor"
+                        stroke-width="14"
+                        stroke-linecap="round"
+                        stroke-dasharray="@_circumference.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                        stroke-dashoffset="@DashOffset.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                        transform="rotate(-90 110 110)"
+                        style="transition: stroke-dashoffset 0.8s linear, stroke 0.4s ease;" />
+                <!-- Temps restant -->
+                <text x="110" y="105"
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                      font-size="42"
+                      font-family="monospace"
+                      fill="currentColor">
+                    @TimeDisplay
+                </text>
+                <!-- Statut -->
+                <text x="110" y="148"
+                      text-anchor="middle"
+                      font-size="15"
+                      fill="#6c757d">
+                    @StatusLabel
+                </text>
+            </svg>
+        }
 
-        <!-- Boutons de contrôle -->
-        <div class="d-flex gap-2">
-            @if (_session is null || _session.Status is "Completed" or "Interrupted")
+        <!-- Boutons de contrôle : une seule action principale par moment -->
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            @if (IsIdle)
             {
-                <button class="btn btn-primary btn-lg" @onclick="StartSession" disabled="@_starting">
-                    @(_starting ? "Démarrage…" : "▶ Démarrer")
-                </button>
+                if (IsHostWaiting)
+                {
+                    @* H2: the host's "Démarrer" says its effect on the others. *@
+                    <button type="button" class="btn btn-primary btn-lg" @onclick="LaunchGroupStepAsync" disabled="@_launching">
+                        @F["Group.Start"]
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-lg kf-btn-stop" @ref="_stopButton"
+                            @onclick="OpenStopDialog" disabled="@_launching">
+                        @F["Group.Stop"]
+                    </button>
+                }
+                else if (IsParticipantWaiting)
+                {
+                    <button type="button" class="btn btn-outline-secondary btn-lg kf-btn-leave" @onclick="LeaveGroupAsync" disabled="@_leaving">
+                        @F["Group.Leave"]
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-primary btn-lg" @ref="_startButton" @onclick="StartSession" disabled="@_starting">
+                        @(_starting ? "Démarrage…" : "▶ Démarrer")
+                    </button>
+                }
             }
-            else if (_session.Status == "Active")
+            else if (_session!.Status == "Active")
             {
                 if (_completionFailed)
                 {
@@ -106,42 +177,62 @@ else
                         @(_completing ? "Nouvelle tentative…" : "↻ Réessayer")
                     </button>
                 }
-                <button class="btn btn-outline-warning btn-lg" @onclick="InterruptSession" disabled="@_completing">
-                    ⏹ Interrompre
-                </button>
+
+                @* In a group, "Interrompre" goes: the host stops it for everyone (confirmed), a participant leaves it alone. *@
+                if (IsGroupLive && IsHost)
+                {
+                    <button type="button" class="btn btn-outline-danger btn-lg kf-btn-stop" @ref="_stopButton"
+                            @onclick="OpenStopDialog" disabled="@_completing">
+                        @F["Group.Stop"]
+                    </button>
+                }
+                else if (IsGroupLive)
+                {
+                    <button type="button" class="btn btn-outline-secondary btn-lg kf-btn-leave" @onclick="LeaveGroupAsync"
+                            disabled="@(_completing || _leaving)">
+                        @F["Group.Leave"]
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-outline-warning btn-lg" @onclick="InterruptSession" disabled="@_completing">
+                        ⏹ Interrompre
+                    </button>
+                }
             }
         </div>
 
-        <!-- Sprint partagé : avec qui je suis, et ouverture du groupe (sprint minuté actif d'un membre de la communauté) -->
-        @if (_isMember && _session is { Status: "Active", SessionType: "Sprint" })
+        @if (IsHostWaiting && _group!.WaitLimitAt is { } waitLimit)
         {
-            <SprintParticipants />
+            @* Small and muted, never announced: the countdown has no live region (role="timer"). *@
+            <p class="kf-group-note mb-0">
+                @(WaitLimit.Before)<SprintCountdown EndsAt="waitLimit" OnElapsed="RefreshGroupAsync" />@(WaitLimit.After)
+            </p>
+        }
+
+        @if (IsGroupLive && !IsHost && IsSessionActive && HostName is { } followedHost)
+        {
+            <p class="kf-group-note mb-0">@F.Bold(F["Group.Follow.Hint"], followedHost)</p>
         }
 
         @if (CanManageGroup)
         {
             <div class="d-flex flex-column align-items-center gap-1 text-center" style="max-width:480px">
                 @* aria-disabled rather than disabled during the call: the keyboard focus stays on the button (the handler ignores a second click). *@
-                <button type="button" class="btn btn-sm btn-outline-secondary @(_closingGroup ? "disabled" : "")"
+                <button type="button" class="btn btn-link btn-sm kf-btn-close-group @(_closingGroup ? "disabled" : "")"
                         aria-describedby="group-closed-hint"
                         aria-disabled="@(_closingGroup ? "true" : null)"
                         @onclick="ToggleGroupClosed">
-                    @F[_session!.IsClosedToJoin ? "Participants.Reopen" : "Participants.Close"]
+                    @F[ClosedKey]
                 </button>
                 <small id="group-closed-hint" class="text-body-secondary">
-                    @F[_session!.IsClosedToJoin ? "Participants.Reopen.Hint" : "Participants.Close.Hint"]
+                    @F[$"{ClosedKey}.Hint"]
                 </small>
             </div>
         }
 
-        @* Group break (UC-CO-10): started by the server at the end of a shared sprint, with a shared end for everyone *@
-        @if (_session is { Status: "Active", SharedEndAt: not null } && _session.SessionType != "Sprint")
-        {
-            <small role="status" class="text-body-secondary text-center" style="max-width:480px">@F["Participants.GroupBreak"]</small>
-        }
-
-        <!-- Résultat après fin de session -->
-        @if (_completedSessionType is not null)
+        <!-- Résultat après fin de session (pas dans un groupe : la suite y est la bande ou l'attente) -->
+        @if (_completedSessionType is not null && !IsGroupLive)
         {
             var (icon, label, next) = _completedSessionType switch
             {
@@ -254,6 +345,9 @@ else
 
 <XpToast @ref="_xpToast" />
 
+<GroupStopDialog Open="StopDialogOpen" DuringSprint="@(_session is { Status: "Active", SessionType: "Sprint" })"
+                 OnConfirm="StopGroupAsync" OnCancel="CancelStop" />
+
 @code {
     // ── Constantes SVG ─────────────────────────────────────────────────────
     private const double Radius = 95.0;
@@ -294,10 +388,75 @@ else
     private bool _closingGroup;  // a close/reopen request is in flight
     private bool _disposed;
 
-    /// <summary>"Fermer / Rouvrir ce sprint": only the host of a timed sprint, and only when a community member.
+    // ── Group session (#46) ───────────────────────────────────────────────
+    // The page reads GET current-session at load, then every 15 s during a session or a live group (hidden tab
+    // included: a participant must keep following). A participant with no step running follows the host every 5 s.
+    private static readonly TimeSpan GroupTick = TimeSpan.FromSeconds(5);
+    private const int GroupReadEveryTicks = 3;     // 3 × 5 s = 15 s
+    private const int MaxSilentGroupFailures = 3;  // H4: an error is shown only after 3 failures in a row
+
+    private CurrentGroupSessionDto? _group;
+    private bool _groupWasLive;          // this page saw the group live: its end gets a message (once)
+    private int _lastSprintNumber;       // sprints of the group seen last, for the summary at its end
+    private int _groupFailures;          // failed reads or follows in a row
+    private int _groupReadSeq;           // the newest read wins: an older answer arriving late is dropped
+    private bool _groupSyncing;          // a read or a follow is in flight (the loop skips its tick)
+    private bool _launching;             // the host's "Lancer pour le groupe" is in flight
+    private bool _leaving;               // leaving or stopping is in flight
+    private bool _stopDialogOpen;
+    private string? _groupAnnouncement;  // the live region's text
+    private string? _announcedState;     // "Phase:StepNumber" last announced, so that each change is announced once
+    private GroupEndNotice? _groupEnd;
+    private int _pendingXp;              // XP to toast once the toast is rendered
+    private CancellationTokenSource? _groupLoopCts;
+    private ElementReference _stopButton;
+    private ElementReference _startButton;
+    private FocusTarget _pendingFocus;
+
+    private enum FocusTarget { None, StopButton, StartButton }
+
+    /// <summary>The end of the group as shown above the usual screen: its reason, and how many sprints were done together.</summary>
+    private sealed record GroupEndNotice(string Reason, int SprintsTogether);
+
+    private bool IsGroupLive => _group is { IsGroup: true } && _group.Phase != "Ended";
+    private bool IsHost => _group?.Role == "Host";
+    private bool IsIdle => _session is null || _session.Status is "Completed" or "Interrupted";
+    private bool IsSessionActive => _session is { Status: "Active" };
+
+    /// <summary>The host between two steps: "À toi de lancer la suite".</summary>
+    private bool IsHostWaiting => IsGroupLive && IsHost && IsIdle;
+
+    /// <summary>A participant with no step running: waits for the host, no timer, no type.</summary>
+    private bool IsParticipantWaiting => IsGroupLive && !IsHost && IsIdle;
+
+    private bool ShowTypeTabs => IsIdle && !IsParticipantWaiting;
+
+    private bool StopDialogOpen => _stopDialogOpen && IsGroupLive && IsHost;
+
+    /// <summary>For a participant, the host is the first of the others (the members read lists the host first).</summary>
+    private string? HostName => IsGroupLive && !IsHost && _group!.Others.Count > 0 ? _group.Others[0].Name : null;
+
+    /// <summary>"Sans choix, la session se termine dans {0}" cut around its placeholder, so that the countdown takes its place.</summary>
+    private (string Before, string After) WaitLimit
+    {
+        get
+        {
+            var template = F["Group.WaitLimit"];
+            return CommunityFormatter.SplitAtPlaceholder(template) ?? (template + " ", "");
+        }
+    }
+
+    /// <summary>"Fermer / Rouvrir la session": only the host, during a step, and only when a community member. A sprint
+    /// nobody joined yet (no group) keeps the sprint wording. Not while waiting: nobody can join a group then.
     /// A free sprint never reaches <c>_session</c> (see <see cref="TryAdoptTimedSession"/>), so it never shows it.</summary>
     private bool CanManageGroup =>
-        _isMember && _session is { Status: "Active", SessionType: "Sprint", IsGroupHost: true };
+        _isMember
+        && _group is { Role: "Host", Phase: "Running" } group
+        && IsSessionActive
+        && (group.IsGroup || _session!.SessionType == "Sprint");
+
+    private string ClosedKey =>
+        (_group!.IsGroup ? "Group" : "Participants") + (_group.IsClosedToJoin ? ".Reopen" : ".Close");
 
     // ── Session type selection ────────────────────────────────────────────
     private string _selectedSessionType = "Sprint";
@@ -314,10 +473,20 @@ else
     private CancellationTokenSource? _timerCts;
 
     // ── Computed ──────────────────────────────────────────────────────────
+    // The host between two steps sees the ring at rest on the duration of the chosen step.
     private string TimeDisplay =>
-        _remainingSeconds >= 0
-            ? $"{_remainingSeconds / 60:D2}:{_remainingSeconds % 60:D2}"
-            : "00:00";
+        IsHostWaiting
+            ? $"{SelectedDurationMinutes:D2}:00"
+            : _remainingSeconds >= 0
+                ? $"{_remainingSeconds / 60:D2}:{_remainingSeconds % 60:D2}"
+                : "00:00";
+
+    private int SelectedDurationMinutes => _selectedSessionType switch
+    {
+        "ShortBreak" => _shortBreakDuration,
+        "LongBreak" => _longBreakDuration,
+        _ => _sprintDuration
+    };
 
     private string StatusLabel => _session?.Status switch
     {
@@ -382,6 +551,11 @@ else
             _errorMessage = "Impossible de charger les tâches.";
         }
 
+        // The group first: it decides below whether the session is adopted (UC-CO-14 A4 → A3). A failed read
+        // leaves the page as it is without a group; the loop reads it again.
+        var group = await CommunityApi.GetCurrentSessionAsync();
+        if (group.Succeeded) ApplyInitialGroup(group.Session);
+
         _session  = await PomodoroApi.GetCurrentSessionAsync();
 
         // Load suggested session type and durations (silent fallback to the field defaults)
@@ -394,8 +568,9 @@ else
             _longBreakDuration = suggested.LongBreakDurationMinutes;
         }
 
-        // A running session always wins; any value other than "sprint" is ignored.
-        if (_session is null && string.Equals(TypeQuery, "sprint", StringComparison.OrdinalIgnoreCase))
+        // A running session always wins, and so does a group (its host picks the steps); any value other than
+        // "sprint" is ignored.
+        if (_session is null && !IsGroupLive && string.Equals(TypeQuery, "sprint", StringComparison.OrdinalIgnoreCase))
         {
             _selectedSessionType = "Sprint";
         }
@@ -414,18 +589,62 @@ else
             _alarmVolume = userSettings.AlarmVolume;
         }
 
-        if (_session?.Status == "Active" && TryAdoptTimedSession(_session))
+        if (_group is { Role: "Participant", Phase: "Ended" } && IsSessionActive)
+        {
+            // This session can only be the group's: for another one, current-session would have described that one
+            // (decision 4). Adopting it would end it at its own end time, with the XP of the whole sprint; follow
+            // closes it at the end time of the group instead (V7). A fresh load shows no end message.
+            await CloseEndedGroupSessionAsync();
+        }
+        else if (_session?.Status == "Active" && TryAdoptTimedSession(_session))
         {
             await StartTimerLoop();
+        }
+        else if (IsParticipantWaiting)
+        {
+            // Back after the host launched a step (P5): resume it for the time left, or wait.
+            await FollowHostAsync();
         }
 
         RefreshLinkedTasks();
         _loaded = true;
+        StartGroupLoop();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // The toast is a child: during the first load it may not be rendered yet when the XP comes in.
+        if (_pendingXp > 0 && _xpToast is not null)
+        {
+            var xp = _pendingXp;
+            _pendingXp = 0;
+            _ = _xpToast.ShowAsync(xp);
+        }
+
+        if (_pendingFocus != FocusTarget.None)
+        {
+            var target = _pendingFocus;
+            _pendingFocus = FocusTarget.None;
+            try
+            {
+                await (target == FocusTarget.StopButton ? _stopButton : _startButton).FocusAsync();
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or JSException)
+            {
+                // The button is not on screen (the state changed meanwhile): leave the focus where it is.
+            }
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
         _disposed = true;
+
+        if (_groupLoopCts is not null)
+        {
+            await _groupLoopCts.CancelAsync();
+            _groupLoopCts.Dispose();
+        }
 
         if (_timerCts is not null)
         {
@@ -452,11 +671,11 @@ else
     }
 
     // ── Actions ───────────────────────────────────────────────────────────
-    /// <summary>Closes or reopens my group to new arrivals. The countdown is left alone: only the session
-    /// flag changes, so the page reads the session again without touching the timer.</summary>
+    /// <summary>Closes or reopens my group to new arrivals. The countdown is left alone: only the group
+    /// flag changes, so the page reads the group again without touching the timer.</summary>
     private async Task ToggleGroupClosed()
     {
-        if (_closingGroup || _session is not { } current) return;
+        if (_closingGroup || _group is not { } current) return;
         _closingGroup = true;
         _errorMessage = null;
 
@@ -469,12 +688,15 @@ else
                 return;
             }
 
-            // Reload the session; if the read fails the server did accept the change, so apply it locally
-            // rather than wipe the running session from the screen.
-            var fresh = await PomodoroApi.GetCurrentSessionAsync();
-            _session = fresh is { Status: "Active" }
-                ? fresh
-                : current with { IsClosedToJoin = close };
+            // Read the group again; if the read fails the server did accept the change, so apply it locally.
+            var seq = ++_groupReadSeq;
+            var lookup = await CommunityApi.GetCurrentSessionAsync();
+            if (seq != _groupReadSeq) return;
+
+            if (lookup is { Succeeded: true, Session: { } fresh })
+                await ApplyGroupAsync(fresh);
+            else
+                _group = current with { IsClosedToJoin = close };
         }
         catch (Exception)
         {
@@ -498,6 +720,7 @@ else
         _starting = true;
         _errorMessage = null;
         _infoMessage = null;
+        _groupEnd = null;
         _completedSessionType = null;
         _suggestedNextSessionType = null;
         _completionFailed = false;
@@ -505,49 +728,59 @@ else
 
         try
         {
-            var outcome = await PomodoroApi.StartSessionAsync(_selectedSessionType);
-            if (outcome.Session is null)
-            {
-                // The POST may have actually succeeded server-side even though we see no
-                // session here (HTTP timeout on the way back, or a 409 raised by our own
-                // earlier attempt once the 5s server idempotency window has elapsed).
-                // Resync with the server before surfacing an error, so the user never gets
-                // stuck on an errored screen while a session is genuinely running.
-                var current = await PomodoroApi.GetCurrentSessionAsync();
-                if (current?.Status == "Active")
-                {
-                    if (TryAdoptTimedSession(current))
-                    {
-                        if (current.SessionType != _selectedSessionType)
-                        {
-                            // The resync recovered a different session type than the one the
-                            // user just asked for (e.g. an interrupted attempt actually landed
-                            // as a break). Adopting it silently would leave the tab selector out
-                            // of sync with no explanation — surface it instead.
-                            _infoMessage = $"Une session « {SessionTypeLabel(current.SessionType)} » était déjà en cours ; on l'a reprise.";
-                            _selectedSessionType = current.SessionType;
-                        }
+            await StartSessionCoreAsync();
 
-                        RefreshLinkedTasks();
-                        await StartTimerLoop();
-                    }
-
-                    return;
-                }
-
-                _errorMessage = outcome.Error ?? "Impossible de démarrer la session.";
-                return;
-            }
-
-            if (TryAdoptTimedSession(outcome.Session))
-            {
-                RefreshLinkedTasks();
-                await StartTimerLoop();
-            }
+            // A sprint started by a member is open to others: read it as a group now, so that "Fermer ce sprint"
+            // shows at once rather than at the next 15 s read.
+            if (_isMember && IsSessionActive)
+                await RefreshGroupCoreAsync();
         }
         finally
         {
             _starting = false;
+        }
+    }
+
+    private async Task StartSessionCoreAsync()
+    {
+        var outcome = await PomodoroApi.StartSessionAsync(_selectedSessionType);
+        if (outcome.Session is null)
+        {
+            // The POST may have actually succeeded server-side even though we see no
+            // session here (HTTP timeout on the way back, or a 409 raised by our own
+            // earlier attempt once the 5s server idempotency window has elapsed).
+            // Resync with the server before surfacing an error, so the user never gets
+            // stuck on an errored screen while a session is genuinely running.
+            var current = await PomodoroApi.GetCurrentSessionAsync();
+            if (current?.Status == "Active")
+            {
+                if (TryAdoptTimedSession(current))
+                {
+                    if (current.SessionType != _selectedSessionType)
+                    {
+                        // The resync recovered a different session type than the one the
+                        // user just asked for (e.g. an interrupted attempt actually landed
+                        // as a break). Adopting it silently would leave the tab selector out
+                        // of sync with no explanation — surface it instead.
+                        _infoMessage = $"Une session « {SessionTypeLabel(current.SessionType)} » était déjà en cours ; on l'a reprise.";
+                        _selectedSessionType = current.SessionType;
+                    }
+
+                    RefreshLinkedTasks();
+                    await StartTimerLoop();
+                }
+
+                return;
+            }
+
+            _errorMessage = outcome.Error ?? "Impossible de démarrer la session.";
+            return;
+        }
+
+        if (TryAdoptTimedSession(outcome.Session))
+        {
+            RefreshLinkedTasks();
+            await StartTimerLoop();
         }
     }
 
@@ -623,9 +856,13 @@ else
             if (xpAwarded.Value > 0 && _xpToast is not null)
                 _ = _xpToast.ShowAsync(xpAwarded.Value);
 
-            // The sprint is recorded and credited: the group break is a bonus that never turns this into a failure.
-            if (completedType == "Sprint")
-                await TryFollowGroupBreakAsync();
+            // A step of the group is over: the participant follows the host right away (next step, or the wait);
+            // the host reads the group for "À toi de lancer la suite".
+            if (IsGroupLive)
+            {
+                if (IsHost) await RefreshGroupCoreAsync();
+                else await FollowHostAsync();
+            }
         }
         catch (Exception)
         {
@@ -640,30 +877,6 @@ else
         }
     }
 
-    /// <summary>After a finished sprint, asks the server for the group break; when one started, shows its countdown
-    /// instead of the "Sprint terminé" banner. Any failure leaves the screen as the completion left it, with no error:
-    /// the sprint itself is already recorded.</summary>
-    private async Task TryFollowGroupBreakAsync()
-    {
-        try
-        {
-            if (!await CommunityApi.StartGroupBreakAsync()) return;
-
-            var current = await PomodoroApi.GetCurrentSessionAsync();
-            if (current is not { Status: "Active" } || !TryAdoptTimedSession(current)) return;
-
-            _selectedSessionType = current.SessionType;
-            _completedSessionType = null;
-            _suggestedNextSessionType = null;
-            RefreshLinkedTasks();
-            await StartTimerLoop();
-        }
-        catch (Exception)
-        {
-            // Accessory: the "Sprint terminé" screen stays.
-        }
-    }
-
     /// <summary>Called after a failed completion request. Asks the server what became of the
     /// session. If it is gone (204 — e.g. completed from another tab, so our request got a 400),
     /// the page goes back to "Prêt" with an informational message: we can't know what was credited,
@@ -674,7 +887,7 @@ else
     {
         var lookup = await PomodoroApi.LookupCurrentSessionAsync();
 
-        // Another session took over while this tab was still counting down (a group break started from
+        // Another session took over while this tab was still counting down (a group step started from
         // another tab, for instance): the server refused to end it, and this tab follows it.
         if (lookup.Session is { Status: "Active" } current && current.Id != _session?.Id)
         {
@@ -803,6 +1016,406 @@ else
         "LongBreak" => "Pause longue",
         _ => sessionType
     };
+
+    // ── Group session (#46) ───────────────────────────────────────────────
+    /// <summary>The group found at load. Nothing is announced and no end message is shown: the page did not see it change.</summary>
+    private void ApplyInitialGroup(CurrentGroupSessionDto? group)
+    {
+        _group = group;
+        if (!IsGroupLive) return;
+
+        _groupWasLive = true;
+        _lastSprintNumber = group!.SprintNumber;
+        _announcedState = StateKey(group);
+    }
+
+    /// <summary>Applies a fresh read of the group: announces a new step or the wait, and handles the end of a group
+    /// this page saw live (once).</summary>
+    private async Task ApplyGroupAsync(CurrentGroupSessionDto? group)
+    {
+        var wasLive = _groupWasLive;
+        var previous = _group;
+        _group = group;
+
+        if (IsGroupLive)
+        {
+            _groupWasLive = true;
+            _lastSprintNumber = group!.SprintNumber;
+
+            var state = StateKey(group);
+            if (state != _announcedState)
+            {
+                // A group that just formed (someone joined my sprint) is not a new step: nothing to announce.
+                if (wasLive) _groupAnnouncement = Announcement(group);
+                _announcedState = state;
+            }
+
+            return;
+        }
+
+        // Over, or no group any more. A participant whose session of the group still runs closes it (UC-CO-14 A3).
+        if (group is { Role: "Participant", Phase: "Ended" } && IsSessionActive)
+        {
+            await CloseEndedGroupSessionAsync();
+            return;
+        }
+
+        if (!wasLive) return;
+
+        // The host only hears about the group left alone; their own stop says nothing, nor does an absence they caused.
+        var reason = group?.EndReason;
+        EndGroup(previous?.Role == "Host" && reason != "HostAlone" ? null : reason);
+        await ResyncSessionAsync();
+    }
+
+    private static string StateKey(CurrentGroupSessionDto group) => $"{group.Phase}:{group.StepNumber}";
+
+    private string Announcement(CurrentGroupSessionDto group) =>
+        group.Phase == "WaitingForHost"
+            ? F[group.Role == "Host" ? "Group.YourTurn" : "Group.Waiting"]
+            : F.Format("Group.Announce.Step", F.GroupStepLabel(group.StepType, group.SprintNumber));
+
+    /// <summary>The group is over for this page. With a reason, and only if the page saw it live, the end is shown
+    /// above the usual screen and announced; in every case the page will not report this end again.</summary>
+    private void EndGroup(string? reason)
+    {
+        var sawItLive = _groupWasLive;
+        _groupWasLive = false;
+        _announcedState = null;
+        _completedSessionType = null;
+        _suggestedNextSessionType = null;
+
+        if (sawItLive && reason is not null) ShowGroupEnded(reason);
+    }
+
+    private void ShowGroupEnded(string reason)
+    {
+        var text = F[$"Group.Ended.{reason}"];
+        _groupEnd = new GroupEndNotice(text, _lastSprintNumber);
+        _groupAnnouncement = text;
+    }
+
+    /// <summary>My session of an ended group still runs: follow closes it at the end time of the group, with the XP
+    /// of V7 (UC-CO-14 A3). It is read again, never adopted. On failure it stays as it is, and the next read tries again.</summary>
+    private async Task CloseEndedGroupSessionAsync()
+    {
+        await StopTimer();
+
+        var result = await CommunityApi.FollowAsync();
+        if (result.Outcome == FollowOutcome.Failed)
+        {
+            _groupFailures++;
+            return;
+        }
+
+        _groupFailures = 0;
+        _session = await PomodoroApi.GetCurrentSessionAsync();
+        _remainingSeconds = 0;
+        _totalSeconds = 0;
+        _deadlineUtc = null;
+        RefreshLinkedTasks();
+
+        EndGroup(result.EndReason ?? _group?.EndReason);
+        if (result.XpAwarded > 0) ShowXp(result.XpAwarded);
+    }
+
+    /// <summary>Reads my Pomodoro session again and follows it: a new active one is adopted and counted down, a
+    /// gone one leaves the page ready. A failed read changes nothing.</summary>
+    private async Task ResyncSessionAsync()
+    {
+        var lookup = await PomodoroApi.LookupCurrentSessionAsync();
+        if (!lookup.Succeeded) return;
+
+        if (lookup.Session is { Status: "Active" } current)
+        {
+            if (current.Id == _session?.Id && _timerCts is not null) return; // already counting it down
+
+            _completedSessionType = null;
+            _suggestedNextSessionType = null;
+            _completionFailed = false;
+            if (TryAdoptTimedSession(current))
+            {
+                RefreshLinkedTasks();
+                await StartTimerLoop();
+            }
+
+            return;
+        }
+
+        await StopTimer();
+        _session = lookup.Session;
+        _remainingSeconds = 0;
+        _totalSeconds = 0;
+        _deadlineUtc = null;
+        RefreshLinkedTasks();
+    }
+
+    /// <summary>Reads the group. The newest read wins; a failure only counts towards the error shown after 3 in a row.</summary>
+    private async Task RefreshGroupCoreAsync()
+    {
+        var seq = ++_groupReadSeq;
+        var lookup = await CommunityApi.GetCurrentSessionAsync();
+        if (_disposed || seq != _groupReadSeq) return;
+
+        if (!lookup.Succeeded)
+        {
+            _groupFailures++;
+            return;
+        }
+
+        _groupFailures = 0;
+        await ApplyGroupAsync(lookup.Session);
+    }
+
+    /// <summary>The periodic read, and the read when the host's waiting limit elapses.</summary>
+    private async Task RefreshGroupAsync()
+    {
+        if (_groupSyncing) return;
+        _groupSyncing = true;
+        try
+        {
+            await RefreshGroupCoreAsync();
+        }
+        finally
+        {
+            _groupSyncing = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>A participant with no step running asks to follow the host (UC-CO-14): the step the host launched
+    /// starts here without a click, with the same end time.</summary>
+    private async Task FollowHostAsync()
+    {
+        if (_groupSyncing) return;
+        _groupSyncing = true;
+        try
+        {
+            var result = await CommunityApi.FollowAsync();
+            // Left or stopped meanwhile: that path reads everything again itself.
+            if (_disposed || _leaving || !IsGroupLive || IsHost) return;
+
+            switch (result.Outcome)
+            {
+                case FollowOutcome.NewStep:
+                case FollowOutcome.SameStep:
+                    _groupFailures = 0;
+                    await ResyncSessionAsync();
+                    await RefreshGroupCoreAsync();
+                    break;
+
+                case FollowOutcome.Waiting:
+                    _groupFailures = 0;
+                    if (_group!.Phase != "WaitingForHost") await RefreshGroupCoreAsync();
+                    break;
+
+                case FollowOutcome.Ended:
+                    _groupFailures = 0;
+                    await ResyncSessionAsync();
+                    EndGroup(result.EndReason);
+                    if (result.XpAwarded > 0) ShowXp(result.XpAwarded);
+                    await RefreshGroupCoreAsync();
+                    break;
+
+                case FollowOutcome.NotInGroup:
+                    // Out of the group (left from another tab, or a session started elsewhere): no message.
+                    _groupFailures = 0;
+                    EndGroup(null);
+                    await RefreshGroupCoreAsync();
+                    await ResyncSessionAsync();
+                    break;
+
+                default:
+                    _groupFailures++;
+                    break;
+            }
+        }
+        finally
+        {
+            _groupSyncing = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>The host launches the next step for the group (UC-CO-10), with the chosen type at their own durations.</summary>
+    private async Task LaunchGroupStepAsync()
+    {
+        if (_launching) return;
+        _launching = true;
+        _errorMessage = null;
+        _infoMessage = null;
+        _groupEnd = null;
+
+        try
+        {
+            switch (await CommunityApi.LaunchStepAsync(_selectedSessionType))
+            {
+                case LaunchStepOutcome.Launched:
+                    _groupFailures = 0;
+                    await ResyncSessionAsync();
+                    await RefreshGroupCoreAsync();
+                    break;
+
+                case LaunchStepOutcome.HostAlone:
+                    // Nobody left in the group: it is over, and the step starts as an ordinary solo session (A1).
+                    EndGroup(null);
+                    _group = null;
+                    await StartSession();
+                    ShowGroupEnded("HostAlone");
+                    break;
+
+                case LaunchStepOutcome.StepRunning:
+                    // Double click or a second tab: the step exists already, follow it without a message.
+                    await ResyncSessionAsync();
+                    await RefreshGroupCoreAsync();
+                    break;
+
+                case LaunchStepOutcome.GroupEnded:
+                    // Past the waiting limit: the group is over (E2).
+                    EndGroup(null);
+                    await RefreshGroupCoreAsync();
+                    ShowGroupEnded("HostAbsent");
+                    break;
+
+                default:
+                    _errorMessage = F["Group.Error"];
+                    break;
+            }
+        }
+        finally
+        {
+            _launching = false;
+        }
+    }
+
+    private void OpenStopDialog()
+    {
+        if (_launching || _leaving) return;
+        _stopDialogOpen = true;
+    }
+
+    private void CancelStop()
+    {
+        _stopDialogOpen = false;
+        _pendingFocus = FocusTarget.StopButton;
+    }
+
+    /// <summary>The host confirmed: the session stops for the whole group (UC-CO-12). Their own stop shows no message.</summary>
+    private async Task StopGroupAsync()
+    {
+        if (_leaving) return;
+        _leaving = true;
+        _errorMessage = null;
+
+        try
+        {
+            if (!await CommunityApi.LeaveOrStopAsync())
+            {
+                _stopDialogOpen = false;
+                _errorMessage = F["Group.Error"];
+                _pendingFocus = FocusTarget.StopButton;
+                return;
+            }
+
+            _stopDialogOpen = false;
+            await StopTimer();
+            EndGroup(null);
+            await ResyncSessionAsync();
+            await RefreshGroupCoreAsync();
+            _pendingFocus = FocusTarget.StartButton;
+        }
+        finally
+        {
+            _leaving = false;
+        }
+    }
+
+    /// <summary>A participant leaves the group alone, without confirmation (UC-CO-11), during a step or the wait.</summary>
+    private async Task LeaveGroupAsync()
+    {
+        if (_leaving) return;
+        _leaving = true;
+        _errorMessage = null;
+
+        try
+        {
+            if (!await CommunityApi.LeaveOrStopAsync())
+            {
+                _errorMessage = F["Group.Error"];
+                return;
+            }
+
+            await StopTimer();
+            EndGroup(null);
+            await ResyncSessionAsync();
+            await RefreshGroupCoreAsync();
+            _pendingFocus = FocusTarget.StartButton;
+        }
+        finally
+        {
+            _leaving = false;
+        }
+    }
+
+    private void ShowXp(int xp)
+    {
+        if (_xpToast is null)
+        {
+            _pendingXp = xp;
+            return;
+        }
+
+        _ = _xpToast.ShowAsync(xp);
+    }
+
+    private void StartGroupLoop()
+    {
+        // OnInitializedAsync starts the loop after its awaits: the page may have been left meanwhile, and
+        // DisposeAsync found no loop to cancel. Started now, the loop would tick until the tab is reloaded.
+        if (_disposed) return;
+
+        _groupLoopCts = new CancellationTokenSource();
+        _ = GroupLoopAsync(_groupLoopCts.Token);
+    }
+
+    /// <summary>Runs as long as the page is open, hidden tab included (spec §6): a participant must keep following.
+    /// Each tick does nothing while another group request or a start, an end or a launch is in flight.</summary>
+    private async Task GroupLoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(GroupTick);
+            var tick = 0;
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                tick++;
+                var readDue = tick % GroupReadEveryTicks == 0;
+                try
+                {
+                    await InvokeAsync(() => OnGroupTickAsync(readDue));
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    // A failed tick is retried at the next one: the loop must outlive it.
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Page left.
+        }
+    }
+
+    private async Task OnGroupTickAsync(bool readDue)
+    {
+        if (_disposed || _groupSyncing || _launching || _leaving || _starting || _completing) return;
+
+        // Every 5 s: a participant with no step running follows the host.
+        if (IsParticipantWaiting) await FollowHostAsync();
+
+        // Every 15 s: the group (participants, state, end) during a session or a live group.
+        if (readDue && !_disposed && (IsGroupLive || (_isMember && IsSessionActive))) await RefreshGroupAsync();
+    }
 
     // ── Timer internals ───────────────────────────────────────────────────
     private void InitTimer(PomodoroSessionDto session)

@@ -1,5 +1,5 @@
 // JS interop of the Community page, of the community section of the settings and of the
-// participants line of the Pomodoro page (visibility only).
+// group stop dialog of the Pomodoro page (focus only).
 // Three things Blazor cannot do on its own:
 //   - know when the tab is hidden (to pause the presence polling);
 //   - scroll to and focus a section reached through an anchor, once the section has loaded;

@@ -65,6 +65,35 @@ public sealed class EfCoreCommunityActivityRepositoryTests
         Assert.Equal(1, inProgress);
     }
 
+    // #46: a break of a group session is "in session" like a sprint, so that the presence agrees with the
+    // cards that show the group in break.
+    [Fact]
+    public async Task Should_CountGroupBreak_When_InProgress()
+    {
+        var groupId = PomodoroSessionId.New();
+        await _database.SeedAsync(
+            JoinedStep(PomodoroSessionType.ShortBreak, groupId, Now.AddMinutes(-1), Now.AddMinutes(4)),
+            JoinedStep(PomodoroSessionType.LongBreak, groupId, Now.AddMinutes(-1), Now.AddMinutes(14)),
+            // Over: its deadline has passed.
+            JoinedStep(PomodoroSessionType.ShortBreak, PomodoroSessionId.New(), Now.AddMinutes(-10), Now.AddMinutes(-5)));
+
+        var inProgress = await QueryAsync(r => r.CountSprintsInProgressAsync(Now));
+
+        Assert.Equal(2, inProgress);
+    }
+
+    [Fact]
+    public async Task Should_CountZeroSprintsInProgress_When_OnlySoloBreaksAreActive()
+    {
+        await _database.SeedAsync(
+            ActiveSession(UserId.New(), PomodoroSessionType.ShortBreak, 5, Now.AddMinutes(-1)),
+            ActiveSession(UserId.New(), PomodoroSessionType.LongBreak, 15, Now.AddMinutes(-1)));
+
+        var inProgress = await QueryAsync(r => r.CountSprintsInProgressAsync(Now));
+
+        Assert.Equal(0, inProgress);
+    }
+
     // --- Active members -------------------------------------------------------------------------
 
     [Fact]
@@ -179,6 +208,15 @@ public sealed class EfCoreCommunityActivityRepositoryTests
         var session = PomodoroSession.Create(type, plannedMinutes, owner!);
         Assert.True(session.Start(startedAt).IsSuccess);
         return session;
+    }
+
+    /// <summary>A step of a group session (<c>SharedSprintId</c> set), started and still active.</summary>
+    private static PomodoroSession JoinedStep(PomodoroSessionType type, PomodoroSessionId groupId, DateTime startedAt, DateTime sharedEndAt)
+    {
+        var joined = PomodoroSession.CreateJoinedStep(type, UserId.New(), groupId, sharedEndAt, startedAt);
+        Assert.True(joined.IsSuccess);
+        Assert.True(joined.Value.Start(startedAt).IsSuccess);
+        return joined.Value;
     }
 
     private static PomodoroSession CompletedSprint(UserId? owner, DateTime startedAt, DateTime endedAt, int plannedMinutes = 0)

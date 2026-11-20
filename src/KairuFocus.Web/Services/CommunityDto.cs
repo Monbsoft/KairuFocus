@@ -43,20 +43,37 @@ public sealed record MemberActivityDto(int Sprints, int FocusMinutes, int Sprint
 public sealed record ActivityDayDto(DateOnly Date, int Sprints);
 
 /// <summary>Others: the group without the member and without the viewer. IncludesViewer: the viewer is already in it.</summary>
-public sealed record OpenSprintStatusDto(DateTimeOffset EndsAt, IReadOnlyList<SprintMemberDto> Others, bool IncludesViewer);
+public sealed record OpenSprintStatusDto(DateTimeOffset EndsAt, IReadOnlyList<SprintMemberDto> Others, bool IncludesViewer,
+    string StepType, string Phase);
 
 /// <summary>GET open-sprints: one row per group.</summary>
-public sealed record OpenSprintsDto(bool ViewerIsMember, IReadOnlyList<OpenSprintRowDto> Groups);
+public sealed record OpenSprintsDto(bool ViewerIsMember, bool ViewerInGroup, IReadOnlyList<OpenSprintRowDto> Groups);
 
-public sealed record OpenSprintRowDto(string Name, string? AvatarUrl, DateTimeOffset EndsAt, int ParticipantCount, bool IsMine);
+public sealed record OpenSprintRowDto(string Name, string? AvatarUrl, DateTimeOffset EndsAt, int ParticipantCount,
+    bool IsMine, string StepType, string Phase);
 
 /// <summary>GET active-today: members who finished a sprint today (UTC); Members lists at most 5, Total counts all of them.</summary>
 public sealed record ActiveTodayDto(int Total, IReadOnlyList<ActiveMemberDto> Members);
 
 public sealed record ActiveMemberDto(string Name, string? AvatarUrl, bool IsMe);
 
-/// <summary>GET current-sprint/participants: the other members of my group.</summary>
-public sealed record SprintParticipantsDto(IReadOnlyList<SprintMemberDto> Others);
+/// <summary>GET current-session: my group session (as host or participant). Role and Phase are
+/// the server strings (contract of the group-session API); WaitLimitAt and EndReason are null when they do not apply.</summary>
+public sealed record CurrentGroupSessionDto(
+    bool IsGroup,
+    string Role,
+    string Phase,
+    int StepNumber,
+    int SprintNumber,
+    string StepType,
+    DateTimeOffset StepEndsAt,
+    DateTimeOffset? WaitLimitAt,
+    string? EndReason,
+    IReadOnlyList<SprintMemberDto> Others,
+    bool IsClosedToJoin);
+
+/// <summary>Session is null with Succeeded when there is none (204); Succeeded is false when the read failed.</summary>
+public sealed record CurrentGroupSessionLookup(CurrentGroupSessionDto? Session, bool Succeeded);
 
 // ── Results ─────────────────────────────────────────────────────────────────
 
@@ -101,10 +118,23 @@ public enum JoinSprintOutcome
     OwnSprint,
     /// <summary>410 sprint-closed: finished, elapsed or closed to arrivals.</summary>
     SprintClosed,
+    /// <summary>410 waiting-for-host: the group is between two steps; try again shortly.</summary>
+    WaitingForHost,
     Failed
 }
 
 public sealed record JoinSprintResult(JoinSprintOutcome Outcome);
+
+/// <summary>POST current-session/steps: 201 Launched, 204 HostAlone, 409 StepRunning, 410 GroupEnded.</summary>
+public enum LaunchStepOutcome { Launched, HostAlone, StepRunning, GroupEnded, Failed }
+
+public enum FollowOutcome { NewStep, SameStep, Waiting, Ended, NotInGroup, Failed }
+
+/// <summary>POST current-session/follow. EndReason is set when Outcome is Ended; XpAwarded is the XP credited by this call.</summary>
+public sealed record FollowGroupResult(FollowOutcome Outcome, string? EndReason, int XpAwarded);
+
+/// <summary>Body of POST follow (read by name, so a new server outcome stays Failed rather than breaking).</summary>
+internal sealed record FollowBody(string? Outcome, string? EndReason, int XpAwarded);
 
 /// <summary>Error body of the API: <c>{ error, code }</c>.</summary>
 internal sealed record ApiErrorBody(string? Error, string? Code);

@@ -18,7 +18,7 @@ public sealed class PomodoroSessionJoinedBreakTests
 
     private static PomodoroSession CreateStartedBreak()
     {
-        var session = PomodoroSession.CreateJoinedBreak(OwnerId, RootId, SharedEnd, Now).Value;
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, OwnerId, RootId, SharedEnd, Now).Value;
         session.Start(Now);
         return session;
     }
@@ -26,7 +26,7 @@ public sealed class PomodoroSessionJoinedBreakTests
     [Fact]
     public void Should_BePlannedShortBreakOfTheGroup_When_Created()
     {
-        var result = PomodoroSession.CreateJoinedBreak(OwnerId, RootId, SharedEnd, Now);
+        var result = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, OwnerId, RootId, SharedEnd, Now);
 
         Assert.True(result.IsSuccess);
         var session = result.Value;
@@ -40,6 +40,21 @@ public sealed class PomodoroSessionJoinedBreakTests
         Assert.False(session.IsClosedToJoin);
     }
 
+    [Fact]
+    public void Should_CreateLongBreak_When_JoinedStepIsLongBreak()
+    {
+        var sharedEnd = Now.AddMinutes(14).AddSeconds(20);
+
+        var result = PomodoroSession.CreateJoinedStep(PomodoroSessionType.LongBreak, OwnerId, RootId, sharedEnd, Now);
+
+        Assert.True(result.IsSuccess);
+        var session = result.Value;
+        Assert.Equal(PomodoroSessionType.LongBreak, session.SessionType);
+        Assert.Equal(RootId, session.SharedSprintId);
+        Assert.Equal(sharedEnd, session.SharedEndAt);
+        Assert.Equal(15, session.PlannedDurationMinutes);
+    }
+
     [Theory]
     [InlineData(4, 30, 5)]
     [InlineData(5, 0, 5)]
@@ -48,7 +63,7 @@ public sealed class PomodoroSessionJoinedBreakTests
     {
         var sharedEnd = Now.AddMinutes(remainingMinutes).AddSeconds(remainingSeconds);
 
-        var result = PomodoroSession.CreateJoinedBreak(OwnerId, RootId, sharedEnd, Now);
+        var result = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, OwnerId, RootId, sharedEnd, Now);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(expected, result.Value.PlannedDurationMinutes);
@@ -59,7 +74,7 @@ public sealed class PomodoroSessionJoinedBreakTests
     [InlineData(1)]
     public void Should_Fail_When_CreatedAtOrAfterSharedEnd(int secondsAfterEnd)
     {
-        var result = PomodoroSession.CreateJoinedBreak(OwnerId, RootId, SharedEnd, SharedEnd.AddSeconds(secondsAfterEnd));
+        var result = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, OwnerId, RootId, SharedEnd, SharedEnd.AddSeconds(secondsAfterEnd));
 
         Assert.True(result.IsFailure);
         Assert.Equal(PomodoroErrors.Pomodoro.SharedSprintEnded, result.Error);
@@ -126,7 +141,7 @@ public sealed class PomodoroSessionJoinedBreakTests
     public void Should_EarnNoXp_When_JoinedBreakIsCompleted()
     {
         var sharedEnd = Now.AddMinutes(10);
-        var session = PomodoroSession.CreateJoinedBreak(OwnerId, RootId, sharedEnd, Now).Value;
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, OwnerId, RootId, sharedEnd, Now).Value;
         session.Start(Now);
         session.Complete(sharedEnd);
 

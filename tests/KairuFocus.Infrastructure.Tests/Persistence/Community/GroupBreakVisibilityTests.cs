@@ -7,9 +7,10 @@ using KairuFocus.Infrastructure.Tests.Persistence.TestSupport;
 namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
 
 /// <summary>
-/// A group break (UC-CO-10) carries the <c>SharedSprintId</c> of its sprint, like the sessions that joined it.
-/// Every read across users that follows that link, or that counts sessions, must still ignore it: a break is
-/// not in "En sprint maintenant", not a participant, not a sprint, not "fait ensemble".
+/// A break of a group carries the <c>SharedSprintId</c> of its group, like the sessions that joined it. Without
+/// a <c>GroupSessions</c> row it is no open sprint, and for the activity and totals a break is never a sprint
+/// nor "fait ensemble". Group breaks shown in the cards and counted in the presence are covered by
+/// <see cref="OpenSprintGroupReadTests"/> and <c>EfCoreCommunityActivityRepositoryTests</c>.
 /// </summary>
 public sealed class GroupBreakVisibilityTests
 {
@@ -49,28 +50,6 @@ public sealed class GroupBreakVisibilityTests
         var groups = await OpenSprintsAsync(r => r.GetOpenGroupsAsync(Now, 10));
 
         Assert.Empty(groups);
-    }
-
-    [Fact]
-    public async Task Should_NotReturnBreakOwner_When_ReadingParticipants()
-    {
-        var root = ActiveRoot(_lea);
-        await SeedAsync(root, ActiveGroupBreak(_tom, root));
-
-        var participants = await OpenSprintsAsync(r => r.GetParticipantsAsync(root.Id.Value, Now));
-
-        Assert.Equal(["lea_dev"], participants.Select(p => p.Name.Value));
-    }
-
-    [Fact]
-    public async Task Should_ReturnNoParticipant_When_OnlyBreaksReferenceTheRoot()
-    {
-        var root = CompletedRoot(_lea);
-        await SeedAsync(root, ActiveGroupBreak(_lea, root), ActiveGroupBreak(_tom, root));
-
-        var participants = await OpenSprintsAsync(r => r.GetParticipantsAsync(root.Id.Value, Now));
-
-        Assert.Empty(participants);
     }
 
     [Fact]
@@ -124,18 +103,7 @@ public sealed class GroupBreakVisibilityTests
         Assert.Empty(activity.Days);
     }
 
-    // --- Presence and totals --------------------------------------------------------------------
-
-    [Fact]
-    public async Task Should_NotCountBreakAsSprintInProgress_When_ReadingPresence()
-    {
-        var root = CompletedRoot(_lea);
-        await SeedAsync(root, ActiveGroupBreak(_tom, root));
-
-        var inProgress = await CommunityActivityAsync(r => r.CountSprintsInProgressAsync(Now));
-
-        Assert.Equal(0, inProgress);
-    }
+    // --- Totals -----------------------------------------------------------------------------------
 
     [Fact]
     public async Task Should_NotCountBreakAsSprint_When_AggregatingCommunity()
@@ -202,7 +170,7 @@ public sealed class GroupBreakVisibilityTests
     /// <summary>A break of the group of <paramref name="root"/>, started at <see cref="Now"/> and lasting five minutes.</summary>
     private static PomodoroSession ActiveGroupBreak(UserId owner, PomodoroSession root)
     {
-        var created = PomodoroSession.CreateJoinedBreak(owner, root.Id, Now.AddMinutes(5), Now);
+        var created = PomodoroSession.CreateJoinedStep(PomodoroSessionType.ShortBreak, owner, root.Id, Now.AddMinutes(5), Now);
         Assert.True(created.IsSuccess);
         Assert.True(created.Value.Start(Now).IsSuccess);
         return created.Value;

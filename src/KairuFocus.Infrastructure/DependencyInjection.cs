@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IMcpTokenRepository, EfCoreMcpTokenRepository>();
         services.AddScoped<IXpGainRepository, EfCoreXpGainRepository>();
         services.AddScoped<IMemberProfileRepository, EfCoreMemberProfileRepository>();
+        services.AddScoped<IGroupSessionRepository, EfCoreGroupSessionRepository>();
         // Cross-user reads (ADR-024): the only repositories without a UserId filter.
         services.AddScoped<ILeaderboardStandingsRepository, EfCoreLeaderboardStandingsRepository>();
         services.AddScoped<ICommunityActivityRepository, EfCoreCommunityActivityRepository>();

@@ -64,29 +64,12 @@ public sealed class PomodoroSession : AggregateRoot<PomodoroSessionId>
         new(PomodoroSessionId.New(), ownerId, sessionType, plannedDurationMinutes, journalComment);
 
     /// <summary>
-    /// Creates the session of a member joining a shared sprint, not started yet.
-    /// <paramref name="rootId"/> is the root of the group (the root of the target session when the
-    /// target itself joined), <paramref name="sharedEndAt"/> its exact end.
+    /// Creates the session of a member joining a step shared by a group (a sprint, a short break or a
+    /// long break), not started yet. <paramref name="rootId"/> is the root of the group (the root of the
+    /// target session when the target itself joined), <paramref name="sharedEndAt"/> the exact end of the
+    /// step, the same instant for every member.
     /// </summary>
-    public static Result<PomodoroSession> CreateJoined(
-        UserId ownerId,
-        PomodoroSessionId rootId,
-        DateTime sharedEndAt,
-        DateTime now) =>
-        CreateShared(PomodoroSessionType.Sprint, ownerId, rootId, sharedEndAt, now);
-
-    /// <summary>
-    /// Creates the short break that follows a shared sprint, not started yet. It keeps the group's
-    /// <paramref name="rootId"/> and ends at <paramref name="sharedEndAt"/>, the same instant for every member.
-    /// </summary>
-    public static Result<PomodoroSession> CreateJoinedBreak(
-        UserId ownerId,
-        PomodoroSessionId rootId,
-        DateTime sharedEndAt,
-        DateTime now) =>
-        CreateShared(PomodoroSessionType.ShortBreak, ownerId, rootId, sharedEndAt, now);
-
-    private static Result<PomodoroSession> CreateShared(
+    public static Result<PomodoroSession> CreateJoinedStep(
         PomodoroSessionType sessionType,
         UserId ownerId,
         PomodoroSessionId rootId,

@@ -1,0 +1,113 @@
+/* Group session (#46) on the Pomodoro page. Outside the community pages: Bootstrap variables only, no page token.
+   Light and dark come from the variables (they follow data-bs-theme). */
+
+/* Buttons of the group: 44 px targets. */
+.kf-btn-stop,
+.kf-btn-leave,
+.kf-btn-close-group {
+    min-height: 44px;
+}
+
+/* "Arrêter la session" touches the whole group: red outline. "Quitter la session" touches only me: neutral outline.
+   Bootstrap's outline red and grey reach 4.5:1 on white but not on the dark body: the dark theme takes the lighter
+   "text emphasis" hues of the same colours. */
+[data-bs-theme="dark"] .kf-btn-stop {
+    --bs-btn-color: var(--bs-danger-text-emphasis);
+    --bs-btn-border-color: var(--bs-danger-text-emphasis);
+    --bs-btn-disabled-color: var(--bs-danger-text-emphasis);
+    --bs-btn-disabled-border-color: var(--bs-danger-text-emphasis);
+}
+
+[data-bs-theme="dark"] .kf-btn-leave {
+    --bs-btn-color: var(--bs-secondary-text-emphasis);
+    --bs-btn-border-color: var(--bs-secondary-text-emphasis);
+    --bs-btn-disabled-color: var(--bs-secondary-text-emphasis);
+    --bs-btn-disabled-border-color: var(--bs-secondary-text-emphasis);
+}
+
+/* Small and muted, under the actions or the band: the waiting limit, the "you follow" hint, the error after 3 failures. */
+.kf-group-note {
+    max-width: 480px;
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* "Ton groupe attend la suite": the title of the host's choice, between the band and the type tabs. */
+.kf-group-yourturn {
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* A participant waiting for the host: a dashed panel in place of the timer (no 00:00 frozen on screen). */
+.kf-group-wait {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 480px;
+    padding: 2rem 1rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+    background: var(--bs-tertiary-bg);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.kf-group-wait strong {
+    font-size: 1.125rem;
+}
+
+.kf-group-wait__body {
+    color: var(--bs-secondary-color);
+}
+
+.kf-group-wait__dots {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.kf-group-wait__dots i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--bs-secondary-color);
+    animation: kf-group-pulse 1.2s infinite ease-in-out;
+}
+
+.kf-group-wait__dots i:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.kf-group-wait__dots i:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes kf-group-pulse {
+    0%, 80%, 100% {
+        opacity: 0.3;
+    }
+
+    40% {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kf-group-wait__dots i {
+        animation: none;
+        opacity: 0.6;
+    }
+}
+
+/* The end of the group: an information panel (not a red alert) with its reason, the summary and the way to the
+   Community page, above the usual screen. */
+.kf-group-ended {
+    display: grid;
+    gap: 0.25rem;
+    width: 100%;
+    max-width: 480px;
+    overflow-wrap: anywhere;
+}

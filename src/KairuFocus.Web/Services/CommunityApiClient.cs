@@ -26,9 +26,6 @@ public sealed class CommunityApiClient
     public Task<ActiveTodayDto?> GetActiveTodayAsync(CancellationToken ct = default) =>
         GetOrNullAsync<ActiveTodayDto>($"{Route}/active-today", ct);
 
-    public Task<SprintParticipantsDto?> GetParticipantsAsync(CancellationToken ct = default) =>
-        GetOrNullAsync<SprintParticipantsDto>($"{Route}/current-sprint/participants", ct);
-
     /// <summary>Found, NotFound (unknown name and non-member alike: same 404) or Failed.</summary>
     public async Task<MemberProfileLookup> GetMemberAsync(string name, CancellationToken ct = default)
     {
@@ -106,6 +103,7 @@ public sealed class CommunityApiClient
                 "sprint-active" => JoinSprintOutcome.SprintActive,
                 "own-sprint" => JoinSprintOutcome.OwnSprint,
                 "sprint-closed" => JoinSprintOutcome.SprintClosed,
+                "waiting-for-host" => JoinSprintOutcome.WaitingForHost,
                 _ => JoinSprintOutcome.Failed
             });
         }
@@ -137,14 +135,87 @@ public sealed class CommunityApiClient
         }
     }
 
-    /// <summary>Asks for the group break after a timed sprint. True on 201 (a break was created or is already running);
-    /// 204, 409, 401, any other status and any network failure mean "no break": the sprint is already recorded.</summary>
-    public async Task<bool> StartGroupBreakAsync(CancellationToken ct = default)
+    // ── Host-driven group session (#46) ─────────────────────────────────────
+
+    /// <summary>200 → (session, true); 204 → (null, true): no session; any failure → (null, false).</summary>
+    public async Task<CurrentGroupSessionLookup> GetCurrentSessionAsync(CancellationToken ct = default)
     {
         try
         {
-            using var response = await _http.PostAsync($"{Route}/current-sprint/break", content: null, ct);
-            return response.StatusCode == HttpStatusCode.Created;
+            using var response = await _http.GetAsync($"{Route}/current-session", ct);
+            if (response.StatusCode == HttpStatusCode.NoContent) return new CurrentGroupSessionLookup(null, true);
+            if (!response.IsSuccessStatusCode) return new CurrentGroupSessionLookup(null, false);
+
+            var session = await response.Content.ReadFromJsonAsync<CurrentGroupSessionDto>(ct);
+            return new CurrentGroupSessionLookup(session, session is not null);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsApiCallFailure(ex))
+        {
+            return new CurrentGroupSessionLookup(null, false);
+        }
+    }
+
+    /// <summary>Host only. stepType: "Sprint", "ShortBreak" or "LongBreak". 201 Launched, 204 HostAlone, 409 StepRunning,
+    /// 410 GroupEnded, anything else Failed.</summary>
+    public async Task<LaunchStepOutcome> LaunchStepAsync(string stepType, CancellationToken ct = default)
+    {
+        try
+        {
+            using var response = await _http.PostAsJsonAsync($"{Route}/current-session/steps", new { type = stepType }, ct);
+            return response.StatusCode switch
+            {
+                HttpStatusCode.Created => LaunchStepOutcome.Launched,
+                HttpStatusCode.NoContent => LaunchStepOutcome.HostAlone,
+                HttpStatusCode.Conflict => LaunchStepOutcome.StepRunning,
+                HttpStatusCode.Gone => LaunchStepOutcome.GroupEnded,
+                _ => LaunchStepOutcome.Failed
+            };
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsApiCallFailure(ex))
+        {
+            return LaunchStepOutcome.Failed;
+        }
+    }
+
+    /// <summary>Participant: asks the server to follow the host's step. 200 → the outcome read by name; otherwise Failed.</summary>
+    public async Task<FollowGroupResult> FollowAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var response = await _http.PostAsync($"{Route}/current-session/follow", content: null, ct);
+            if (response.StatusCode != HttpStatusCode.OK) return new FollowGroupResult(FollowOutcome.Failed, null, 0);
+
+            var body = await response.Content.ReadFromJsonAsync<FollowBody>(ct);
+            return body is not null && Enum.TryParse<FollowOutcome>(body.Outcome, ignoreCase: true, out var outcome)
+                && outcome != FollowOutcome.Failed
+                ? new FollowGroupResult(outcome, body.EndReason, body.XpAwarded)
+                : new FollowGroupResult(FollowOutcome.Failed, null, 0);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsApiCallFailure(ex))
+        {
+            return new FollowGroupResult(FollowOutcome.Failed, null, 0);
+        }
+    }
+
+    /// <summary>The host stops the session for everyone; a participant leaves it. True on 204.</summary>
+    public async Task<bool> LeaveOrStopAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            using var response = await _http.DeleteAsync($"{Route}/current-session", ct);
+            return response.StatusCode == HttpStatusCode.NoContent;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {

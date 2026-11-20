@@ -103,10 +103,10 @@
 	<value>Classement général affiché</value>
   </data>
   <data name="Community.Presence.Now.One" xml:space="preserve">
-	<value>{0} personne en sprint en ce moment</value>
+	<value>{0} personne en session en ce moment</value>
   </data>
   <data name="Community.Presence.Now.Other" xml:space="preserve">
-	<value>{0} personnes en sprint en ce moment</value>
+	<value>{0} personnes en session en ce moment</value>
   </data>
   <data name="Community.Presence.Today.One" xml:space="preserve">
 	<value>Aujourd'hui, {0} personne a déjà fait un sprint</value>
@@ -396,16 +396,16 @@
 	<value>Modifier mon nom</value>
   </data>
   <data name="Profile.Status.Aria" xml:space="preserve">
-	<value>Sprint ouvert</value>
+	<value>Session ouverte</value>
   </data>
   <data name="Profile.Status.Open" xml:space="preserve">
 	<value>En sprint · encore {0}</value>
   </data>
   <data name="Profile.Status.Closed" xml:space="preserve">
-	<value>Pas de sprint ouvert pour le moment</value>
+	<value>Pas de session ouverte pour le moment</value>
   </data>
   <data name="Profile.Status.IncludesViewer" xml:space="preserve">
-	<value>Tu es dans ce sprint.</value>
+	<value>Tu es dans cette session.</value>
   </data>
   <data name="Profile.Status.Error" xml:space="preserve">
 	<value>Impossible de lire le sprint ouvert pour le moment.</value>
@@ -711,10 +711,10 @@
   </data>
   <!-- T12 OpenSprints.* -->
   <data name="OpenSprints.Title" xml:space="preserve">
-	<value>En sprint maintenant</value>
+	<value>En ce moment</value>
   </data>
   <data name="OpenSprints.Sub" xml:space="preserve">
-	<value>Rejoins un sprint déjà lancé : vous terminez ensemble, à la même heure.</value>
+	<value>Rejoins une session déjà lancée : tu suis le rythme de l'hôte, sprints et pauses.</value>
   </data>
   <data name="OpenSprints.Loading" xml:space="preserve">
 	<value>Chargement des sprints ouverts…</value>
@@ -732,7 +732,7 @@
 	<value>{0} participants</value>
   </data>
   <data name="OpenSprints.Empty.Title" xml:space="preserve">
-	<value>Personne n'est en sprint pour le moment</value>
+	<value>Personne n'est en session pour le moment</value>
   </data>
   <data name="OpenSprints.Empty.Body" xml:space="preserve">
 	<value>Lance le tien : les autres membres le verront ici et pourront te rejoindre.</value>
@@ -744,10 +744,10 @@
 	<value>Personne ne l'a encore rejoint</value>
   </data>
   <data name="OpenSprints.More.One" xml:space="preserve">
-	<value>Voir l'autre sprint</value>
+	<value>Voir l'autre session</value>
   </data>
   <data name="OpenSprints.More.Other" xml:space="preserve">
-	<value>Voir les {0} autres sprints</value>
+	<value>Voir les {0} autres</value>
   </data>
   <data name="OpenSprints.Less" xml:space="preserve">
 	<value>Réduire</value>
@@ -771,7 +771,7 @@
 	<value>Impossible de charger les membres actifs aujourd'hui.</value>
   </data>
   <data name="OpenSprints.Mine" xml:space="preserve">
-	<value>Ton sprint</value>
+	<value>Ta session</value>
   </data>
   <data name="OpenSprints.Profile.Aria" xml:space="preserve">
 	<value>Profil de {0}</value>
@@ -813,18 +813,15 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>Impossible de modifier l'ouverture du sprint pour le moment.</value>
   </data>
-  <data name="Participants.GroupBreak" xml:space="preserve">
-	<value>Pause commune : elle se termine au même moment pour tout le groupe.</value>
-  </data>
   <!-- T9 (shared components, used by T10 T12) Join.* -->
   <data name="Join.Button" xml:space="preserve">
-	<value>Rejoindre ce sprint</value>
+	<value>Rejoindre</value>
   </data>
   <data name="Join.Button.Aria" xml:space="preserve">
-	<value>Rejoindre ce sprint de {0}</value>
+	<value>Rejoindre la session de {0}</value>
   </data>
   <data name="Join.Joining" xml:space="preserve">
-	<value>Connexion au sprint…</value>
+	<value>Connexion à la session…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
 	<value>Active la communauté pour rejoindre un sprint : les autres membres verront ton nom et ton XP.</value>
@@ -845,7 +842,7 @@
 	<value>C'est ton propre sprint.</value>
   </data>
   <data name="Join.Closed" xml:space="preserve">
-	<value>Ce sprint n'est plus ouvert</value>
+	<value>Cette session n'est plus ouverte</value>
   </data>
   <data name="Join.Error" xml:space="preserve">
 	<value>Impossible de rejoindre ce sprint pour le moment. Réessaie dans un instant.</value>
@@ -864,5 +861,115 @@
   </data>
   <data name="Profile.Progress.Period.Global" xml:space="preserve">
 	<value>Depuis le début</value>
+  </data>
+  <!-- #46 OpenSprints / Join / Profile -->
+  <data name="OpenSprints.Badge.Break" xml:space="preserve">
+	<value>En pause</value>
+  </data>
+  <data name="OpenSprints.Badge.Waiting" xml:space="preserve">
+	<value>En attente de l'hôte</value>
+  </data>
+  <data name="OpenSprints.BackToSession" xml:space="preserve">
+	<value>Retour à ta session</value>
+  </data>
+  <data name="OpenSprints.Badge.Sprint" xml:space="preserve">
+	<value>Sprint</value>
+  </data>
+  <data name="OpenSprints.Waiting.Hint" xml:space="preserve">
+	<value>Tu pourras rejoindre dès que la suite démarre.</value>
+  </data>
+  <data name="Join.WaitingForHost" xml:space="preserve">
+	<value>L'hôte va lancer la suite : réessaie dans un instant.</value>
+  </data>
+  <data name="Profile.Status.Break" xml:space="preserve">
+	<value>En pause · encore {0}</value>
+  </data>
+  <data name="Profile.Status.Waiting" xml:space="preserve">
+	<value>En attente de l'hôte</value>
+  </data>
+  <!-- #46 Group.* -->
+  <data name="Group.Line" xml:space="preserve">
+	<value>Session de groupe · {0}</value>
+  </data>
+  <data name="Group.Step.Sprint" xml:space="preserve">
+	<value>Sprint {0}</value>
+  </data>
+  <data name="Group.Step.ShortBreak" xml:space="preserve">
+	<value>Pause courte</value>
+  </data>
+  <data name="Group.Step.LongBreak" xml:space="preserve">
+	<value>Pause longue</value>
+  </data>
+  <data name="Group.Waiting" xml:space="preserve">
+	<value>En attente de l'hôte…</value>
+  </data>
+  <data name="Group.YourTurn" xml:space="preserve">
+	<value>À toi de lancer la suite</value>
+  </data>
+  <data name="Group.WaitLimit" xml:space="preserve">
+	<value>Sans choix, la session se termine dans {0}</value>
+  </data>
+  <data name="Group.Stop" xml:space="preserve">
+	<value>Arrêter la session</value>
+  </data>
+  <data name="Group.Stop.Title" xml:space="preserve">
+	<value>Arrêter la session ?</value>
+  </data>
+  <data name="Group.Stop.Body" xml:space="preserve">
+	<value>La session s'arrête pour tout le groupe.</value>
+  </data>
+  <data name="Group.Stop.Body.Sprint" xml:space="preserve">
+	<value>La session s'arrête pour tout le groupe. Ton sprint en cours ne rapportera pas d'XP.</value>
+  </data>
+  <data name="Group.Stop.Cancel" xml:space="preserve">
+	<value>Continuer</value>
+  </data>
+  <data name="Group.Leave" xml:space="preserve">
+	<value>Quitter la session</value>
+  </data>
+  <data name="Group.Close" xml:space="preserve">
+	<value>Fermer la session</value>
+  </data>
+  <data name="Group.Reopen" xml:space="preserve">
+	<value>Rouvrir la session</value>
+  </data>
+  <data name="Group.Close.Hint" xml:space="preserve">
+	<value>Plus personne ne pourra la rejoindre ; ceux qui y sont déjà restent.</value>
+  </data>
+  <data name="Group.Reopen.Hint" xml:space="preserve">
+	<value>Cette session est fermée : plus personne ne peut la rejoindre.</value>
+  </data>
+  <data name="Group.Ended.Stopped" xml:space="preserve">
+	<value>L'hôte a arrêté la session.</value>
+  </data>
+  <data name="Group.Ended.HostAbsent" xml:space="preserve">
+	<value>L'hôte n'est plus là : la session est terminée.</value>
+  </data>
+  <data name="Group.Ended.HostAlone" xml:space="preserve">
+	<value>Plus personne dans le groupe : la session continue en solo.</value>
+  </data>
+  <data name="Group.Ended.HostLeftCommunity" xml:space="preserve">
+	<value>L'hôte a quitté la communauté : la session est terminée.</value>
+  </data>
+  <data name="Group.Announce.Step" xml:space="preserve">
+	<value>Nouvelle étape : {0}</value>
+  </data>
+  <data name="Group.Error" xml:space="preserve">
+	<value>Impossible de joindre la session de groupe pour le moment.</value>
+  </data>
+  <data name="Group.Start" xml:space="preserve">
+	<value>Lancer pour le groupe</value>
+  </data>
+  <data name="Group.YourTurn.Title" xml:space="preserve">
+	<value>Ton groupe attend la suite</value>
+  </data>
+  <data name="Group.Waiting.Body" xml:space="preserve">
+	<value>La suite démarre ici dès que {0} la lance. Tu n'as rien à faire.</value>
+  </data>
+  <data name="Group.Follow.Hint" xml:space="preserve">
+	<value>Tu suis le rythme de {0} : la suite démarre toute seule.</value>
+  </data>
+  <data name="Group.Ended.Community" xml:space="preserve">
+	<value>Voir qui est en session</value>
   </data>
 </root>

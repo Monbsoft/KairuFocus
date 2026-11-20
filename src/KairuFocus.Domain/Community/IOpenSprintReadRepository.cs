@@ -1,15 +1,26 @@
 namespace KairuFocus.Domain.Community;
 
-/// <summary>Reads across users about open sprints. No user identifier enters or leaves this contract.</summary>
+/// <summary>
+/// Reads across users about open sprints and group sessions. No user identifier enters or leaves this
+/// contract: a member is known by <see cref="ProfileName"/> only.
+/// </summary>
 public interface IOpenSprintReadRepository
 {
+    /// <summary>
+    /// The sprints nobody joined yet and the group sessions open to new members, during a step or while the
+    /// group waits for its host. A group whose host wait limit has passed is not returned.
+    /// </summary>
     Task<IReadOnlyList<OpenSprintGroup>> GetOpenGroupsAsync(DateTime nowUtc, int maxGroups, CancellationToken ct = default);
-    Task<JoinableSprint?> FindJoinableAsync(ProfileName targetName, DateTime nowUtc, CancellationToken ct = default);
-    Task<IReadOnlyList<SprintMember>> GetParticipantsAsync(Guid rootSessionId, DateTime nowUtc, CancellationToken ct = default);
 
     /// <summary>
-    /// The break rules of the group rooted at <paramref name="rootSessionId"/> once its sprint is over, or null when
-    /// the root is unknown or fewer than two members took part (sessions not interrupted).
+    /// The open group in which <paramref name="targetName"/> is host or active member, otherwise the open sprint
+    /// of <paramref name="targetName"/> nobody joined yet, otherwise null.
     /// </summary>
-    Task<GroupBreakRules?> FindGroupBreakAsync(Guid rootSessionId, CancellationToken ct = default);
+    Task<JoinableSprint?> FindJoinableAsync(ProfileName targetName, DateTime nowUtc, CancellationToken ct = default);
+
+    /// <summary>
+    /// The host, then the active members by arrival, of the group <paramref name="rootSessionId"/>, whatever its
+    /// state. Empty when no group has this id (a sprint nobody joined has none).
+    /// </summary>
+    Task<IReadOnlyList<SprintMember>> GetGroupMembersAsync(Guid rootSessionId, CancellationToken ct = default);
 }

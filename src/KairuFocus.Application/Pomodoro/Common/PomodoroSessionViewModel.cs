@@ -12,7 +12,6 @@ public sealed record PomodoroSessionViewModel(
     IReadOnlyList<Guid> LinkedTaskIds,
     double? DurationSeconds,
     DateTime? SharedEndAt,
-    bool IsGroupHost,
     bool IsClosedToJoin)
 {
     public static PomodoroSessionViewModel From(PomodoroSession session)
@@ -31,9 +30,6 @@ public sealed record PomodoroSessionViewModel(
             session.LinkedTaskIds.Select(t => t.Value).ToList().AsReadOnly(),
             duration,
             session.SharedEndAt,
-            session.SharedSprintId is null
-                && session.SessionType == PomodoroSessionType.Sprint
-                && session.PlannedDurationMinutes > 0,
             session.IsClosedToJoin);
     }
 }

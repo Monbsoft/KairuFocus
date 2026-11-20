@@ -1,0 +1,5 @@
+/* Shown on the Pomodoro page: Bootstrap variables only. The fade-in, the 44 px buttons and the dark outline grey
+   come from the shared .kf-lb-modal rules of app.css; the modal itself follows data-bs-theme. */
+.kf-group-stop {
+    background: rgba(0, 0, 0, 0.5);
+}

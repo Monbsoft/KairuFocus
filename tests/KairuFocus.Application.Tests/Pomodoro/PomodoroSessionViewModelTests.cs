@@ -16,7 +16,7 @@ public sealed class PomodoroSessionViewModelTests
     }
 
     [Fact]
-    public void Should_ExposeSharedEndAndHostFlags_When_SessionIsRoot()
+    public void Should_ExposeSharedEndAndClosedFlag_When_SessionIsRoot()
     {
         var session = Started(PomodoroSessionType.Sprint, 25);
         Assert.True(session.CloseToJoin().IsSuccess);
@@ -24,16 +24,14 @@ public sealed class PomodoroSessionViewModelTests
         var viewModel = PomodoroSessionViewModel.From(session);
 
         Assert.Null(viewModel.SharedEndAt);
-        Assert.True(viewModel.IsGroupHost);
         Assert.True(viewModel.IsClosedToJoin);
     }
 
     [Fact]
-    public void Should_ExposeSharedEndAndHostFlags_When_SessionWasJoined()
+    public void Should_ExposeSharedEndAndClosedFlag_When_SessionWasJoined()
     {
         var sharedEndAt = NowUtc.AddMinutes(18).AddSeconds(24);
-        var session = PomodoroSession.CreateJoined(
-            FakeCurrentUserService.TestUserId,
+        var session = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, FakeCurrentUserService.TestUserId,
             PomodoroSessionId.New(),
             sharedEndAt,
             NowUtc).Value;
@@ -42,7 +40,6 @@ public sealed class PomodoroSessionViewModelTests
         var viewModel = PomodoroSessionViewModel.From(session);
 
         Assert.Equal(sharedEndAt, viewModel.SharedEndAt);
-        Assert.False(viewModel.IsGroupHost);
         Assert.False(viewModel.IsClosedToJoin);
     }
 
@@ -50,11 +47,10 @@ public sealed class PomodoroSessionViewModelTests
     [InlineData(PomodoroSessionType.Sprint, 0)]
     [InlineData(PomodoroSessionType.ShortBreak, 5)]
     [InlineData(PomodoroSessionType.LongBreak, 15)]
-    public void Should_NotBeHost_When_SessionIsFreeSprintOrBreak(PomodoroSessionType type, int plannedMinutes)
+    public void Should_NotBeClosedToJoin_When_SessionIsFreeSprintOrBreak(PomodoroSessionType type, int plannedMinutes)
     {
         var viewModel = PomodoroSessionViewModel.From(Started(type, plannedMinutes));
 
-        Assert.False(viewModel.IsGroupHost);
         Assert.False(viewModel.IsClosedToJoin);
     }
 }

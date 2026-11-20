@@ -48,7 +48,11 @@
                     </p>
                 }
             </div>
-            @if (Data.ViewerIsMember)
+            @if (Data.ViewerInGroup)
+            {
+                <a class="kf-btn-light" href="pomodoro">@F["OpenSprints.BackToSession"]</a>
+            }
+            else if (Data.ViewerIsMember)
             {
                 <a class="kf-btn-light" href="pomodoro?type=sprint">@F["OpenSprints.Empty.Cta"]</a>
             }
@@ -72,7 +76,7 @@
             @foreach (var group in (canFold && !_expanded ? Data.Groups.Take(VisibleCards) : Data.Groups))
             {
                 <OpenSprintCard @key="group.Name" Group="group" ViewerIsMember="Data.ViewerIsMember"
-                                OnNoLongerOpen="HandleNoLongerOpenAsync" OnElapsed="OnChanged" />
+                                OnNoLongerOpen="HandleNoLongerOpenAsync" OnWaiting="OnChanged" OnElapsed="OnChanged" />
             }
         </ul>
 

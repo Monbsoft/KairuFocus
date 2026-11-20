@@ -1,16 +1,18 @@
 using System.ComponentModel.DataAnnotations;
 using KairuFocus.Application.Community.Commands.ChangeProfileName;
 using KairuFocus.Application.Community.Commands.JoinCommunity;
+using KairuFocus.Application.Community.Commands.FollowGroupHost;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
+using KairuFocus.Application.Community.Commands.LaunchGroupStep;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
+using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
-using KairuFocus.Application.Community.Commands.StartGroupBreak;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetActiveToday;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
+using KairuFocus.Application.Community.Queries.GetCurrentSession;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
 using KairuFocus.Application.Community.Queries.GetOpenSprints;
-using KairuFocus.Application.Community.Queries.GetSprintParticipants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Monbsoft.BrilliantMediator.Abstractions;
@@ -121,27 +123,61 @@ public sealed class CommunityController : ControllerBase
             : ErrorResponse(result.Error!, notMemberStatus: StatusCodes.Status403Forbidden);
     }
 
-    [HttpGet("current-sprint/participants")]
-    public async Task<IActionResult> GetParticipants(CancellationToken ct)
+    [HttpGet("current-session")]
+    public async Task<IActionResult> GetCurrentSession(CancellationToken ct)
     {
-        var result = await _mediator.SendAsync<GetSprintParticipantsQuery, GetSprintParticipantsResult>(
-            new GetSprintParticipantsQuery(), ct);
-        return Ok(result);
+        var result = await _mediator.SendAsync<GetCurrentSessionQuery, GetCurrentSessionResult?>(
+            new GetCurrentSessionQuery(), ct);
+        return result is null ? NoContent() : Ok(result);
     }
 
-    /// <summary>UC-CO-10 — 201 with the end of the group break, 204 when no break applies to the member.</summary>
-    [HttpPost("current-sprint/break")]
-    public async Task<IActionResult> StartGroupBreak(CancellationToken ct)
+    /// <summary>UC-CO-10 — the host launches the next step: 201 with its end, or 204 when nobody is left
+    /// (the group ended, the page starts a solo session).</summary>
+    [HttpPost("current-session/steps")]
+    public async Task<IActionResult> LaunchGroupStep([FromBody] GroupStepBody body, CancellationToken ct)
     {
-        var result = await _mediator.DispatchAsync<StartGroupBreakCommand, StartGroupBreakResult>(
-            new StartGroupBreakCommand(), ct);
+        var result = await _mediator.DispatchAsync<LaunchGroupStepCommand, LaunchGroupStepResult>(
+            new LaunchGroupStepCommand(body.Type!), ct);
 
         if (!result.IsSuccess)
-            return ErrorResponse(result.Error!);
+            return ErrorResponse(result.Error!, notMemberStatus: StatusCodes.Status403Forbidden);
 
-        return result.SharedEndAt is { } sharedEndAt
-            ? StatusCode(StatusCodes.Status201Created, new { sharedEndAt })
-            : NoContent();
+        return result.HostAlone
+            ? NoContent()
+            : StatusCode(StatusCodes.Status201Created, new { stepEndsAt = result.StepEndsAt });
+    }
+
+    /// <summary>UC-CO-14 — a participant follows the host. Always 200 with an <c>outcome</c> (a 204 could not
+    /// carry the end reason nor the XP), except 403 for a non-member and 409 for another active session.</summary>
+    [HttpPost("current-session/follow")]
+    public async Task<IActionResult> FollowGroupHost(CancellationToken ct)
+    {
+        var result = await _mediator.DispatchAsync<FollowGroupHostCommand, FollowGroupHostResult>(
+            new FollowGroupHostCommand(), ct);
+
+        if (!result.IsSuccess)
+            return ErrorResponse(result.Error!, notMemberStatus: StatusCodes.Status403Forbidden);
+
+        return Ok(new
+        {
+            outcome = result.Outcome,
+            stepType = result.StepType,
+            stepEndsAt = result.StepEndsAt,
+            waitLimitAt = result.WaitLimitAt,
+            endReason = result.EndReason,
+            xpAwarded = result.XpAwarded,
+        });
+    }
+
+    [HttpDelete("current-session")]
+    public async Task<IActionResult> LeaveOrStopCurrentSession(CancellationToken ct)
+    {
+        var result = await _mediator.DispatchAsync<LeaveOrStopGroupSessionCommand, LeaveOrStopGroupSessionResult>(
+            new LeaveOrStopGroupSessionCommand(), ct);
+
+        return result.IsSuccess
+            ? NoContent()
+            : ErrorResponse(result.Error!, notMemberStatus: StatusCodes.Status403Forbidden);
     }
 
     [HttpPut("current-sprint/closed")]
@@ -197,6 +233,20 @@ public sealed class CommunityController : ControllerBase
                 Body(StatusCodes.Status403Forbidden, error, "not-host"),
             CommunityErrors.Community.NoActiveSprint =>
                 Body(StatusCodes.Status404NotFound, error, "no-active-sprint"),
+            CommunityErrors.Community.GroupWaitingForHost =>
+                Body(StatusCodes.Status410Gone, error, "waiting-for-host"),
+            CommunityErrors.Community.GroupEnded =>
+                Body(StatusCodes.Status410Gone, error, "group-ended"),
+            CommunityErrors.Community.GroupClosed =>
+                Body(StatusCodes.Status410Gone, error, "sprint-closed"),
+            CommunityErrors.Community.GroupStepRunning =>
+                Body(StatusCodes.Status409Conflict, error, "step-running"),
+            CommunityErrors.Community.AlreadyInGroup =>
+                Body(StatusCodes.Status409Conflict, error, "already-in-group"),
+            CommunityErrors.Community.NotInGroup =>
+                Body(StatusCodes.Status404NotFound, error, "not-in-group"),
+            CommunityErrors.Community.InvalidGroupStep =>
+                Body(StatusCodes.Status400BadRequest, error, "invalid-step"),
             // Not in the contract (UserNotFound, for example): nothing to tell the client.
             _ => StatusCode(StatusCodes.Status500InternalServerError, new { error = UnexpectedErrorText })
         };
@@ -209,3 +259,6 @@ public sealed class CommunityController : ControllerBase
 public sealed record ProfileNameBody(string? Source, string? Name);
 
 public sealed record SprintClosedBody([Required] bool? Closed);
+
+/// <summary>A missing type is a generic 400; an unknown one is answered by <c>invalid-step</c>.</summary>
+public sealed record GroupStepBody([Required] string? Type);

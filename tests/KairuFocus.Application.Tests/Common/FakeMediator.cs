@@ -1,5 +1,8 @@
+using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
 using KairuFocus.Application.Gamification.Commands.CreditSprintXp;
 using KairuFocus.Application.Journal.Commands.CreateEntry;
+using KairuFocus.Application.Pomodoro.Commands.CompleteSession;
+using KairuFocus.Application.Pomodoro.Commands.InterruptSession;
 using KairuFocus.Domain.Journal;
 using Microsoft.Extensions.Logging.Abstractions;
 using Monbsoft.BrilliantMediator.Abstractions;
@@ -12,13 +15,17 @@ namespace KairuFocus.Application.Tests.Common;
 /// <summary>
 /// Fake mediator for unit tests. Supports CreateEntryCommand dispatching (delegates to a
 /// real CreateEntryCommandHandler backed by an IJournalEntryRepository) and, optionally,
-/// CreditSprintXpCommand (delegates to a real CreditSprintXpCommandHandler when supplied).
+/// CreditSprintXpCommand (delegates to a real CreditSprintXpCommandHandler when supplied), as well as
+/// CompleteSessionCommand and InterruptSessionCommand (delegated to the real handlers when supplied).
 /// Set <see cref="ThrowOnCreditSprintXp"/> to simulate an XP credit crash.
 /// </summary>
 public sealed class FakeMediator : IMediator
 {
     private readonly CreateEntryCommandHandler _createEntryHandler;
     private readonly CreditSprintXpCommandHandler? _creditSprintXpHandler;
+    private readonly CompleteSessionCommandHandler? _completeSessionHandler;
+    private readonly InterruptSessionCommandHandler? _interruptSessionHandler;
+    private readonly LeaveOrStopGroupSessionCommandHandler? _leaveOrStopHandler;
 
     /// <summary>When true, dispatching CreditSprintXpCommand throws (simulated credit failure).</summary>
     public bool ThrowOnCreditSprintXp { get; set; }
@@ -31,12 +38,18 @@ public sealed class FakeMediator : IMediator
 
     public FakeMediator(
         IJournalEntryRepository journalRepository,
-        CreditSprintXpCommandHandler? creditSprintXpHandler = null)
+        CreditSprintXpCommandHandler? creditSprintXpHandler = null,
+        CompleteSessionCommandHandler? completeSession = null,
+        InterruptSessionCommandHandler? interruptSession = null,
+        LeaveOrStopGroupSessionCommandHandler? leaveOrStop = null)
     {
         _createEntryHandler = new CreateEntryCommandHandler(
             journalRepository,
             NullLogger<CreateEntryCommandHandler>.Instance);
         _creditSprintXpHandler = creditSprintXpHandler;
+        _completeSessionHandler = completeSession;
+        _interruptSessionHandler = interruptSession;
+        _leaveOrStopHandler = leaveOrStop;
     }
 
     public Task DispatchAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default)
@@ -71,6 +84,24 @@ public sealed class FakeMediator : IMediator
 
             // No handler configured: tests that do not care about XP get a neutral result.
             return (TResponse)(object)CreditSprintXpResult.Success(0);
+        }
+
+        if (command is CompleteSessionCommand completeSessionCommand && _completeSessionHandler is not null)
+        {
+            var result = await _completeSessionHandler.Handle(completeSessionCommand, cancellationToken);
+            return (TResponse)(object)result;
+        }
+
+        if (command is InterruptSessionCommand interruptSessionCommand && _interruptSessionHandler is not null)
+        {
+            var result = await _interruptSessionHandler.Handle(interruptSessionCommand, cancellationToken);
+            return (TResponse)(object)result;
+        }
+
+        if (command is LeaveOrStopGroupSessionCommand leaveOrStopCommand && _leaveOrStopHandler is not null)
+        {
+            var result = await _leaveOrStopHandler.Handle(leaveOrStopCommand, cancellationToken);
+            return (TResponse)(object)result;
         }
 
         throw new NotSupportedException($"FakeMediator does not support dispatch of {typeof(TCommand).Name}");

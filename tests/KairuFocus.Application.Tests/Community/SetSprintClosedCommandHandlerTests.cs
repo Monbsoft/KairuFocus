@@ -1,6 +1,7 @@
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
 using KairuFocus.Application.Tests.Common;
 using KairuFocus.Application.Tests.Pomodoro;
+using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Identity;
 using KairuFocus.Domain.Pomodoro;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -15,6 +16,7 @@ public sealed class SetSprintClosedCommandHandlerTests
 
     private readonly FakeMemberProfileRepository _profiles = new();
     private readonly FakePomodoroSessionRepository _sessions = new();
+    private readonly FakeGroupSessionRepository _groups = new();
     private readonly SetSprintClosedCommandHandler _sut;
 
     public SetSprintClosedCommandHandlerTests()
@@ -22,7 +24,9 @@ public sealed class SetSprintClosedCommandHandlerTests
         _sut = new SetSprintClosedCommandHandler(
             _profiles,
             _sessions,
+            _groups,
             new FakeCurrentUserService(),
+            new FixedTimeProvider(new DateTimeOffset(NowUtc)),
             NullLogger<SetSprintClosedCommandHandler>.Instance);
     }
 
@@ -36,7 +40,7 @@ public sealed class SetSprintClosedCommandHandlerTests
 
     private PomodoroSession GivenJoinedSession()
     {
-        var joined = PomodoroSession.CreateJoined(Host, PomodoroSessionId.New(), NowUtc.AddMinutes(10), NowUtc);
+        var joined = PomodoroSession.CreateJoinedStep(PomodoroSessionType.Sprint, Host, PomodoroSessionId.New(), NowUtc.AddMinutes(10), NowUtc);
         Assert.True(joined.IsSuccess);
         Assert.True(joined.Value.Start(NowUtc).IsSuccess);
         _sessions.Sessions.Add(joined.Value);
@@ -127,5 +131,95 @@ public sealed class SetSprintClosedCommandHandlerTests
         var result = await _sut.Handle(new SetSprintClosedCommand(true));
 
         Assert.Equal(CommunityErrors.Community.NoActiveSprint, result.Error);
+    }
+
+    // --- Group sessions ------------------------------------------------------------------------
+
+    private static readonly UserId OtherUser = UserId.From(new Guid("30000000-0000-0000-0000-000000000003"));
+
+    private GroupSession GivenGroup(UserId host, UserId member, DateTime? stepEndsAtUtc = null)
+    {
+        var end = stepEndsAtUtc ?? NowUtc.AddMinutes(15);
+        var group = GroupSession.Start(Guid.NewGuid(), host, end.AddMinutes(-25), end, member, end.AddMinutes(-20));
+        Assert.True(group.IsSuccess);
+        _groups.Seed(group.Value);
+        return group.Value;
+    }
+
+    [Fact]
+    public async Task Should_CloseGroup_When_HostOfGroup()
+    {
+        _profiles.Seed(Host, "lea_dev");
+        var group = GivenGroup(Host, OtherUser);
+        var session = GivenActiveSession();
+
+        var closed = await _sut.Handle(new SetSprintClosedCommand(true));
+
+        Assert.True(closed.IsSuccess);
+        Assert.True(group.IsClosedToJoin);
+        Assert.Equal(1, _groups.UpdateCallCount);
+        Assert.False(session.IsClosedToJoin);
+        Assert.Equal(0, _sessions.UpdateAsyncCallCount);
+
+        var reopened = await _sut.Handle(new SetSprintClosedCommand(false));
+
+        Assert.True(reopened.IsSuccess);
+        Assert.False(group.IsClosedToJoin);
+        Assert.Equal(2, _groups.UpdateCallCount);
+    }
+
+    [Fact]
+    public async Task Should_CloseGroup_When_HostWaitsForNextStep()
+    {
+        _profiles.Seed(Host, "lea_dev");
+        var group = GivenGroup(Host, OtherUser, stepEndsAtUtc: NowUtc.AddMinutes(-2));
+
+        var result = await _sut.Handle(new SetSprintClosedCommand(true));
+
+        Assert.True(result.IsSuccess);
+        Assert.True(group.IsClosedToJoin);
+    }
+
+    [Fact]
+    public async Task Should_RefuseClose_When_Participant()
+    {
+        _profiles.Seed(Host, "lea_dev");
+        var group = GivenGroup(OtherUser, Host);
+
+        var result = await _sut.Handle(new SetSprintClosedCommand(true));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(CommunityErrors.Community.NotSprintHost, result.Error);
+        Assert.False(group.IsClosedToJoin);
+        Assert.Equal(0, _groups.UpdateCallCount);
+    }
+
+    [Fact]
+    public async Task Should_UseRootSession_When_GroupIsOver()
+    {
+        _profiles.Seed(Host, "lea_dev");
+        var group = GivenGroup(Host, OtherUser);
+        Assert.True(group.Stop(GroupSessionEndReason.Stopped, NowUtc).IsSuccess);
+        var session = GivenActiveSession();
+
+        var result = await _sut.Handle(new SetSprintClosedCommand(true));
+
+        Assert.True(result.IsSuccess);
+        Assert.True(session.IsClosedToJoin);
+        Assert.Equal(0, _groups.UpdateCallCount);
+    }
+
+    [Fact]
+    public async Task Should_UseRootSession_When_ParticipantMovedOnToOwnSprint()
+    {
+        _profiles.Seed(Host, "lea_dev");
+        GivenGroup(OtherUser, Host);
+        var session = GivenActiveSession();
+
+        var result = await _sut.Handle(new SetSprintClosedCommand(true));
+
+        Assert.True(result.IsSuccess);
+        Assert.True(session.IsClosedToJoin);
+        Assert.Equal(0, _groups.UpdateCallCount);
     }
 }

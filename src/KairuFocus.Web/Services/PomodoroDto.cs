@@ -23,7 +23,6 @@ public sealed record PomodoroSessionDto(
     IReadOnlyList<Guid> LinkedTaskIds,
     double? DurationSeconds,
     DateTime? SharedEndAt,
-    bool IsGroupHost,
     bool IsClosedToJoin);
 
 public sealed record SuggestedSessionTypeDto(
