@@ -49,7 +49,8 @@ internal sealed class FakeGroupSessionRepository : IGroupSessionRepository
     public Task<GroupSession?> FindLatestForUserAsync(UserId userId, CancellationToken ct = default) =>
         Task.FromResult(Groups
             .Where(g => g.IsHostedBy(userId) || g.IsActiveMember(userId))
-            .OrderByDescending(g => g.CurrentStep.StartedAtUtc)
+            .OrderBy(g => g.EndedAtUtc is null ? 0 : 1)
+            .ThenByDescending(g => g.CurrentStep.StartedAtUtc)
             .FirstOrDefault());
 
     public Task<bool> TryAddAsync(GroupSession group, CancellationToken ct = default)

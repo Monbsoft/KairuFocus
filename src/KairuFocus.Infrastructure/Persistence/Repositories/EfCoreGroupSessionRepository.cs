@@ -24,17 +24,25 @@ internal sealed class EfCoreGroupSessionRepository : IGroupSessionRepository
             .Include(GroupSessionConfiguration.MembersField)
             .FirstOrDefaultAsync(g => g.Id == id, ct);
 
+    // A group not ended comes first: a stopped group stays attached to its host and members, and the step its
+    // host had launched may have started after the step of the group the user joined since. Two reads rather
+    // than a second ordering key: the in-memory provider cannot translate a ThenBy on the owned current step.
+    public async Task<GroupSession?> FindLatestForUserAsync(UserId userId, CancellationToken ct = default) =>
+        await LatestAsync(ForUser(userId).Where(g => g.EndedAtUtc == null), ct)
+        ?? await LatestAsync(ForUser(userId).Where(g => g.EndedAtUtc != null), ct);
+
     // The host and the members' users are private fields: they are reached through EF.Property for the
     // filter only, never projected (ADR-026).
-    public async Task<GroupSession?> FindLatestForUserAsync(UserId userId, CancellationToken ct = default) =>
-        await _context.GroupSessions
+    private IQueryable<GroupSession> ForUser(UserId userId) =>
+        _context.GroupSessions
             .Include(GroupSessionConfiguration.MembersField)
             .Where(g => EF.Property<UserId>(g, GroupSessionConfiguration.HostField) == userId
                         || EF.Property<IEnumerable<GroupMember>>(g, GroupSessionConfiguration.MembersField)
                             .Any(m => EF.Property<UserId>(m, GroupMemberConfiguration.UserField) == userId
-                                      && m.LeftAtUtc == null))
-            .OrderByDescending(g => g.CurrentStep.StartedAtUtc)
-            .FirstOrDefaultAsync(ct);
+                                      && m.LeftAtUtc == null));
+
+    private static Task<GroupSession?> LatestAsync(IQueryable<GroupSession> groups, CancellationToken ct) =>
+        groups.OrderByDescending(g => g.CurrentStep.StartedAtUtc).FirstOrDefaultAsync(ct);
 
     public async Task<bool> TryAddAsync(GroupSession group, CancellationToken ct = default)
     {

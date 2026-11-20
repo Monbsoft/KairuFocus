@@ -11,7 +11,7 @@ public interface IGroupSessionRepository
     Task<GroupSession?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>The most recent group the user hosts or belongs to (member without <see cref="GroupMember.LeftAtUtc"/>),
-    /// ended or not.</summary>
+    /// ended or not. A group whose end is not recorded comes before any ended group, then the latest step first.</summary>
     Task<GroupSession?> FindLatestForUserAsync(UserId userId, CancellationToken ct = default);
 
     /// <summary>False when the id already exists.</summary>

@@ -147,6 +147,24 @@ public sealed class GroupSessionRepositoryTests
     }
 
     [Fact]
+    public async Task Should_PreferLiveGroup_When_EndedGroupHasLaterStep()
+    {
+        // The host of a group stopped at 10:12 (step started at 10:10) then joined a group whose step started
+        // at 10:00: the ended group must not hide the one the user is in now.
+        var user = UserId.New();
+        var hostedThenStopped = NewGroup(user, UserId.New(), StartedAtUtc.AddMinutes(10));
+        Assert.True(hostedThenStopped.Stop(GroupSessionEndReason.Stopped, StartedAtUtc.AddMinutes(12)).IsSuccess);
+        var joined = NewGroup(UserId.New(), user, StartedAtUtc);
+        await _database.SeedAsync(hostedThenStopped, joined);
+
+        await using var context = _database.CreateContext();
+        var found = await new EfCoreGroupSessionRepository(context).FindLatestForUserAsync(user);
+
+        Assert.NotNull(found);
+        Assert.Equal(joined.Id, found.Id);
+    }
+
+    [Fact]
     public async Task Should_ReturnFalse_When_VersionIsStale()
     {
         var group = NewGroup(UserId.New(), UserId.New());
