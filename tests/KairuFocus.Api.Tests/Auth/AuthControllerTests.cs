@@ -1,7 +1,5 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
-using System.Text;
 using KairuFocus.Application.Identity.Commands.GetOrCreateUser;
 using KairuFocus.Domain.Common;
 using KairuFocus.Domain.Identity;
@@ -9,22 +7,26 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.IdentityModel.Tokens;
 using Monbsoft.BrilliantMediator.Abstractions;
 
 namespace KairuFocus.Api.Tests.Auth;
 
 /// <summary>
 /// Integration tests on AuthController.
-/// Verifies that the OAuth cookie is cleared on error paths
-/// and that the logout endpoint behaves correctly.
+/// Verifies that the OAuth cookies are cleared on error paths,
+/// in AuthController and on /signin-github.
 /// </summary>
 public sealed class AuthControllerTests : IClassFixture<KairuFocusApiFactory>
 {
+    private const string AuthCookieName = ".AspNetCore.Cookies";
+    private const string CorrelationCookiePrefix = ".AspNetCore.Correlation.";
+
+    private readonly KairuFocusApiFactory _factory;
     private readonly HttpClient _client;
 
     public AuthControllerTests(KairuFocusApiFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
         {
             // Disable automatic redirect following so we can inspect response headers.
@@ -33,161 +35,82 @@ public sealed class AuthControllerTests : IClassFixture<KairuFocusApiFactory>
     }
 
     /// <summary>
-    /// Verifies that the GitHub callback without a valid OAuth state cookie
-    /// cleans up the cookie before redirecting with an error.
-    ///
-    /// Context: without a valid correlation state, AuthenticateAsync fails
-    /// ("The oauth state was missing or invalid"). Without the fix, the code
-    /// would redirect without calling SignOut, leaving a corrupted cookie.
-    /// With the fix, RedirectWithErrorAsync calls SignOut before redirecting.
-    ///
-    /// We verify:
-    /// 1. The response is a redirect (302).
-    /// 2. The Location header contains auth-error=.
-    /// 3. The Set-Cookie header clears the session cookie.
+    /// Verifies that the GitHub callback, when the Cookies scheme cannot authenticate
+    /// (no cookie, or a cookie that no longer decrypts), deletes the authentication cookie
+    /// before redirecting with auth-error=denied.
     /// </summary>
     [Fact]
     public async Task Should_ClearCookie_When_CallbackAuthenticationFails()
     {
-        // Arrange — direct call without going through the GitHub OAuth flow.
-        // No correlation cookie → AuthenticateAsync will fail.
+        // Arrange — direct call without going through the GitHub OAuth flow:
+        // no authentication cookie → AuthenticateAsync(Cookies) does not succeed.
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/github/callback");
 
         // Act
         var response = await _client.SendAsync(request);
 
-        // Assert — must redirect to the error page.
-        Assert.True(
-            response.StatusCode == HttpStatusCode.Redirect
-            || response.StatusCode == HttpStatusCode.Found,
-            $"Expected redirect, got {(int)response.StatusCode}");
-
-        var location = response.Headers.Location?.ToString() ?? string.Empty;
-        Assert.Contains("auth-error=", location, StringComparison.OrdinalIgnoreCase);
-
-        // Verify that Set-Cookie clears the session cookie
-        // (SignOutAsync emits a Set-Cookie with a past expiry).
-        var setCookieHeaders = response.Headers
-            .Where(h => string.Equals(h.Key, "Set-Cookie", StringComparison.OrdinalIgnoreCase))
-            .SelectMany(h => h.Value)
-            .ToList();
-
-        Assert.True(setCookieHeaders.Count > 0,
-            "Expected at least one Set-Cookie header to clear the authentication cookie after error.");
+        // Assert — redirect to the error page, with the authentication cookie expired.
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("http://localhost/login#auth-error=denied", response.Headers.Location?.ToString());
+        Assert.Contains(SetCookieHeaders(response), c => IsDeletion(c, AuthCookieName));
     }
 
     /// <summary>
-    /// Verifies that POST /api/auth/logout requires a valid JWT (401 when unauthenticated).
+    /// Verifies that a failure on /signin-github (state the server can no longer read, e.g. after
+    /// a Data Protection key change) redirects to the login error page instead of a 500,
+    /// and deletes both the authentication cookie and the correlation cookie on its own path.
     /// </summary>
     [Fact]
-    public async Task Should_Return401_When_LogoutCalledWithoutJwt()
+    public async Task Should_RedirectWithDeniedErrorAndClearCookies_When_GitHubRemoteAuthenticationFails()
     {
-        // Arrange — no Authorization header
-        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout");
+        // Arrange — a real challenge issues the correlation cookie the browser sends back to /signin-github.
+        var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false,
+        });
+        var challenge = await client.GetAsync("/api/auth/github");
+        var correlationSetCookie = Assert.Single(
+            SetCookieHeaders(challenge), c => c.StartsWith(CorrelationCookiePrefix, StringComparison.Ordinal));
+        var correlationNameValue = correlationSetCookie[..correlationSetCookie.IndexOf(';')];
+        var correlationName = correlationNameValue[..correlationNameValue.IndexOf('=')];
+
+        var callback = new HttpRequestMessage(HttpMethod.Get, "/signin-github?code=fake-code&state=unreadable-state");
+        callback.Headers.Add("Cookie", correlationNameValue);
 
         // Act
-        var response = await _client.SendAsync(request);
+        var response = await client.SendAsync(callback);
 
-        // Assert — 401 Unauthorized because [Authorize(JwtBearer)] is required
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        // Assert
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Equal("http://localhost/login#auth-error=denied", response.Headers.Location?.ToString());
+
+        var setCookies = SetCookieHeaders(response);
+        Assert.Contains(setCookies, c => IsDeletion(c, AuthCookieName));
+        var correlationDeletion = Assert.Single(setCookies, c => IsDeletion(c, correlationName));
+        Assert.Equal(PathOf(correlationSetCookie), PathOf(correlationDeletion));
     }
 
-    /// <summary>
-    /// Verifies that POST /api/auth/logout returns 204 No Content
-    /// and emits a Set-Cookie that removes the session cookie,
-    /// when called with a valid JWT.
-    /// </summary>
-    [Fact]
-    public async Task Should_SignOutCookieScheme_When_LogoutEndpointCalled()
-    {
-        // Arrange — generate a valid JWT signed with the test secret key
-        var jwt = GenerateTestJwt();
-        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+    private static List<string> SetCookieHeaders(HttpResponseMessage response) =>
+        response.Headers.TryGetValues("Set-Cookie", out var values) ? values.ToList() : [];
 
-        // Act
-        var response = await _client.SendAsync(request);
+    // A deletion is the cookie set to an empty value with an expiry in 1970 (ResponseCookies.Delete).
+    private static bool IsDeletion(string setCookie, string cookieName) =>
+        setCookie.StartsWith(cookieName + "=;", StringComparison.Ordinal)
+        && setCookie.Contains("expires=Thu, 01 Jan 1970", StringComparison.OrdinalIgnoreCase);
 
-        // Assert — 204 No Content
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-
-        // SignOutAsync must emit a Set-Cookie to remove the .AspNetCore.Cookies cookie.
-        var setCookieHeaders = response.Headers
-            .Where(h => string.Equals(h.Key, "Set-Cookie", StringComparison.OrdinalIgnoreCase))
-            .SelectMany(h => h.Value)
-            .ToList();
-
-        Assert.True(setCookieHeaders.Count > 0,
-            "Expected at least one Set-Cookie header to clear the authentication cookie on logout.");
-
-        var hasCookieClearDirective = setCookieHeaders.Any(c =>
-            c.Contains("expires=", StringComparison.OrdinalIgnoreCase)
-            || c.Contains("max-age=0", StringComparison.OrdinalIgnoreCase));
-
-        Assert.True(hasCookieClearDirective,
-            $"Expected a Set-Cookie with past expiry. Got: {string.Join("; ", setCookieHeaders)}");
-    }
-
-    /// <summary>
-    /// Verifies that POST /api/auth/logout deletes residual .AspNetCore.Correlation.* cookies
-    /// from a previous OAuth challenge. Without this cleanup, a stale correlation cookie can
-    /// block a subsequent challenge.
-    /// </summary>
-    [Fact]
-    public async Task Should_DeleteCorrelationCookies_When_LogoutEndpointCalled()
-    {
-        // Arrange — JWT + fake stale correlation cookie sent by the client.
-        var jwt = GenerateTestJwt();
-        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/logout");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
-        request.Headers.Add("Cookie", ".AspNetCore.Correlation.GitHub.abc123=stale-value");
-
-        // Act
-        var response = await _client.SendAsync(request);
-
-        // Assert — 204 + Set-Cookie deleting the correlation cookie (past expiry).
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-
-        var setCookieHeaders = response.Headers
-            .Where(h => string.Equals(h.Key, "Set-Cookie", StringComparison.OrdinalIgnoreCase))
-            .SelectMany(h => h.Value)
-            .ToList();
-
-        var hasCorrelationDelete = setCookieHeaders.Any(c =>
-            c.Contains(".AspNetCore.Correlation.GitHub.abc123", StringComparison.Ordinal)
-            && (c.Contains("expires=", StringComparison.OrdinalIgnoreCase)
-                || c.Contains("max-age=0", StringComparison.OrdinalIgnoreCase)));
-
-        Assert.True(hasCorrelationDelete,
-            $"Expected Set-Cookie deleting .AspNetCore.Correlation.GitHub.abc123. Got: {string.Join(" | ", setCookieHeaders)}");
-
-        // Vérifie que le Set-Cookie d'effacement a bien path=/ — sinon le navigateur
-        // ne fait pas la correspondance avec le cookie original (posé par
-        // CorrelationCookieBuilder à PathBase ou "/" si pas de PathBase).
-        var correlationDeleteHeader = setCookieHeaders.First(c =>
-            c.Contains(".AspNetCore.Correlation.GitHub.abc123", StringComparison.Ordinal));
-        Assert.Contains("path=/", correlationDeleteHeader, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string GenerateTestJwt()
-    {
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("testing-secret-key-minimum-32-chars-for-hmac"));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var token = new JwtSecurityToken(
-            claims: [new Claim("sub", "test-user-id")],
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds);
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
+    private static string? PathOf(string setCookie) =>
+        setCookie.Split(';', StringSplitOptions.TrimEntries)
+            .FirstOrDefault(attribute => attribute.StartsWith("path=", StringComparison.OrdinalIgnoreCase));
 }
 
 /// <summary>
 /// Tests the no-id branch of GitHubCallback:
 /// Cookie authentication succeeds but the principal has no NameIdentifier claim.
 /// </summary>
-public sealed class GitHubCallbackNoIdTests
+public sealed class GitHubCallbackNoIdTests : IDisposable
 {
+    private readonly KairuFocusApiFactory _factory;
     private readonly HttpClient _client;
     private readonly TestClaimsProvider _claimsProvider = new();
 
@@ -195,7 +118,7 @@ public sealed class GitHubCallbackNoIdTests
     {
         var claimsProvider = _claimsProvider;
 
-        var factory = new KairuFocusApiFactory
+        var factory = _factory = new KairuFocusApiFactory
         {
             ConfigureTestServices = services =>
             {
@@ -220,11 +143,8 @@ public sealed class GitHubCallbackNoIdTests
 
     /// <summary>
     /// Verifies that when AuthenticateAsync(Cookie) succeeds but the principal
-    /// has no NameIdentifier claim, the callback redirects with auth-error=no-id.
-    ///
-    /// Note: SignOutAsync is a no-op on the test handler (no real cookie infrastructure),
-    /// so the Set-Cookie assertion is omitted for this test — the core behavior under test
-    /// is the redirect URL containing auth-error=no-id.
+    /// has no NameIdentifier claim, the Cookie scheme is signed out and the callback
+    /// redirects with auth-error=no-id.
     /// </summary>
     [Fact]
     public async Task Should_ClearCookieAndRedirectWithNoIdError_When_CallbackAuthenticatesWithoutGitHubId()
@@ -248,6 +168,13 @@ public sealed class GitHubCallbackNoIdTests
 
         var location = response.Headers.Location?.ToString() ?? string.Empty;
         Assert.Contains("auth-error=no-id", location, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(1, _claimsProvider.SignOutCount);
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
+        _factory.Dispose();
     }
 }
 
@@ -256,8 +183,9 @@ public sealed class GitHubCallbackNoIdTests
 /// Cookie authentication succeeds and the principal has a NameIdentifier claim,
 /// but GetOrCreateUser fails.
 /// </summary>
-public sealed class GitHubCallbackServerErrorTests
+public sealed class GitHubCallbackServerErrorTests : IDisposable
 {
+    private readonly KairuFocusApiFactory _factory;
     private readonly HttpClient _client;
     private readonly TestClaimsProvider _claimsProvider = new();
 
@@ -269,7 +197,7 @@ public sealed class GitHubCallbackServerErrorTests
             DispatchResult = _ => Result.Failure<GetOrCreateUserResult>("simulated server error")
         };
 
-        var factory = new KairuFocusApiFactory
+        var factory = _factory = new KairuFocusApiFactory
         {
             ConfigureTestServices = services =>
             {
@@ -298,10 +226,8 @@ public sealed class GitHubCallbackServerErrorTests
 
     /// <summary>
     /// Verifies that when AuthenticateAsync(Cookie) succeeds with a valid NameIdentifier
-    /// but GetOrCreateUser returns a failure, the callback redirects with auth-error=server.
-    ///
-    /// Note: SignOutAsync is a no-op on the test handler (no real cookie infrastructure),
-    /// so the Set-Cookie assertion is omitted — the core behavior under test is the redirect URL.
+    /// but GetOrCreateUser returns a failure, the Cookie scheme is signed out and the callback
+    /// redirects with auth-error=server.
     /// </summary>
     [Fact]
     public async Task Should_ClearCookieAndRedirectWithServerError_When_GetOrCreateUserFails()
@@ -325,5 +251,12 @@ public sealed class GitHubCallbackServerErrorTests
 
         var location = response.Headers.Location?.ToString() ?? string.Empty;
         Assert.Contains("auth-error=server", location, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(1, _claimsProvider.SignOutCount);
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
+        _factory.Dispose();
     }
 }

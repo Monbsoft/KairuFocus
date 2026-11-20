@@ -7,7 +7,6 @@ using KairuFocus.Domain.Identity;
 using KairuFocus.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace KairuFocus.Api.Tests.Community;
 
@@ -20,32 +19,8 @@ public sealed class CommunityMemberVisibilityTests : IDisposable
 {
     private const string ChosenName = "RenardAgile";
 
-    // The factory swaps the options of the DbContext for InMemory, but the UseSqlServer configuration
-    // registered by the Infrastructure stays in the container: with the real handlers (and a DbContext
-    // resolved by hand) both providers would be registered. Remove it and register InMemory alone.
-    // The database name is fixed once: a name computed inside the options lambda would give each scope
-    // (so each request) its own empty database.
-    private readonly KairuFocusApiFactory _factory = CreateFactory("CommunityVisibility_" + Guid.NewGuid());
-
-    private static KairuFocusApiFactory CreateFactory(string databaseName) => new()
-    {
-        ConfigureTestServices = services =>
-        {
-            // The configuration interface is not public API: it is matched by name.
-            foreach (var descriptor in services
-                .Where(d => d.ServiceType.Name.StartsWith("IDbContextOptionsConfiguration", StringComparison.Ordinal)
-                    && d.ServiceType.GenericTypeArguments.SequenceEqual([typeof(KairuFocusDbContext)]))
-                .ToList())
-            {
-                services.Remove(descriptor);
-            }
-
-            services.RemoveAll<DbContextOptions<KairuFocusDbContext>>();
-            services.RemoveAll<KairuFocusDbContext>();
-            services.AddDbContext<KairuFocusDbContext>(options =>
-                options.UseInMemoryDatabase(databaseName));
-        }
-    };
+    // One InMemory database per factory, shared by every scope and request (see KairuFocusApiFactory).
+    private readonly KairuFocusApiFactory _factory = new();
 
     private readonly User _user = User.Create("gh-1", "octocat", "The Octocat", "octocat@example.com");
     private readonly HttpClient _client;
