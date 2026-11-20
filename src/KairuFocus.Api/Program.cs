@@ -31,13 +31,10 @@ var isTesting = builder.Environment.IsEnvironment("Testing");
 
 // Get connection string: prioritize SQL_CONNECTION_STRING (Azure/production),
 // then appsettings ConnectionStrings:Default (development).
-// En env Testing, une chaîne fictive est acceptée : le DbContext sera remplacé par InMemory dans WebApplicationFactory.
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? Environment.GetEnvironmentVariable("SQL_CONNECTION_STRING")
-    ?? (isTesting
-        ? "Server=(localdb)\\mssqllocaldb;Database=KairuFocus_Testing;Trusted_Connection=True;"
-        : throw new InvalidOperationException(
-            "A SQL Server connection string must be configured via 'ConnectionStrings:Default' or the 'SQL_CONNECTION_STRING' environment variable."));
+    ?? throw new InvalidOperationException(
+        "A SQL Server connection string must be configured via 'ConnectionStrings:Default' or the 'SQL_CONNECTION_STRING' environment variable.");
 
 builder.Services.AddInfrastructure(connectionString);
 
@@ -104,11 +101,10 @@ builder.Services.AddScoped<ICurrentUserService, ClaimsCurrentUserService>();
 builder.Services.AddSingleton<KairuFocus.Api.Auth.JwtTokenService>();
 
 // Authentication — JWT Bearer + GitHub OAuth
-// En env Testing, une clé fictive est utilisée (les tests n'émettent pas de vrais JWT).
+// Pas de clé de repli, même en Testing : une clé connue dans le code permettrait de forger des JWT
+// sur toute instance démarrée avec ce nom d'environnement. Les tests fournissent la leur.
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"]
-    ?? (isTesting
-        ? "testing-secret-key-minimum-32-chars-for-hmac"
-        : throw new InvalidOperationException("Jwt:SecretKey must be configured in appsettings or user secrets."));
+    ?? throw new InvalidOperationException("Jwt:SecretKey must be configured in appsettings or user secrets.");
 
 var gitHubClientId = builder.Configuration["GitHub:ClientId"] ?? string.Empty;
 var gitHubClientSecret = builder.Configuration["GitHub:ClientSecret"] ?? string.Empty;
@@ -170,6 +166,31 @@ builder.Services
                 response.EnsureSuccessStatusCode();
                 var userJson = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
                 context.RunClaimActions(userJson.RootElement);
+            },
+            // Échec sur /signin-github, avant AuthController : state illisible (clés Data Protection
+            // perdues ou changées), corrélation absente, refus de l'utilisateur sur GitHub (access_denied).
+            // Sans ce handler, RemoteAuthenticationHandler lève une exception et l'utilisateur voit une 500.
+            OnRemoteFailure = async context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogWarning(context.Failure, "GitHub remote authentication failed: {Error}", context.Failure?.Message);
+
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                // Le cookie de corrélation est posé sur le CallbackPath (/signin-github), seul chemin où le
+                // navigateur le renvoie : on le supprime avec les options qui l'ont créé.
+                var correlationCookie = context.Options.CorrelationCookie;
+                var correlationOptions = correlationCookie.Build(context.HttpContext);
+                foreach (var cookieName in context.Request.Cookies.Keys
+                    .Where(name => name.StartsWith(correlationCookie.Name!, StringComparison.Ordinal)))
+                {
+                    context.Response.Cookies.Delete(cookieName, correlationOptions);
+                }
+
+                var webBase = context.HttpContext.RequestServices.GetRequiredService<IConfiguration>()["WebBaseUrl"]
+                    ?? "http://localhost:5010";
+                context.Response.Redirect($"{webBase}/login#auth-error=denied");
+                context.HandleResponse();
             }
         };
     })
