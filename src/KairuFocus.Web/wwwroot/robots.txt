@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# API, MCP endpoint and pages behind sign-in: nothing to index there.
+# /login stays crawlable so its noindex tag can be read.
+Disallow: /api/
+Disallow: /mcp
+Disallow: /dashboard
+Disallow: /tasks
+Disallow: /pomodoro
+Disallow: /journal
+Disallow: /communaute
+Disallow: /profil
+Disallow: /membres/
+Disallow: /stats
+Disallow: /settings
+
+Sitemap: https://kairufocus.com/sitemap.xml
