@@ -6,7 +6,9 @@ using KairuFocus.Api.Tests.Auth;
 using KairuFocus.Api.Tests.Gamification;
 using KairuFocus.Application.Community.Commands.ChangeProfileName;
 using KairuFocus.Application.Community.Commands.JoinCommunity;
+using KairuFocus.Application.Community.Commands.FollowGroupHost;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
+using KairuFocus.Application.Community.Commands.LaunchGroupStep;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
 using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
@@ -39,6 +41,8 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     private const string ActiveTodayUrl = "api/community/active-today";
     private const string JoinUrl = "api/community/open-sprints/LoutreTenace/join";
     private const string CurrentSessionUrl = "api/community/current-session";
+    private const string StepsUrl = "api/community/current-session/steps";
+    private const string FollowUrl = "api/community/current-session/follow";
     private const string ClosedUrl = "api/community/current-sprint/closed";
     private const string SessionUrl = "api/pomodoro/session";
 
@@ -79,6 +83,8 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [InlineData("GET", ActiveTodayUrl)]
     [InlineData("POST", JoinUrl)]
     [InlineData("GET", CurrentSessionUrl)]
+    [InlineData("POST", StepsUrl)]
+    [InlineData("POST", FollowUrl)]
     [InlineData("PUT", ClosedUrl)]
     public async Task Should_Return401_When_CommunityEndpointIsCalledAnonymously(string method, string url)
     {
@@ -464,6 +470,150 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
 
         Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
         await AssertCodeAsync("waiting-for-host", response);
+    }
+
+    // ── Launch a step, follow the host (UC-CO-10, UC-CO-14) ────────────────
+
+    [Fact]
+    public async Task Should_Return201WithStepEnd_When_StepIsLaunched()
+    {
+        LaunchGroupStepCommand? sent = null;
+        _mediator.DispatchResult = command =>
+        {
+            sent = (LaunchGroupStepCommand)command;
+            return LaunchGroupStepResult.Success(SharedEnd);
+        };
+
+        var response = await PostJsonAsync(StepsUrl, """{ "type": "ShortBreak" }""");
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(new LaunchGroupStepCommand("ShortBreak"), sent);
+        await AssertJsonAsync("""{ "stepEndsAt": "2026-10-30T14:25:00+00:00" }""", response);
+    }
+
+    [Fact]
+    public async Task Should_Return204_When_HostIsLeftAlone()
+    {
+        _mediator.DispatchResult = _ => LaunchGroupStepResult.EndedHostAlone();
+
+        var response = await PostJsonAsync(StepsUrl, """{ "type": "Sprint" }""");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(CommunityErrors.Community.GroupStepRunning, HttpStatusCode.Conflict, "step-running")]
+    [InlineData(PomodoroErrors.Pomodoro.SessionAlreadyActive, HttpStatusCode.Conflict, "sprint-active")]
+    [InlineData(CommunityErrors.Community.GroupEnded, HttpStatusCode.Gone, "group-ended")]
+    [InlineData(CommunityErrors.Community.NotMember, HttpStatusCode.Forbidden, "not-member")]
+    [InlineData(CommunityErrors.Community.NotSprintHost, HttpStatusCode.Forbidden, "not-host")]
+    [InlineData(CommunityErrors.Community.InvalidGroupStep, HttpStatusCode.BadRequest, "invalid-step")]
+    public async Task Should_MapError_When_LaunchStepFails(string error, HttpStatusCode status, string code)
+    {
+        _mediator.DispatchResult = _ => LaunchGroupStepResult.Failure(error);
+
+        var response = await PostJsonAsync(StepsUrl, """{ "type": "Sprint" }""");
+
+        Assert.Equal(status, response.StatusCode);
+        await AssertCodeAsync(code, response);
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("""{ "type": null }""")]
+    public async Task Should_Return400_When_StepTypeIsMissing(string body)
+    {
+        var dispatched = false;
+        _mediator.DispatchResult = _ =>
+        {
+            dispatched = true;
+            return LaunchGroupStepResult.Success(SharedEnd);
+        };
+
+        var response = await PostJsonAsync(StepsUrl, body);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.False(dispatched);
+    }
+
+    [Fact]
+    public async Task Should_Return200WithOutcome_When_FollowingStartsNewStep()
+    {
+        FollowGroupHostCommand? sent = null;
+        _mediator.DispatchResult = command =>
+        {
+            sent = (FollowGroupHostCommand)command;
+            return FollowGroupHostResult.NewStep("Sprint", SharedEnd, xpAwarded: 0);
+        };
+
+        var response = await _client.PostAsync(FollowUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(sent);
+        await AssertJsonAsync("""
+            {"outcome":"NewStep","stepType":"Sprint","stepEndsAt":"2026-10-30T14:25:00+00:00","waitLimitAt":null,"endReason":null,"xpAwarded":0}
+            """, response);
+    }
+
+    public static TheoryData<string> FollowOutcomes => new()
+    {
+        FollowGroupHostResult.NewStepOutcome,
+        FollowGroupHostResult.SameStepOutcome,
+        FollowGroupHostResult.WaitingOutcome,
+        FollowGroupHostResult.EndedOutcome,
+        FollowGroupHostResult.NotInGroupOutcome,
+    };
+
+    [Theory]
+    [MemberData(nameof(FollowOutcomes))]
+    public async Task Should_Return200WithoutIds_When_FollowingGivesAnyOutcome(string outcome)
+    {
+        _mediator.DispatchResult = _ => outcome switch
+        {
+            FollowGroupHostResult.NewStepOutcome => FollowGroupHostResult.NewStep("Sprint", SharedEnd, 10),
+            FollowGroupHostResult.SameStepOutcome => FollowGroupHostResult.SameStep("ShortBreak", SharedEnd),
+            FollowGroupHostResult.WaitingOutcome =>
+                FollowGroupHostResult.Waiting("Sprint", SharedEnd, SharedEnd.AddMinutes(15)),
+            FollowGroupHostResult.EndedOutcome => FollowGroupHostResult.Ended("Stopped", 10),
+            _ => FollowGroupHostResult.NotInGroup(),
+        };
+
+        var response = await _client.PostAsync(FollowUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        AssertNoForbiddenKey(body);
+        Assert.Null(body["hostId"]);
+        Assert.Null(body["isSuccess"]);
+        Assert.Null(body["error"]);
+        Assert.Equal(outcome, body["outcome"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnEndReasonAndXp_When_FollowingEndedGroup()
+    {
+        _mediator.DispatchResult = _ => FollowGroupHostResult.Ended("Stopped", 10);
+
+        var response = await _client.PostAsync(FollowUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        Assert.Equal("Ended", body["outcome"]!.GetValue<string>());
+        Assert.Equal("Stopped", body["endReason"]!.GetValue<string>());
+        Assert.Equal(10, body["xpAwarded"]!.GetValue<int>());
+    }
+
+    [Theory]
+    [InlineData(CommunityErrors.Community.NotMember, HttpStatusCode.Forbidden, "not-member")]
+    [InlineData(PomodoroErrors.Pomodoro.SessionAlreadyActive, HttpStatusCode.Conflict, "sprint-active")]
+    public async Task Should_MapError_When_FollowingFails(string error, HttpStatusCode status, string code)
+    {
+        _mediator.DispatchResult = _ => FollowGroupHostResult.Failure(error);
+
+        var response = await _client.PostAsync(FollowUrl, content: null);
+
+        Assert.Equal(status, response.StatusCode);
+        await AssertCodeAsync(code, response);
     }
 
     // ── Join an open sprint, close a sprint ────────────────────────────────

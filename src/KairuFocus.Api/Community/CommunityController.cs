@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using KairuFocus.Application.Community.Commands.ChangeProfileName;
 using KairuFocus.Application.Community.Commands.JoinCommunity;
+using KairuFocus.Application.Community.Commands.FollowGroupHost;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
+using KairuFocus.Application.Community.Commands.LaunchGroupStep;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
 using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
@@ -129,6 +131,44 @@ public sealed class CommunityController : ControllerBase
         return result is null ? NoContent() : Ok(result);
     }
 
+    /// <summary>UC-CO-10 — the host launches the next step: 201 with its end, or 204 when nobody is left
+    /// (the group ended, the page starts a solo session).</summary>
+    [HttpPost("current-session/steps")]
+    public async Task<IActionResult> LaunchGroupStep([FromBody] GroupStepBody body, CancellationToken ct)
+    {
+        var result = await _mediator.DispatchAsync<LaunchGroupStepCommand, LaunchGroupStepResult>(
+            new LaunchGroupStepCommand(body.Type!), ct);
+
+        if (!result.IsSuccess)
+            return ErrorResponse(result.Error!, notMemberStatus: StatusCodes.Status403Forbidden);
+
+        return result.HostAlone
+            ? NoContent()
+            : StatusCode(StatusCodes.Status201Created, new { stepEndsAt = result.StepEndsAt });
+    }
+
+    /// <summary>UC-CO-14 — a participant follows the host. Always 200 with an <c>outcome</c> (a 204 could not
+    /// carry the end reason nor the XP), except 403 for a non-member and 409 for another active session.</summary>
+    [HttpPost("current-session/follow")]
+    public async Task<IActionResult> FollowGroupHost(CancellationToken ct)
+    {
+        var result = await _mediator.DispatchAsync<FollowGroupHostCommand, FollowGroupHostResult>(
+            new FollowGroupHostCommand(), ct);
+
+        if (!result.IsSuccess)
+            return ErrorResponse(result.Error!, notMemberStatus: StatusCodes.Status403Forbidden);
+
+        return Ok(new
+        {
+            outcome = result.Outcome,
+            stepType = result.StepType,
+            stepEndsAt = result.StepEndsAt,
+            waitLimitAt = result.WaitLimitAt,
+            endReason = result.EndReason,
+            xpAwarded = result.XpAwarded,
+        });
+    }
+
     [HttpDelete("current-session")]
     public async Task<IActionResult> LeaveOrStopCurrentSession(CancellationToken ct)
     {
@@ -219,3 +259,6 @@ public sealed class CommunityController : ControllerBase
 public sealed record ProfileNameBody(string? Source, string? Name);
 
 public sealed record SprintClosedBody([Required] bool? Closed);
+
+/// <summary>A missing type is a generic 400; an unknown one is answered by <c>invalid-step</c>.</summary>
+public sealed record GroupStepBody([Required] string? Type);
