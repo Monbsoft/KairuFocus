@@ -70,4 +70,33 @@ internal sealed class FakeGroupSessionRepository : IGroupSessionRepository
         UpdateCallCount++;
         return Task.FromResult(TryUpdateResult);
     }
+
+    /// <summary>What <see cref="TryJoinAsync"/> answers, one value per call; true once empty.</summary>
+    public Queue<bool> TryJoinResults { get; } = new();
+
+    /// <summary>Calls to <see cref="TryJoinAsync"/>, accepted or not.</summary>
+    public int JoinCallCount { get; private set; }
+
+    /// <summary>
+    /// The group as the store holds it after each rejected <see cref="TryJoinAsync"/>, which the rejected join
+    /// did not reach: it replaces the stored group with the same id, so that the next <see cref="GetByIdAsync"/>
+    /// reads it, like the real repository detaching the rejected aggregate. Without it, the read returns the
+    /// aggregate the handler changed.
+    /// </summary>
+    public Func<GroupSession?>? OnReloadAfterRejectedJoin { get; set; }
+
+    public Task<bool> TryJoinAsync(GroupSession group, CancellationToken ct = default)
+    {
+        JoinCallCount++;
+        var accepted = !TryJoinResults.TryDequeue(out var result) || result;
+        if (!accepted && OnReloadAfterRejectedJoin is { } reload)
+        {
+            var stored = reload();
+            Groups.RemoveAll(g => g.Id == group.Id);
+            if (stored is not null)
+                Groups.Add(stored);
+        }
+
+        return Task.FromResult(accepted);
+    }
 }

@@ -1370,6 +1370,10 @@ else
 
     private void StartGroupLoop()
     {
+        // OnInitializedAsync starts the loop after its awaits: the page may have been left meanwhile, and
+        // DisposeAsync found no loop to cancel. Started now, the loop would tick until the tab is reloaded.
+        if (_disposed) return;
+
         _groupLoopCts = new CancellationTokenSource();
         _ = GroupLoopAsync(_groupLoopCts.Token);
     }

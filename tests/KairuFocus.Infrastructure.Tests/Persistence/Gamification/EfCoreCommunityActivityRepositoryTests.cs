@@ -83,7 +83,7 @@ public sealed class EfCoreCommunityActivityRepositoryTests
     }
 
     [Fact]
-    public async Task Should_NotCountSoloBreak()
+    public async Task Should_CountZeroSprintsInProgress_When_OnlySoloBreaksAreActive()
     {
         await _database.SeedAsync(
             ActiveSession(UserId.New(), PomodoroSessionType.ShortBreak, 5, Now.AddMinutes(-1)),

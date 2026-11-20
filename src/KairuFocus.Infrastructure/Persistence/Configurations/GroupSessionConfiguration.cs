@@ -107,6 +107,10 @@ public sealed class GroupMemberConfiguration : IEntityTypeConfiguration<GroupMem
     // Shadow foreign key to the group: the reads filter and group the members on it.
     internal const string GroupField = "GroupSessionId";
 
+    // EF's default name for the composite key, not configured (the model stays as migrated): the repository
+    // recognises a duplicate membership by it in the SQL Server error.
+    internal const string PrimaryKeyName = "PK_GroupSessionMembers";
+
     public void Configure(EntityTypeBuilder<GroupMember> builder)
     {
         builder.ToTable("GroupSessionMembers");

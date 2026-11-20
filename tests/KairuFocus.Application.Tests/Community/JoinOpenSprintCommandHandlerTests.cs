@@ -444,7 +444,8 @@ public sealed class JoinOpenSprintCommandHandlerTests
         Assert.Same(group, Assert.Single(_groups.Groups));
         Assert.Equal(2, group.ActiveMemberCount);
         Assert.True(group.IsActiveMember(Visitor));
-        Assert.Equal(1, _groups.UpdateCallCount);
+        Assert.Equal(1, _groups.JoinCallCount);
+        Assert.Equal(0, _groups.UpdateCallCount);
         var session = Assert.Single(VisitorSessions);
         Assert.Equal(PomodoroSessionId.From(RootId), session.SharedSprintId);
         Assert.Equal(EndsAtUtc, session.SharedEndAt);
@@ -504,7 +505,8 @@ public sealed class JoinOpenSprintCommandHandlerTests
         Assert.Same(concurrent, Assert.Single(_groups.Groups));
         Assert.Equal(2, concurrent.ActiveMemberCount);
         Assert.True(concurrent.IsActiveMember(Visitor));
-        Assert.Equal(1, _groups.UpdateCallCount);
+        Assert.Equal(1, _groups.JoinCallCount);
+        Assert.Equal(0, _groups.UpdateCallCount);
         Assert.Equal(PomodoroSessionId.From(RootId), Assert.Single(VisitorSessions).SharedSprintId);
     }
 
@@ -527,7 +529,8 @@ public sealed class JoinOpenSprintCommandHandlerTests
         // IsActiveMember is "LeftAtUtc is null": the departure is recorded.
         Assert.False(group.IsActiveMember(Visitor));
         Assert.Equal(1, group.ActiveMemberCount);
-        Assert.Equal(2, _groups.UpdateCallCount); // Join, then Leave.
+        Assert.Equal(1, _groups.JoinCallCount);
+        Assert.Equal(1, _groups.UpdateCallCount); // The departure.
         Assert.Same(winner, Assert.Single(VisitorSessions));
         Assert.Empty(_journal.Entries);
     }
@@ -546,6 +549,7 @@ public sealed class JoinOpenSprintCommandHandlerTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(1, group.ActiveMemberCount);
+        Assert.Equal(0, _groups.JoinCallCount);
         Assert.Equal(0, _groups.UpdateCallCount);
         Assert.Single(VisitorSessions);
     }
@@ -591,6 +595,7 @@ public sealed class JoinOpenSprintCommandHandlerTests
         Assert.False(result.IsSuccess);
         Assert.Equal(CommunityErrors.Community.SprintNotJoinable, result.Error);
         Assert.False(group.IsActiveMember(Visitor));
+        Assert.Equal(0, _groups.JoinCallCount);
         Assert.Equal(0, _groups.UpdateCallCount);
         Assert.Empty(VisitorSessions);
     }
@@ -610,20 +615,75 @@ public sealed class JoinOpenSprintCommandHandlerTests
         Assert.Empty(VisitorSessions);
     }
 
-    // Join writes member rows only: a conflict means the group row itself changed in between.
+    // The host closed the group between the read and the save: the join, checked against the version of the
+    // group, is rejected, then decided again on the group as stored.
     [Fact]
-    public async Task Should_ReturnNotJoinable_When_GroupUpdateConflicts()
+    public async Task Should_ReturnNotJoinable_When_HostClosedGroupDuringJoin()
     {
         GivenVisitorIsMember();
         GivenGroupRunning();
-        _groups.TryUpdateResult = false;
+        var stored = StoredGroup();
+        Assert.True(stored.Close().IsSuccess);
+        _groups.TryJoinResults.Enqueue(false);
+        _groups.OnReloadAfterRejectedJoin = () => stored;
 
         var result = await CreateSut().Handle(new JoinOpenSprintCommand(TargetName));
 
         Assert.False(result.IsSuccess);
         Assert.Equal(CommunityErrors.Community.SprintNotJoinable, result.Error);
+        Assert.False(stored.IsActiveMember(Visitor));
+        Assert.Equal(1, _groups.JoinCallCount);
         Assert.Empty(VisitorSessions);
         Assert.Empty(_journal.Entries);
+    }
+
+    // A second tab of the same user recorded the membership first: on the group as stored, the visitor is
+    // already a member, and the session insert decides as for a double click.
+    [Fact]
+    public async Task Should_JoinCurrentStep_When_SameUserRecordedMembershipFirst()
+    {
+        GivenVisitorIsMember();
+        GivenGroupRunning();
+        var stored = StoredGroup();
+        Assert.True(stored.Join(Visitor, NowUtc).IsSuccess);
+        _groups.TryJoinResults.Enqueue(false);
+        _groups.OnReloadAfterRejectedJoin = () => stored;
+
+        var result = await CreateSut().Handle(new JoinOpenSprintCommand(TargetName));
+
+        Assert.True(result.IsSuccess);
+        Assert.Same(stored, Assert.Single(_groups.Groups));
+        Assert.Equal(2, stored.ActiveMemberCount);
+        Assert.Equal(PomodoroSessionId.From(RootId), Assert.Single(VisitorSessions).SharedSprintId);
+    }
+
+    // Rejected again on the group read back: the group keeps moving under the request, the card reads its
+    // state again.
+    [Fact]
+    public async Task Should_ReturnNotJoinable_When_JoinRejectedTwice()
+    {
+        GivenVisitorIsMember();
+        GivenGroupRunning();
+        _groups.TryJoinResults.Enqueue(false);
+        _groups.TryJoinResults.Enqueue(false);
+        _groups.OnReloadAfterRejectedJoin = StoredGroup;
+
+        var result = await CreateSut().Handle(new JoinOpenSprintCommand(TargetName));
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(CommunityErrors.Community.SprintNotJoinable, result.Error);
+        Assert.Equal(2, _groups.JoinCallCount);
+        Assert.Empty(VisitorSessions);
+        Assert.Empty(_journal.Entries);
+    }
+
+    /// <summary>A fresh read of the group of <see cref="GivenGroupRunning"/>, as the store holds it.</summary>
+    private GroupSession StoredGroup()
+    {
+        var root = _sessions.Sessions.Single(s => s.Id.Value == RootId);
+        var group = GroupSession.Start(RootId, Host, root.StartedAt!.Value, EndsAtUtc, OtherMember, NowUtc.AddMinutes(-3));
+        Assert.True(group.IsSuccess);
+        return group.Value;
     }
 
     /// <summary>Each read of the clock returns a later instant, like a real clock across slow reads.</summary>

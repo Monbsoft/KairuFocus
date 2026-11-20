@@ -294,5 +294,8 @@ public sealed class LeaveOrStopGroupSessionCommandHandlerTests
 
             return Task.FromResult(accepted);
         }
+
+        public Task<bool> TryJoinAsync(GroupSession group, CancellationToken ct = default) =>
+            _inner.TryJoinAsync(group, ct);
     }
 }

@@ -1,6 +1,7 @@
 using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Identity;
 using KairuFocus.Infrastructure.Persistence;
+using KairuFocus.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -87,6 +88,8 @@ public sealed class GroupSessionConfigurationTests
         Assert.Equal("GroupSessionMembers", member.GetTableName());
         var primaryKey = member.FindPrimaryKey()!;
         Assert.Equal(["GroupSessionId", "UserId"], primaryKey.Properties.Select(p => p.GetColumnName()));
+        // The repository recognises a duplicate membership by this name in the SQL Server error.
+        Assert.Equal(GroupMemberConfiguration.PrimaryKeyName, primaryKey.GetName());
         Assert.Equal("uniqueidentifier", member.FindProperty("_userId")!.GetColumnType());
         Assert.True(member.FindProperty(nameof(GroupMember.LeftAtUtc))!.IsNullable);
     }

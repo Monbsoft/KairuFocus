@@ -218,28 +218,39 @@ public sealed class JoinOpenSprintCommandHandler : ICommandHandler<JoinOpenSprin
         DateTime now,
         CancellationToken cancellationToken)
     {
-        var endRecorded = group.EndIfHostAbsent(now);
-
-        var joined = group.Join(userId, now);
-        if (joined.IsFailure)
+        // A rejected join means the group was written since the read (step launched, stopped, closed) or the
+        // same user's other request recorded the membership first. The repository detached the aggregate, so
+        // a fresh load decides again on the stored group. Once is enough: a second rejection means the group
+        // keeps moving under the request, and the card reads its state again.
+        for (var attempt = 0; ; attempt++)
         {
-            if (endRecorded)
-                await SaveEndRecordedAsync(group, cancellationToken);
+            var endRecorded = group.EndIfHostAbsent(now);
 
-            return joined.Error == CommunityErrors.Community.AlreadyInGroup
-                ? Result.Success(group)
-                : Result.Failure<GroupSession>(ToJoinError(joined.Error));
+            var joined = group.Join(userId, now);
+            if (joined.IsFailure)
+            {
+                if (endRecorded)
+                    await SaveEndRecordedAsync(group, cancellationToken);
+
+                return joined.Error == CommunityErrors.Community.AlreadyInGroup
+                    ? Result.Success(group)
+                    : Result.Failure<GroupSession>(ToJoinError(joined.Error));
+            }
+
+            if (await _groupRepository.TryJoinAsync(group, cancellationToken))
+                return Result.Success(group);
+
+            var reloaded = attempt == 0
+                ? await _groupRepository.GetByIdAsync(group.Id, cancellationToken)
+                : null;
+            if (reloaded is null)
+            {
+                _logger.LogWarning("Join of user {UserId} to group session {GroupId} rejected by concurrent writes", userId, group.Id);
+                return Result.Failure<GroupSession>(CommunityErrors.Community.SprintNotJoinable);
+            }
+
+            group = reloaded;
         }
-
-        // Join writes member rows only: a conflict means the group row itself changed in between (step
-        // launched, stopped, closed). The card reads its state again.
-        if (!await _groupRepository.TryUpdateAsync(group, cancellationToken))
-        {
-            _logger.LogWarning("Join of user {UserId} to group session {GroupId} rejected by a concurrent write", userId, group.Id);
-            return Result.Failure<GroupSession>(CommunityErrors.Community.SprintNotJoinable);
-        }
-
-        return Result.Success(group);
     }
 
     /// <summary>Withdraws a membership written by this request when no session can follow it.</summary>

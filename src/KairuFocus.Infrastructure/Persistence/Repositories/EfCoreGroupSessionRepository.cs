@@ -52,7 +52,7 @@ internal sealed class EfCoreGroupSessionRepository : IGroupSessionRepository
             await _context.SaveChangesAsync(ct);
             return true;
         }
-        catch (DbUpdateException ex) when (IsIdConflict(ex))
+        catch (DbUpdateException ex) when (IsDuplicateKey(ex, GroupSessionConfiguration.PrimaryKeyName))
         {
             // A concurrent request created the group with the same id. Detach the orphan so the scoped
             // DbContext stays usable.
@@ -80,17 +80,46 @@ internal sealed class EfCoreGroupSessionRepository : IGroupSessionRepository
         }
     }
 
+    // A join writes member rows only. Marking the unchanged Version as modified adds the group row to the save
+    // (UPDATE ... SET Version = @same WHERE Version = @read): a step launched, a stop or a close committed since
+    // the read rejects the join, while two users arriving at the same version both pass.
+    public async Task<bool> TryJoinAsync(GroupSession group, CancellationToken ct = default)
+    {
+        _context.Entry(group).Property(g => g.Version).IsModified = true;
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Detach(group);
+            return false;
+        }
+        catch (DbUpdateException ex) when (IsDuplicateKey(ex, GroupMemberConfiguration.PrimaryKeyName))
+        {
+            // Another request of the same user (second tab) recorded the membership first. Detached like a
+            // version conflict: the caller reads the group again and finds the user already a member.
+            Detach(group);
+            return false;
+        }
+    }
+
     private void Detach(GroupSession group)
     {
         var entry = _context.Entry(group);
-        foreach (var member in entry.Collection(GroupSessionConfiguration.MembersField).CurrentValue?.Cast<GroupMember>() ?? [])
+
+        // Copied first: detaching a member still Added (a join, a group just created) removes it from the
+        // collection being enumerated.
+        var members = entry.Collection(GroupSessionConfiguration.MembersField).CurrentValue?.Cast<GroupMember>().ToList() ?? [];
+        foreach (var member in members)
             _context.Entry(member).State = EntityState.Detached;
 
         entry.State = EntityState.Detached;
     }
 
-    private static bool IsIdConflict(DbUpdateException exception) =>
+    private static bool IsDuplicateKey(DbUpdateException exception, string keyName) =>
         exception.InnerException is SqlException sqlException
         && sqlException.Number is DuplicateKeyRowError or DuplicateKeyConstraintError
-        && sqlException.Message.Contains(GroupSessionConfiguration.PrimaryKeyName, StringComparison.Ordinal);
+        && sqlException.Message.Contains(keyName, StringComparison.Ordinal);
 }

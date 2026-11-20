@@ -8,8 +8,8 @@ namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
 /// <summary>
 /// Round trip, lookups and conflicts of <see cref="EfCoreGroupSessionRepository"/>. InMemory enforces no
 /// foreign key and raises no SQL Server error number: the SQL shape is covered by <see cref="GroupSessionSqlTests"/>.
-/// The duplicate-key path of TryAddAsync is not testable under InMemory (a duplicate id surfaces as a raw
-/// ArgumentException) and is checked at acceptance.
+/// The duplicate-key paths of TryAddAsync (group id) and TryJoinAsync (membership) are not testable under
+/// InMemory (a duplicate key surfaces as a raw ArgumentException) and are checked at acceptance.
 /// </summary>
 public sealed class GroupSessionRepositoryTests
 {
@@ -182,6 +182,84 @@ public sealed class GroupSessionRepositoryTests
 
         Assert.True(seenBySecond!.Close().IsSuccess);
         Assert.False(await secondRepository.TryUpdateAsync(seenBySecond));
+    }
+
+    // A join moves no column of the group, yet the close committed since the read rejects it.
+    [Fact]
+    public async Task Should_RejectJoin_When_GroupWrittenSinceRead()
+    {
+        var group = NewGroup(UserId.New(), UserId.New());
+        await _database.SeedAsync(group);
+
+        await using var hostContext = _database.CreateContext();
+        await using var visitorContext = _database.CreateContext();
+        var hostRepository = new EfCoreGroupSessionRepository(hostContext);
+        var visitorRepository = new EfCoreGroupSessionRepository(visitorContext);
+        var seenByHost = await hostRepository.GetByIdAsync(group.Id);
+        var seenByVisitor = await visitorRepository.GetByIdAsync(group.Id);
+
+        Assert.True(seenByHost!.Close().IsSuccess);
+        Assert.True(await hostRepository.TryUpdateAsync(seenByHost));
+
+        Assert.True(seenByVisitor!.Join(UserId.New(), NowUtc).IsSuccess);
+        Assert.False(await visitorRepository.TryJoinAsync(seenByVisitor));
+    }
+
+    // The rejected join is detached: the same request reads the group as stored, not its own change.
+    [Fact]
+    public async Task Should_ReadStoredGroup_When_JoinWasRejected()
+    {
+        var group = NewGroup(UserId.New(), UserId.New());
+        await _database.SeedAsync(group);
+
+        await using var hostContext = _database.CreateContext();
+        await using var visitorContext = _database.CreateContext();
+        var hostRepository = new EfCoreGroupSessionRepository(hostContext);
+        var visitorRepository = new EfCoreGroupSessionRepository(visitorContext);
+        var seenByHost = await hostRepository.GetByIdAsync(group.Id);
+        var seenByVisitor = await visitorRepository.GetByIdAsync(group.Id);
+        Assert.True(seenByHost!.Close().IsSuccess);
+        Assert.True(await hostRepository.TryUpdateAsync(seenByHost));
+        var visitor = UserId.New();
+        Assert.True(seenByVisitor!.Join(visitor, NowUtc).IsSuccess);
+        await visitorRepository.TryJoinAsync(seenByVisitor);
+
+        var reloaded = await visitorRepository.GetByIdAsync(group.Id);
+
+        // Compared with a fresh read rather than on the visitor's membership: InMemory has no transaction and
+        // keeps the member insert written before the rejected group update (SQL Server rolls the save back).
+        await using var freshContext = _database.CreateContext();
+        var stored = await new EfCoreGroupSessionRepository(freshContext).GetByIdAsync(group.Id);
+        Assert.NotNull(reloaded);
+        Assert.NotSame(seenByVisitor, reloaded);
+        Assert.True(reloaded.IsClosedToJoin);
+        Assert.Equal(1, reloaded.Version);
+        Assert.Equal(stored!.ActiveMemberCount, reloaded.ActiveMemberCount);
+    }
+
+    // Join does not move the version: two users arriving at the same version are both recorded.
+    [Fact]
+    public async Task Should_RecordBothJoins_When_TwoUsersJoinAtSameVersion()
+    {
+        var group = NewGroup(UserId.New(), UserId.New());
+        await _database.SeedAsync(group);
+
+        await using var firstContext = _database.CreateContext();
+        await using var secondContext = _database.CreateContext();
+        var firstRepository = new EfCoreGroupSessionRepository(firstContext);
+        var secondRepository = new EfCoreGroupSessionRepository(secondContext);
+        var seenByFirst = await firstRepository.GetByIdAsync(group.Id);
+        var seenBySecond = await secondRepository.GetByIdAsync(group.Id);
+
+        Assert.True(seenByFirst!.Join(UserId.New(), NowUtc).IsSuccess);
+        Assert.True(await firstRepository.TryJoinAsync(seenByFirst));
+        Assert.True(seenBySecond!.Join(UserId.New(), NowUtc).IsSuccess);
+        Assert.True(await secondRepository.TryJoinAsync(seenBySecond));
+
+        await using var readContext = _database.CreateContext();
+        var loaded = await new EfCoreGroupSessionRepository(readContext).GetByIdAsync(group.Id);
+        Assert.Equal(3, loaded!.ActiveMemberCount);
+        Assert.Equal(0, loaded.Version);
     }
 
     private static GroupSession NewGroup(UserId host, UserId member, DateTime? startedAtUtc = null)

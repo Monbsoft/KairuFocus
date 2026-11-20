@@ -19,4 +19,12 @@ public interface IGroupSessionRepository
 
     /// <summary>False on a <see cref="GroupSession.Version"/> conflict.</summary>
     Task<bool> TryUpdateAsync(GroupSession group, CancellationToken ct = default);
+
+    /// <summary>
+    /// Saves a <see cref="GroupSession.Join"/>. A join moves no column of the group, yet it is checked against
+    /// its <see cref="GroupSession.Version"/>: false when the group was written in between (step launched,
+    /// stopped, closed), or when a concurrent request of the same user recorded the membership first. Two
+    /// users joining at the same version both succeed.
+    /// </summary>
+    Task<bool> TryJoinAsync(GroupSession group, CancellationToken ct = default);
 }

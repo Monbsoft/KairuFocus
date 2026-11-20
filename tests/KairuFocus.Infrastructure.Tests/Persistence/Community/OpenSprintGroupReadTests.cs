@@ -251,7 +251,7 @@ public sealed class OpenSprintGroupReadTests
     }
 
     [Fact]
-    public async Task Should_NeverListSoloBreak()
+    public async Task Should_NotListAnyGroup_When_SessionsAreSoloBreaks()
     {
         await SeedAsync(
             Started(_lea, PomodoroSessionType.ShortBreak, 5, Now.AddMinutes(-1)),
