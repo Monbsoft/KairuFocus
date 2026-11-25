@@ -145,6 +145,7 @@
         if (code == _currentCulture)
         {
             Close();
+            await _trigger.FocusAsync();
             return;
         }
 

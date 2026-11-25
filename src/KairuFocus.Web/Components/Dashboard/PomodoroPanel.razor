@@ -65,7 +65,7 @@
 
                     @TaskReminder
 
-                    <a class="kf-pomo__btn kf-pomo__btn--primary" href="pomodoro?start=sprint">@F["Dashboard.Pomodoro.Start"]</a>
+                    <a class="kf-pomo__btn kf-pomo__btn--primary" href="@($"pomodoro?{KairuFocus.Web.Helpers.PomodoroAutoStart.QueryName}={KairuFocus.Web.Helpers.PomodoroAutoStart.SprintValue}")">@F["Dashboard.Pomodoro.Start"]</a>
                 }
             </div>
 

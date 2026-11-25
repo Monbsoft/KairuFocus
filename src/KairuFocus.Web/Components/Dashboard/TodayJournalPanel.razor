@@ -11,7 +11,6 @@
 
     @if (_loading)
     {
-        <span class="visually-hidden" role="status">@F["Dashboard.Loading"]</span>
         <div class="kf-card kf-journal__card" aria-hidden="true">
             <div class="kf-skel kf-journal__skel"></div>
             <div class="kf-skel kf-journal__skel"></div>
@@ -35,7 +34,7 @@
                     @foreach (var entry in _shown)
                     {
                         <li class="kf-journal__item" @key="entry.Id">
-                            <time class="kf-journal__time" datetime="@entry.OccurredAt.ToUniversalTime().ToString("o")">@entry.OccurredAt.ToLocalTime().ToString("HH:mm")</time>
+                            <time class="kf-journal__time" datetime="@AsUtc(entry.OccurredAt).ToString("o")">@entry.OccurredAt.ToLocalTime().ToString("HH:mm")</time>
                             <span class="kf-journal__icon" aria-hidden="true">@JournalEntryMeta.GetIcon(entry.EventType)</span>
                             <div class="kf-journal__body">
                                 <span class="kf-journal__label">@JournalEntryMeta.GetLabel(entry, F)</span>
@@ -98,7 +97,6 @@
     private bool _loading = true;
     private bool _failed;
 
-    private List<JournalEntryDto> _entries = [];
     private IReadOnlyList<JournalEntryDto> _shown = [];
     private JournalEntryDto? _target;
 
@@ -114,6 +112,13 @@
     private bool _focusAddButton;
 
     protected override Task OnInitializedAsync() => LoadAsync();
+
+    // Unspecified is treated as UTC, consistently with ToLocalTime() used for the displayed time.
+    private static DateTime AsUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Unspecified => DateTime.SpecifyKind(value, DateTimeKind.Utc),
+        _ => value.ToUniversalTime()
+    };
 
     private async Task LoadAsync()
     {
@@ -148,7 +153,6 @@
 
     private void Apply(List<JournalEntryDto> entries)
     {
-        _entries = entries;
         _shown = TodayJournal.Latest(entries);
         // The target is searched in the whole day: it may be older than the entries shown.
         _target = TodayJournal.NoteTarget(entries);

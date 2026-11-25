@@ -974,7 +974,7 @@
 	<value>vergangen</value>
   </data>
   <data name="Dashboard.Session.TimeUp" xml:space="preserve">
-	<value>Zeit abgelaufen. Öffne das Pomodoro, um ihn zu speichern.</value>
+	<value>Zeit abgelaufen. Öffne das Pomodoro, um es zu speichern.</value>
   </data>
   <data name="Dashboard.Session.OpenSprint" xml:space="preserve">
 	<value>Sprint öffnen</value>
