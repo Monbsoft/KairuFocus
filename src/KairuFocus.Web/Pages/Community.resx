@@ -360,10 +360,6 @@
   <data name="Community.Format.MonthShortYear" xml:space="preserve">
 	<value>MMM yyyy</value>
   </data>
-  <!-- T10 Nav.Profile -->
-  <data name="Nav.Profile" xml:space="preserve">
-	<value>Profil</value>
-  </data>
   <!-- T10 Profile.* -->
   <data name="Profile.PageTitle" xml:space="preserve">
 	<value>Profil — KairuFocus</value>

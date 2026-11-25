@@ -23,10 +23,12 @@
     padding-top: 0.75rem;
 }
 
-.nav-item-settings {
-    margin-top: auto;
-    padding-top: 0.25rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
+.nav-separator {
+    width: 2rem;
+    margin: 0.25rem auto 0.5rem;
+    border: 0;
+    border-top: 1px solid rgba(255,255,255,0.25);
+    opacity: 1;
 }
 
 /* Lien icône centré */
@@ -74,37 +76,22 @@
     z-index: 1000;
 }
 
-.nav-item ::deep a.nav-icon:hover::after {
+.nav-item ::deep a.nav-icon:hover::after,
+.nav-item ::deep a.nav-icon:focus-visible::after {
     opacity: 1;
 }
 
-.nav-item-logout {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
+.nav-item ::deep a.nav-icon:focus-visible,
+.navbar-toggler:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
 }
 
-.nav-item-logout button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    width: 100%;
-    color: #d7d7d7;
-    border-radius: 8px;
-    height: 3rem;
-    width: 3rem;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    transition: background-color 0.15s ease;
-}
-
-.nav-item-logout button:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    color: white;
+@media (prefers-reduced-motion: reduce) {
+    .nav-item ::deep a.nav-icon,
+    .nav-item ::deep a.nav-icon::after {
+        transition: none;
+    }
 }
 
 @media (min-width: 641px) {
