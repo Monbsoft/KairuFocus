@@ -63,7 +63,9 @@
     z-index: 3;
     width: 18rem;
     max-width: calc(100vw - 1rem);
-    max-height: calc(100vh - 5rem);
+    /* Panel starts ~3.5rem + 0.25rem below the top: keep a ~1rem bottom margin. */
+    max-height: calc(100vh - 4.5rem);
+    max-height: calc(100dvh - 4.5rem);
     overflow-y: auto;
     padding: 0.5rem 0;
     background-color: var(--bs-body-bg);
@@ -181,6 +183,12 @@
 }
 
 @media (max-width: 640.98px) {
+    /* The 3.5rem NavMenu brand row sits above the 3.5rem top bar: panel starts ~6.6rem down. */
+    .kf-account__panel {
+        max-height: calc(100vh - 8rem);
+        max-height: calc(100dvh - 8rem);
+    }
+
     .kf-account__name {
         position: absolute;
         width: 1px;

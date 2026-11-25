@@ -37,6 +37,9 @@ main {
         height: 100vh;
         position: sticky;
         top: 0;
+        /* Own stacking context: above page content so nav tooltips paint over it,
+           below the top bar (1020), modals (1055) and the XP toast (1080). */
+        z-index: 1010;
     }
 
     .top-row {

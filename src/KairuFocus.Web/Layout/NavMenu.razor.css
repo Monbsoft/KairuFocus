@@ -105,7 +105,8 @@
 
     .nav-scrollable {
         height: calc(100vh - 3.5rem);
-        overflow-y: auto;
+        /* Visible so the hover/focus tooltips can escape the 64px column (5 items, never scrolls). */
+        overflow: visible;
         display: flex;
         flex-direction: column;
     }
