@@ -367,6 +367,10 @@ else
     /// <summary>Optional <c>?type=sprint</c> from the Community page: preselects the sprint when no session is running.</summary>
     [Parameter, SupplyParameterFromQuery(Name = "type")] public string? TypeQuery { get; set; }
 
+    /// <summary>Optional <c>?start=sprint</c> from the dashboard: starts a sprint on arrival, through
+    /// <see cref="StartSession"/>, then is removed from the address (see the end of <see cref="OnInitializedAsync"/>).</summary>
+    [Parameter, SupplyParameterFromQuery(Name = PomodoroAutoStart.QueryName)] public string? StartQuery { get; set; }
+
     // ── État ──────────────────────────────────────────────────────────────
     private bool _loaded;
     private PomodoroSessionDto? _session;
@@ -557,6 +561,8 @@ else
         if (group.Succeeded) ApplyInitialGroup(group.Session);
 
         _session  = await PomodoroApi.GetCurrentSessionAsync();
+        // Read before the adoption below: it sets _session back to null for a free sprint, which still runs.
+        var hadSessionAtLoad = _session is not null;
 
         // Load suggested session type and durations (silent fallback to the field defaults)
         var suggested = await GetSuggestedSessionTypeOrNullAsync();
@@ -609,6 +615,22 @@ else
         RefreshLinkedTasks();
         _loaded = true;
         StartGroupLoop();
+
+        // ?start=sprint (dashboard): a running session or a live group wins, as for ?type=sprint. The start goes
+        // through StartSession, the only start path (double-click guard, 409/401/network handling, resync).
+        if (StartQuery is not null)
+        {
+            if (!_disposed && PomodoroAutoStart.ShouldStart(StartQuery, hadSessionAtLoad, IsGroupLive))
+            {
+                _selectedSessionType = "Sprint";
+                await StartSession();
+            }
+
+            // In every case (started, ignored or failed): a reload or Back must never start a second sprint.
+            // Left meanwhile: the address is no longer this page's, so it is not touched.
+            if (!_disposed)
+                Nav.NavigateTo(Nav.GetUriWithQueryParameter(PomodoroAutoStart.QueryName, (string?)null), replace: true);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
