@@ -622,8 +622,12 @@ else
         {
             if (!_disposed && PomodoroAutoStart.ShouldStart(StartQuery, hadSessionAtLoad, IsGroupLive))
             {
+                // StartSession clears the messages of a previous attempt: keep the load error (task list)
+                // unless the start reported its own.
+                var loadError = _errorMessage;
                 _selectedSessionType = "Sprint";
                 await StartSession();
+                _errorMessage ??= loadError;
             }
 
             // In every case (started, ignored or failed): a reload or Back must never start a second sprint.

@@ -47,7 +47,8 @@ a, .btn-link {
     padding: 0.6rem 1.25rem 0.7rem 1.25rem;
     position: fixed;
     width: 100%;
-    z-index: 1000;
+    /* Above the sidebar (1010), the top bar (1020) and Bootstrap modals (1055), below the XP toast (1080). */
+    z-index: 1060;
 }
 
     #blazor-error-ui .dismiss {

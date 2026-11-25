@@ -69,7 +69,7 @@
                             <div class="kf-journal__actions">
                                 <button type="button" class="kf-journal__btn kf-journal__btn--primary" @onclick="SaveAsync"
                                         disabled="@(_saving || string.IsNullOrWhiteSpace(_text))">@F["Dashboard.Journal.Save"]</button>
-                                <button type="button" class="kf-journal__btn kf-journal__btn--secondary" @onclick="Cancel">@F["Dashboard.Journal.Cancel"]</button>
+                                <button type="button" class="kf-journal__btn kf-journal__btn--secondary" @onclick="Cancel" disabled="@_saving">@F["Dashboard.Journal.Cancel"]</button>
                             </div>
                         </div>
                     }
