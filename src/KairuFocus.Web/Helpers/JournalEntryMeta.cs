@@ -28,19 +28,17 @@ public static class JournalEntryMeta
     public static bool CanAddComment(string eventType) =>
         !Configs.TryGetValue(eventType, out var c) || c.CanAddComment;
 
-    public static string GetLabel(JournalEntryDto entry) => entry.EventType switch
+    public static (string Key, object[] Args)? GetLabelKey(JournalEntryDto entry)
     {
-        "SprintStarted"     => SeqLabel("Sprint", entry.Sequence, "démarré"),
-        "SprintCompleted"   => SeqLabel("Sprint", entry.Sequence, "complété"),
-        "SprintInterrupted" => SeqLabel("Sprint", entry.Sequence, "interrompu"),
-        "BreakStarted"      => SeqLabel("Pause",  entry.Sequence, "démarrée"),
-        "BreakCompleted"    => SeqLabel("Pause",  entry.Sequence, "terminée"),
-        "BreakInterrupted"  => SeqLabel("Pause",  entry.Sequence, "interrompue"),
-        "TaskStarted"       => "Tâche démarrée",
-        "TaskCompleted"     => "Tâche complétée",
-        _                   => entry.EventType
-    };
+        if (!Configs.ContainsKey(entry.EventType)) return null;
+        var key = $"Journal.Entry.{entry.EventType}";
+        var supportsSequence = entry.EventType.StartsWith("Sprint", StringComparison.Ordinal)
+                               || entry.EventType.StartsWith("Break", StringComparison.Ordinal);
+        return supportsSequence && entry.Sequence.HasValue
+            ? (key + ".Seq", new object[] { entry.Sequence.Value })
+            : (key, Array.Empty<object>());
+    }
 
-    private static string SeqLabel(string noun, int? seq, string verb) =>
-        seq.HasValue ? $"{noun} #{seq} {verb}" : $"{noun} {verb}";
+    public static string GetLabel(JournalEntryDto entry, CommunityFormatter f) =>
+        GetLabelKey(entry) is { } label ? f.Format(label.Key, label.Args) : entry.EventType;
 }

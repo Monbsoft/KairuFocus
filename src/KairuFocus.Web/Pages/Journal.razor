@@ -3,6 +3,7 @@
 @using KairuFocus.Web.Services
 @using KairuFocus.Web.Helpers
 @inject JournalApiClient Api
+@inject CommunityFormatter F
 
 <div class="notebook">
 
@@ -51,7 +52,7 @@
                         <div class="nb-content">
                             <div class="nb-event">
                                 <span class="nb-icon">@JournalEntryMeta.GetIcon(entry.EventType)</span>
-                                <span class="nb-label">@JournalEntryMeta.GetLabel(entry)</span>
+                                <span class="nb-label">@JournalEntryMeta.GetLabel(entry, F)</span>
                             </div>
 
                             @if (entry.LinkedTasks.Count > 0)
