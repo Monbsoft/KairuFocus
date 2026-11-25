@@ -5,15 +5,20 @@
     align-items: center;
 }
 
+/* z-indexes below are local to the .top-row stacking context (MainLayout.razor.css, z-index 1020):
+   backdrop 1 < trigger 2 < panel 3. The trigger stays above the backdrop so it keeps its hover while open. */
+
 /* Transparent full-viewport layer behind the panel: a click on it closes the menu. */
 .kf-account__backdrop {
     position: fixed;
     inset: 0;
-    z-index: 1030;
+    z-index: 1;
     background: transparent;
 }
 
 .kf-account__trigger {
+    position: relative;
+    z-index: 2;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -55,7 +60,7 @@
     position: absolute;
     top: calc(100% + 0.25rem);
     right: 0;
-    z-index: 1031;
+    z-index: 3;
     width: 18rem;
     max-width: calc(100vw - 1rem);
     max-height: calc(100vh - 5rem);
