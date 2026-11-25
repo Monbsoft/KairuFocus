@@ -1,0 +1,235 @@
+@* Journal block of the dashboard: the last entries of today and a quick note on the most recent entry that accepts one.
+   Reads through JournalApiClient only; the full journal stays on the Journal page. *@
+@using System.Text.Json
+@using KairuFocus.Web.Helpers
+@implements IDisposable
+@inject JournalApiClient Journal
+@inject CommunityFormatter F
+
+<section class="kf-journal" aria-labelledby="kf-journal-heading" aria-busy="@(_loading ? "true" : "false")">
+    <h2 id="kf-journal-heading" class="kf-eyebrow">@F["Dashboard.Journal.Heading"]</h2>
+
+    @if (_loading)
+    {
+        <div class="kf-card kf-journal__card" aria-hidden="true">
+            <div class="kf-skel kf-journal__skel"></div>
+            <div class="kf-skel kf-journal__skel"></div>
+            <div class="kf-skel kf-journal__skel"></div>
+        </div>
+    }
+    else if (_failed)
+    {
+        <ZoneAlert Message="@F["Dashboard.Journal.Error"]" OnRetry="LoadAsync" />
+    }
+    else
+    {
+        <div class="kf-card kf-journal__card">
+            @if (_shown.Count == 0)
+            {
+                <p class="kf-journal__empty">@F["Dashboard.Journal.Empty"]</p>
+            }
+            else
+            {
+                <ul class="kf-journal__list">
+                    @foreach (var entry in _shown)
+                    {
+                        <li class="kf-journal__item" @key="entry.Id">
+                            <time class="kf-journal__time" datetime="@AsUtc(entry.OccurredAt).ToString("o")">@entry.OccurredAt.ToLocalTime().ToString("HH:mm")</time>
+                            <span class="kf-journal__icon" aria-hidden="true">@JournalEntryMeta.GetIcon(entry.EventType)</span>
+                            <div class="kf-journal__body">
+                                <span class="kf-journal__label">@JournalEntryMeta.GetLabel(entry, F)</span>
+                                @if (entry.Comments.Count > 0)
+                                {
+                                    <ul class="kf-journal__notes">
+                                        @foreach (var comment in entry.Comments)
+                                        {
+                                            <li @key="comment.Id">@comment.Text</li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+
+            <div class="kf-journal__foot">
+                @if (_target is { } target)
+                {
+                    @if (_editing)
+                    {
+                        <div class="kf-journal__editor">
+                            <label class="kf-journal__fieldlabel" for="kf-journal-note">@F.Format("Dashboard.Journal.NoteLabel", JournalEntryMeta.GetLabel(target, F))</label>
+                            <textarea id="kf-journal-note" class="kf-journal__textarea" rows="3" @ref="_editor"
+                                      @bind="_text" @bind:event="oninput" @onkeydown="OnEditorKeyDown"></textarea>
+                            @if (_saveFailed)
+                            {
+                                <p class="kf-journal__error" role="alert">@F["Dashboard.Journal.NoteError"]</p>
+                            }
+                            <div class="kf-journal__actions">
+                                <button type="button" class="kf-journal__btn kf-journal__btn--primary" @onclick="SaveAsync"
+                                        disabled="@(_saving || string.IsNullOrWhiteSpace(_text))">@F["Dashboard.Journal.Save"]</button>
+                                <button type="button" class="kf-journal__btn kf-journal__btn--secondary" @onclick="Cancel" disabled="@_saving">@F["Dashboard.Journal.Cancel"]</button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <button type="button" class="kf-journal__btn kf-journal__btn--secondary" @ref="_addButton" @onclick="OpenEditor">
+                            @F.Format("Dashboard.Journal.AddNote", JournalEntryMeta.GetLabel(target, F))
+                        </button>
+                    }
+                }
+
+                @* Polite status: always rendered (visually hidden while empty, never display:none) so that the confirmation is announced when it appears. *@
+                <p class="kf-journal__saved" role="status">@_savedMessage</p>
+
+                <a class="kf-journal__link" href="journal">@F["Dashboard.Journal.All"]</a>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private readonly CancellationTokenSource _life = new();
+    private int _loadVersion;
+
+    private bool _loading = true;
+    private bool _failed;
+
+    private IReadOnlyList<JournalEntryDto> _shown = [];
+    private JournalEntryDto? _target;
+
+    private bool _editing;
+    private bool _saving;
+    private bool _saveFailed;
+    private string _text = "";
+    private string? _savedMessage;
+
+    private ElementReference _editor;
+    private ElementReference _addButton;
+    private bool _focusEditor;
+    private bool _focusAddButton;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    // Unspecified is treated as UTC, consistently with ToLocalTime() used for the displayed time.
+    private static DateTime AsUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Unspecified => DateTime.SpecifyKind(value, DateTimeKind.Utc),
+        _ => value.ToUniversalTime()
+    };
+
+    private async Task LoadAsync()
+    {
+        var version = ++_loadVersion;
+        _loading = true;
+        _failed = false;
+
+        var entries = await ReadEntriesAsync();
+
+        // Disposed meanwhile, or a newer load (retry) took over.
+        if (_life.IsCancellationRequested || version != _loadVersion) return;
+
+        if (entries is null) _failed = true;
+        else Apply(entries);
+        _loading = false;
+    }
+
+    private async Task<List<JournalEntryDto>?> ReadEntriesAsync()
+    {
+        try
+        {
+            return await Journal.GetTodayEntriesAsync();
+        }
+        catch (Exception ex) when (IsFailure(ex))
+        {
+            return null;
+        }
+    }
+
+    private static bool IsFailure(Exception ex) =>
+        ex is HttpRequestException or TaskCanceledException or JsonException or NotSupportedException;
+
+    private void Apply(List<JournalEntryDto> entries)
+    {
+        _shown = TodayJournal.Latest(entries);
+        // The target is searched in the whole day: it may be older than the entries shown.
+        _target = TodayJournal.NoteTarget(entries);
+    }
+
+    private void OpenEditor()
+    {
+        _editing = true;
+        _saveFailed = false;
+        _savedMessage = null;
+        _focusEditor = true;
+    }
+
+    private void Cancel()
+    {
+        _editing = false;
+        _saveFailed = false;
+        _text = "";
+        _focusAddButton = true;
+    }
+
+    private void OnEditorKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape" && !_saving) Cancel();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_saving || _target is not { } target || string.IsNullOrWhiteSpace(_text)) return;
+
+        _saving = true;
+        _saveFailed = false;
+        var label = JournalEntryMeta.GetLabel(target, F);
+
+        try
+        {
+            await Journal.AddCommentAsync(target.Id, _text.Trim());
+        }
+        catch (Exception ex) when (IsFailure(ex) || ex is NullReferenceException)
+        {
+            // The text is kept so that nothing is lost.
+            _saving = false;
+            if (!_life.IsCancellationRequested) _saveFailed = true;
+            return;
+        }
+
+        _saving = false;
+        if (_life.IsCancellationRequested) return;
+
+        _editing = false;
+        _text = "";
+        _savedMessage = F.Format("Dashboard.Journal.NoteSaved", label);
+        _focusAddButton = true;
+
+        // Re-read so that the new note shows under its entry; on failure keep what is displayed (the note is saved).
+        var fresh = await ReadEntriesAsync();
+        if (fresh is not null && !_life.IsCancellationRequested) Apply(fresh);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusEditor)
+        {
+            _focusEditor = false;
+            await _editor.FocusAsync();
+        }
+        else if (_focusAddButton)
+        {
+            _focusAddButton = false;
+            try { await _addButton.FocusAsync(); }
+            catch (InvalidOperationException) { /* no target any more: nothing to focus */ }
+        }
+    }
+
+    public void Dispose()
+    {
+        _life.Cancel();
+        _life.Dispose();
+    }
+}

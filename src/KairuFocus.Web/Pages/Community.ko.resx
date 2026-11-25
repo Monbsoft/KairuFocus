@@ -360,9 +360,6 @@
   <data name="Community.Format.MonthShortYear" xml:space="preserve">
 	<value>yyyy년 M월</value>
   </data>
-  <data name="Nav.Profile" xml:space="preserve">
-	<value>프로필</value>
-  </data>
   <data name="Profile.PageTitle" xml:space="preserve">
 	<value>프로필 — KairuFocus</value>
   </data>
@@ -857,5 +854,210 @@
   </data>
   <data name="Profile.Progress.Period.Global" xml:space="preserve">
 	<value>처음부터</value>
+  </data>
+  <!-- #49 Menu du compte et tableau de bord -->
+  <data name="Nav.Toggle" xml:space="preserve">
+	<value>탐색 메뉴</value>
+  </data>
+  <data name="Nav.Dashboard" xml:space="preserve">
+	<value>대시보드</value>
+  </data>
+  <data name="Nav.Tasks" xml:space="preserve">
+	<value>작업</value>
+  </data>
+  <data name="Nav.Pomodoro" xml:space="preserve">
+	<value>Pomodoro</value>
+  </data>
+  <data name="Nav.Journal" xml:space="preserve">
+	<value>저널</value>
+  </data>
+  <data name="Nav.Community" xml:space="preserve">
+	<value>커뮤니티</value>
+  </data>
+  <data name="Nav.Aria" xml:space="preserve">
+	<value>주 탐색</value>
+  </data>
+  <data name="Account.Trigger.Aria" xml:space="preserve">
+	<value>{0}님의 계정 메뉴</value>
+  </data>
+  <data name="Account.ViewProfile" xml:space="preserve">
+	<value>내 프로필 보기</value>
+  </data>
+  <data name="Account.Profile" xml:space="preserve">
+	<value>내 프로필</value>
+  </data>
+  <data name="Account.Settings" xml:space="preserve">
+	<value>설정</value>
+  </data>
+  <data name="Account.Language" xml:space="preserve">
+	<value>언어</value>
+  </data>
+  <data name="Account.Logout" xml:space="preserve">
+	<value>로그아웃</value>
+  </data>
+  <data name="Dashboard.PageTitle" xml:space="preserve">
+	<value>대시보드 — KairuFocus</value>
+  </data>
+  <data name="Dashboard.Loading" xml:space="preserve">
+	<value>대시보드를 불러오는 중…</value>
+  </data>
+  <data name="Dashboard.Greeting" xml:space="preserve">
+	<value>안녕하세요, {0}님</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Heading" xml:space="preserve">
+	<value>Pomodoro</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Ready" xml:space="preserve">
+	<value>스프린트를 시작할 준비가 되었나요?</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Duration" xml:space="preserve">
+	<value>{0}분 동안 집중합니다.</value>
+  </data>
+  <data name="Dashboard.Pomodoro.CurrentTask" xml:space="preserve">
+	<value>진행 중인 작업: {0}</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Start" xml:space="preserve">
+	<value>스프린트 시작</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Goal" xml:space="preserve">
+	<value>오늘의 목표</value>
+  </data>
+  <data name="Dashboard.Pomodoro.GoalAria.One" xml:space="preserve">
+	<value>목표 {1}회 중 스프린트 {0}회 완료</value>
+  </data>
+  <data name="Dashboard.Pomodoro.GoalAria.Other" xml:space="preserve">
+	<value>목표 {1}회 중 스프린트 {0}회 완료</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Left.One" xml:space="preserve">
+	<value>목표까지 스프린트 {0}회 남았습니다.</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Left.Other" xml:space="preserve">
+	<value>목표까지 스프린트 {0}회 남았습니다.</value>
+  </data>
+  <data name="Dashboard.Pomodoro.GoalReached" xml:space="preserve">
+	<value>목표 달성! 멋진 집중의 하루였어요!</value>
+  </data>
+  <data name="Dashboard.Pomodoro.FocusTime" xml:space="preserve">
+	<value>집중 시간</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Streak" xml:space="preserve">
+	<value>연속 기록</value>
+  </data>
+  <data name="Dashboard.Pomodoro.StreakValue.One" xml:space="preserve">
+	<value>{0}일</value>
+  </data>
+  <data name="Dashboard.Pomodoro.StreakValue.Other" xml:space="preserve">
+	<value>{0}일</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Stats" xml:space="preserve">
+	<value>내 통계</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Error" xml:space="preserve">
+	<value>Pomodoro를 불러올 수 없습니다.</value>
+  </data>
+  <data name="Dashboard.Session.Sprint" xml:space="preserve">
+	<value>스프린트 진행 중</value>
+  </data>
+  <data name="Dashboard.Session.ShortBreak" xml:space="preserve">
+	<value>짧은 휴식 중</value>
+  </data>
+  <data name="Dashboard.Session.LongBreak" xml:space="preserve">
+	<value>긴 휴식 중</value>
+  </data>
+  <data name="Dashboard.Session.FreeSprint" xml:space="preserve">
+	<value>자유 스프린트 진행 중</value>
+  </data>
+  <data name="Dashboard.Session.Remaining" xml:space="preserve">
+	<value>남음</value>
+  </data>
+  <data name="Dashboard.Session.Elapsed" xml:space="preserve">
+	<value>경과</value>
+  </data>
+  <data name="Dashboard.Session.TimeUp" xml:space="preserve">
+	<value>시간이 다 되었습니다. Pomodoro를 열어 기록하세요.</value>
+  </data>
+  <data name="Dashboard.Session.OpenSprint" xml:space="preserve">
+	<value>스프린트 열기</value>
+  </data>
+  <data name="Dashboard.Session.OpenBreak" xml:space="preserve">
+	<value>휴식 열기</value>
+  </data>
+  <data name="Dashboard.Group.Live" xml:space="preserve">
+	<value>그룹 세션 진행 중</value>
+  </data>
+  <data name="Dashboard.Group.Open" xml:space="preserve">
+	<value>세션 열기</value>
+  </data>
+  <data name="Dashboard.Journal.Heading" xml:space="preserve">
+	<value>오늘의 저널</value>
+  </data>
+  <data name="Dashboard.Journal.Empty" xml:space="preserve">
+	<value>오늘은 아직 아무것도 없습니다. 스프린트를 시작하면 여기에 기록이 나타납니다.</value>
+  </data>
+  <data name="Dashboard.Journal.All" xml:space="preserve">
+	<value>전체 저널</value>
+  </data>
+  <data name="Dashboard.Journal.AddNote" xml:space="preserve">
+	<value>+ '{0}'에 메모</value>
+  </data>
+  <data name="Dashboard.Journal.NoteLabel" xml:space="preserve">
+	<value>'{0}'에 대한 내 메모</value>
+  </data>
+  <data name="Dashboard.Journal.Save" xml:space="preserve">
+	<value>저장</value>
+  </data>
+  <data name="Dashboard.Journal.Cancel" xml:space="preserve">
+	<value>취소</value>
+  </data>
+  <data name="Dashboard.Journal.NoteSaved" xml:space="preserve">
+	<value>'{0}'에 메모를 추가했습니다.</value>
+  </data>
+  <data name="Dashboard.Journal.NoteError" xml:space="preserve">
+	<value>메모를 저장할 수 없습니다.</value>
+  </data>
+  <data name="Dashboard.Journal.Error" xml:space="preserve">
+	<value>오늘의 저널을 불러올 수 없습니다.</value>
+  </data>
+  <data name="Journal.Entry.SprintStarted" xml:space="preserve">
+	<value>스프린트 시작</value>
+  </data>
+  <data name="Journal.Entry.SprintStarted.Seq" xml:space="preserve">
+	<value>스프린트 #{0} 시작</value>
+  </data>
+  <data name="Journal.Entry.SprintCompleted" xml:space="preserve">
+	<value>스프린트 완료</value>
+  </data>
+  <data name="Journal.Entry.SprintCompleted.Seq" xml:space="preserve">
+	<value>스프린트 #{0} 완료</value>
+  </data>
+  <data name="Journal.Entry.SprintInterrupted" xml:space="preserve">
+	<value>스프린트 중단</value>
+  </data>
+  <data name="Journal.Entry.SprintInterrupted.Seq" xml:space="preserve">
+	<value>스프린트 #{0} 중단</value>
+  </data>
+  <data name="Journal.Entry.BreakStarted" xml:space="preserve">
+	<value>휴식 시작</value>
+  </data>
+  <data name="Journal.Entry.BreakStarted.Seq" xml:space="preserve">
+	<value>휴식 #{0} 시작</value>
+  </data>
+  <data name="Journal.Entry.BreakCompleted" xml:space="preserve">
+	<value>휴식 종료</value>
+  </data>
+  <data name="Journal.Entry.BreakCompleted.Seq" xml:space="preserve">
+	<value>휴식 #{0} 종료</value>
+  </data>
+  <data name="Journal.Entry.BreakInterrupted" xml:space="preserve">
+	<value>휴식 중단</value>
+  </data>
+  <data name="Journal.Entry.BreakInterrupted.Seq" xml:space="preserve">
+	<value>휴식 #{0} 중단</value>
+  </data>
+  <data name="Journal.Entry.TaskStarted" xml:space="preserve">
+	<value>작업 시작</value>
+  </data>
+  <data name="Journal.Entry.TaskCompleted" xml:space="preserve">
+	<value>작업 완료</value>
   </data>
 </root>

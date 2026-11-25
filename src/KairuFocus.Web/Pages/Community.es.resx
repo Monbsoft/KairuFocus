@@ -360,9 +360,6 @@
   <data name="Community.Format.MonthShortYear" xml:space="preserve">
 	<value>MMM yyyy</value>
   </data>
-  <data name="Nav.Profile" xml:space="preserve">
-	<value>Perfil</value>
-  </data>
   <data name="Profile.PageTitle" xml:space="preserve">
 	<value>Perfil — KairuFocus</value>
   </data>
@@ -857,5 +854,210 @@
   </data>
   <data name="Profile.Progress.Period.Global" xml:space="preserve">
 	<value>Desde el principio</value>
+  </data>
+  <!-- #49 Menu du compte et tableau de bord -->
+  <data name="Nav.Toggle" xml:space="preserve">
+	<value>Menú de navegación</value>
+  </data>
+  <data name="Nav.Dashboard" xml:space="preserve">
+	<value>Panel</value>
+  </data>
+  <data name="Nav.Tasks" xml:space="preserve">
+	<value>Tareas</value>
+  </data>
+  <data name="Nav.Pomodoro" xml:space="preserve">
+	<value>Pomodoro</value>
+  </data>
+  <data name="Nav.Journal" xml:space="preserve">
+	<value>Diario</value>
+  </data>
+  <data name="Nav.Community" xml:space="preserve">
+	<value>Comunidad</value>
+  </data>
+  <data name="Nav.Aria" xml:space="preserve">
+	<value>Navegación principal</value>
+  </data>
+  <data name="Account.Trigger.Aria" xml:space="preserve">
+	<value>Menú de la cuenta de {0}</value>
+  </data>
+  <data name="Account.ViewProfile" xml:space="preserve">
+	<value>Ver mi perfil</value>
+  </data>
+  <data name="Account.Profile" xml:space="preserve">
+	<value>Mi perfil</value>
+  </data>
+  <data name="Account.Settings" xml:space="preserve">
+	<value>Ajustes</value>
+  </data>
+  <data name="Account.Language" xml:space="preserve">
+	<value>Idioma</value>
+  </data>
+  <data name="Account.Logout" xml:space="preserve">
+	<value>Cerrar sesión</value>
+  </data>
+  <data name="Dashboard.PageTitle" xml:space="preserve">
+	<value>Panel — KairuFocus</value>
+  </data>
+  <data name="Dashboard.Loading" xml:space="preserve">
+	<value>Cargando el panel…</value>
+  </data>
+  <data name="Dashboard.Greeting" xml:space="preserve">
+	<value>Hola, {0}</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Heading" xml:space="preserve">
+	<value>Pomodoro</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Ready" xml:space="preserve">
+	<value>¿Listo para un sprint?</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Duration" xml:space="preserve">
+	<value>{0} minutos de concentración.</value>
+  </data>
+  <data name="Dashboard.Pomodoro.CurrentTask" xml:space="preserve">
+	<value>Tarea en curso: {0}</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Start" xml:space="preserve">
+	<value>Empezar un sprint</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Goal" xml:space="preserve">
+	<value>Objetivo del día</value>
+  </data>
+  <data name="Dashboard.Pomodoro.GoalAria.One" xml:space="preserve">
+	<value>{0} sprint completado de un objetivo de {1}</value>
+  </data>
+  <data name="Dashboard.Pomodoro.GoalAria.Other" xml:space="preserve">
+	<value>{0} sprints completados de un objetivo de {1}</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Left.One" xml:space="preserve">
+	<value>Solo un sprint más para alcanzar tu objetivo.</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Left.Other" xml:space="preserve">
+	<value>Solo {0} sprints más para alcanzar tu objetivo.</value>
+  </data>
+  <data name="Dashboard.Pomodoro.GoalReached" xml:space="preserve">
+	<value>¡Objetivo alcanzado, qué gran día de concentración!</value>
+  </data>
+  <data name="Dashboard.Pomodoro.FocusTime" xml:space="preserve">
+	<value>Tiempo de concentración</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Streak" xml:space="preserve">
+	<value>Racha</value>
+  </data>
+  <data name="Dashboard.Pomodoro.StreakValue.One" xml:space="preserve">
+	<value>{0} día</value>
+  </data>
+  <data name="Dashboard.Pomodoro.StreakValue.Other" xml:space="preserve">
+	<value>{0} días</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Stats" xml:space="preserve">
+	<value>Mis estadísticas</value>
+  </data>
+  <data name="Dashboard.Pomodoro.Error" xml:space="preserve">
+	<value>No se pudo cargar tu Pomodoro.</value>
+  </data>
+  <data name="Dashboard.Session.Sprint" xml:space="preserve">
+	<value>Sprint en curso</value>
+  </data>
+  <data name="Dashboard.Session.ShortBreak" xml:space="preserve">
+	<value>Pausa corta en curso</value>
+  </data>
+  <data name="Dashboard.Session.LongBreak" xml:space="preserve">
+	<value>Pausa larga en curso</value>
+  </data>
+  <data name="Dashboard.Session.FreeSprint" xml:space="preserve">
+	<value>Sprint libre en curso</value>
+  </data>
+  <data name="Dashboard.Session.Remaining" xml:space="preserve">
+	<value>restantes</value>
+  </data>
+  <data name="Dashboard.Session.Elapsed" xml:space="preserve">
+	<value>transcurridos</value>
+  </data>
+  <data name="Dashboard.Session.TimeUp" xml:space="preserve">
+	<value>Se acabó el tiempo. Abre el Pomodoro para registrarlo.</value>
+  </data>
+  <data name="Dashboard.Session.OpenSprint" xml:space="preserve">
+	<value>Abrir el sprint</value>
+  </data>
+  <data name="Dashboard.Session.OpenBreak" xml:space="preserve">
+	<value>Abrir la pausa</value>
+  </data>
+  <data name="Dashboard.Group.Live" xml:space="preserve">
+	<value>Sesión de grupo en curso</value>
+  </data>
+  <data name="Dashboard.Group.Open" xml:space="preserve">
+	<value>Abrir la sesión</value>
+  </data>
+  <data name="Dashboard.Journal.Heading" xml:space="preserve">
+	<value>Diario de hoy</value>
+  </data>
+  <data name="Dashboard.Journal.Empty" xml:space="preserve">
+	<value>Nada por ahora hoy. Empieza un sprint y tus entradas aparecerán aquí.</value>
+  </data>
+  <data name="Dashboard.Journal.All" xml:space="preserve">
+	<value>Todo el diario</value>
+  </data>
+  <data name="Dashboard.Journal.AddNote" xml:space="preserve">
+	<value>+ Nota sobre «{0}»</value>
+  </data>
+  <data name="Dashboard.Journal.NoteLabel" xml:space="preserve">
+	<value>Tu nota sobre «{0}»</value>
+  </data>
+  <data name="Dashboard.Journal.Save" xml:space="preserve">
+	<value>Guardar</value>
+  </data>
+  <data name="Dashboard.Journal.Cancel" xml:space="preserve">
+	<value>Cancelar</value>
+  </data>
+  <data name="Dashboard.Journal.NoteSaved" xml:space="preserve">
+	<value>Nota añadida a «{0}».</value>
+  </data>
+  <data name="Dashboard.Journal.NoteError" xml:space="preserve">
+	<value>No se pudo guardar la nota.</value>
+  </data>
+  <data name="Dashboard.Journal.Error" xml:space="preserve">
+	<value>No se pudo cargar el diario de hoy.</value>
+  </data>
+  <data name="Journal.Entry.SprintStarted" xml:space="preserve">
+	<value>Sprint iniciado</value>
+  </data>
+  <data name="Journal.Entry.SprintStarted.Seq" xml:space="preserve">
+	<value>Sprint #{0} iniciado</value>
+  </data>
+  <data name="Journal.Entry.SprintCompleted" xml:space="preserve">
+	<value>Sprint completado</value>
+  </data>
+  <data name="Journal.Entry.SprintCompleted.Seq" xml:space="preserve">
+	<value>Sprint #{0} completado</value>
+  </data>
+  <data name="Journal.Entry.SprintInterrupted" xml:space="preserve">
+	<value>Sprint interrumpido</value>
+  </data>
+  <data name="Journal.Entry.SprintInterrupted.Seq" xml:space="preserve">
+	<value>Sprint #{0} interrumpido</value>
+  </data>
+  <data name="Journal.Entry.BreakStarted" xml:space="preserve">
+	<value>Pausa iniciada</value>
+  </data>
+  <data name="Journal.Entry.BreakStarted.Seq" xml:space="preserve">
+	<value>Pausa #{0} iniciada</value>
+  </data>
+  <data name="Journal.Entry.BreakCompleted" xml:space="preserve">
+	<value>Pausa terminada</value>
+  </data>
+  <data name="Journal.Entry.BreakCompleted.Seq" xml:space="preserve">
+	<value>Pausa #{0} terminada</value>
+  </data>
+  <data name="Journal.Entry.BreakInterrupted" xml:space="preserve">
+	<value>Pausa interrumpida</value>
+  </data>
+  <data name="Journal.Entry.BreakInterrupted.Seq" xml:space="preserve">
+	<value>Pausa #{0} interrumpida</value>
+  </data>
+  <data name="Journal.Entry.TaskStarted" xml:space="preserve">
+	<value>Tarea iniciada</value>
+  </data>
+  <data name="Journal.Entry.TaskCompleted" xml:space="preserve">
+	<value>Tarea completada</value>
   </data>
 </root>

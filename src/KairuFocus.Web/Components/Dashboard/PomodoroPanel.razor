@@ -1,0 +1,328 @@
+@* Pomodoro block of the dashboard: the state of the moment (session running, group session alive, or ready to start)
+   and the progress of the day. It never starts a session itself: « Démarrer un sprint » is a link to the Pomodoro page,
+   which starts it on arrival (pomodoro?start=sprint). Owns its one-second timer, so only this block re-renders every second. *@
+@using System.Text.Json
+@implements IAsyncDisposable
+@inject PomodoroApiClient Pomodoro
+@inject CommunityApiClient Community
+@inject TaskApiClient Tasks
+@inject CommunityFormatter F
+@inject TimeProvider Clock
+
+<section class="kf-pomo" aria-labelledby="kf-pomo-heading" aria-busy="@(_loading ? "true" : "false")">
+    <h2 id="kf-pomo-heading" class="kf-eyebrow">@F["Dashboard.Pomodoro.Heading"]</h2>
+
+    @if (_loading)
+    {
+        <span class="visually-hidden" role="status">@F["Dashboard.Loading"]</span>
+        <div class="kf-card kf-pomo__card" aria-hidden="true">
+            <div class="kf-skel kf-pomo__skel-title"></div>
+            <div class="kf-skel kf-pomo__skel-line"></div>
+            <div class="kf-skel kf-pomo__skel-btn"></div>
+            <div class="kf-skel kf-pomo__skel-progress"></div>
+        </div>
+    }
+    else if (_failed || _focus is null)
+    {
+        <ZoneAlert Message="@F["Dashboard.Pomodoro.Error"]" OnRetry="LoadAsync" />
+    }
+    else
+    {
+        <div class="kf-card kf-pomo__card">
+            <div class="kf-pomo__state">
+                @if (_session is { } session)
+                {
+                    <h3 class="kf-pomo__badge @(IsBreak(session) ? "kf-pomo__badge--break" : "kf-pomo__badge--sprint")">@SessionLabel(session)</h3>
+
+                    @if (_timeUp)
+                    {
+                        <p class="kf-pomo__timeup">@F["Dashboard.Session.TimeUp"]</p>
+                    }
+                    else if (_hasClock)
+                    {
+                        @* role="timer" is not live: the ticking time is never announced. *@
+                        <p class="kf-pomo__time">
+                            <span class="kf-pomo__clock" role="timer">@SessionClock.Format(_seconds)</span>
+                            <span class="kf-pomo__unit">@F[_isFreeSprint ? "Dashboard.Session.Elapsed" : "Dashboard.Session.Remaining"]</span>
+                        </p>
+                    }
+
+                    @TaskReminder
+
+                    <a class="kf-pomo__btn kf-pomo__btn--secondary" href="@(_isFreeSprint ? "pomodoro/libre" : "pomodoro")">
+                        @F[IsBreak(session) ? "Dashboard.Session.OpenBreak" : "Dashboard.Session.OpenSprint"]
+                    </a>
+                }
+                else if (_groupLive)
+                {
+                    <h3 class="kf-pomo__title">@F["Dashboard.Group.Live"]</h3>
+                    <a class="kf-pomo__btn kf-pomo__btn--secondary" href="pomodoro">@F["Dashboard.Group.Open"]</a>
+                }
+                else
+                {
+                    <h3 class="kf-pomo__title">@F["Dashboard.Pomodoro.Ready"]</h3>
+                    <p class="kf-pomo__sub">@F.Format("Dashboard.Pomodoro.Duration", F.Number(_sprintMinutes))</p>
+
+                    @TaskReminder
+
+                    <a class="kf-pomo__btn kf-pomo__btn--primary" href="@($"pomodoro?{KairuFocus.Web.Helpers.PomodoroAutoStart.QueryName}={KairuFocus.Web.Helpers.PomodoroAutoStart.SprintValue}")">@F["Dashboard.Pomodoro.Start"]</a>
+                }
+            </div>
+
+            <div class="kf-pomo__progress">
+                <div class="kf-pomo__goalhead">
+                    <span class="kf-pomo__label">@F["Dashboard.Pomodoro.Goal"]</span>
+                    <span class="kf-pomo__count" aria-hidden="true">@F.Number(_focus.SprintsToday) / @F.Number(Goal)</span>
+                </div>
+                <div class="kf-dots" role="img"
+                     aria-label="@F.Plural("Dashboard.Pomodoro.GoalAria", _focus.SprintsToday, F.Number(_focus.SprintsToday), F.Number(Goal))">
+                    @for (var i = 0; i < Goal; i++)
+                    {
+                        <span class="kf-dot @(i < _focus.SprintsToday ? "kf-dot--on" : "kf-dot--off")"></span>
+                    }
+                </div>
+                <p class="kf-pomo__hint">
+                    @(SprintsLeft == 0
+                        ? F["Dashboard.Pomodoro.GoalReached"]
+                        : F.Plural("Dashboard.Pomodoro.Left", SprintsLeft, F.Number(SprintsLeft)))
+                </p>
+
+                <dl class="kf-pomo__meta">
+                    <div>
+                        <dt>@F["Dashboard.Pomodoro.FocusTime"]</dt>
+                        <dd>@F.Duration(_focus.FocusMinutesToday)</dd>
+                    </div>
+                    <div>
+                        <dt>@F["Dashboard.Pomodoro.Streak"]</dt>
+                        <dd>@F.Plural("Dashboard.Pomodoro.StreakValue", _focus.Streak, F.Number(_focus.Streak))</dd>
+                    </div>
+                </dl>
+
+                <a class="kf-pomo__link" href="profil">@F["Dashboard.Pomodoro.Stats"]</a>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    private const int DefaultSprintMinutes = 25;
+
+    // Lifetime of the component: cancels the reads and the timer once it is disposed.
+    private readonly CancellationTokenSource _life = new();
+    private CancellationTokenSource? _tickCts;
+    private int _loadVersion;
+
+    private bool _loading = true;
+    private bool _failed;
+
+    private FocusSummaryDto? _focus;
+    private PomodoroSessionDto? _session;
+    private bool _groupLive;
+    private TaskDto? _currentTask;
+    private int _sprintMinutes = DefaultSprintMinutes;
+
+    // Clock of the running session.
+    private DateTime? _deadlineUtc;
+    private DateTime? _startedAtUtc;
+    private bool _isFreeSprint;
+    private bool _hasClock;
+    private bool _timeUp;
+    private int _seconds;
+
+    private int Goal => Math.Max(1, _focus?.DailySprintGoal ?? 1);
+
+    private int SprintsLeft => Math.Max(0, Goal - (_focus?.SprintsToday ?? 0));
+
+    private RenderFragment TaskReminder => __builder =>
+    {
+        if (_currentTask is { } task)
+        {
+            <p class="kf-pomo__task">@F.Format("Dashboard.Pomodoro.CurrentTask", task.Title)</p>
+        }
+    };
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    /// <summary>Reads everything in parallel. The focus summary and the session are required (their failure shows the
+    /// error); the group, the current task and the settings are optional (their failure falls back to « no group »,
+    /// « no task reminder », the default sprint length).</summary>
+    private async Task LoadAsync()
+    {
+        var version = ++_loadVersion;
+        StopTicking();
+        _loading = true;
+        _failed = false;
+
+        var ct = _life.Token;
+        var focusTask = ReadFocusAsync();
+        var sessionTask = Pomodoro.LookupCurrentSessionAsync();
+        var groupTask = ReadGroupLiveAsync(ct);
+        var taskTask = ReadCurrentTaskAsync();
+        var settingsTask = ReadSprintMinutesAsync();
+
+        await Task.WhenAll(focusTask, sessionTask, groupTask, taskTask, settingsTask);
+
+        // Disposed meanwhile, or a newer load (retry) took over.
+        if (ct.IsCancellationRequested || version != _loadVersion) return;
+
+        var sessionLookup = sessionTask.Result;
+        _focus = focusTask.Result;
+        _failed = _focus is null || !sessionLookup.Succeeded;
+        _session = sessionLookup.Session;
+        _groupLive = groupTask.Result;
+        _currentTask = taskTask.Result;
+        _sprintMinutes = settingsTask.Result;
+
+        SetUpClock();
+        _loading = false;
+
+        if (!_failed) StartTicking();
+    }
+
+    private async Task<FocusSummaryDto?> ReadFocusAsync()
+    {
+        try
+        {
+            return await Pomodoro.GetFocusSummaryAsync();
+        }
+        catch (Exception ex) when (IsReadFailure(ex))
+        {
+            return null;
+        }
+    }
+
+    private async Task<bool> ReadGroupLiveAsync(CancellationToken ct)
+    {
+        try
+        {
+            var lookup = await Community.GetCurrentSessionAsync(ct);
+            return lookup.Session is { IsGroup: true } group && group.Phase != "Ended";
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+    }
+
+    private async Task<TaskDto?> ReadCurrentTaskAsync()
+    {
+        try
+        {
+            var tasks = await Tasks.GetAllAsync();
+            return tasks
+                .Where(t => t.Status == "InProgress")
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefault();
+        }
+        catch (Exception ex) when (IsReadFailure(ex))
+        {
+            return null;
+        }
+    }
+
+    private async Task<int> ReadSprintMinutesAsync()
+    {
+        try
+        {
+            var settings = await Pomodoro.GetSettingsAsync();
+            return settings is { SprintDurationMinutes: > 0 } ? settings.SprintDurationMinutes : DefaultSprintMinutes;
+        }
+        catch (Exception ex) when (IsReadFailure(ex))
+        {
+            return DefaultSprintMinutes;
+        }
+    }
+
+    private static bool IsReadFailure(Exception ex) =>
+        ex is HttpRequestException or TaskCanceledException or JsonException or NotSupportedException;
+
+    // ── Session state ───────────────────────────────────────────────────────
+
+    private static bool IsBreak(PomodoroSessionDto s) => s.SessionType is "ShortBreak" or "LongBreak";
+
+    private string SessionLabel(PomodoroSessionDto s) => s.SessionType switch
+    {
+        "ShortBreak" => F["Dashboard.Session.ShortBreak"],
+        "LongBreak" => F["Dashboard.Session.LongBreak"],
+        _ when _isFreeSprint => F["Dashboard.Session.FreeSprint"],
+        _ => F["Dashboard.Session.Sprint"]
+    };
+
+    private void SetUpClock()
+    {
+        _deadlineUtc = null;
+        _startedAtUtc = null;
+        _isFreeSprint = false;
+        _hasClock = false;
+        _timeUp = false;
+        _seconds = 0;
+
+        if (_session is not { } s) return;
+
+        _deadlineUtc = SessionClock.DeadlineUtc(s);
+        // A free sprint has no planned length and no shared end: it counts up from its start.
+        _isFreeSprint = _deadlineUtc is null && s.PlannedDurationMinutes == 0;
+        _startedAtUtc = _isFreeSprint ? s.StartedAt : null;
+        _hasClock = _deadlineUtc is not null || _startedAtUtc is not null;
+
+        UpdateClock();
+    }
+
+    private void UpdateClock()
+    {
+        var now = Clock.GetUtcNow().UtcDateTime;
+        if (_deadlineUtc is { } deadline)
+        {
+            _seconds = SessionClock.RemainingSeconds(deadline, now);
+            _timeUp = _seconds == 0;
+        }
+        else if (_startedAtUtc is { } started)
+        {
+            _seconds = SessionClock.ElapsedSeconds(started, now);
+        }
+    }
+
+    // ── Timer ───────────────────────────────────────────────────────────────
+
+    private void StartTicking()
+    {
+        // Only for a timed session still running, or a free sprint (which never ends on its own).
+        if (_session is null || !_hasClock || _timeUp) return;
+
+        _tickCts = CancellationTokenSource.CreateLinkedTokenSource(_life.Token);
+        _ = TickAsync(_tickCts.Token);
+    }
+
+    private void StopTicking()
+    {
+        _tickCts?.Cancel();
+        _tickCts?.Dispose();
+        _tickCts = null;
+    }
+
+    private async Task TickAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1), Clock);
+        try
+        {
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                UpdateClock();
+                await InvokeAsync(StateHasChanged);
+                if (_timeUp) return; // Stopped at zero: the Pomodoro page records the end.
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Reloaded or disposed.
+        }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _life.Cancel();
+        StopTicking();
+        _life.Dispose();
+        return ValueTask.CompletedTask;
+    }
+}
