@@ -460,7 +460,7 @@ code {
 .kf-journal__body { min-width: 0; display: flex; flex-direction: column; gap: .25rem; }
 .kf-journal__label { color: var(--text-primary); font-weight: 600; overflow-wrap: anywhere; }
 .kf-journal__notes li { font-size: var(--text-sm); color: var(--text-secondary); padding-left: var(--space-3); border-left: 2px solid var(--border-default); overflow-wrap: anywhere; white-space: pre-wrap; }
-.kf-journal__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--border-subtle); }
+.kf-journal__foot { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--border-subtle); }
 .kf-journal__editor { flex: 1 1 100%; display: flex; flex-direction: column; gap: var(--space-2); }
 .kf-journal__fieldlabel { font-size: var(--text-sm); font-weight: 600; color: var(--text-secondary); overflow-wrap: anywhere; }
 .kf-journal__textarea { width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-primary); font: inherit; resize: vertical; }
@@ -479,7 +479,9 @@ code {
 .kf-journal__btn--secondary { background: transparent; border: 1px solid var(--primary-border); color: var(--link-text); }
 .kf-journal__btn--secondary:hover { background: var(--primary-subtle); }
 .kf-journal__saved { margin: 0; flex: 1 1 100%; font-size: var(--text-sm); color: var(--success-text); }
-.kf-journal__saved:empty { display: none; }
+/* Empty: visually hidden but still rendered (never display:none) so the live region stays in the accessibility tree and its text is announced.
+   Out of the flex flow (absolute) so it leaves no gap in the footer. */
+.kf-journal__saved:empty { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .kf-journal__link { margin-left: auto; display: inline-flex; align-items: center; min-height: var(--target-min); font-size: var(--text-sm); font-weight: 600; color: var(--link-text); text-decoration: none; }
 .kf-journal__link:hover { text-decoration: underline; }
 .kf-journal__link:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 4px; }

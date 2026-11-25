@@ -82,7 +82,7 @@
                     }
                 }
 
-                @* Polite status: the region stays in the DOM so that the confirmation is announced when it appears. *@
+                @* Polite status: always rendered (visually hidden while empty, never display:none) so that the confirmation is announced when it appears. *@
                 <p class="kf-journal__saved" role="status">@_savedMessage</p>
 
                 <a class="kf-journal__link" href="journal">@F["Dashboard.Journal.All"]</a>
