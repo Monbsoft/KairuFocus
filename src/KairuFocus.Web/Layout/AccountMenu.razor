@@ -1,0 +1,176 @@
+@* Account menu at the top right: profile, settings, language, logout.
+   Disclosure pattern (button with aria-expanded + aria-controls, ordinary links and buttons reached with Tab),
+   not role="menu". Closes on Escape (focus back to the trigger), on a click outside (transparent backdrop),
+   on navigation and on the choice of an item. *@
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Routing
+@implements IDisposable
+@inject AuthService AuthService
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject CommunityApiClient CommunityApi
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject CommunityFormatter F
+
+<div class="kf-account" @onkeydown="OnKeyDown">
+    @if (_open)
+    {
+        <div class="kf-account__backdrop" aria-hidden="true" @onclick="Close"></div>
+    }
+
+    <button type="button"
+            class="kf-account__trigger"
+            aria-expanded="@(_open ? "true" : "false")"
+            aria-controls="kf-account-panel"
+            aria-label="@F.Format("Account.Trigger.Aria", _displayName)"
+            @ref="_trigger"
+            @onclick="Toggle">
+        <MemberAvatar Name="@_displayName" AvatarUrl="@_avatarUrl" Size="28" />
+        <span class="kf-account__name">@_displayName</span>
+        <svg class="kf-account__chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" focusable="false">
+            <polyline points="6 9 12 15 18 9" />
+        </svg>
+    </button>
+
+    <div id="kf-account-panel" class="kf-account__panel" hidden="@(!_open)">
+        <div class="kf-account__header">
+            <MemberAvatar Name="@_displayName" AvatarUrl="@_avatarUrl" Size="36" />
+            <div class="kf-account__identity">
+                <span class="kf-account__header-name">@_displayName</span>
+                <a href="profil" class="kf-account__view-profile" @onclick="Close">@F["Account.ViewProfile"]</a>
+            </div>
+        </div>
+
+        <ul class="kf-account__list">
+            <li><a href="profil" class="kf-account__item" @onclick="Close">@F["Account.Profile"]</a></li>
+            <li><a href="settings" class="kf-account__item" @onclick="Close">@F["Account.Settings"]</a></li>
+            <li>
+                <button type="button"
+                        class="kf-account__item kf-account__language-toggle"
+                        aria-expanded="@(_languagesOpen ? "true" : "false")"
+                        aria-controls="kf-account-languages"
+                        @onclick="ToggleLanguages">
+                    <span>@F["Account.Language"] · @SupportedCultures.LabelFor(_currentCulture)</span>
+                    <svg class="kf-account__chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                         aria-hidden="true" focusable="false">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </button>
+                <ul id="kf-account-languages" class="kf-account__languages" hidden="@(!_languagesOpen)">
+                    @foreach (var culture in SupportedCultures.All)
+                    {
+                        var cultureCode = culture.Code;
+                        <li>
+                            <button type="button"
+                                    class="kf-account__item kf-account__language"
+                                    lang="@cultureCode"
+                                    aria-current="@(cultureCode == _currentCulture ? "true" : null)"
+                                    @onclick="() => SelectCultureAsync(cultureCode)">
+                                @culture.Label
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </li>
+        </ul>
+
+        <hr class="kf-account__separator" />
+
+        <button type="button" class="kf-account__item kf-account__logout" @onclick="LogoutAsync">
+            @F["Account.Logout"]
+        </button>
+    </div>
+</div>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private ElementReference _trigger;
+    private bool _open;
+    private bool _languagesOpen;
+    private string _displayName = AccountIdentity.DisplayName(null, null, null);
+    private string? _avatarUrl;
+    private string _currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+
+        var user = await AuthService.GetCurrentUserAsync();
+        var login = user.FindFirst("login")?.Value;
+        var name = user.FindFirst("name")?.Value;
+        _displayName = AccountIdentity.DisplayName(null, login, name);
+
+        if (user.Identity?.IsAuthenticated != true) return;
+
+        CommunityMembershipDto? membership = null;
+        try
+        {
+            membership = await CommunityApi.GetMembershipAsync(_cts.Token);
+        }
+        catch
+        {
+            // Network failure or disposal: the initial stays, without a message.
+        }
+
+        _displayName = AccountIdentity.DisplayName(membership, login, name);
+        _avatarUrl = AccountIdentity.AvatarUrl(membership);
+    }
+
+    private void Toggle()
+    {
+        if (_open) Close();
+        else _open = true;
+    }
+
+    private void Close()
+    {
+        _open = false;
+        _languagesOpen = false;
+    }
+
+    private void ToggleLanguages() => _languagesOpen = !_languagesOpen;
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Escape" || !_open) return;
+        Close();
+        await _trigger.FocusAsync();
+    }
+
+    private async Task SelectCultureAsync(string code)
+    {
+        if (code == _currentCulture)
+        {
+            Close();
+            return;
+        }
+
+        await JS.InvokeVoidAsync("blazorCulture.set", code);
+        Nav.NavigateTo(Nav.Uri, forceLoad: true);
+    }
+
+    private async Task LogoutAsync()
+    {
+        Close();
+        await AuthService.RemoveTokenAsync();
+        AuthStateProvider.NotifyAuthenticationStateChanged();
+        Nav.NavigateTo("/", forceLoad: false);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (!_open) return;
+        Close();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+}
