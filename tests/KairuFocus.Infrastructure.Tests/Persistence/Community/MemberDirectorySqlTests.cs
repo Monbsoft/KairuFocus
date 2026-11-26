@@ -14,6 +14,7 @@ public sealed class MemberDirectorySqlTests
     private const string FindByName = nameof(IMemberDirectoryReadRepository.FindByNameAsync);
     private const string GetActivity = nameof(IMemberDirectoryReadRepository.GetActivityAsync);
     private const string GetActive = nameof(IMemberDirectoryReadRepository.GetActiveMembersAsync);
+    private const string Connected = nameof(IMemberDirectoryReadRepository.GetConnectedMembersAsync);
 
     private static readonly ProfileName Name = ProfileName.Create("Lea_Dev").Value;
     private static readonly DateTime Since = new(2025, 10, 25, 0, 0, 0, DateTimeKind.Utc);
@@ -22,6 +23,7 @@ public sealed class MemberDirectorySqlTests
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
     [InlineData(GetActive)]
+    [InlineData(Connected)]
     public async Task Should_NotReferenceUsersEmailOrDisplayName_When_Queried(string method)
     {
         var command = await CaptureAsync(method);
@@ -35,6 +37,7 @@ public sealed class MemberDirectorySqlTests
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
     [InlineData(GetActive)]
+    [InlineData(Connected)]
     public async Task Should_NotProjectOwnerOrUserId_When_Queried(string method)
     {
         var command = await CaptureAsync(method);
@@ -123,6 +126,35 @@ public sealed class MemberDirectorySqlTests
         Assert.Matches(@"GROUP BY .*\[NameKey\]", command.Text);
     }
 
+    // The last sighting filters, it never leaves the database: only the public name and the avatar come out.
+    [Fact]
+    public async Task Should_ProjectOnlyNameAndAvatar_When_GettingConnectedMembers()
+    {
+        var command = await CaptureAsync(Connected);
+
+        Assert.Collection(
+            OuterSelectList(command.Text),
+            name => Assert.Matches(@"^\[\w+\]\.\[ProfileName\]( AS \[\w+\])?$", name),
+            avatar => Assert.Matches(@"^\[\w+\]\.\[AvatarUrl\]( AS \[\w+\])?$", avatar));
+    }
+
+    // Presence is keyed by the member: the user identifier is only the join condition with the profile, and
+    // consent and window are plain comparisons.
+    [Fact]
+    public async Task Should_JoinPresenceOnProfileAndFilterConsentAndWindow_When_GettingConnectedMembers()
+    {
+        var command = await CaptureAsync(Connected);
+
+        Assert.Matches(
+            @"FROM \[MemberPresences\] AS \[\w+\]\s*INNER JOIN \[MemberProfiles\] AS \[\w+\] ON \[\w+\]\.\[UserId\] = \[\w+\]\.\[UserId\]",
+            command.Text);
+        Assert.Equal(2, Regex.Matches(command.Text, "UserId").Count);
+        Assert.Matches(@"\[\w+\]\.\[PresenceConsentedAtUtc\] IS NOT NULL", command.Text);
+        Assert.Matches(@"\[\w+\]\.\[LastSeenAtUtc\] >= @\w+", command.Text);
+        Assert.Contains(command.Parameters, p => Equals(p.Value, Since));
+        Assert.DoesNotContain("DATEADD", command.Text, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Theory]
     [InlineData(FindByName)]
     [InlineData(GetActivity)]
@@ -155,6 +187,7 @@ public sealed class MemberDirectorySqlTests
                 FindByName => repository.FindByNameAsync(Name),
                 GetActivity => repository.GetActivityAsync(Name, Since),
                 GetActive => repository.GetActiveMembersAsync(Since, Since.AddDays(1), 10),
+                Connected => repository.GetConnectedMembersAsync(Since, 10),
                 _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
             };
         });
