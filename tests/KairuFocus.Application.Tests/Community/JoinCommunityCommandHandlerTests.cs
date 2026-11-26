@@ -53,6 +53,16 @@ public sealed class JoinCommunityCommandHandlerTests
     }
 
     [Fact]
+    public async Task Should_ConsentToPresence_When_JoiningCommunity()
+    {
+        var result = await _sut.Handle(new JoinCommunityCommand(ProfileNameSource.GitHub, null));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(MembershipTestData.NowUtc, Assert.Single(_profiles.Stored).PresenceConsentedAtUtc);
+        Assert.True(result.Membership!.PresenceConsented);
+    }
+
+    [Fact]
     public async Task Should_CreateProfileWithoutAvatar_When_SourceIsChosen()
     {
         var result = await _sut.Handle(new JoinCommunityCommand(ProfileNameSource.Chosen, "lea_dev"));

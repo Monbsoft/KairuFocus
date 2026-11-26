@@ -6,6 +6,7 @@ using KairuFocus.Api.Generated;
 using KairuFocus.Api.Mcp;
 using KairuFocus.Application.Common;
 using KairuFocus.Domain.Common;
+using KairuFocus.Domain.Community;
 using KairuFocus.Infrastructure;
 using KairuFocus.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -86,6 +87,9 @@ else if (!builder.Environment.IsDevelopment() && !isTesting)
 
 // TimeProvider — injectable pour les handlers qui ont besoin de l'heure courante (testabilité).
 builder.Services.AddSingleton(TimeProvider.System);
+
+// Closed list of ambiances a member can choose from.
+builder.Services.AddSingleton(AmbianceCatalogue.Default);
 
 // BrilliantMediator — handlers auto-découverts par le source generator
 builder.Services.AddBrilliantMediator()

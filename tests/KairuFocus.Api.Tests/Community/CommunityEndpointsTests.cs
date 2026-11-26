@@ -107,7 +107,8 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
             {
               "isMember": true, "name": "RenardAgile", "nameSource": "GitHub",
               "avatarUrl": "https://avatars.githubusercontent.com/u/1",
-              "gitHubLogin": "RenardAgile", "gitHubLoginAvailable": true
+              "gitHubLogin": "RenardAgile", "gitHubLoginAvailable": true,
+              "presenceConsented": true, "ambianceCode": null
             }
             """, response);
     }
@@ -710,7 +711,9 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
         NameSource: "GitHub",
         AvatarUrl: "https://avatars.githubusercontent.com/u/1",
         GitHubLogin: "RenardAgile",
-        GitHubLoginAvailable: true);
+        GitHubLoginAvailable: true,
+        PresenceConsented: true,
+        AmbianceCode: null);
 
     private static readonly MemberProfileViewModel SampleProfile = new(
         Name: "RenardAgile",

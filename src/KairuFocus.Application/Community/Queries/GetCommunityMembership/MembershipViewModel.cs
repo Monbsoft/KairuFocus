@@ -13,10 +13,12 @@ public sealed record MembershipViewModel(
     string? NameSource,
     string? AvatarUrl,
     string? GitHubLogin,
-    bool GitHubLoginAvailable)
+    bool GitHubLoginAvailable,
+    bool PresenceConsented,
+    string? AmbianceCode)
 {
     internal static MembershipViewModel NotMember(string? gitHubLogin, bool gitHubLoginAvailable) =>
-        new(IsMember: false, Name: null, NameSource: null, AvatarUrl: null, gitHubLogin, gitHubLoginAvailable);
+        new(IsMember: false, Name: null, NameSource: null, AvatarUrl: null, gitHubLogin, gitHubLoginAvailable, PresenceConsented: false, AmbianceCode: null);
 
     internal static MembershipViewModel ForMember(MemberProfile profile, string? gitHubLogin, bool gitHubLoginAvailable) =>
         new(
@@ -25,5 +27,7 @@ public sealed record MembershipViewModel(
             profile.NameSource.ToString(),
             profile.AvatarUrl,
             gitHubLogin,
-            gitHubLoginAvailable);
+            gitHubLoginAvailable,
+            profile.HasConsentedToPresence,
+            profile.AmbianceCode);
 }
