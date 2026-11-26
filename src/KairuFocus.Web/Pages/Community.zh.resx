@@ -1124,7 +1124,7 @@
 	<value>坐下</value>
   </data>
   <data name="Seat.Soon" xml:space="preserve">
-	<value>即将推出</value>
+	<value>稍后</value>
   </data>
   <data name="Seat.Aria" xml:space="preserve">
 	<value>坐到 {0} 的工位（加入其冲刺）</value>

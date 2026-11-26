@@ -1106,7 +1106,7 @@
 	<value>La tua scrivania</value>
   </data>
   <data name="Desk.Seated" xml:space="preserve">
-	<value>Sei seduto qui</value>
+	<value>Hai un posto qui</value>
   </data>
   <data name="Desk.ClosedToOthers" xml:space="preserve">
 	<value>chiusa agli altri</value>

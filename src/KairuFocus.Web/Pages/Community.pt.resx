@@ -1106,7 +1106,7 @@
 	<value>Sua mesa</value>
   </data>
   <data name="Desk.Seated" xml:space="preserve">
-	<value>Você está sentado aqui</value>
+	<value>Seu lugar é aqui</value>
   </data>
   <data name="Desk.ClosedToOthers" xml:space="preserve">
 	<value>fechada para os outros</value>

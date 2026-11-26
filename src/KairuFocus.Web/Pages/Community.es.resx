@@ -817,7 +817,7 @@
 	<value>Conectando al sprint…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>Activa la comunidad para sentarte en un escritorio: los demás miembros verán tu nombre, tu XP y cuándo estás conectado.</value>
+	<value>Activa la comunidad para sentarte en un escritorio: los demás miembros verán tu nombre, tu XP y cuándo te conectas.</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
 	<value>Activar la comunidad</value>
@@ -1085,10 +1085,10 @@
 	<value>Abrir mi escritorio</value>
   </data>
   <data name="OpenSpace.Gate.NotMember" xml:space="preserve">
-	<value>El open space es solo para miembros de la comunidad. Actívala para ver quién está trabajando y sentarte en un escritorio: los demás verán tu nombre, tu XP y cuándo estás conectado.</value>
+	<value>El open space es solo para miembros de la comunidad. Actívala para ver quién está trabajando y sentarte en un escritorio: los demás verán tu nombre, tu XP y cuándo te conectas.</value>
   </data>
   <data name="OpenSpace.Gate.Consent" xml:space="preserve">
-	<value>Novedad: el open space muestra a los miembros conectados. Para entrar, acepta que los demás miembros vean cuándo estás conectado.</value>
+	<value>Novedad: el open space muestra a los miembros conectados. Para entrar, acepta que los demás miembros vean cuándo te conectas.</value>
   </data>
   <data name="OpenSpace.Gate.ConsentCta" xml:space="preserve">
 	<value>Entrar en el open space</value>
@@ -1106,7 +1106,7 @@
 	<value>Tu escritorio</value>
   </data>
   <data name="Desk.Seated" xml:space="preserve">
-	<value>Estás sentado aquí</value>
+	<value>Tienes asiento aquí</value>
   </data>
   <data name="Desk.ClosedToOthers" xml:space="preserve">
 	<value>cerrado a los demás</value>
@@ -1169,6 +1169,6 @@
 	<value>Activa la comunidad para elegir el ambiente de tu escritorio.</value>
   </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
-	<value>cuándo estás conectado a KairuFocus;</value>
+	<value>cuándo te conectas a KairuFocus;</value>
   </data>
 </root>

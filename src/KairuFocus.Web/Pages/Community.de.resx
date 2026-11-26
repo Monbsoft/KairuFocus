@@ -1127,7 +1127,7 @@
 	<value>Bald</value>
   </data>
   <data name="Seat.Aria" xml:space="preserve">
-	<value>Am Schreibtisch von {0} hinsetzen (seinem Sprint beitreten)</value>
+	<value>Am Schreibtisch von {0} hinsetzen (dem Sprint beitreten)</value>
   </data>
   <data name="Ambiance.Label" xml:space="preserve">
 	<value>Ambiente:</value>

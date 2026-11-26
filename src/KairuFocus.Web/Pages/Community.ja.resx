@@ -1124,7 +1124,7 @@
 	<value>座る</value>
   </data>
   <data name="Seat.Soon" xml:space="preserve">
-	<value>近日公開</value>
+	<value>まもなく</value>
   </data>
   <data name="Seat.Aria" xml:space="preserve">
 	<value>{0}さんのデスクに座る（スプリントに参加）</value>

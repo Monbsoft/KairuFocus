@@ -1124,7 +1124,7 @@
 	<value>앉기</value>
   </data>
   <data name="Seat.Soon" xml:space="preserve">
-	<value>곧 제공</value>
+	<value>곧</value>
   </data>
   <data name="Seat.Aria" xml:space="preserve">
 	<value>{0}님의 책상에 앉기(스프린트 참여)</value>
