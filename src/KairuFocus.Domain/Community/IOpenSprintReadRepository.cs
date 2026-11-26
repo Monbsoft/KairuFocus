@@ -23,4 +23,16 @@ public interface IOpenSprintReadRepository
     /// state. Empty when no group has this id (a sprint nobody joined has none).
     /// </summary>
     Task<IReadOnlyList<SprintMember>> GetGroupMembersAsync(Guid rootSessionId, CancellationToken ct = default);
+
+    /// <summary>
+    /// The desks of the open space: the same sprints and groups as <see cref="GetOpenGroupsAsync"/>, each with
+    /// the members seated at it, at most <paramref name="maxDesks"/>.
+    /// </summary>
+    Task<IReadOnlyList<OpenSpaceDesk>> GetDesksAsync(DateTime nowUtc, int maxDesks, CancellationToken ct = default);
+
+    /// <summary>The desk of the group <paramref name="rootSessionId"/> when it is open, otherwise null.</summary>
+    Task<OpenSpaceDesk?> GetDeskAsync(Guid rootSessionId, DateTime nowUtc, CancellationToken ct = default);
+
+    /// <summary>The ambiance code chosen by the host of <paramref name="rootSessionId"/>, null when none or no such group.</summary>
+    Task<string?> GetHostAmbianceCodeAsync(Guid rootSessionId, CancellationToken ct = default);
 }

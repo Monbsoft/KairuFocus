@@ -31,6 +31,9 @@ internal sealed class EfCoreMemberDirectoryReadRepository : IMemberDirectoryRead
             .Select(p => new PublicMemberProfile(p.Name, p.NameSource, p.AvatarUrl, p.JoinedAtUtc))
             .FirstOrDefaultAsync(ct);
 
+    public Task<IReadOnlyList<SprintMember>> GetConnectedMembersAsync(DateTime seenSinceUtc, int maxMembers, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
     public async Task<ActiveMembers> GetActiveMembersAsync(DateTime fromUtc, DateTime toUtc, int maxMembers, CancellationToken ct = default)
     {
         // CROSS-USERS read (ADR-026), same join debt as GetActivityAsync: PomodoroSessions.OwnerId is

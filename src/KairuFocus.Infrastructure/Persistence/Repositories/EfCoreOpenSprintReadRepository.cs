@@ -89,6 +89,15 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
             : null;
     }
 
+    public Task<IReadOnlyList<OpenSpaceDesk>> GetDesksAsync(DateTime nowUtc, int maxDesks, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
+    public Task<OpenSpaceDesk?> GetDeskAsync(Guid rootSessionId, DateTime nowUtc, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
+    public Task<string?> GetHostAmbianceCodeAsync(Guid rootSessionId, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
     public async Task<IReadOnlyList<SprintMember>> GetGroupMembersAsync(Guid rootSessionId, CancellationToken ct = default)
     {
         // Whatever the state of the group: those already present stay visible to each other after a closure,

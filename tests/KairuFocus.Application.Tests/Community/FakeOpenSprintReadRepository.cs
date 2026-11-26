@@ -54,6 +54,15 @@ internal sealed class FakeOpenSprintReadRepository : IOpenSprintReadRepository
         return Task.FromResult(sprint is not null && IsVisible(sprint.Phase, sprint.EndsAtUtc, nowUtc) ? sprint : null);
     }
 
+    public Task<IReadOnlyList<OpenSpaceDesk>> GetDesksAsync(DateTime nowUtc, int maxDesks, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
+    public Task<OpenSpaceDesk?> GetDeskAsync(Guid rootSessionId, DateTime nowUtc, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
+    public Task<string?> GetHostAmbianceCodeAsync(Guid rootSessionId, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
     public Task<IReadOnlyList<SprintMember>> GetGroupMembersAsync(Guid rootSessionId, CancellationToken ct = default)
     {
         ThrowIfReadFails();

@@ -59,6 +59,9 @@ internal sealed class FakeMemberDirectoryReadRepository : IMemberDirectoryReadRe
         return Task.FromResult(_active);
     }
 
+    public Task<IReadOnlyList<SprintMember>> GetConnectedMembersAsync(DateTime seenSinceUtc, int maxMembers, CancellationToken ct = default) =>
+        throw new NotImplementedException();
+
     private void ThrowIfReadFails()
     {
         if (ThrowOnRead is not null)

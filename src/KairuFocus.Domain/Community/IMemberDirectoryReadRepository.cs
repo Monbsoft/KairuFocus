@@ -11,4 +11,10 @@ public interface IMemberDirectoryReadRepository
     /// most recent end first then by name (ordinal), at most <paramref name="maxMembers"/>; Total counts every distinct member.
     /// </summary>
     Task<ActiveMembers> GetActiveMembersAsync(DateTime fromUtc, DateTime toUtc, int maxMembers, CancellationToken ct = default);
+
+    /// <summary>
+    /// Members who consented to presence and were last seen at or after <paramref name="seenSinceUtc"/>
+    /// (see <see cref="PresenceRules.SeenSince"/>), by name (ordinal), at most <paramref name="maxMembers"/>.
+    /// </summary>
+    Task<IReadOnlyList<SprintMember>> GetConnectedMembersAsync(DateTime seenSinceUtc, int maxMembers, CancellationToken ct = default);
 }
