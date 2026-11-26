@@ -226,7 +226,7 @@
 	<value>{0} 小时</value>
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
-	<value>{0} 小时 {1} 分钟</value>
+	<value>{0} 小时 {1:00} 分钟</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>个人纪录</value>
@@ -756,9 +756,6 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>暂时无法修改冲刺的开放状态。</value>
   </data>
-  <data name="Participants.GroupBreak" xml:space="preserve">
-	<value>小组休息：所有人同时结束。</value>
-  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>加入此冲刺</value>
   </data>
@@ -1117,8 +1114,11 @@
   <data name="Settings.MyDesk.Error" xml:space="preserve">
 	<value>无法保存氛围。</value>
   </data>
+  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
+	<value>启用社区后，才能选择工位氛围。</value>
+  </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
-	<value>你在 KairuFocus 上在线时</value>
+	<value>你在 KairuFocus 上在线时；</value>
   </data>
   <data name="OpenSpace.Error" xml:space="preserve">
 	<value>无法加载开放办公区。</value>
@@ -1146,5 +1146,105 @@
   </data>
   <data name="OpenSpace.DeskClosed" xml:space="preserve">
 	<value>此工位已不再开放。</value>
+  </data>
+  <!-- #46 / #50 — session de groupe, attente et retour à la session -->
+  <data name="OpenSprints.BackToSession" xml:space="preserve">
+	<value>返回你的会话</value>
+  </data>
+  <data name="OpenSprints.Waiting.Hint" xml:space="preserve">
+	<value>下一步开始后就可以加入。</value>
+  </data>
+  <data name="Join.WaitingForHost" xml:space="preserve">
+	<value>主持人即将开始下一步：请稍后再试。</value>
+  </data>
+  <data name="Profile.Status.Break" xml:space="preserve">
+	<value>休息中 · 还剩 {0}</value>
+  </data>
+  <data name="Profile.Status.Waiting" xml:space="preserve">
+	<value>正在等待主持人</value>
+  </data>
+  <data name="Group.Line" xml:space="preserve">
+	<value>小组会话 · {0}</value>
+  </data>
+  <data name="Group.Step.Sprint" xml:space="preserve">
+	<value>冲刺 {0}</value>
+  </data>
+  <data name="Group.Step.ShortBreak" xml:space="preserve">
+	<value>短休息</value>
+  </data>
+  <data name="Group.Step.LongBreak" xml:space="preserve">
+	<value>长休息</value>
+  </data>
+  <data name="Group.Waiting" xml:space="preserve">
+	<value>正在等待主持人…</value>
+  </data>
+  <data name="Group.YourTurn" xml:space="preserve">
+	<value>轮到你开始下一步了</value>
+  </data>
+  <data name="Group.WaitLimit" xml:space="preserve">
+	<value>若不作选择，会话将在 {0} 后结束</value>
+  </data>
+  <data name="Group.Stop" xml:space="preserve">
+	<value>停止会话</value>
+  </data>
+  <data name="Group.Stop.Title" xml:space="preserve">
+	<value>停止会话？</value>
+  </data>
+  <data name="Group.Stop.Body" xml:space="preserve">
+	<value>会话将为整个小组停止。</value>
+  </data>
+  <data name="Group.Stop.Body.Sprint" xml:space="preserve">
+	<value>会话将为整个小组停止。你当前的冲刺不会获得 XP。</value>
+  </data>
+  <data name="Group.Stop.Cancel" xml:space="preserve">
+	<value>继续</value>
+  </data>
+  <data name="Group.Leave" xml:space="preserve">
+	<value>退出会话</value>
+  </data>
+  <data name="Group.Close" xml:space="preserve">
+	<value>关闭会话</value>
+  </data>
+  <data name="Group.Reopen" xml:space="preserve">
+	<value>重新开放会话</value>
+  </data>
+  <data name="Group.Close.Hint" xml:space="preserve">
+	<value>之后没有人能再加入；已在其中的人不受影响。</value>
+  </data>
+  <data name="Group.Reopen.Hint" xml:space="preserve">
+	<value>此会话已关闭：没有人能再加入。</value>
+  </data>
+  <data name="Group.Ended.Stopped" xml:space="preserve">
+	<value>主持人已停止会话。</value>
+  </data>
+  <data name="Group.Ended.HostAbsent" xml:space="preserve">
+	<value>主持人已不在：会话已结束。</value>
+  </data>
+  <data name="Group.Ended.HostAlone" xml:space="preserve">
+	<value>小组里已没有其他人：会话将单人继续。</value>
+  </data>
+  <data name="Group.Ended.HostLeftCommunity" xml:space="preserve">
+	<value>主持人已离开社区：会话已结束。</value>
+  </data>
+  <data name="Group.Announce.Step" xml:space="preserve">
+	<value>新步骤：{0}</value>
+  </data>
+  <data name="Group.Error" xml:space="preserve">
+	<value>暂时无法连接小组会话。</value>
+  </data>
+  <data name="Group.Start" xml:space="preserve">
+	<value>为小组开始</value>
+  </data>
+  <data name="Group.YourTurn.Title" xml:space="preserve">
+	<value>你的小组正在等待下一步</value>
+  </data>
+  <data name="Group.Waiting.Body" xml:space="preserve">
+	<value>{0} 一开始，下一步就会在这里启动。你无需做任何事。</value>
+  </data>
+  <data name="Group.Follow.Hint" xml:space="preserve">
+	<value>你正在跟随 {0} 的节奏：下一步会自动开始。</value>
+  </data>
+  <data name="Group.Ended.Community" xml:space="preserve">
+	<value>查看谁在会话中</value>
   </data>
 </root>

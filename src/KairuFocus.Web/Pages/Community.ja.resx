@@ -226,7 +226,7 @@
 	<value>{0}時間</value>
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
-	<value>{0}時間{1}分</value>
+	<value>{0}時間{1:00}分</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>自己ベスト</value>
@@ -756,9 +756,6 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>スプリントの受け付け状態を変更できません。</value>
   </data>
-  <data name="Participants.GroupBreak" xml:space="preserve">
-	<value>グループ休憩：全員同時に終了します。</value>
-  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>このスプリントに参加</value>
   </data>
@@ -1117,6 +1114,9 @@
   <data name="Settings.MyDesk.Error" xml:space="preserve">
 	<value>アンビエンスを保存できませんでした。</value>
   </data>
+  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
+	<value>デスクのアンビエンスを選ぶには、先にコミュニティを有効にしてください。</value>
+  </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
 	<value>KairuFocusにオンラインのとき</value>
   </data>
@@ -1145,6 +1145,106 @@
 	<value>待機中</value>
   </data>
   <data name="OpenSpace.DeskClosed" xml:space="preserve">
-	<value>このデスクは受け付けを終了しました。</value>
+	<value>このデスクはもう開いていません。</value>
+  </data>
+  <!-- #46 / #50 — session de groupe, attente et retour à la session -->
+  <data name="OpenSprints.BackToSession" xml:space="preserve">
+	<value>自分のセッションに戻る</value>
+  </data>
+  <data name="OpenSprints.Waiting.Hint" xml:space="preserve">
+	<value>次のステップが始まったら参加できます。</value>
+  </data>
+  <data name="Join.WaitingForHost" xml:space="preserve">
+	<value>ホストがまもなく次のステップを始めます。少し待ってからもう一度お試しください。</value>
+  </data>
+  <data name="Profile.Status.Break" xml:space="preserve">
+	<value>休憩中・あと{0}</value>
+  </data>
+  <data name="Profile.Status.Waiting" xml:space="preserve">
+	<value>ホストを待っています</value>
+  </data>
+  <data name="Group.Line" xml:space="preserve">
+	<value>グループセッション・{0}</value>
+  </data>
+  <data name="Group.Step.Sprint" xml:space="preserve">
+	<value>スプリント{0}</value>
+  </data>
+  <data name="Group.Step.ShortBreak" xml:space="preserve">
+	<value>短い休憩</value>
+  </data>
+  <data name="Group.Step.LongBreak" xml:space="preserve">
+	<value>長い休憩</value>
+  </data>
+  <data name="Group.Waiting" xml:space="preserve">
+	<value>ホストを待っています…</value>
+  </data>
+  <data name="Group.YourTurn" xml:space="preserve">
+	<value>次のステップを始めましょう</value>
+  </data>
+  <data name="Group.WaitLimit" xml:space="preserve">
+	<value>選択しない場合、セッションは{0}後に終了します</value>
+  </data>
+  <data name="Group.Stop" xml:space="preserve">
+	<value>セッションを停止</value>
+  </data>
+  <data name="Group.Stop.Title" xml:space="preserve">
+	<value>セッションを停止しますか？</value>
+  </data>
+  <data name="Group.Stop.Body" xml:space="preserve">
+	<value>セッションはグループ全員に対して停止します。</value>
+  </data>
+  <data name="Group.Stop.Body.Sprint" xml:space="preserve">
+	<value>セッションはグループ全員に対して停止します。進行中のスプリントではXPを獲得できません。</value>
+  </data>
+  <data name="Group.Stop.Cancel" xml:space="preserve">
+	<value>続ける</value>
+  </data>
+  <data name="Group.Leave" xml:space="preserve">
+	<value>セッションを退出</value>
+  </data>
+  <data name="Group.Close" xml:space="preserve">
+	<value>セッションを閉じる</value>
+  </data>
+  <data name="Group.Reopen" xml:space="preserve">
+	<value>セッションを再開放</value>
+  </data>
+  <data name="Group.Close.Hint" xml:space="preserve">
+	<value>これ以上は誰も参加できません。すでに参加している人はそのままです。</value>
+  </data>
+  <data name="Group.Reopen.Hint" xml:space="preserve">
+	<value>このセッションは閉じられています。これ以上は誰も参加できません。</value>
+  </data>
+  <data name="Group.Ended.Stopped" xml:space="preserve">
+	<value>ホストがセッションを停止しました。</value>
+  </data>
+  <data name="Group.Ended.HostAbsent" xml:space="preserve">
+	<value>ホストがいなくなったため、セッションは終了しました。</value>
+  </data>
+  <data name="Group.Ended.HostAlone" xml:space="preserve">
+	<value>グループに誰もいなくなったため、セッションは一人で続行します。</value>
+  </data>
+  <data name="Group.Ended.HostLeftCommunity" xml:space="preserve">
+	<value>ホストがコミュニティを退出したため、セッションは終了しました。</value>
+  </data>
+  <data name="Group.Announce.Step" xml:space="preserve">
+	<value>新しいステップ：{0}</value>
+  </data>
+  <data name="Group.Error" xml:space="preserve">
+	<value>現在、グループセッションに接続できません。</value>
+  </data>
+  <data name="Group.Start" xml:space="preserve">
+	<value>グループ向けに開始</value>
+  </data>
+  <data name="Group.YourTurn.Title" xml:space="preserve">
+	<value>グループが次のステップを待っています</value>
+  </data>
+  <data name="Group.Waiting.Body" xml:space="preserve">
+	<value>{0}が開始すると、ここで次のステップが始まります。操作は必要ありません。</value>
+  </data>
+  <data name="Group.Follow.Hint" xml:space="preserve">
+	<value>{0}のペースに合わせています。次のステップは自動で始まります。</value>
+  </data>
+  <data name="Group.Ended.Community" xml:space="preserve">
+	<value>セッション中の人を見る</value>
   </data>
 </root>

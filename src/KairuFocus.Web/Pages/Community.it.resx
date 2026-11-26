@@ -181,13 +181,13 @@
 	<value>{0} sprint · {1} di focus</value>
   </data>
   <data name="Community.Xp.Compare.Week" xml:space="preserve">
-	<value>rispetto allo stesso momento della settimana scorsa ({1} XP)</value>
+	<value>rispetto a {0} scorso alla stessa ora ({1} XP)</value>
   </data>
   <data name="Community.Xp.Compare.Month" xml:space="preserve">
 	<value>rispetto al {0} alla stessa ora ({1} XP)</value>
   </data>
   <data name="Community.Xp.Equal.Week" xml:space="preserve">
-	<value>Come lo stesso momento della settimana scorsa ({1} XP)</value>
+	<value>Come {0} scorso alla stessa ora ({1} XP)</value>
   </data>
   <data name="Community.Xp.Equal.Month" xml:space="preserve">
 	<value>Come il {0} alla stessa ora ({1} XP)</value>
@@ -226,7 +226,7 @@
 	<value>{0} h</value>
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
-	<value>{0} h {1} min</value>
+	<value>{0} h {1:00} min</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>Record personale</value>
@@ -756,9 +756,6 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>Impossibile modificare l'apertura dello sprint al momento.</value>
   </data>
-  <data name="Participants.GroupBreak" xml:space="preserve">
-	<value>Pausa di gruppo: finisce nello stesso momento per tutto il gruppo.</value>
-  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>Unisciti a questo sprint</value>
   </data>
@@ -1025,7 +1022,7 @@
 	<value>{0} altra persona online</value>
   </data>
   <data name="OpenSpace.Others.Other" xml:space="preserve">
-	<value>altre {0} persone online</value>
+	<value>{0} altre persone online</value>
   </data>
   <data name="OpenSpace.Empty.Title" xml:space="preserve">
 	<value>Al momento nessuno è in sprint.</value>
@@ -1117,6 +1114,9 @@
   <data name="Settings.MyDesk.Error" xml:space="preserve">
 	<value>Impossibile salvare l'atmosfera.</value>
   </data>
+  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
+	<value>Attiva la community per scegliere l'atmosfera della tua scrivania.</value>
+  </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
 	<value>quando sei online su KairuFocus;</value>
   </data>
@@ -1146,5 +1146,105 @@
   </data>
   <data name="OpenSpace.DeskClosed" xml:space="preserve">
 	<value>Questa scrivania non è più aperta.</value>
+  </data>
+  <!-- #46 / #50 — session de groupe, attente et retour à la session -->
+  <data name="OpenSprints.BackToSession" xml:space="preserve">
+	<value>Torna alla tua sessione</value>
+  </data>
+  <data name="OpenSprints.Waiting.Hint" xml:space="preserve">
+	<value>Potrai unirti non appena parte il passaggio successivo.</value>
+  </data>
+  <data name="Join.WaitingForHost" xml:space="preserve">
+	<value>L'host sta per avviare il passaggio successivo: riprova tra un istante.</value>
+  </data>
+  <data name="Profile.Status.Break" xml:space="preserve">
+	<value>In pausa · ancora {0}</value>
+  </data>
+  <data name="Profile.Status.Waiting" xml:space="preserve">
+	<value>In attesa dell'host</value>
+  </data>
+  <data name="Group.Line" xml:space="preserve">
+	<value>Sessione di gruppo · {0}</value>
+  </data>
+  <data name="Group.Step.Sprint" xml:space="preserve">
+	<value>Sprint {0}</value>
+  </data>
+  <data name="Group.Step.ShortBreak" xml:space="preserve">
+	<value>Pausa breve</value>
+  </data>
+  <data name="Group.Step.LongBreak" xml:space="preserve">
+	<value>Pausa lunga</value>
+  </data>
+  <data name="Group.Waiting" xml:space="preserve">
+	<value>In attesa dell'host…</value>
+  </data>
+  <data name="Group.YourTurn" xml:space="preserve">
+	<value>Tocca a te avviare il passaggio successivo</value>
+  </data>
+  <data name="Group.WaitLimit" xml:space="preserve">
+	<value>Senza una scelta, la sessione termina tra {0}</value>
+  </data>
+  <data name="Group.Stop" xml:space="preserve">
+	<value>Interrompi la sessione</value>
+  </data>
+  <data name="Group.Stop.Title" xml:space="preserve">
+	<value>Interrompere la sessione?</value>
+  </data>
+  <data name="Group.Stop.Body" xml:space="preserve">
+	<value>La sessione si interrompe per tutto il gruppo.</value>
+  </data>
+  <data name="Group.Stop.Body.Sprint" xml:space="preserve">
+	<value>La sessione si interrompe per tutto il gruppo. Il tuo sprint in corso non darà XP.</value>
+  </data>
+  <data name="Group.Stop.Cancel" xml:space="preserve">
+	<value>Continua</value>
+  </data>
+  <data name="Group.Leave" xml:space="preserve">
+	<value>Esci dalla sessione</value>
+  </data>
+  <data name="Group.Close" xml:space="preserve">
+	<value>Chiudi la sessione</value>
+  </data>
+  <data name="Group.Reopen" xml:space="preserve">
+	<value>Riapri la sessione</value>
+  </data>
+  <data name="Group.Close.Hint" xml:space="preserve">
+	<value>Nessun altro potrà unirsi; chi c'è già resta.</value>
+  </data>
+  <data name="Group.Reopen.Hint" xml:space="preserve">
+	<value>Questa sessione è chiusa: nessun altro può unirsi.</value>
+  </data>
+  <data name="Group.Ended.Stopped" xml:space="preserve">
+	<value>L'host ha interrotto la sessione.</value>
+  </data>
+  <data name="Group.Ended.HostAbsent" xml:space="preserve">
+	<value>L'host non c'è più: la sessione è terminata.</value>
+  </data>
+  <data name="Group.Ended.HostAlone" xml:space="preserve">
+	<value>Nessun altro nel gruppo: la sessione continua in solitaria.</value>
+  </data>
+  <data name="Group.Ended.HostLeftCommunity" xml:space="preserve">
+	<value>L'host ha lasciato la community: la sessione è terminata.</value>
+  </data>
+  <data name="Group.Announce.Step" xml:space="preserve">
+	<value>Nuovo passaggio: {0}</value>
+  </data>
+  <data name="Group.Error" xml:space="preserve">
+	<value>Impossibile raggiungere la sessione di gruppo al momento.</value>
+  </data>
+  <data name="Group.Start" xml:space="preserve">
+	<value>Avvia per il gruppo</value>
+  </data>
+  <data name="Group.YourTurn.Title" xml:space="preserve">
+	<value>Il tuo gruppo aspetta il passaggio successivo</value>
+  </data>
+  <data name="Group.Waiting.Body" xml:space="preserve">
+	<value>Il passaggio successivo parte qui appena {0} lo avvia. Non devi fare nulla.</value>
+  </data>
+  <data name="Group.Follow.Hint" xml:space="preserve">
+	<value>Segui il ritmo di {0}: il passaggio successivo parte da solo.</value>
+  </data>
+  <data name="Group.Ended.Community" xml:space="preserve">
+	<value>Vedi chi è in sessione</value>
   </data>
 </root>

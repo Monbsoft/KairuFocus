@@ -705,7 +705,7 @@
   <data name="Settings.Community.Left" xml:space="preserve">
 	<value>Tu as quitté la communauté.</value>
   </data>
-  <!-- T12 OpenSprints.* -->
+  <!-- Actifs aujourd'hui (ActiveToday.*) et suite -->
   <data name="ActiveToday.Title" xml:space="preserve">
 	<value>Actifs aujourd'hui</value>
   </data>
@@ -810,7 +810,7 @@
   <data name="Profile.Progress.Period.Global" xml:space="preserve">
 	<value>Depuis le début</value>
   </data>
-  <!-- #46 OpenSprints / Join / Profile -->
+  <!-- #46 / #50 — session de groupe, attente et retour à la session -->
   <data name="OpenSprints.BackToSession" xml:space="preserve">
 	<value>Retour à ta session</value>
   </data>
@@ -1220,6 +1220,9 @@
   </data>
   <data name="Settings.MyDesk.Error" xml:space="preserve">
 	<value>Impossible d'enregistrer l'ambiance.</value>
+  </data>
+  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
+	<value>Active la communauté pour choisir l'ambiance de ton bureau.</value>
   </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
 	<value>quand tu es connecté à KairuFocus ;</value>
