@@ -1,0 +1,69 @@
+using KairuFocus.Domain.Identity;
+using KairuFocus.Infrastructure.Persistence.Repositories;
+using KairuFocus.Infrastructure.Tests.Persistence.TestSupport;
+
+namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
+
+/// <summary>
+/// Create / move forward / ignore-older paths of <see cref="EfCoreMemberPresenceRepository"/>. The race of two
+/// first signals of the same member is NOT covered here: under InMemory a duplicate key surfaces as a raw
+/// ArgumentException, never as the SQL Server duplicate-key error the repository recovers from, so the
+/// recovery path cannot be reproduced honestly. It is checked at acceptance on SQL Server.
+/// </summary>
+public sealed class MemberPresenceRepositoryTests
+{
+    private static readonly DateTime FirstSeenAtUtc = new(2026, 11, 26, 9, 0, 0, DateTimeKind.Utc);
+
+    private readonly InMemoryDatabase _database = new();
+
+    [Fact]
+    public async Task Should_AddPresence_When_FirstSeen()
+    {
+        var userId = UserId.New();
+
+        await RecordAsync(userId, FirstSeenAtUtc);
+
+        Assert.Equal(FirstSeenAtUtc, await LastSeenAsync(userId));
+    }
+
+    [Fact]
+    public async Task Should_UpdatePresence_When_SeenAgain()
+    {
+        var userId = UserId.New();
+        await RecordAsync(userId, FirstSeenAtUtc);
+
+        await RecordAsync(userId, FirstSeenAtUtc.AddMinutes(2));
+
+        Assert.Equal(FirstSeenAtUtc.AddMinutes(2), await LastSeenAsync(userId));
+        Assert.Equal(1, await CountAsync());
+    }
+
+    [Fact]
+    public async Task Should_KeepLatest_When_OlderSeenArrivesLate()
+    {
+        var userId = UserId.New();
+        await RecordAsync(userId, FirstSeenAtUtc.AddMinutes(2));
+
+        await RecordAsync(userId, FirstSeenAtUtc);
+
+        Assert.Equal(FirstSeenAtUtc.AddMinutes(2), await LastSeenAsync(userId));
+    }
+
+    private async Task RecordAsync(UserId userId, DateTime seenAtUtc)
+    {
+        await using var context = _database.CreateContext();
+        await new EfCoreMemberPresenceRepository(context).RecordSeenAsync(userId, seenAtUtc);
+    }
+
+    private async Task<DateTime?> LastSeenAsync(UserId userId)
+    {
+        await using var context = _database.CreateContext();
+        return (await context.MemberPresences.FindAsync(userId))?.LastSeenAtUtc;
+    }
+
+    private async Task<int> CountAsync()
+    {
+        await using var context = _database.CreateContext();
+        return context.MemberPresences.Count();
+    }
+}

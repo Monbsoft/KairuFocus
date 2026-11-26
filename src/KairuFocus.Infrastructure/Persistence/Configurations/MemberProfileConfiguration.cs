@@ -62,6 +62,14 @@ public sealed class MemberProfileConfiguration : IEntityTypeConfiguration<Member
             .HasColumnType("datetime2")
             .IsRequired();
 
+        // Opt-in to presence: null until the member consents. Existing members are never backfilled (D10).
+        builder.Property(p => p.PresenceConsentedAtUtc)
+            .HasColumnType("datetime2");
+
+        builder.Property(p => p.AmbianceCode)
+            .HasColumnType("nvarchar(40)")
+            .HasMaxLength(AmbianceCatalogue.MaxCodeLength);
+
         builder.HasOne<User>()
             .WithOne()
             .HasForeignKey<MemberProfile>(p => p.Id)
