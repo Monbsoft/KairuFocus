@@ -13,22 +13,22 @@
 <section class="kf-hero kf-os" aria-labelledby="open-space-title" aria-busy="@(Data is null && !Failed ? "true" : "false")">
     <div class="kf-os__head">
         <h2 class="kf-os__title" id="open-space-title" tabindex="-1" @ref="_title">@F["OpenSpace.Title"]</h2>
-        @if (Data is { Access: OpenAccess } open)
+        @if (Data is { Access: OpenAccess })
         {
-            <p class="kf-os__sub">@F.OpenSpaceSubtitle(open.Desks.Count, open.ConnectedTotal)</p>
+            <p class="kf-os__sub">@F.OpenSpaceSubtitle(_desks.Count, _others)</p>
         }
         @* Always mounted so that the message is announced when it appears. *@
         <div role="status">
             @if (_showClosedNotice)
             {
-                <p class="kf-os__closed">@F["Join.Closed"]</p>
+                <p class="kf-os__closed">@F["OpenSpace.DeskClosed"]</p>
             }
         </div>
     </div>
 
     @if (Failed)
     {
-        <ZoneAlert Message="@F["OpenSprints.Error"]" OnRetry="OnRetry" />
+        <ZoneAlert Message="@F["OpenSpace.Error"]" OnRetry="OnRetry" />
     }
     else if (Data is null)
     {
@@ -36,7 +36,7 @@
             <div class="kf-skel kf-os__skel"></div>
             <div class="kf-skel kf-os__skel"></div>
         </div>
-        <span class="visually-hidden">@F["OpenSprints.Loading"]</span>
+        <span class="visually-hidden">@F["OpenSpace.Loading"]</span>
     }
     else if (Data.Access != OpenAccess)
     {
@@ -44,7 +44,7 @@
     }
     else
     {
-        if (Data.Desks.Count == 0)
+        if (_desks.Count == 0)
         {
             <div class="kf-os__empty">
                 <div class="kf-os__emptytext">
@@ -63,11 +63,11 @@
         }
         else
         {
-            var hidden = Data.Desks.Count - VisibleDesks;
+            var hidden = _desks.Count - VisibleDesks;
             var canFold = hidden > 0;
 
             <ul class="kf-os__grid" id="open-space-desks">
-                @foreach (var desk in (canFold && !_expanded ? Data.Desks.Take(VisibleDesks) : Data.Desks))
+                @foreach (var desk in (canFold && !_expanded ? _desks.Take(VisibleDesks) : _desks))
                 {
                     <DeskCard @key="DeskKey(desk)" Desk="desk" OnNoLongerOpen="HandleNoLongerOpenAsync"
                               OnWaiting="OnChanged" OnElapsed="OnChanged" />
@@ -79,7 +79,7 @@
                 <button type="button" class="kf-linkbtn kf-os__more" aria-expanded="@(_expanded ? "true" : "false")"
                         aria-controls="open-space-desks" @onclick="ToggleExpanded"
                         @onfocus="() => _moreFocused = true" @onblur="() => _moreFocused = false">
-                    @(_expanded ? F["OpenSprints.Less"] : F.Plural("OpenSprints.More", hidden, F.Number(hidden)))
+                    @(_expanded ? F["OpenSpace.Less"] : F.Plural("OpenSpace.More", hidden, F.Number(hidden)))
                 </button>
             }
         }
@@ -129,15 +129,25 @@
     private bool _consentedHere;
     private OpenSpaceDto? _dataAtConsent;
 
+    // What is shown, computed once per read: the desks with somebody seated (an empty one would be an empty card, and
+    // would be counted), and the connected people other than the viewer (the subtitle says "others").
+    private IReadOnlyList<DeskDto> _desks = [];
+    private int _others;
+
     protected override void OnParametersSet()
     {
+        _desks = Data is { Access: OpenAccess } shown ? shown.Desks.Where(d => d.Seated.Count > 0).ToList() : [];
+        _others = Data is { Access: OpenAccess } read
+            ? Math.Max(0, read.ConnectedTotal - (read.Connected.Any(m => m.IsMe) ? 1 : 0))
+            : 0;
+
         if (_consentedHere && !ReferenceEquals(Data, _dataAtConsent) && Data is { Access: OpenAccess })
         {
             _consentedHere = false;
             _focusTitle = true;
         }
 
-        if (Data is not { Access: OpenAccess } data || data.Desks.Count > VisibleDesks) return;
+        if (Data is not { Access: OpenAccess } || _desks.Count > VisibleDesks) return;
 
         if (_moreFocused) _focusTitle = true;
         _expanded = false;

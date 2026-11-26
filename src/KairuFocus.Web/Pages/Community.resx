@@ -706,48 +706,6 @@
 	<value>Tu as quitté la communauté.</value>
   </data>
   <!-- T12 OpenSprints.* -->
-  <data name="OpenSprints.Title" xml:space="preserve">
-	<value>En ce moment</value>
-  </data>
-  <data name="OpenSprints.Sub" xml:space="preserve">
-	<value>Rejoins une session déjà lancée : tu suis le rythme de l'hôte, sprints et pauses.</value>
-  </data>
-  <data name="OpenSprints.Loading" xml:space="preserve">
-	<value>Chargement des sprints ouverts…</value>
-  </data>
-  <data name="OpenSprints.Error" xml:space="preserve">
-	<value>Impossible de lire les sprints ouverts pour le moment.</value>
-  </data>
-  <data name="OpenSprints.Remaining" xml:space="preserve">
-	<value>encore {0}</value>
-  </data>
-  <data name="OpenSprints.Participants.One" xml:space="preserve">
-	<value>{0} participant</value>
-  </data>
-  <data name="OpenSprints.Participants.Other" xml:space="preserve">
-	<value>{0} participants</value>
-  </data>
-  <data name="OpenSprints.Empty.Title" xml:space="preserve">
-	<value>Personne n'est en session pour le moment</value>
-  </data>
-  <data name="OpenSprints.Empty.Body" xml:space="preserve">
-	<value>Lance le tien : les autres membres le verront ici et pourront te rejoindre.</value>
-  </data>
-  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
-	<value>Lancer un sprint</value>
-  </data>
-  <data name="OpenSprints.Alone" xml:space="preserve">
-	<value>Personne ne l'a encore rejoint</value>
-  </data>
-  <data name="OpenSprints.More.One" xml:space="preserve">
-	<value>Voir l'autre session</value>
-  </data>
-  <data name="OpenSprints.More.Other" xml:space="preserve">
-	<value>Voir les {0} autres</value>
-  </data>
-  <data name="OpenSprints.Less" xml:space="preserve">
-	<value>Réduire</value>
-  </data>
   <data name="ActiveToday.Title" xml:space="preserve">
 	<value>Actifs aujourd'hui</value>
   </data>
@@ -765,12 +723,6 @@
   </data>
   <data name="ActiveToday.Error" xml:space="preserve">
 	<value>Impossible de charger les membres actifs aujourd'hui.</value>
-  </data>
-  <data name="OpenSprints.Mine" xml:space="preserve">
-	<value>Ta session</value>
-  </data>
-  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
-	<value>Profil de {0}</value>
   </data>
   <!-- T12 Participants.* -->
   <data name="Participants.Aria" xml:space="preserve">
@@ -859,17 +811,8 @@
 	<value>Depuis le début</value>
   </data>
   <!-- #46 OpenSprints / Join / Profile -->
-  <data name="OpenSprints.Badge.Break" xml:space="preserve">
-	<value>En pause</value>
-  </data>
-  <data name="OpenSprints.Badge.Waiting" xml:space="preserve">
-	<value>En attente de l'hôte</value>
-  </data>
   <data name="OpenSprints.BackToSession" xml:space="preserve">
 	<value>Retour à ta session</value>
-  </data>
-  <data name="OpenSprints.Badge.Sprint" xml:space="preserve">
-	<value>Sprint</value>
   </data>
   <data name="OpenSprints.Waiting.Hint" xml:space="preserve">
 	<value>Tu pourras rejoindre dès que la suite démarre.</value>
@@ -1278,10 +1221,34 @@
   <data name="Settings.MyDesk.Error" xml:space="preserve">
 	<value>Impossible d'enregistrer l'ambiance.</value>
   </data>
-  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
-	<value>Active la communauté pour choisir l'ambiance de ton bureau.</value>
-  </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
 	<value>quand tu es connecté à KairuFocus ;</value>
+  </data>
+  <data name="OpenSpace.Error" xml:space="preserve">
+	<value>Impossible de charger l'open space.</value>
+  </data>
+  <data name="OpenSpace.Loading" xml:space="preserve">
+	<value>Chargement de l'open space…</value>
+  </data>
+  <data name="OpenSpace.More.One" xml:space="preserve">
+	<value>Voir l'autre bureau</value>
+  </data>
+  <data name="OpenSpace.More.Other" xml:space="preserve">
+	<value>Voir les {0} autres bureaux</value>
+  </data>
+  <data name="OpenSpace.Less" xml:space="preserve">
+	<value>Réduire</value>
+  </data>
+  <data name="Desk.Badge.Sprint" xml:space="preserve">
+	<value>Sprint</value>
+  </data>
+  <data name="Desk.Badge.Break" xml:space="preserve">
+	<value>Pause</value>
+  </data>
+  <data name="Desk.Badge.Waiting" xml:space="preserve">
+	<value>En attente</value>
+  </data>
+  <data name="OpenSpace.DeskClosed" xml:space="preserve">
+	<value>Ce bureau n'est plus ouvert.</value>
   </data>
 </root>

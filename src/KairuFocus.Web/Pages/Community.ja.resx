@@ -702,48 +702,6 @@
   <data name="Settings.Community.Left" xml:space="preserve">
 	<value>コミュニティを退会しました。</value>
   </data>
-  <data name="OpenSprints.Title" xml:space="preserve">
-	<value>今スプリント中</value>
-  </data>
-  <data name="OpenSprints.Sub" xml:space="preserve">
-	<value>すでに始まっているスプリントに参加しましょう。同じ時刻に一緒に終わります。</value>
-  </data>
-  <data name="OpenSprints.Loading" xml:space="preserve">
-	<value>開いているスプリントを読み込み中…</value>
-  </data>
-  <data name="OpenSprints.Error" xml:space="preserve">
-	<value>現在、開いているスプリントを読み込めません。</value>
-  </data>
-  <data name="OpenSprints.Remaining" xml:space="preserve">
-	<value>残り{0}</value>
-  </data>
-  <data name="OpenSprints.Participants.One" xml:space="preserve">
-	<value>{0}人が参加</value>
-  </data>
-  <data name="OpenSprints.Participants.Other" xml:space="preserve">
-	<value>{0}人が参加</value>
-  </data>
-  <data name="OpenSprints.Empty.Title" xml:space="preserve">
-	<value>現在スプリント中の人はいません</value>
-  </data>
-  <data name="OpenSprints.Empty.Body" xml:space="preserve">
-	<value>あなたのスプリントを始めましょう。ほかのメンバーにここで表示され、参加してもらえます。</value>
-  </data>
-  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
-	<value>スプリントを始める</value>
-  </data>
-  <data name="OpenSprints.Alone" xml:space="preserve">
-	<value>まだ誰も参加していません</value>
-  </data>
-  <data name="OpenSprints.More.One" xml:space="preserve">
-	<value>もう1件のスプリントを表示</value>
-  </data>
-  <data name="OpenSprints.More.Other" xml:space="preserve">
-	<value>ほかの{0}件のスプリントを表示</value>
-  </data>
-  <data name="OpenSprints.Less" xml:space="preserve">
-	<value>折りたたむ</value>
-  </data>
   <data name="ActiveToday.Title" xml:space="preserve">
 	<value>今日アクティブな人</value>
   </data>
@@ -761,12 +719,6 @@
   </data>
   <data name="ActiveToday.Error" xml:space="preserve">
 	<value>今日アクティブなメンバーを読み込めません。</value>
-  </data>
-  <data name="OpenSprints.Mine" xml:space="preserve">
-	<value>あなたのスプリント</value>
-  </data>
-  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
-	<value>{0}さんのプロフィール</value>
   </data>
   <data name="Participants.Aria" xml:space="preserve">
 	<value>一緒にスプリント中のメンバー</value>
@@ -1165,10 +1117,34 @@
   <data name="Settings.MyDesk.Error" xml:space="preserve">
 	<value>アンビエンスを保存できませんでした。</value>
   </data>
-  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
-	<value>デスクのアンビエンスを選ぶには、先にコミュニティを有効にしてください。</value>
-  </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
 	<value>KairuFocusにオンラインのとき</value>
+  </data>
+  <data name="OpenSpace.Error" xml:space="preserve">
+	<value>オープンスペースを読み込めません。</value>
+  </data>
+  <data name="OpenSpace.Loading" xml:space="preserve">
+	<value>オープンスペースを読み込み中…</value>
+  </data>
+  <data name="OpenSpace.More.One" xml:space="preserve">
+	<value>もう1台のデスクを表示</value>
+  </data>
+  <data name="OpenSpace.More.Other" xml:space="preserve">
+	<value>ほかの{0}台のデスクを表示</value>
+  </data>
+  <data name="OpenSpace.Less" xml:space="preserve">
+	<value>折りたたむ</value>
+  </data>
+  <data name="Desk.Badge.Sprint" xml:space="preserve">
+	<value>スプリント</value>
+  </data>
+  <data name="Desk.Badge.Break" xml:space="preserve">
+	<value>休憩</value>
+  </data>
+  <data name="Desk.Badge.Waiting" xml:space="preserve">
+	<value>待機中</value>
+  </data>
+  <data name="OpenSpace.DeskClosed" xml:space="preserve">
+	<value>このデスクは受け付けを終了しました。</value>
   </data>
 </root>

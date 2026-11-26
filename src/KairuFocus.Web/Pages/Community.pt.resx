@@ -702,48 +702,6 @@
   <data name="Settings.Community.Left" xml:space="preserve">
 	<value>Você saiu da comunidade.</value>
   </data>
-  <data name="OpenSprints.Title" xml:space="preserve">
-	<value>Em sprint agora</value>
-  </data>
-  <data name="OpenSprints.Sub" xml:space="preserve">
-	<value>Entre em um sprint já iniciado: vocês terminam juntos, no mesmo horário.</value>
-  </data>
-  <data name="OpenSprints.Loading" xml:space="preserve">
-	<value>Carregando os sprints abertos…</value>
-  </data>
-  <data name="OpenSprints.Error" xml:space="preserve">
-	<value>Não foi possível ler os sprints abertos no momento.</value>
-  </data>
-  <data name="OpenSprints.Remaining" xml:space="preserve">
-	<value>faltam {0}</value>
-  </data>
-  <data name="OpenSprints.Participants.One" xml:space="preserve">
-	<value>{0} participante</value>
-  </data>
-  <data name="OpenSprints.Participants.Other" xml:space="preserve">
-	<value>{0} participantes</value>
-  </data>
-  <data name="OpenSprints.Empty.Title" xml:space="preserve">
-	<value>Ninguém está em sprint agora</value>
-  </data>
-  <data name="OpenSprints.Empty.Body" xml:space="preserve">
-	<value>Inicie o seu: os outros membros vão vê-lo aqui e poderão entrar.</value>
-  </data>
-  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
-	<value>Iniciar um sprint</value>
-  </data>
-  <data name="OpenSprints.Alone" xml:space="preserve">
-	<value>Ninguém entrou ainda</value>
-  </data>
-  <data name="OpenSprints.More.One" xml:space="preserve">
-	<value>Ver o outro sprint</value>
-  </data>
-  <data name="OpenSprints.More.Other" xml:space="preserve">
-	<value>Ver os outros {0} sprints</value>
-  </data>
-  <data name="OpenSprints.Less" xml:space="preserve">
-	<value>Mostrar menos</value>
-  </data>
   <data name="ActiveToday.Title" xml:space="preserve">
 	<value>Ativos hoje</value>
   </data>
@@ -761,12 +719,6 @@
   </data>
   <data name="ActiveToday.Error" xml:space="preserve">
 	<value>Não foi possível carregar os membros ativos hoje.</value>
-  </data>
-  <data name="OpenSprints.Mine" xml:space="preserve">
-	<value>Seu sprint</value>
-  </data>
-  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
-	<value>Perfil de {0}</value>
   </data>
   <data name="Participants.Aria" xml:space="preserve">
 	<value>Com quem você está em sprint</value>
@@ -1165,10 +1117,34 @@
   <data name="Settings.MyDesk.Error" xml:space="preserve">
 	<value>Não foi possível salvar o ambiente.</value>
   </data>
-  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
-	<value>Ative a comunidade para escolher o ambiente da sua mesa.</value>
-  </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
 	<value>quando você está online no KairuFocus;</value>
+  </data>
+  <data name="OpenSpace.Error" xml:space="preserve">
+	<value>Não foi possível carregar o open space.</value>
+  </data>
+  <data name="OpenSpace.Loading" xml:space="preserve">
+	<value>Carregando o open space…</value>
+  </data>
+  <data name="OpenSpace.More.One" xml:space="preserve">
+	<value>Ver a outra mesa</value>
+  </data>
+  <data name="OpenSpace.More.Other" xml:space="preserve">
+	<value>Ver as outras {0} mesas</value>
+  </data>
+  <data name="OpenSpace.Less" xml:space="preserve">
+	<value>Mostrar menos</value>
+  </data>
+  <data name="Desk.Badge.Sprint" xml:space="preserve">
+	<value>Sprint</value>
+  </data>
+  <data name="Desk.Badge.Break" xml:space="preserve">
+	<value>Pausa</value>
+  </data>
+  <data name="Desk.Badge.Waiting" xml:space="preserve">
+	<value>Em espera</value>
+  </data>
+  <data name="OpenSpace.DeskClosed" xml:space="preserve">
+	<value>Esta mesa não está mais aberta.</value>
   </data>
 </root>

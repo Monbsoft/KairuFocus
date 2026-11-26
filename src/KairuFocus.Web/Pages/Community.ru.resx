@@ -702,48 +702,6 @@
   <data name="Settings.Community.Left" xml:space="preserve">
 	<value>Ты вышел из сообщества.</value>
   </data>
-  <data name="OpenSprints.Title" xml:space="preserve">
-	<value>Сейчас в спринте</value>
-  </data>
-  <data name="OpenSprints.Sub" xml:space="preserve">
-	<value>Присоединяйся к уже запущенному спринту: вы завершите его вместе, в одно и то же время.</value>
-  </data>
-  <data name="OpenSprints.Loading" xml:space="preserve">
-	<value>Загрузка открытых спринтов…</value>
-  </data>
-  <data name="OpenSprints.Error" xml:space="preserve">
-	<value>Сейчас не удаётся прочитать открытые спринты.</value>
-  </data>
-  <data name="OpenSprints.Remaining" xml:space="preserve">
-	<value>осталось {0}</value>
-  </data>
-  <data name="OpenSprints.Participants.One" xml:space="preserve">
-	<value>Участников: {0}</value>
-  </data>
-  <data name="OpenSprints.Participants.Other" xml:space="preserve">
-	<value>Участников: {0}</value>
-  </data>
-  <data name="OpenSprints.Empty.Title" xml:space="preserve">
-	<value>Сейчас никто не в спринте</value>
-  </data>
-  <data name="OpenSprints.Empty.Body" xml:space="preserve">
-	<value>Запусти свой: другие участники увидят его здесь и смогут присоединиться.</value>
-  </data>
-  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
-	<value>Запустить спринт</value>
-  </data>
-  <data name="OpenSprints.Alone" xml:space="preserve">
-	<value>Пока никто не присоединился</value>
-  </data>
-  <data name="OpenSprints.More.One" xml:space="preserve">
-	<value>Показать другой спринт</value>
-  </data>
-  <data name="OpenSprints.More.Other" xml:space="preserve">
-	<value>Показать другие спринты: {0}</value>
-  </data>
-  <data name="OpenSprints.Less" xml:space="preserve">
-	<value>Свернуть</value>
-  </data>
   <data name="ActiveToday.Title" xml:space="preserve">
 	<value>Активны сегодня</value>
   </data>
@@ -761,12 +719,6 @@
   </data>
   <data name="ActiveToday.Error" xml:space="preserve">
 	<value>Не удаётся загрузить участников, активных сегодня.</value>
-  </data>
-  <data name="OpenSprints.Mine" xml:space="preserve">
-	<value>Твой спринт</value>
-  </data>
-  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
-	<value>Профиль: {0}</value>
   </data>
   <data name="Participants.Aria" xml:space="preserve">
 	<value>С кем ты в спринте</value>
@@ -1165,10 +1117,34 @@
   <data name="Settings.MyDesk.Error" xml:space="preserve">
 	<value>Не удалось сохранить атмосферу.</value>
   </data>
-  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
-	<value>Включи сообщество, чтобы выбрать атмосферу своего стола.</value>
-  </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
 	<value>когда ты онлайн в KairuFocus;</value>
+  </data>
+  <data name="OpenSpace.Error" xml:space="preserve">
+	<value>Не удалось загрузить опенспейс.</value>
+  </data>
+  <data name="OpenSpace.Loading" xml:space="preserve">
+	<value>Загрузка опенспейса…</value>
+  </data>
+  <data name="OpenSpace.More.One" xml:space="preserve">
+	<value>Показать другой стол</value>
+  </data>
+  <data name="OpenSpace.More.Other" xml:space="preserve">
+	<value>Показать другие столы: {0}</value>
+  </data>
+  <data name="OpenSpace.Less" xml:space="preserve">
+	<value>Свернуть</value>
+  </data>
+  <data name="Desk.Badge.Sprint" xml:space="preserve">
+	<value>Спринт</value>
+  </data>
+  <data name="Desk.Badge.Break" xml:space="preserve">
+	<value>Перерыв</value>
+  </data>
+  <data name="Desk.Badge.Waiting" xml:space="preserve">
+	<value>Ожидание</value>
+  </data>
+  <data name="OpenSpace.DeskClosed" xml:space="preserve">
+	<value>Этот стол больше не открыт.</value>
   </data>
 </root>

@@ -389,6 +389,10 @@
 
         if (result is not null)
         {
+            // A partial server failure (its own read of the active-today line) must not wipe the line already shown.
+            if (result.ActiveToday is null && _openSpace?.ActiveToday is { } last)
+                result = result with { ActiveToday = last };
+
             _openSpace = result;
             _openSpaceFailed = false;
         }

@@ -146,7 +146,7 @@
 
     private int HiddenSeats => Math.Max(0, Desk.Seated.Count - MaxSeatsShown);
 
-    private string StateText => F[IsWaiting ? "OpenSprints.Badge.Waiting" : IsSprint ? "OpenSprints.Badge.Sprint" : "OpenSprints.Badge.Break"];
+    private string StateText => F[IsWaiting ? "Desk.Badge.Waiting" : IsSprint ? "Desk.Badge.Sprint" : "Desk.Badge.Break"];
 
     private string StateIcon => IsWaiting ? "⏳" : IsSprint ? "🍅" : "☕";
 
