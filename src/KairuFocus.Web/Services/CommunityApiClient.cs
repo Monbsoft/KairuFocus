@@ -26,6 +26,12 @@ public sealed class CommunityApiClient
     public Task<ActiveTodayDto?> GetActiveTodayAsync(CancellationToken ct = default) =>
         GetOrNullAsync<ActiveTodayDto>($"{Route}/active-today", ct);
 
+    public Task<OpenSpaceDto?> GetOpenSpaceAsync(CancellationToken ct = default) =>
+        GetOrNullAsync<OpenSpaceDto>($"{Route}/open-space", ct);
+
+    public Task<IReadOnlyList<AmbianceDto>?> GetAmbiancesAsync(CancellationToken ct = default) =>
+        GetOrNullAsync<IReadOnlyList<AmbianceDto>>($"{Route}/ambiances", ct);
+
     /// <summary>Found, NotFound (unknown name and non-member alike: same 404) or Failed.</summary>
     public async Task<MemberProfileLookup> GetMemberAsync(string name, CancellationToken ct = default)
     {
@@ -84,6 +90,20 @@ public sealed class CommunityApiClient
             return CommunityOutcome.Failed;
         }
     }
+
+    // ── Open space (#50) ────────────────────────────────────────────────────
+
+    /// <summary>Heartbeat: "I am connected". True on 204.</summary>
+    public Task<bool> RecordPresenceAsync(CancellationToken ct = default) =>
+        SendForNoContentAsync(HttpMethod.Post, $"{Route}/presence", body: null, ct);
+
+    /// <summary>The member accepts that the others see when they are connected. True on 204 (404: not a member).</summary>
+    public Task<bool> ConsentToPresenceAsync(CancellationToken ct = default) =>
+        SendForNoContentAsync(HttpMethod.Put, $"{Route}/presence/consent", body: null, ct);
+
+    /// <summary>Chooses the ambiance of my desk; null clears it. True on 204 (404 not a member, 400 unknown ambiance: false).</summary>
+    public Task<bool> SetAmbianceAsync(string? code, CancellationToken ct = default) =>
+        SendForNoContentAsync(HttpMethod.Put, $"{Route}/membership/ambiance", new { code }, ct);
 
     // ── Open sprints ────────────────────────────────────────────────────────
 
@@ -244,6 +264,25 @@ public sealed class CommunityApiClient
         catch (Exception ex) when (IsApiCallFailure(ex))
         {
             return null;
+        }
+    }
+
+    private async Task<bool> SendForNoContentAsync(HttpMethod method, string url, object? body, CancellationToken ct)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(method, url);
+            if (body is not null) request.Content = JsonContent.Create(body);
+            using var response = await _http.SendAsync(request, ct);
+            return response.StatusCode == HttpStatusCode.NoContent;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (IsApiCallFailure(ex))
+        {
+            return false;
         }
     }
 

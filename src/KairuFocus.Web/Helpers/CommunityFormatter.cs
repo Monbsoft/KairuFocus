@@ -60,6 +60,18 @@ public sealed class CommunityFormatter
     public string Plural(string key, int count, params object[] args) =>
         string.Format(Culture, PluralTemplate(key, count), args);
 
+    // ── Open space ──────────────────────────────────────────────────────────
+
+    /// <summary>« 2 bureaux occupés · 3 autres personnes connectées ». Without anybody else only the desks are told; with
+    /// no occupied desk only the others are (« 3 autres personnes connectées »); with nobody at all, « 0 bureau occupé ».</summary>
+    public string OpenSpaceSubtitle(int desks, int others)
+    {
+        var parts = new List<string>(2);
+        if (desks > 0 || others <= 0) parts.Add(Plural("OpenSpace.Desks", desks, Number(desks)));
+        if (others > 0) parts.Add(Plural("OpenSpace.Others", others, Number(others)));
+        return string.Join(" · ", parts);
+    }
+
     // ── Group session steps ─────────────────────────────────────────────────
 
     /// <summary>The resource key naming a step of a group session; the sprint one takes the sprint number as <c>{0}</c>.</summary>

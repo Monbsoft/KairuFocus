@@ -156,4 +156,41 @@ public sealed class CommunityFormatterTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => CommunityFormatter.GroupStepKey("Nap"));
     }
+
+    // --- OpenSpaceSubtitle ----------------------------------------------------------------------
+    // Counts 2 and 3 take the plural form in every language, so these tests do not depend on the machine culture.
+
+    private static CommunityFormatter SubtitleFormatter() => new(
+        new FakeLocalizer(
+            ("OpenSpace.Desks.One", "{0} bureau occupé"), ("OpenSpace.Desks.Other", "{0} bureaux occupés"),
+            ("OpenSpace.Others.One", "{0} autre personne connectée"), ("OpenSpace.Others.Other", "{0} autres personnes connectées")),
+        TimeProvider.System);
+
+    [Fact]
+    public void Should_JoinDesksAndOthers_When_BothPositive() =>
+        Assert.Equal("2 bureaux occupés · 3 autres personnes connectées", SubtitleFormatter().OpenSpaceSubtitle(2, 3));
+
+    [Fact]
+    public void Should_ShowDesksOnly_When_NobodyElse() =>
+        Assert.Equal("2 bureaux occupés", SubtitleFormatter().OpenSpaceSubtitle(2, 0));
+
+    [Fact]
+    public void Should_ShowOthersOnly_When_NoDeskIsOccupied() =>
+        Assert.Equal("3 autres personnes connectées", SubtitleFormatter().OpenSpaceSubtitle(0, 3));
+
+    private sealed class FakeLocalizer(params (string Key, string Value)[] resources) : Microsoft.Extensions.Localization.IStringLocalizer<KairuFocus.Web.Pages.Community>
+    {
+        private readonly Dictionary<string, string> _resources = resources.ToDictionary(r => r.Key, r => r.Value);
+
+        public Microsoft.Extensions.Localization.LocalizedString this[string name] =>
+            _resources.TryGetValue(name, out var value)
+                ? new(name, value)
+                : new(name, name, resourceNotFound: true);
+
+        public Microsoft.Extensions.Localization.LocalizedString this[string name, params object[] arguments] =>
+            new(name, string.Format(this[name].Value, arguments), this[name].ResourceNotFound);
+
+        public IEnumerable<Microsoft.Extensions.Localization.LocalizedString> GetAllStrings(bool includeParentCultures) =>
+            _resources.Select(r => new Microsoft.Extensions.Localization.LocalizedString(r.Key, r.Value));
+    }
 }
