@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace KairuFocus.Web.Services;
 
-/// <summary>Client of <c>api/community</c>: membership, member profiles, open sprints.</summary>
+/// <summary>Client of <c>api/community</c>: membership, member profiles, open space, open sprints.</summary>
 public sealed class CommunityApiClient
 {
     private const string Route = "api/community";
@@ -19,12 +19,6 @@ public sealed class CommunityApiClient
 
     public Task<CommunityMembershipDto?> GetMembershipAsync(CancellationToken ct = default) =>
         GetOrNullAsync<CommunityMembershipDto>($"{Route}/membership", ct);
-
-    public Task<OpenSprintsDto?> GetOpenSprintsAsync(CancellationToken ct = default) =>
-        GetOrNullAsync<OpenSprintsDto>($"{Route}/open-sprints", ct);
-
-    public Task<ActiveTodayDto?> GetActiveTodayAsync(CancellationToken ct = default) =>
-        GetOrNullAsync<ActiveTodayDto>($"{Route}/active-today", ct);
 
     public Task<OpenSpaceDto?> GetOpenSpaceAsync(CancellationToken ct = default) =>
         GetOrNullAsync<OpenSpaceDto>($"{Route}/open-space", ct);

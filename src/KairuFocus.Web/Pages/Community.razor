@@ -18,13 +18,9 @@
         </div>
     </div>
 
-    @* The live strip: independent of the period and of the other sections (each of its two parts shows its own error). *@
-    <OpenSprintsSection Data="_openSprints" Failed="_openSprintsFailed"
-                        OnRetry="RetryOpenSprintsAsync" OnChanged="HandleStripChanged">
-        <Footer>
-            <ActiveTodayStrip Data="_activeToday" Failed="_activeTodayFailed" OnRetry="RetryActiveTodayAsync" />
-        </Footer>
-    </OpenSprintsSection>
+    @* The open space: independent of the period and of the other sections (it shows its own error). *@
+    <OpenSpaceSection Data="_openSpace" Failed="_openSpaceFailed" OnRetry="RetryOpenSpaceAsync"
+                      OnChanged="HandleStripChanged" OnConsented="LoadOpenSpaceAsync" />
 
     @* The only zone the period selector drives, so the selector sits in it. *@
     <section class="kf-zone" aria-labelledby="community-zone-title">
@@ -72,22 +68,16 @@
     // A read that started less than this ago is not started again by the presence loop (the first read of the page just ran).
     private static readonly TimeSpan ReadFreshness = TimeSpan.FromSeconds(5);
 
-    // Open sprints: independent of the period, read at the first render and then with the presence loop.
-    // A failed refresh keeps the last list; the error only shows when there is nothing to keep.
-    private OpenSprintsDto? _openSprints;
-    private bool _openSprintsFailed;
-    private CancellationTokenSource? _openSprintsCts;
-    private DateTimeOffset _openSprintsRequestedAt = DateTimeOffset.MinValue;
-
-    // "Actifs aujourd'hui": same model as the open sprints (read at the first render, then with the presence loop,
-    // a failed refresh keeps the last list, a newer read cancels the one in flight).
-    private ActiveTodayDto? _activeToday;
-    private bool _activeTodayFailed;
-    private CancellationTokenSource? _activeTodayCts;
-    private DateTimeOffset _activeTodayRequestedAt = DateTimeOffset.MinValue;
+    // The open space (desks, connected members, "Actifs aujourd'hui"): independent of the period, read at the first
+    // render and then with the presence loop. A failed refresh keeps the last answer; the error only shows when there is
+    // nothing to keep. A newer read cancels the one in flight.
+    private OpenSpaceDto? _openSpace;
+    private bool _openSpaceFailed;
+    private CancellationTokenSource? _openSpaceCts;
+    private DateTimeOffset _openSpaceRequestedAt = DateTimeOffset.MinValue;
 
     // A sprint ends on the clients: each participant's Pomodoro page records it when its own countdown reaches zero.
-    // After a card of the strip ends, "Actifs aujourd'hui" is read again once they had the time to do so.
+    // After a desk ends, the open space ("Actifs aujourd'hui" included) is read again once they had the time to do so.
     private static readonly TimeSpan CompletionGrace = TimeSpan.FromSeconds(5);
     private CancellationTokenSource? _stripChangedCts;
 
@@ -129,8 +119,7 @@
     protected override void OnInitialized()
     {
         // Not tied to the period: read once here, then refreshed by the presence loop.
-        _ = LoadOpenSprintsAsync();
-        _ = LoadActiveTodayAsync();
+        _ = LoadOpenSpaceAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -157,8 +146,7 @@
         StopPresence();
         _leaderboard.Cancel();
         _recap.Cancel();
-        _openSprintsCts?.Cancel();
-        _activeTodayCts?.Cancel();
+        _openSpaceCts?.Cancel();
         _stripChangedCts?.Cancel();
 
         try
@@ -305,14 +293,11 @@
 
     private async Task RefreshPresenceAsync(CancellationToken ct)
     {
-        // The open sprints and the active members ride on the same loop (same pace, same stop when the tab is hidden).
-        // They are not awaited here: a slow or failing read must not delay the presence.
+        // The open space rides on the same loop (same pace, same stop when the tab is hidden).
+        // It is not awaited here: a slow or failing read must not delay the presence.
         // The first read of the page just started: no second one.
-        var now = Clock.GetUtcNow();
-        if (now - _openSprintsRequestedAt >= ReadFreshness)
-            _ = LoadOpenSprintsAsync();
-        if (now - _activeTodayRequestedAt >= ReadFreshness)
-            _ = LoadActiveTodayAsync();
+        if (Clock.GetUtcNow() - _openSpaceRequestedAt >= ReadFreshness)
+            _ = LoadOpenSpaceAsync();
 
         await ReadPresenceAsync(ct);
     }
@@ -331,17 +316,17 @@
     }
 
     /// <summary>
-    /// A card of the strip reached zero, or its sprint turned out to be no longer open (410). The strip, the subtitle and
-    /// "Actifs aujourd'hui" must not contradict each other until the next tick of the presence loop: the list and the
-    /// presence are read at once, "Actifs aujourd'hui" a little later (see <see cref="CompletionGrace"/>). While the tab is
-    /// hidden only the list is read: the loop is stopped, and reads everything again once the tab is shown.
-    /// Not awaited by the caller: the countdown that raised it must not wait for the reads.
+    /// A desk reached zero, or turned out to be no longer open (410) or waiting for its host (409). The open space and the
+    /// presence of the header must not contradict each other until the next tick of the presence loop: both are read at
+    /// once, then the open space again a little later, for "Actifs aujourd'hui" (see <see cref="CompletionGrace"/>).
+    /// While the tab is hidden only the open space is read: the loop is stopped, and reads everything again once the tab
+    /// is shown. Not awaited by the caller: the countdown that raised it must not wait for the reads.
     /// </summary>
     private void HandleStripChanged()
     {
         if (_disposed) return;
 
-        _ = LoadOpenSprintsAsync();
+        _ = LoadOpenSpaceAsync();
 
         _stripChangedCts?.Cancel();
 
@@ -365,29 +350,30 @@
             return;
         }
 
-        if (!_disposed) await LoadActiveTodayAsync();
+        if (!_disposed) await LoadOpenSpaceAsync();
     }
 
-    // ── Open sprints ────────────────────────────────────────────────────────
+    // ── Open space ──────────────────────────────────────────────────────────
 
-    private Task RetryOpenSprintsAsync()
+    private Task RetryOpenSpaceAsync()
     {
-        _openSprintsFailed = false; // back to "Chargement…" while the new read runs
-        return LoadOpenSprintsAsync();
+        _openSpaceFailed = false; // back to "Chargement…" while the new read runs
+        return LoadOpenSpaceAsync();
     }
 
-    /// <summary>Reads the open sprints. A newer read cancels the one in flight, whose result is then dropped.</summary>
-    private async Task LoadOpenSprintsAsync()
+    /// <summary>Reads the open space. A newer read cancels the one in flight, whose result is then dropped.
+    /// Also awaited by the consent panel, whose button stays busy meanwhile.</summary>
+    private async Task LoadOpenSpaceAsync()
     {
-        _openSprintsCts?.Cancel();
+        _openSpaceCts?.Cancel();
         var cts = new CancellationTokenSource();
-        _openSprintsCts = cts;
-        _openSprintsRequestedAt = Clock.GetUtcNow();
+        _openSpaceCts = cts;
+        _openSpaceRequestedAt = Clock.GetUtcNow();
 
-        OpenSprintsDto? result;
+        OpenSpaceDto? result;
         try
         {
-            result = await CommunityApi.GetOpenSprintsAsync(cts.Token);
+            result = await CommunityApi.GetOpenSpaceAsync(cts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -403,58 +389,12 @@
 
         if (result is not null)
         {
-            _openSprints = result;
-            _openSprintsFailed = false;
+            _openSpace = result;
+            _openSpaceFailed = false;
         }
-        else if (_openSprints is null)
+        else if (_openSpace is null)
         {
-            _openSprintsFailed = true;
-        }
-
-        await InvokeAsync(StateHasChanged);
-    }
-
-    // ── Active today ────────────────────────────────────────────────────────
-
-    private Task RetryActiveTodayAsync()
-    {
-        _activeTodayFailed = false; // back to the skeleton while the new read runs
-        return LoadActiveTodayAsync();
-    }
-
-    /// <summary>Reads the members active today. A newer read cancels the one in flight, whose result is then dropped.</summary>
-    private async Task LoadActiveTodayAsync()
-    {
-        _activeTodayCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _activeTodayCts = cts;
-        _activeTodayRequestedAt = Clock.GetUtcNow();
-
-        ActiveTodayDto? result;
-        try
-        {
-            result = await CommunityApi.GetActiveTodayAsync(cts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            return;
-        }
-        catch (Exception)
-        {
-            // Whatever went wrong, this line shows its own error and the rest of the page carries on.
-            result = null;
-        }
-
-        if (cts.IsCancellationRequested || _disposed) return;
-
-        if (result is not null)
-        {
-            _activeToday = result;
-            _activeTodayFailed = false;
-        }
-        else if (_activeToday is null)
-        {
-            _activeTodayFailed = true;
+            _openSpaceFailed = true;
         }
 
         await InvokeAsync(StateHasChanged);

@@ -1,0 +1,33 @@
+@* "🎧 Ambiance : Lofi Girl ↗", the listening ambiance chosen by the host of a desk (#50). A plain link that opens the
+   video in a new tab: no player, no iframe, no call to YouTube from KairuFocus. Shown on a desk card (dark hero) and on
+   the Pomodoro page (light or dark theme): the colours come from the caller through --kf-ambiance-* custom properties,
+   with Bootstrap fallbacks. The accessible name says whose desk it is and that a new tab opens. *@
+@inject CommunityFormatter F
+
+<p class="kf-ambiance">
+    <span class="kf-ambiance__icon" aria-hidden="true">🎧</span>
+    <span class="kf-ambiance__label">@F["Ambiance.Label"]</span>
+    @if (SafeUrl is { } url)
+    {
+        <a class="kf-ambiance__link" href="@url" target="_blank" rel="noopener noreferrer"
+           aria-label="@F.Format("Ambiance.Aria", HostName, Ambiance.Label)">
+            <span class="kf-ambiance__name">@Ambiance.Label</span><span aria-hidden="true">↗</span>
+        </a>
+    }
+    else
+    {
+        <span class="kf-ambiance__name">@Ambiance.Label</span>
+    }
+</p>
+
+@code {
+    [Parameter, EditorRequired] public AmbianceDto Ambiance { get; set; } = default!;
+
+    /// <summary>The host of the desk, whose ambiance it is (named in the accessible name of the link).</summary>
+    [Parameter, EditorRequired] public string HostName { get; set; } = "";
+
+    /// <summary>The address comes from the server's fixed catalogue (YouTube only); anything but an absolute https address
+    /// is not made a link, as a guard.</summary>
+    private string? SafeUrl =>
+        Uri.TryCreate(Ambiance.Url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps ? uri.AbsoluteUri : null;
+}

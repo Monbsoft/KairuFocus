@@ -48,13 +48,8 @@ public sealed record ActivityDayDto(DateOnly Date, int Sprints);
 public sealed record OpenSprintStatusDto(DateTimeOffset EndsAt, IReadOnlyList<SprintMemberDto> Others, bool IncludesViewer,
     string StepType, string Phase);
 
-/// <summary>GET open-sprints: one row per group.</summary>
-public sealed record OpenSprintsDto(bool ViewerIsMember, bool ViewerInGroup, IReadOnlyList<OpenSprintRowDto> Groups);
-
-public sealed record OpenSprintRowDto(string Name, string? AvatarUrl, DateTimeOffset EndsAt, int ParticipantCount,
-    bool IsMine, string StepType, string Phase);
-
-/// <summary>GET active-today: members who finished a sprint today (UTC); Members lists at most 5, Total counts all of them.</summary>
+/// <summary>"Actifs aujourd'hui" (part of GET open-space): members who finished a sprint today (UTC); Members lists at
+/// most 5, Total counts all of them.</summary>
 public sealed record ActiveTodayDto(int Total, IReadOnlyList<ActiveMemberDto> Members);
 
 public sealed record ActiveMemberDto(string Name, string? AvatarUrl, bool IsMe);
