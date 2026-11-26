@@ -35,6 +35,15 @@
                 @(_operation == Operation.Join ? F["Settings.Community.Joining"] : F["Settings.Community.Join"])
             </button>
         </form>
+
+        @* "Mon bureau" for a non-member (spec §5.4): why there is no choice yet, and the way to the activation above. *@
+        <section class="mt-4" aria-labelledby="mydesk-title">
+            <h5 id="mydesk-title" class="mb-2">@F["Settings.MyDesk.Title"]</h5>
+            <p class="mb-0">
+                @F["Settings.MyDesk.NeedMember"]
+                <a href="settings#communaute" @onclick="FocusJoin" @onclick:preventDefault>@F["Settings.Community.Join"]</a>
+            </p>
+        </section>
     }
     else if (_editing)
     {
@@ -163,6 +172,9 @@
     private bool IsMember => _membership is { IsMember: true };
     private bool Busy => _operation != Operation.None;
     private bool GitHubAvailable => _membership?.GitHubLoginAvailable == true;
+
+    /// <summary>The link of "Mon bureau" leads to the activation button of this section, which takes the focus.</summary>
+    private void FocusJoin() => _pendingFocus = FocusTarget.Join;
 
     protected override async Task OnInitializedAsync()
     {

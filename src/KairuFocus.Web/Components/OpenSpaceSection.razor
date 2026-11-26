@@ -86,8 +86,7 @@
 
         <ConnectedMembersLine Members="Data.Connected" Total="Data.ConnectedTotal" />
 
-        @* ActiveToday is null when its own read failed on the server: its line shows the error, the retry reads the whole open space. *@
-        <ActiveTodayStrip Data="Data.ActiveToday" Failed="Data.ActiveToday is null" OnRetry="OnRetry" />
+        <ActiveTodayStrip Data="Data.ActiveToday" />
     }
 </section>
 

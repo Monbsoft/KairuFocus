@@ -55,7 +55,7 @@ public sealed record ActiveTodayDto(int Total, IReadOnlyList<ActiveMemberDto> Me
 public sealed record ActiveMemberDto(string Name, string? AvatarUrl, bool IsMe);
 
 /// <summary>GET open-space (iteration #50). Access is "Open", "NotMember" or "ConsentRequired"; the other fields are
-/// empty unless it is "Open". ActiveToday is null when its read failed.</summary>
+/// empty and ActiveToday is null unless it is "Open".</summary>
 public sealed record OpenSpaceDto(string Access, bool ViewerInGroup, IReadOnlyList<DeskDto> Desks,
     IReadOnlyList<ActiveMemberDto> Connected, int ConnectedTotal, ActiveTodayDto? ActiveToday);
 

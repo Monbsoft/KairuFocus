@@ -3,7 +3,7 @@
    The data comes from the page (it refreshes it with its presence loop); this component only shows it. *@
 @inject CommunityFormatter F
 
-<div class="kf-today" aria-busy="@(Data is null && !Failed ? "true" : "false")">
+<div class="kf-today" aria-busy="@(Data is null ? "true" : "false")">
     <p class="kf-today__title" id="active-today-title">@F["ActiveToday.Title"]</p>
 
     @if (Data is { } today)
@@ -33,11 +33,6 @@
             }
         }
     }
-    else if (Failed)
-    {
-        @* Visual only: the page keeps one live region, and a refresh failure is not worth an interruption. *@
-        <ZoneAlert Message="@F["ActiveToday.Error"]" OnRetry="OnRetry" Announce="false" />
-    }
     else
     {
         <div class="kf-skel kf-today__skel" aria-hidden="true"></div>
@@ -45,13 +40,8 @@
 </div>
 
 @code {
-    /// <summary>The last successful read; null while the first one is pending (or failed).</summary>
+    /// <summary>The line of the last successful read of the open space (the page shows the error of a failed read).</summary>
     [Parameter] public ActiveTodayDto? Data { get; set; }
-
-    /// <summary>The read failed and there is nothing to show yet.</summary>
-    [Parameter] public bool Failed { get; set; }
-
-    [Parameter] public EventCallback OnRetry { get; set; }
 
     private string Label(ActiveMemberDto member) =>
         member.IsMe ? $"{member.Name} ({F["ActiveToday.You"]})" : member.Name;
