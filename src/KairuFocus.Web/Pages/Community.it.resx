@@ -817,7 +817,7 @@
 	<value>Connessione allo sprint…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>Attiva la community per unirti a uno sprint: gli altri membri vedranno il tuo nome e i tuoi XP.</value>
+	<value>Attiva la community per sederti a una scrivania: gli altri membri vedranno il tuo nome, i tuoi XP e quando sei online.</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
 	<value>Attiva la community</value>
@@ -1064,111 +1064,111 @@
 	<value>Open space</value>
   </data>
   <data name="OpenSpace.Desks.One" xml:space="preserve">
-	<value>{0} bureau occupé</value>
+	<value>{0} scrivania occupata</value>
   </data>
   <data name="OpenSpace.Desks.Other" xml:space="preserve">
-	<value>{0} bureaux occupés</value>
+	<value>{0} scrivanie occupate</value>
   </data>
   <data name="OpenSpace.Others.One" xml:space="preserve">
-	<value>{0} autre personne connectée</value>
+	<value>{0} altra persona online</value>
   </data>
   <data name="OpenSpace.Others.Other" xml:space="preserve">
-	<value>{0} autres personnes connectées</value>
+	<value>altre {0} persone online</value>
   </data>
   <data name="OpenSpace.Empty.Title" xml:space="preserve">
-	<value>Personne n'est en sprint pour le moment.</value>
+	<value>Al momento nessuno è in sprint.</value>
   </data>
   <data name="OpenSpace.Empty.Body" xml:space="preserve">
-	<value>Ouvre ton bureau : les autres pourront s'y asseoir.</value>
+	<value>Apri la tua scrivania: gli altri potranno sedersi.</value>
   </data>
   <data name="OpenSpace.Empty.Cta" xml:space="preserve">
-	<value>Ouvrir mon bureau</value>
+	<value>Apri la mia scrivania</value>
   </data>
   <data name="OpenSpace.Gate.NotMember" xml:space="preserve">
-	<value>L'open space est réservé aux membres de la communauté. Active-la pour voir qui travaille et t'asseoir à un bureau : les autres verront ton nom, ton XP et quand tu es connecté.</value>
+	<value>L'open space è riservato ai membri della community. Attivala per vedere chi sta lavorando e sederti a una scrivania: gli altri vedranno il tuo nome, i tuoi XP e quando sei online.</value>
   </data>
   <data name="OpenSpace.Gate.Consent" xml:space="preserve">
-	<value>Nouveau : l'open space montre les membres connectés. Pour y entrer, accepte que les autres membres voient quand tu es connecté.</value>
+	<value>Novità: l'open space mostra i membri online. Per entrare, accetta che gli altri membri vedano quando sei online.</value>
   </data>
   <data name="OpenSpace.Gate.ConsentCta" xml:space="preserve">
-	<value>Entrer dans l'open space</value>
+	<value>Entra nell'open space</value>
   </data>
   <data name="OpenSpace.Gate.ConsentError" xml:space="preserve">
-	<value>Impossible d'enregistrer ton accord. Réessaie.</value>
+	<value>Impossibile salvare il tuo consenso. Riprova.</value>
   </data>
   <data name="Connected.Title" xml:space="preserve">
-	<value>Dans l'open space</value>
+	<value>Nell'open space</value>
   </data>
   <data name="Desk.Of" xml:space="preserve">
-	<value>Bureau de {0}</value>
+	<value>Scrivania di {0}</value>
   </data>
   <data name="Desk.Mine" xml:space="preserve">
-	<value>Ton bureau</value>
+	<value>La tua scrivania</value>
   </data>
   <data name="Desk.Seated" xml:space="preserve">
-	<value>Tu es assis ici</value>
+	<value>Sei seduto qui</value>
   </data>
   <data name="Desk.ClosedToOthers" xml:space="preserve">
-	<value>fermé aux autres</value>
+	<value>chiusa agli altri</value>
   </data>
   <data name="Desk.Left.Sprint" xml:space="preserve">
-	<value>encore</value>
+	<value>ancora</value>
   </data>
   <data name="Desk.Left.Break" xml:space="preserve">
-	<value>reprise dans</value>
+	<value>si riprende tra</value>
   </data>
   <data name="Desk.Waiting" xml:space="preserve">
-	<value>{0} choisit la suite</value>
+	<value>{0} sta scegliendo cosa fare dopo</value>
   </data>
   <data name="Seat.Sit" xml:space="preserve">
-	<value>S'asseoir</value>
+	<value>Siediti</value>
   </data>
   <data name="Seat.Soon" xml:space="preserve">
-	<value>Bientôt</value>
+	<value>Presto</value>
   </data>
   <data name="Seat.Aria" xml:space="preserve">
-	<value>S'asseoir au bureau de {0} (rejoindre son sprint)</value>
+	<value>Siediti alla scrivania di {0} (unisciti al suo sprint)</value>
   </data>
   <data name="Ambiance.Label" xml:space="preserve">
-	<value>Ambiance :</value>
+	<value>Atmosfera:</value>
   </data>
   <data name="Ambiance.Aria" xml:space="preserve">
-	<value>Ambiance du bureau de {0} : {1} (nouvel onglet)</value>
+	<value>Atmosfera della scrivania di {0}: {1} (nuova scheda)</value>
   </data>
   <data name="Ambiance.None" xml:space="preserve">
-	<value>Aucune</value>
+	<value>Nessuna</value>
   </data>
   <data name="Ambiance.Category.Lofi" xml:space="preserve">
 	<value>Lofi</value>
   </data>
   <data name="Ambiance.Category.JazzBlues" xml:space="preserve">
-	<value>Jazz et blues</value>
+	<value>Jazz e blues</value>
   </data>
   <data name="Ambiance.Category.Classical" xml:space="preserve">
-	<value>Classique</value>
+	<value>Classica</value>
   </data>
   <data name="Ambiance.Category.RelaxFocus" xml:space="preserve">
-	<value>Relaxation et focus</value>
+	<value>Relax e concentrazione</value>
   </data>
   <data name="Settings.MyDesk.Title" xml:space="preserve">
-	<value>Mon bureau</value>
+	<value>La mia scrivania</value>
   </data>
   <data name="Settings.MyDesk.Ambiance" xml:space="preserve">
-	<value>Ambiance de mon bureau</value>
+	<value>Atmosfera della mia scrivania</value>
   </data>
   <data name="Settings.MyDesk.Hint" xml:space="preserve">
-	<value>Visible sur ton bureau dans la page Communauté et par ceux qui s'y assoient.</value>
+	<value>Visibile sulla tua scrivania nella pagina Community e a chi si siede.</value>
   </data>
   <data name="Settings.MyDesk.Saved" xml:space="preserve">
-	<value>Ambiance enregistrée.</value>
+	<value>Atmosfera salvata.</value>
   </data>
   <data name="Settings.MyDesk.Error" xml:space="preserve">
-	<value>Impossible d'enregistrer l'ambiance.</value>
+	<value>Impossibile salvare l'atmosfera.</value>
   </data>
   <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
-	<value>Active la communauté pour choisir l'ambiance de ton bureau.</value>
+	<value>Attiva la community per scegliere l'atmosfera della tua scrivania.</value>
   </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
-	<value>quand tu es connecté à KairuFocus ;</value>
+	<value>quando sei online su KairuFocus;</value>
   </data>
 </root>

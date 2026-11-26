@@ -817,7 +817,7 @@
 	<value>スプリントに接続中…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>スプリントに参加するには、先にコミュニティを有効にしてください。ほかのメンバーにあなたの名前とXPが表示されます。</value>
+	<value>デスクに座るには、先にコミュニティを有効にしてください。ほかのメンバーにあなたの名前、XP、オンライン中かどうかが表示されます。</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
 	<value>コミュニティを有効にする</value>
@@ -1061,114 +1061,114 @@
 	<value>タスク完了</value>
   </data>
   <data name="OpenSpace.Title" xml:space="preserve">
-	<value>Open space</value>
+	<value>オープンスペース</value>
   </data>
   <data name="OpenSpace.Desks.One" xml:space="preserve">
-	<value>{0} bureau occupé</value>
+	<value>使用中のデスク：{0}台</value>
   </data>
   <data name="OpenSpace.Desks.Other" xml:space="preserve">
-	<value>{0} bureaux occupés</value>
+	<value>使用中のデスク：{0}台</value>
   </data>
   <data name="OpenSpace.Others.One" xml:space="preserve">
-	<value>{0} autre personne connectée</value>
+	<value>ほか{0}人がオンライン</value>
   </data>
   <data name="OpenSpace.Others.Other" xml:space="preserve">
-	<value>{0} autres personnes connectées</value>
+	<value>ほか{0}人がオンライン</value>
   </data>
   <data name="OpenSpace.Empty.Title" xml:space="preserve">
-	<value>Personne n'est en sprint pour le moment.</value>
+	<value>今スプリント中の人はいません。</value>
   </data>
   <data name="OpenSpace.Empty.Body" xml:space="preserve">
-	<value>Ouvre ton bureau : les autres pourront s'y asseoir.</value>
+	<value>デスクを開くと、ほかの人が隣に座れます。</value>
   </data>
   <data name="OpenSpace.Empty.Cta" xml:space="preserve">
-	<value>Ouvrir mon bureau</value>
+	<value>自分のデスクを開く</value>
   </data>
   <data name="OpenSpace.Gate.NotMember" xml:space="preserve">
-	<value>L'open space est réservé aux membres de la communauté. Active-la pour voir qui travaille et t'asseoir à un bureau : les autres verront ton nom, ton XP et quand tu es connecté.</value>
+	<value>オープンスペースはコミュニティのメンバー専用です。コミュニティを有効にすると、誰が作業中か確認してデスクに座れます。ほかのメンバーにあなたの名前、XP、オンライン中かどうかが表示されます。</value>
   </data>
   <data name="OpenSpace.Gate.Consent" xml:space="preserve">
-	<value>Nouveau : l'open space montre les membres connectés. Pour y entrer, accepte que les autres membres voient quand tu es connecté.</value>
+	<value>新機能：オープンスペースではオンラインのメンバーが表示されます。入るには、オンライン中であることをほかのメンバーに表示することに同意してください。</value>
   </data>
   <data name="OpenSpace.Gate.ConsentCta" xml:space="preserve">
-	<value>Entrer dans l'open space</value>
+	<value>オープンスペースに入る</value>
   </data>
   <data name="OpenSpace.Gate.ConsentError" xml:space="preserve">
-	<value>Impossible d'enregistrer ton accord. Réessaie.</value>
+	<value>同意を保存できませんでした。もう一度お試しください。</value>
   </data>
   <data name="Connected.Title" xml:space="preserve">
-	<value>Dans l'open space</value>
+	<value>オープンスペース</value>
   </data>
   <data name="Desk.Of" xml:space="preserve">
-	<value>Bureau de {0}</value>
+	<value>{0}のデスク</value>
   </data>
   <data name="Desk.Mine" xml:space="preserve">
-	<value>Ton bureau</value>
+	<value>あなたのデスク</value>
   </data>
   <data name="Desk.Seated" xml:space="preserve">
-	<value>Tu es assis ici</value>
+	<value>ここに座っています</value>
   </data>
   <data name="Desk.ClosedToOthers" xml:space="preserve">
-	<value>fermé aux autres</value>
+	<value>ほかの人には非公開</value>
   </data>
   <data name="Desk.Left.Sprint" xml:space="preserve">
-	<value>encore</value>
+	<value>残り</value>
   </data>
   <data name="Desk.Left.Break" xml:space="preserve">
-	<value>reprise dans</value>
+	<value>再開まで</value>
   </data>
   <data name="Desk.Waiting" xml:space="preserve">
-	<value>{0} choisit la suite</value>
+	<value>{0}さんが次を選んでいます</value>
   </data>
   <data name="Seat.Sit" xml:space="preserve">
-	<value>S'asseoir</value>
+	<value>座る</value>
   </data>
   <data name="Seat.Soon" xml:space="preserve">
-	<value>Bientôt</value>
+	<value>近日公開</value>
   </data>
   <data name="Seat.Aria" xml:space="preserve">
-	<value>S'asseoir au bureau de {0} (rejoindre son sprint)</value>
+	<value>{0}さんのデスクに座る（スプリントに参加）</value>
   </data>
   <data name="Ambiance.Label" xml:space="preserve">
-	<value>Ambiance :</value>
+	<value>アンビエンス：</value>
   </data>
   <data name="Ambiance.Aria" xml:space="preserve">
-	<value>Ambiance du bureau de {0} : {1} (nouvel onglet)</value>
+	<value>{0}さんのデスクのアンビエンス：{1}（新しいタブ）</value>
   </data>
   <data name="Ambiance.None" xml:space="preserve">
-	<value>Aucune</value>
+	<value>なし</value>
   </data>
   <data name="Ambiance.Category.Lofi" xml:space="preserve">
-	<value>Lofi</value>
+	<value>ローファイ</value>
   </data>
   <data name="Ambiance.Category.JazzBlues" xml:space="preserve">
-	<value>Jazz et blues</value>
+	<value>ジャズ＆ブルース</value>
   </data>
   <data name="Ambiance.Category.Classical" xml:space="preserve">
-	<value>Classique</value>
+	<value>クラシック</value>
   </data>
   <data name="Ambiance.Category.RelaxFocus" xml:space="preserve">
-	<value>Relaxation et focus</value>
+	<value>リラックス＆フォーカス</value>
   </data>
   <data name="Settings.MyDesk.Title" xml:space="preserve">
-	<value>Mon bureau</value>
+	<value>マイデスク</value>
   </data>
   <data name="Settings.MyDesk.Ambiance" xml:space="preserve">
-	<value>Ambiance de mon bureau</value>
+	<value>デスクのアンビエンス</value>
   </data>
   <data name="Settings.MyDesk.Hint" xml:space="preserve">
-	<value>Visible sur ton bureau dans la page Communauté et par ceux qui s'y assoient.</value>
+	<value>コミュニティページのあなたのデスクと、隣に座る人に表示されます。</value>
   </data>
   <data name="Settings.MyDesk.Saved" xml:space="preserve">
-	<value>Ambiance enregistrée.</value>
+	<value>アンビエンスを保存しました。</value>
   </data>
   <data name="Settings.MyDesk.Error" xml:space="preserve">
-	<value>Impossible d'enregistrer l'ambiance.</value>
+	<value>アンビエンスを保存できませんでした。</value>
   </data>
   <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
-	<value>Active la communauté pour choisir l'ambiance de ton bureau.</value>
+	<value>デスクのアンビエンスを選ぶには、先にコミュニティを有効にしてください。</value>
   </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
-	<value>quand tu es connecté à KairuFocus ;</value>
+	<value>KairuFocusにオンラインのとき</value>
   </data>
 </root>

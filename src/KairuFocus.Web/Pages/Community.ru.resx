@@ -817,7 +817,7 @@
 	<value>Подключение к спринту…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>Включи сообщество, чтобы присоединиться к спринту: другие участники увидят твоё имя и твой XP.</value>
+	<value>Включи сообщество, чтобы сесть за стол: другие участники увидят твоё имя, твой XP и когда ты онлайн.</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
 	<value>Включить сообщество</value>
@@ -1061,114 +1061,114 @@
 	<value>Задача выполнена</value>
   </data>
   <data name="OpenSpace.Title" xml:space="preserve">
-	<value>Open space</value>
+	<value>Опенспейс</value>
   </data>
   <data name="OpenSpace.Desks.One" xml:space="preserve">
-	<value>{0} bureau occupé</value>
+	<value>Занят столов: {0}</value>
   </data>
   <data name="OpenSpace.Desks.Other" xml:space="preserve">
-	<value>{0} bureaux occupés</value>
+	<value>Занят столов: {0}</value>
   </data>
   <data name="OpenSpace.Others.One" xml:space="preserve">
-	<value>{0} autre personne connectée</value>
+	<value>Ещё онлайн: {0}</value>
   </data>
   <data name="OpenSpace.Others.Other" xml:space="preserve">
-	<value>{0} autres personnes connectées</value>
+	<value>Ещё онлайн: {0}</value>
   </data>
   <data name="OpenSpace.Empty.Title" xml:space="preserve">
-	<value>Personne n'est en sprint pour le moment.</value>
+	<value>Сейчас никто не в спринте.</value>
   </data>
   <data name="OpenSpace.Empty.Body" xml:space="preserve">
-	<value>Ouvre ton bureau : les autres pourront s'y asseoir.</value>
+	<value>Открой свой стол: другие смогут сесть рядом.</value>
   </data>
   <data name="OpenSpace.Empty.Cta" xml:space="preserve">
-	<value>Ouvrir mon bureau</value>
+	<value>Открыть мой стол</value>
   </data>
   <data name="OpenSpace.Gate.NotMember" xml:space="preserve">
-	<value>L'open space est réservé aux membres de la communauté. Active-la pour voir qui travaille et t'asseoir à un bureau : les autres verront ton nom, ton XP et quand tu es connecté.</value>
+	<value>Опенспейс доступен только участникам сообщества. Включи сообщество, чтобы видеть, кто работает, и садиться за стол: другие увидят твоё имя, твой XP и когда ты онлайн.</value>
   </data>
   <data name="OpenSpace.Gate.Consent" xml:space="preserve">
-	<value>Nouveau : l'open space montre les membres connectés. Pour y entrer, accepte que les autres membres voient quand tu es connecté.</value>
+	<value>Новое: опенспейс показывает, кто онлайн. Чтобы войти, разреши другим участникам видеть, когда ты онлайн.</value>
   </data>
   <data name="OpenSpace.Gate.ConsentCta" xml:space="preserve">
-	<value>Entrer dans l'open space</value>
+	<value>Войти в опенспейс</value>
   </data>
   <data name="OpenSpace.Gate.ConsentError" xml:space="preserve">
-	<value>Impossible d'enregistrer ton accord. Réessaie.</value>
+	<value>Не удалось сохранить твоё согласие. Попробуй ещё раз.</value>
   </data>
   <data name="Connected.Title" xml:space="preserve">
-	<value>Dans l'open space</value>
+	<value>В опенспейсе</value>
   </data>
   <data name="Desk.Of" xml:space="preserve">
-	<value>Bureau de {0}</value>
+	<value>Стол пользователя {0}</value>
   </data>
   <data name="Desk.Mine" xml:space="preserve">
-	<value>Ton bureau</value>
+	<value>Твой стол</value>
   </data>
   <data name="Desk.Seated" xml:space="preserve">
-	<value>Tu es assis ici</value>
+	<value>Ты сидишь здесь</value>
   </data>
   <data name="Desk.ClosedToOthers" xml:space="preserve">
-	<value>fermé aux autres</value>
+	<value>закрыт для других</value>
   </data>
   <data name="Desk.Left.Sprint" xml:space="preserve">
-	<value>encore</value>
+	<value>осталось</value>
   </data>
   <data name="Desk.Left.Break" xml:space="preserve">
-	<value>reprise dans</value>
+	<value>продолжение через</value>
   </data>
   <data name="Desk.Waiting" xml:space="preserve">
-	<value>{0} choisit la suite</value>
+	<value>{0} выбирает, что дальше</value>
   </data>
   <data name="Seat.Sit" xml:space="preserve">
-	<value>S'asseoir</value>
+	<value>Сесть</value>
   </data>
   <data name="Seat.Soon" xml:space="preserve">
-	<value>Bientôt</value>
+	<value>Скоро</value>
   </data>
   <data name="Seat.Aria" xml:space="preserve">
-	<value>S'asseoir au bureau de {0} (rejoindre son sprint)</value>
+	<value>Сесть за стол пользователя {0} (присоединиться к спринту)</value>
   </data>
   <data name="Ambiance.Label" xml:space="preserve">
-	<value>Ambiance :</value>
+	<value>Атмосфера:</value>
   </data>
   <data name="Ambiance.Aria" xml:space="preserve">
-	<value>Ambiance du bureau de {0} : {1} (nouvel onglet)</value>
+	<value>Атмосфера за столом пользователя {0}: {1} (новая вкладка)</value>
   </data>
   <data name="Ambiance.None" xml:space="preserve">
-	<value>Aucune</value>
+	<value>Нет</value>
   </data>
   <data name="Ambiance.Category.Lofi" xml:space="preserve">
-	<value>Lofi</value>
+	<value>Лоу-фай</value>
   </data>
   <data name="Ambiance.Category.JazzBlues" xml:space="preserve">
-	<value>Jazz et blues</value>
+	<value>Джаз и блюз</value>
   </data>
   <data name="Ambiance.Category.Classical" xml:space="preserve">
-	<value>Classique</value>
+	<value>Классика</value>
   </data>
   <data name="Ambiance.Category.RelaxFocus" xml:space="preserve">
-	<value>Relaxation et focus</value>
+	<value>Релакс и фокус</value>
   </data>
   <data name="Settings.MyDesk.Title" xml:space="preserve">
-	<value>Mon bureau</value>
+	<value>Мой стол</value>
   </data>
   <data name="Settings.MyDesk.Ambiance" xml:space="preserve">
-	<value>Ambiance de mon bureau</value>
+	<value>Атмосфера моего стола</value>
   </data>
   <data name="Settings.MyDesk.Hint" xml:space="preserve">
-	<value>Visible sur ton bureau dans la page Communauté et par ceux qui s'y assoient.</value>
+	<value>Видна за твоим столом на странице сообщества и тем, кто садится рядом.</value>
   </data>
   <data name="Settings.MyDesk.Saved" xml:space="preserve">
-	<value>Ambiance enregistrée.</value>
+	<value>Атмосфера сохранена.</value>
   </data>
   <data name="Settings.MyDesk.Error" xml:space="preserve">
-	<value>Impossible d'enregistrer l'ambiance.</value>
+	<value>Не удалось сохранить атмосферу.</value>
   </data>
   <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
-	<value>Active la communauté pour choisir l'ambiance de ton bureau.</value>
+	<value>Включи сообщество, чтобы выбрать атмосферу своего стола.</value>
   </data>
   <data name="Settings.Community.Visible.Presence" xml:space="preserve">
-	<value>quand tu es connecté à KairuFocus ;</value>
+	<value>когда ты онлайн в KairuFocus;</value>
   </data>
 </root>
