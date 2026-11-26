@@ -25,6 +25,7 @@
             <li>@F["Settings.Community.Visible.Name"]</li>
             <li>@F["Settings.Community.Visible.Xp"]</li>
             <li>@F["Settings.Community.Visible.Activity"]</li>
+            <li>@F["Settings.Community.Visible.Presence"]</li>
             <li>@F["Settings.Community.Visible.Sprint"]</li>
         </ul>
 
@@ -61,12 +62,30 @@
                 @F["Settings.Community.Member.Change"]
             </button>
         </div>
+    }
 
-        <div class="kf-lb-danger">
-            <button type="button" class="btn btn-outline-danger" @ref="_leaveButton" @onclick="OpenLeave" disabled="@Busy">
-                @F["Settings.Community.Leave"]
-            </button>
-        </div>
+    @if (!_loading && !_loadFailed && IsMember)
+    {
+        @if (!_membership!.PresenceConsented)
+        {
+            <div class="mt-4">
+                <p class="mb-2">@F["OpenSpace.Gate.Consent"]</p>
+                <button type="button" class="btn btn-primary" @ref="_consentButton" @onclick="ConsentAsync" disabled="@Busy">
+                    @F["OpenSpace.Gate.ConsentCta"]
+                </button>
+            </div>
+        }
+
+        <MyDeskSettingsSection Membership="_membership" />
+
+        @if (!_editing)
+        {
+            <div class="kf-lb-danger">
+                <button type="button" class="btn btn-outline-danger" @ref="_leaveButton" @onclick="OpenLeave" disabled="@Busy">
+                    @F["Settings.Community.Leave"]
+                </button>
+            </div>
+        }
     }
 
     @if (_error is not null)
@@ -107,15 +126,16 @@
     private const string GitHubSource = "GitHub";
     private const string ChosenSource = "Chosen";
 
-    private enum Operation { None, Join, Save, Leave }
+    private enum Operation { None, Join, Save, Leave, Consent }
 
     /// <summary>Where the focus goes after the next render (a button that was just disabled or removed loses it).</summary>
-    private enum FocusTarget { None, Join, State, Change, Leave, Choice, NameInput, ModalCancel, Modal }
+    private enum FocusTarget { None, Join, State, Change, Leave, Consent, Choice, NameInput, ModalCancel, Modal }
 
     private ElementReference _joinButton;
     private ElementReference _stateText;
     private ElementReference _changeButton;
     private ElementReference _leaveButton;
+    private ElementReference _consentButton;
     private ElementReference _cancelButton;
     private ElementReference _modal;
     private ElementReference _githubRadio;
@@ -363,6 +383,31 @@
         _pendingFocus = FocusTarget.NameInput;
     }
 
+    /// <summary>The member accepts that the others see when they are connected, then the real state is read again.</summary>
+    private async Task ConsentAsync()
+    {
+        if (Busy) return;
+        _operation = Operation.Consent;
+        _error = null;
+        _announcement = null;
+
+        var consented = await Community.ConsentToPresenceAsync();
+        if (consented)
+            await LoadStatusAsync();
+        _operation = Operation.None;
+
+        if (consented && !_loadFailed && _membership is { PresenceConsented: true })
+        {
+            // The button is gone: the focus moves onto the sentence that states the name.
+            _pendingFocus = FocusTarget.State;
+        }
+        else
+        {
+            _error = F["OpenSpace.Gate.ConsentError"];
+            _pendingFocus = FocusTarget.Consent;
+        }
+    }
+
     private void OpenLeave()
     {
         if (Busy) return;
@@ -430,6 +475,7 @@
                 case FocusTarget.State: await _stateText.FocusAsync(); break;
                 case FocusTarget.Change: await _changeButton.FocusAsync(); break;
                 case FocusTarget.Leave: await _leaveButton.FocusAsync(); break;
+                case FocusTarget.Consent: await _consentButton.FocusAsync(); break;
                 case FocusTarget.Choice:
                     await (GitHubAvailable && _source == GitHubSource ? _githubRadio : _chosenRadio).FocusAsync();
                     break;

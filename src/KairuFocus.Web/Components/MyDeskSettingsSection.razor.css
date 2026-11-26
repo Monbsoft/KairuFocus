@@ -1,0 +1,21 @@
+/* Bootstrap variables only: light and dark follow data-bs-theme. */
+.kf-mydesk {
+    margin-top: 1.5rem;
+}
+
+.kf-mydesk__title {
+    margin-bottom: 0.75rem;
+}
+
+/* Touch target of at least 44 px; max width so that the select does not stretch across a wide form. */
+.kf-mydesk__select {
+    min-height: 44px;
+    max-width: 24rem;
+}
+
+/* Reserved height: the message appearing does not push what follows. */
+.kf-mydesk__status {
+    min-height: 1.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+}
