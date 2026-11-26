@@ -25,12 +25,16 @@ public interface IOpenSprintReadRepository
     Task<IReadOnlyList<SprintMember>> GetGroupMembersAsync(Guid rootSessionId, CancellationToken ct = default);
 
     /// <summary>
-    /// The desks of the open space: the same sprints and groups as <see cref="GetOpenGroupsAsync"/>, each with
-    /// the members seated at it, at most <paramref name="maxDesks"/>.
+    /// The desks of the open space: the running sprints and group sessions, each with the members seated at it,
+    /// at most <paramref name="maxDesks"/>. A desk closed to joins is still returned, flagged by
+    /// <see cref="OpenSpaceDesk.IsClosedToJoin"/>: who may see or sit at it is decided by the caller.
     /// </summary>
     Task<IReadOnlyList<OpenSpaceDesk>> GetDesksAsync(DateTime nowUtc, int maxDesks, CancellationToken ct = default);
 
-    /// <summary>The desk of the group <paramref name="rootSessionId"/> when it is open, otherwise null.</summary>
+    /// <summary>
+    /// The desk of the group or sprint <paramref name="rootSessionId"/>. Null only when the group or sprint is
+    /// over (or unknown); a desk closed to joins is still returned.
+    /// </summary>
     Task<OpenSpaceDesk?> GetDeskAsync(Guid rootSessionId, DateTime nowUtc, CancellationToken ct = default);
 
     /// <summary>The ambiance code chosen by the host of <paramref name="rootSessionId"/>, null when none or no such group.</summary>
