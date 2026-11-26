@@ -1,5 +1,6 @@
 using KairuFocus.Domain.Community;
 using KairuFocus.Infrastructure.Persistence;
+using KairuFocus.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -47,6 +48,17 @@ public sealed class MemberPresenceConfigurationTests
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
         Assert.True(foreignKey.IsUnique);
         Assert.Equal("UserId", Assert.Single(foreignKey.Properties).GetColumnName());
+    }
+
+    // The repository matches this name to drop the signal of a member who left during it.
+    [Fact]
+    public void Should_NameProfileForeignKeyAsRepositoryExpects_When_ModelIsBuilt()
+    {
+        var presence = Model().FindEntityType(typeof(MemberPresence))!;
+
+        var foreignKey = Assert.Single(presence.GetForeignKeys());
+        Assert.Equal(MemberPresenceConfiguration.ProfileForeignKeyName, foreignKey.GetConstraintName());
+        Assert.Equal("FK_MemberPresences_MemberProfiles_UserId", foreignKey.GetConstraintName());
     }
 
     [Fact]

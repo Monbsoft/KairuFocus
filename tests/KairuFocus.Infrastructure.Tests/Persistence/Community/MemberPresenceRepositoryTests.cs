@@ -5,10 +5,11 @@ using KairuFocus.Infrastructure.Tests.Persistence.TestSupport;
 namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
 
 /// <summary>
-/// Create / move forward / ignore-older paths of <see cref="EfCoreMemberPresenceRepository"/>. The race of two
-/// first signals of the same member is NOT covered here: under InMemory a duplicate key surfaces as a raw
-/// ArgumentException, never as the SQL Server duplicate-key error the repository recovers from, so the
-/// recovery path cannot be reproduced honestly. It is checked at acceptance on SQL Server.
+/// Create / move forward / ignore-older paths of <see cref="EfCoreMemberPresenceRepository"/>, and a presence deleted
+/// during the signal (the member left the community). The race of two first signals of the same member is NOT covered
+/// here: under InMemory a duplicate key surfaces as a raw ArgumentException, never as the SQL Server duplicate-key error
+/// the repository recovers from, so the recovery path cannot be reproduced honestly. Nor is the insert whose profile is
+/// gone (foreign key violation): InMemory enforces no foreign key. Both are checked at acceptance on SQL Server.
 /// </summary>
 public sealed class MemberPresenceRepositoryTests
 {
@@ -47,6 +48,29 @@ public sealed class MemberPresenceRepositoryTests
         await RecordAsync(userId, FirstSeenAtUtc);
 
         Assert.Equal(FirstSeenAtUtc.AddMinutes(2), await LastSeenAsync(userId));
+    }
+
+    // The member left the community between the read of the presence and its update: the cascade deleted the row.
+    [Fact]
+    public async Task Should_IgnoreSignal_When_PresenceDeletedDuringSignal()
+    {
+        var userId = UserId.New();
+        await RecordAsync(userId, FirstSeenAtUtc);
+        await using var context = _database.CreateContext();
+        Assert.NotNull(await context.MemberPresences.FindAsync(userId));
+        await using (var other = _database.CreateContext())
+        {
+            other.MemberPresences.Remove((await other.MemberPresences.FindAsync(userId))!);
+            await other.SaveChangesAsync();
+        }
+
+        var repository = new EfCoreMemberPresenceRepository(context);
+        await repository.RecordSeenAsync(userId, FirstSeenAtUtc.AddMinutes(1));
+
+        Assert.Equal(0, await CountAsync());
+        // The scoped context stays usable: nothing rejected is left tracked.
+        Assert.Empty(context.ChangeTracker.Entries());
+        await context.SaveChangesAsync();
     }
 
     private async Task RecordAsync(UserId userId, DateTime seenAtUtc)

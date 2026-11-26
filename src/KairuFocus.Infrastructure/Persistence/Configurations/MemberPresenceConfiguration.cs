@@ -12,6 +12,10 @@ public sealed class MemberPresenceConfiguration : IEntityTypeConfiguration<Membe
     // literal: a migration is a frozen snapshot of the schema at the time it was written.)
     internal const string PrimaryKeyName = "PK_MemberPresences";
 
+    // Name of the foreign key to the profile, the one EF Core gives by convention (checked by a model test): the
+    // repository matches it to tell an insert whose profile is gone (member left the community) from any other failure.
+    internal const string ProfileForeignKeyName = "FK_MemberPresences_MemberProfiles_UserId";
+
     public void Configure(EntityTypeBuilder<MemberPresence> builder)
     {
         builder.ToTable("MemberPresences");
