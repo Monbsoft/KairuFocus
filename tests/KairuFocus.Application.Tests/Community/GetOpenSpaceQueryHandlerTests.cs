@@ -343,6 +343,27 @@ public sealed class GetOpenSpaceQueryHandlerTests
         Assert.Equal("lea_dev", Assert.Single(Assert.Single(result.Desks).Seated).Name);
     }
 
+    // The host may run a solo open sprint while their closed group waits: one desk per host, the closed one the viewer is in.
+    [Fact]
+    public async Task Should_ShowOneDesk_When_ViewerHostsClosedGroupAndRunsSoloSprint()
+    {
+        GivenViewerMember();
+        var group = GroupSession.Start(
+            Guid.NewGuid(), Viewer, NowUtc.AddMinutes(-27), NowUtc.AddMinutes(-2), UserId.New(), NowUtc.AddMinutes(-20)).Value;
+        Assert.True(group.Close().IsSuccess);
+        _groupSessions.Seed(group);
+        _openSprints.SeedDesk(Desk(Guid.NewGuid(), Members(ViewerName)));
+        _openSprints.SeedDesk(Desk(Guid.NewGuid(), Members("noa_42")));
+        _openSprints.SeedDeskByRoot(Desk(group.Id, Members(ViewerName, "lea_dev"), closed: true, phase: GroupPhase.WaitingForHost));
+
+        var desks = (await QueryAsync()).Desks;
+
+        Assert.Equal(2, desks.Count);
+        Assert.True(desks[0].IsClosedToJoin);
+        Assert.Equal([true, false], desks[0].Seated.Select(m => m.IsMe));
+        Assert.Equal("noa_42", Assert.Single(desks[1].Seated).Name);
+    }
+
     // ── Ambiance of the desk ──────────────────────────────────────────────
 
     [Fact]
@@ -395,10 +416,12 @@ public sealed class GetOpenSpaceQueryHandlerTests
         Assert.Equal(2, result.ConnectedTotal);
     }
 
+    // The viewer sits at a desk: out of the connected list, which then holds the others only.
     [Fact]
     public async Task Should_CapConnectedAt12AndCountTheRest_When_ManyConnected()
     {
         GivenViewerMember();
+        _openSprints.SeedDesk(Desk(Guid.NewGuid(), Members(ViewerName)));
         var names = Enumerable.Range(1, 15).Select(i => $"member_{i:00}").ToArray();
         _directory.SeedConnected(Members(names));
 
@@ -406,6 +429,66 @@ public sealed class GetOpenSpaceQueryHandlerTests
 
         Assert.Equal(names.Take(12), result.Connected.Select(m => m.Name));
         Assert.Equal(15, result.ConnectedTotal);
+    }
+
+    // Arrived before their first presence signal: the viewer is connected and consenting by construction.
+    [Fact]
+    public async Task Should_AddViewerToConnected_When_NotYetSeen()
+    {
+        _profiles.Seed(Viewer, ViewerName, ProfileNameSource.GitHub, AvatarUrl);
+        _directory.SeedConnected(Members("alpha", "zed_dev"));
+
+        var result = await QueryAsync();
+
+        Assert.Equal(
+            [
+                new MemberChipViewModel("alpha", null, false),
+                new MemberChipViewModel(ViewerName, AvatarUrl, true),
+                new MemberChipViewModel("zed_dev", null, false),
+            ],
+            result.Connected);
+        Assert.Equal(3, result.ConnectedTotal);
+        Assert.Equal(0, _profiles.TryUpdateCallCount);
+    }
+
+    [Fact]
+    public async Task Should_KeepViewerInShownList_When_MoreThanTwelveConnected()
+    {
+        GivenViewerMember();
+        var names = Enumerable.Range(1, 15).Select(i => $"member_{i:00}").ToArray();
+        _directory.SeedConnected([.. Members(names), Member(ViewerName)]);
+
+        var result = await QueryAsync();
+
+        Assert.Equal([.. names.Take(11), ViewerName], result.Connected.Select(m => m.Name));
+        Assert.Equal([.. Enumerable.Repeat(false, 11), true], result.Connected.Select(m => m.IsMe));
+        Assert.Equal(16, result.ConnectedTotal);
+    }
+
+    [Fact]
+    public async Task Should_KeepViewerInShownList_When_NotYetSeenAndMoreThanTwelveConnected()
+    {
+        GivenViewerMember();
+        var names = Enumerable.Range(1, 15).Select(i => $"member_{i:00}").ToArray();
+        _directory.SeedConnected(Members(names));
+
+        var result = await QueryAsync();
+
+        Assert.Equal([.. names.Take(11), ViewerName], result.Connected.Select(m => m.Name));
+        Assert.Equal(16, result.ConnectedTotal);
+    }
+
+    [Fact]
+    public async Task Should_NotAddViewer_When_ViewerIsSeated()
+    {
+        GivenViewerMember();
+        _openSprints.SeedDesk(Desk(Guid.NewGuid(), Members("lea_dev", ViewerName)));
+        _directory.SeedConnected(Members("alpha"));
+
+        var result = await QueryAsync();
+
+        Assert.Equal([new MemberChipViewModel("alpha", null, false)], result.Connected);
+        Assert.Equal(1, result.ConnectedTotal);
     }
 
     // ── Active today (UC-CO-13) ───────────────────────────────────────────

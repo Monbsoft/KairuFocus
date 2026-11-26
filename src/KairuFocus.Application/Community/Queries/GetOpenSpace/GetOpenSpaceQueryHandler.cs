@@ -67,6 +67,8 @@ public sealed class GetOpenSpaceQueryHandler : IQueryHandler<GetOpenSpaceQuery, 
         var seatedKeys = desks.SelectMany(d => d.Seated).Select(m => m.Name.Key).ToHashSet(StringComparer.Ordinal);
         var connected = await _directory.GetConnectedMembersAsync(PresenceRules.SeenSince(now), MaxConnectedRead, cancellationToken);
         var notSeated = connected.Where(m => !seatedKeys.Contains(m.Name.Key)).ToList();
+        if (!seatedKeys.Contains(viewerKey))
+            EnsureViewer(notSeated, new SprintMember(profile.Name, profile.AvatarUrl));
 
         var today = now.Date;
         var activeToday = await _directory.GetActiveMembersAsync(today, today.AddDays(1), MaxActiveToday, cancellationToken);
@@ -75,7 +77,7 @@ public sealed class GetOpenSpaceQueryHandler : IQueryHandler<GetOpenSpaceQuery, 
             OpenSpaceAccess.Open,
             ViewerInGroup: myGroup is not null,
             desks.Select(d => ToViewModel(d, viewerKey)).ToList(),
-            notSeated.Take(MaxConnectedShown).Select(m => Chip(m, viewerKey)).ToList(),
+            Shown(notSeated, viewerKey).Select(m => Chip(m, viewerKey)).ToList(),
             notSeated.Count,
             new ActiveTodayViewModel(activeToday.Total, activeToday.Members.Select(m => Chip(m, viewerKey)).ToList()));
     }
@@ -113,7 +115,36 @@ public sealed class GetOpenSpaceQueryHandler : IQueryHandler<GetOpenSpaceQuery, 
                 ownClosed.Add(desk);
         }
 
+        // One desk per host: a host may run a solo open sprint while their closed group goes on (or waits).
+        // The closed desk is the one the viewer sits at, it wins.
+        var ownHosts = ownClosed.Where(d => d.Seated.Count > 0).Select(d => d.Seated[0].Name.Key).ToHashSet(StringComparer.Ordinal);
+        desks.RemoveAll(d => d.Seated.Count > 0 && ownHosts.Contains(d.Seated[0].Name.Key));
+
         return [.. ownClosed, .. desks];
+    }
+
+    /// <summary>
+    /// The viewer is connected and consenting by construction: they are listed even before their first presence
+    /// signal, or beyond the members read (in memory only, nothing is written). Kept in name order (ordinal), like the read.
+    /// </summary>
+    private static void EnsureViewer(List<SprintMember> notSeated, SprintMember viewer)
+    {
+        if (notSeated.Exists(m => m.Name.Key == viewer.Name.Key))
+            return;
+
+        var index = notSeated.FindIndex(m => string.CompareOrdinal(m.Name.Value, viewer.Name.Value) > 0);
+        notSeated.Insert(index < 0 ? notSeated.Count : index, viewer);
+    }
+
+    /// <summary>The first connected members, the viewer always among them (in last place when sorted beyond the cap).</summary>
+    private static List<SprintMember> Shown(List<SprintMember> notSeated, string viewerKey)
+    {
+        var shown = notSeated.Take(MaxConnectedShown).ToList();
+        var viewerIndex = notSeated.FindIndex(m => m.Name.Key == viewerKey);
+        if (viewerIndex >= MaxConnectedShown)
+            shown[^1] = notSeated[viewerIndex];
+
+        return shown;
     }
 
     private DeskViewModel ToViewModel(OpenSpaceDesk desk, string viewerKey) =>

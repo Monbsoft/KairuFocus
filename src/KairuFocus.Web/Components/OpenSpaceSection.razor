@@ -67,9 +67,9 @@
             var canFold = hidden > 0;
 
             <ul class="kf-os__grid" id="open-space-desks">
-                @foreach (var desk in (canFold && !_expanded ? _desks.Take(VisibleDesks) : _desks))
+                @foreach (var (desk, key) in (canFold && !_expanded ? _desks.Zip(_deskKeys).Take(VisibleDesks) : _desks.Zip(_deskKeys)))
                 {
-                    <DeskCard @key="DeskKey(desk)" Desk="desk" OnNoLongerOpen="HandleNoLongerOpenAsync"
+                    <DeskCard @key="key" Desk="desk" OnNoLongerOpen="HandleNoLongerOpenAsync"
                               OnWaiting="OnChanged" OnElapsed="OnChanged" />
                 }
             </ul>
@@ -132,11 +132,13 @@
     // What is shown, computed once per read: the desks with somebody seated (an empty one would be an empty card, and
     // would be counted), and the connected people other than the viewer (the subtitle says "others").
     private IReadOnlyList<DeskDto> _desks = [];
+    private IReadOnlyList<string> _deskKeys = [];
     private int _others;
 
     protected override void OnParametersSet()
     {
         _desks = Data is { Access: OpenAccess } shown ? shown.Desks.Where(d => d.Seated.Count > 0).ToList() : [];
+        _deskKeys = DeskKeys(_desks);
         _others = Data is { Access: OpenAccess } read
             ? Math.Max(0, read.ConnectedTotal - (read.Connected.Any(m => m.IsMe) ? 1 : 0))
             : 0;
@@ -162,8 +164,23 @@
         await _title.FocusAsync();
     }
 
-    /// <summary>A desk is its host: the same host keeps the same card (and its chair) from one read to the next.</summary>
-    private static string DeskKey(DeskDto desk) => desk.Seated.Count > 0 ? desk.Seated[0].Name : desk.EndsAt.ToString("O");
+    /// <summary>A desk is its host: the same host keeps the same card (and its chair) from one read to the next. The server
+    /// lists one desk per host; should a host still come twice, the next ones get a numbered key, since Blazor rejects
+    /// two siblings with the same key.</summary>
+    private static IReadOnlyList<string> DeskKeys(IReadOnlyList<DeskDto> desks)
+    {
+        var used = new HashSet<string>(StringComparer.Ordinal);
+        var keys = new List<string>(desks.Count);
+        foreach (var desk in desks)
+        {
+            var key = desk.Seated[0].Name;
+            for (var n = 2; !used.Add(key); n++)
+                key = $"{desk.Seated[0].Name}#{n}";
+            keys.Add(key);
+        }
+
+        return keys;
+    }
 
     private void ToggleExpanded() => _expanded = !_expanded;
 
