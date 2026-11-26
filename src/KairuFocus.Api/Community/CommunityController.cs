@@ -8,11 +8,9 @@ using KairuFocus.Application.Community.Commands.LeaveCommunity;
 using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
 using KairuFocus.Application.Community.Common;
-using KairuFocus.Application.Community.Queries.GetActiveToday;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetCurrentSession;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
-using KairuFocus.Application.Community.Queries.GetOpenSprints;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Monbsoft.BrilliantMediator.Abstractions;
@@ -104,14 +102,6 @@ public sealed class CommunityController : ControllerBase
             : NotFound();
     }
 
-    [HttpGet("open-sprints")]
-    public async Task<IActionResult> GetOpenSprints(CancellationToken ct)
-    {
-        var result = await _mediator.SendAsync<GetOpenSprintsQuery, GetOpenSprintsResult>(
-            new GetOpenSprintsQuery(), ct);
-        return Ok(result);
-    }
-
     [HttpPost("open-sprints/{name}/join")]
     public async Task<IActionResult> JoinOpenSprint(string name, CancellationToken ct)
     {
@@ -189,16 +179,6 @@ public sealed class CommunityController : ControllerBase
         return result.IsSuccess
             ? NoContent()
             : ErrorResponse(result.Error!);
-    }
-
-    // ── Active today (UC-CO-13) ────────────────────────────────────────────
-
-    [HttpGet("active-today")]
-    public async Task<IActionResult> GetActiveToday(CancellationToken ct)
-    {
-        var result = await _mediator.SendAsync<GetActiveTodayQuery, GetActiveTodayResult>(
-            new GetActiveTodayQuery(), ct);
-        return Ok(result);
     }
 
     // ── Error mapping (spec §8) ────────────────────────────────────────────

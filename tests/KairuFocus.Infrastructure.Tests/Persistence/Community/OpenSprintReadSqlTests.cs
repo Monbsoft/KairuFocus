@@ -13,7 +13,7 @@ namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
 /// </summary>
 public sealed class OpenSprintReadSqlTests
 {
-    private const string OpenGroups = nameof(IOpenSprintReadRepository.GetOpenGroupsAsync);
+    private const string OpenGroups = nameof(EfCoreOpenSprintReadRepository.GetOpenGroupsAsync);
     private const string Joinable = nameof(IOpenSprintReadRepository.FindJoinableAsync);
     private const string GroupMembers = nameof(IOpenSprintReadRepository.GetGroupMembersAsync);
     private const string Desks = nameof(IOpenSprintReadRepository.GetDesksAsync);

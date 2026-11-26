@@ -16,6 +16,13 @@ public sealed class GetCurrentSessionQueryHandlerTests
     private static readonly DateTime NowUtc = Now.UtcDateTime;
     private static readonly UserId Visitor = FakeCurrentUserService.TestUserId;
 
+    // Test data only: never part of AmbianceCatalogue.Default.
+    private static readonly AmbianceCatalogue Catalogue = new(
+    [
+        new Ambiance("test1", "Test 1", AmbianceCategory.Lofi, "https://www.youtube.com/watch?v=test1"),
+        new Ambiance("test2", "Test 2", AmbianceCategory.Classical, "https://www.youtube.com/watch?v=test2"),
+    ]);
+
     private readonly FakeMemberProfileRepository _profiles = new();
     private readonly FakeGroupSessionRepository _groups = new();
     private readonly FakeOpenSprintReadRepository _openSprints = new();
@@ -29,6 +36,7 @@ public sealed class GetCurrentSessionQueryHandlerTests
             _groups,
             _openSprints,
             _sessions,
+            Catalogue,
             new FakeCurrentUserService(),
             new FixedTimeProvider(Now));
     }
@@ -240,5 +248,76 @@ public sealed class GetCurrentSessionQueryHandlerTests
         Assert.False(result.IsGroup);
         Assert.Equal("Running", result.Phase);
         Assert.Equal("Host", result.Role);
+    }
+
+    // ── Ambiance ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Should_ReturnHostAmbiance_When_ParticipantInGroup()
+    {
+        // The visitor's own choice does not apply in someone else's group.
+        _profiles.Seed(Visitor, VisitorName, ambianceCode: "test2");
+        var group = GivenGroupAsParticipant(endedMinutesAgo: -10);
+        GivenJoinedSession(group.Id);
+        _openSprints.SeedHostAmbiance(group.Id, "test1");
+
+        var result = await _sut.Handle(new GetCurrentSessionQuery());
+
+        Assert.NotNull(result);
+        Assert.True(result.IsGroup);
+        Assert.Equal(new AmbianceViewModel("test1", "Test 1", "Lofi", "https://www.youtube.com/watch?v=test1"), result.Ambiance);
+    }
+
+    [Fact]
+    public async Task Should_ReturnOwnAmbiance_When_HostOfSoloOpenSprint()
+    {
+        _profiles.Seed(Visitor, VisitorName, ambianceCode: "test2");
+        GivenActiveSession(PomodoroSessionType.Sprint, 25);
+
+        var result = await _sut.Handle(new GetCurrentSessionQuery());
+
+        Assert.NotNull(result);
+        Assert.False(result.IsGroup);
+        Assert.Equal(new AmbianceViewModel("test2", "Test 2", "Classical", "https://www.youtube.com/watch?v=test2"), result.Ambiance);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNoAmbiance_When_HostChoseNone()
+    {
+        _profiles.Seed(Visitor, VisitorName, ambianceCode: "test2");
+        var group = GivenGroupAsParticipant(endedMinutesAgo: -10);
+        GivenJoinedSession(group.Id);
+        _openSprints.SeedHostAmbiance(group.Id, null);
+
+        var result = await _sut.Handle(new GetCurrentSessionQuery());
+
+        Assert.NotNull(result);
+        Assert.Null(result.Ambiance);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNoAmbiance_When_OwnCodeNoLongerInCatalogue()
+    {
+        _profiles.Seed(Visitor, VisitorName, ambianceCode: "removed");
+        GivenActiveSession(PomodoroSessionType.Sprint, 25);
+
+        var result = await _sut.Handle(new GetCurrentSessionQuery());
+
+        Assert.NotNull(result);
+        Assert.Null(result.Ambiance);
+    }
+
+    [Fact]
+    public async Task Should_ReturnHostAmbiance_When_ViewerHostsGroup()
+    {
+        _profiles.Seed(Visitor, VisitorName, ambianceCode: "test1");
+        var group = GivenGroupAsHost(endedMinutesAgo: -10);
+        _openSprints.SeedHostAmbiance(group.Id, "test1");
+
+        var result = await _sut.Handle(new GetCurrentSessionQuery());
+
+        Assert.NotNull(result);
+        Assert.Equal("Host", result.Role);
+        Assert.Equal("test1", result.Ambiance?.Code);
     }
 }

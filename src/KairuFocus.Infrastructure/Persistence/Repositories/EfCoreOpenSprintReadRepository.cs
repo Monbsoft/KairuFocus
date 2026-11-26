@@ -29,6 +29,11 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
         _context = context;
     }
 
+    /// <summary>
+    /// The rows of <see cref="GetDesksAsync"/>, each with a participant count instead of the seated members. No
+    /// longer on the port (the open space replaced the cards): kept for the infrastructure tests that pin the
+    /// shared candidates, preference rule and order.
+    /// </summary>
     public async Task<IReadOnlyList<OpenSprintGroup>> GetOpenGroupsAsync(
         DateTime nowUtc,
         int maxGroups,

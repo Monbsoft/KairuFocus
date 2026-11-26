@@ -15,8 +15,6 @@ using KairuFocus.Application.Community.Commands.SetSprintClosed;
 using KairuFocus.Application.Community.Common;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
-using KairuFocus.Application.Community.Queries.GetActiveToday;
-using KairuFocus.Application.Community.Queries.GetOpenSprints;
 using KairuFocus.Application.Community.Queries.GetCurrentSession;
 using KairuFocus.Application.Pomodoro.Commands.StartSession;
 using KairuFocus.Application.Pomodoro.Common;
@@ -37,8 +35,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     private const string MembershipUrl = "api/community/membership";
     private const string MembershipNameUrl = "api/community/membership/name";
     private const string MemberUrl = "api/community/members/RenardAgile";
-    private const string OpenSprintsUrl = "api/community/open-sprints";
-    private const string ActiveTodayUrl = "api/community/active-today";
     private const string JoinUrl = "api/community/open-sprints/LoutreTenace/join";
     private const string CurrentSessionUrl = "api/community/current-session";
     private const string StepsUrl = "api/community/current-session/steps";
@@ -79,8 +75,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [InlineData("PUT", MembershipNameUrl)]
     [InlineData("DELETE", MembershipUrl)]
     [InlineData("GET", MemberUrl)]
-    [InlineData("GET", OpenSprintsUrl)]
-    [InlineData("GET", ActiveTodayUrl)]
     [InlineData("POST", JoinUrl)]
     [InlineData("GET", CurrentSessionUrl)]
     [InlineData("POST", StepsUrl)]
@@ -350,49 +344,6 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     // ── Open sprints, participants ─────────────────────────────────────────
 
     [Fact]
-    public async Task Should_ExposeOnlyPublicFields_When_OpenSprintsAreReturned()
-    {
-        _mediator.SendResult = _ => new GetOpenSprintsResult(
-            ViewerIsMember: true,
-            ViewerInGroup: false,
-            Groups: [new OpenSprintRowViewModel("LoutreTenace", null, SharedEnd, 3, IsMine: false, StepType: "ShortBreak", Phase: "Running")]);
-
-        var response = await _client.GetAsync(OpenSprintsUrl);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        AssertNoForbiddenKey(await ReadJsonAsync(response));
-        await AssertJsonAsync("""
-            {
-              "viewerIsMember": true,
-              "viewerInGroup": false,
-              "groups": [ {
-                "name": "LoutreTenace", "avatarUrl": null, "endsAt": "2026-10-30T14:25:00+00:00",
-                "participantCount": 3, "isMine": false, "stepType": "ShortBreak", "phase": "Running"
-              } ]
-            }
-            """, response);
-    }
-
-    [Fact]
-    public async Task Should_ReturnActiveTodayContract_When_Requested()
-    {
-        _mediator.SendResult = _ => new GetActiveTodayResult(
-            7,
-            [
-                new("lea_dev", "https://avatars.githubusercontent.com/u/1", false),
-                new("nora", null, true),
-            ]);
-
-        var response = await _client.GetAsync(ActiveTodayUrl);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        AssertNoForbiddenKey(await ReadJsonAsync(response));
-        await AssertJsonAsync("""
-            {"total":7,"members":[{"name":"lea_dev","avatarUrl":"https://avatars.githubusercontent.com/u/1","isMe":false},{"name":"nora","avatarUrl":null,"isMe":true}]}
-            """, response);
-    }
-
-    [Fact]
     public async Task Should_Return204_When_NoSession()
     {
         _mediator.SendResult = _ => null!;
@@ -409,7 +360,7 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
             IsGroup: true, Role: "Participant", Phase: "WaitingForHost", StepNumber: 2, SprintNumber: 1,
             StepType: "ShortBreak", StepEndsAt: SharedEnd, WaitLimitAt: SharedEnd.AddMinutes(15), EndReason: null,
             Others: [new SprintMemberViewModel("LoutreTenace", "https://avatars.githubusercontent.com/u/2")],
-            IsClosedToJoin: false);
+            IsClosedToJoin: false, Ambiance: null);
 
         var response = await _client.GetAsync(CurrentSessionUrl);
 
