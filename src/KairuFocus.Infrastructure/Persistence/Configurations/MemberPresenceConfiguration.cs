@@ -22,6 +22,7 @@ public sealed class MemberPresenceConfiguration : IEntityTypeConfiguration<Membe
 
         builder.Property(p => p.Id)
             .HasConversion(id => id.Value, value => UserId.From(value))
+            .HasColumnName("UserId")
             .HasColumnType("uniqueidentifier")
             .ValueGeneratedNever()
             .IsRequired();

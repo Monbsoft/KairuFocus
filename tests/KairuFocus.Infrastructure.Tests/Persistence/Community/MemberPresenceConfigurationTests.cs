@@ -23,7 +23,7 @@ public sealed class MemberPresenceConfigurationTests
         var primaryKey = presence.FindPrimaryKey()!;
         Assert.Equal("PK_MemberPresences", primaryKey.GetName());
         var key = Assert.Single(primaryKey.Properties);
-        Assert.Equal("Id", key.GetColumnName());
+        Assert.Equal("UserId", key.GetColumnName());
         Assert.Equal("uniqueidentifier", key.GetColumnType());
         Assert.Equal(ValueGenerated.Never, key.ValueGenerated);
 
@@ -46,7 +46,7 @@ public sealed class MemberPresenceConfigurationTests
         Assert.Equal(typeof(MemberProfile), foreignKey.PrincipalEntityType.ClrType);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
         Assert.True(foreignKey.IsUnique);
-        Assert.Equal("Id", Assert.Single(foreignKey.Properties).GetColumnName());
+        Assert.Equal("UserId", Assert.Single(foreignKey.Properties).GetColumnName());
     }
 
     [Fact]
