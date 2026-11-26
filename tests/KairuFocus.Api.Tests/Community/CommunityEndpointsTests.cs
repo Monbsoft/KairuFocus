@@ -5,6 +5,11 @@ using System.Text.Json.Nodes;
 using KairuFocus.Api.Tests.Auth;
 using KairuFocus.Api.Tests.Gamification;
 using KairuFocus.Application.Community.Commands.ChangeProfileName;
+using KairuFocus.Application.Community.Commands.ChooseAmbiance;
+using KairuFocus.Application.Community.Commands.ConsentToPresence;
+using KairuFocus.Application.Community.Commands.RecordPresence;
+using KairuFocus.Application.Community.Queries.GetAmbiances;
+using KairuFocus.Application.Community.Queries.GetOpenSpace;
 using KairuFocus.Application.Community.Commands.JoinCommunity;
 using KairuFocus.Application.Community.Commands.FollowGroupHost;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
@@ -40,6 +45,11 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     private const string StepsUrl = "api/community/current-session/steps";
     private const string FollowUrl = "api/community/current-session/follow";
     private const string ClosedUrl = "api/community/current-sprint/closed";
+    private const string PresenceUrl = "api/community/presence";
+    private const string ConsentUrl = "api/community/presence/consent";
+    private const string AmbianceUrl = "api/community/membership/ambiance";
+    private const string AmbiancesUrl = "api/community/ambiances";
+    private const string OpenSpaceUrl = "api/community/open-space";
     private const string SessionUrl = "api/pomodoro/session";
 
     private const string NameUnavailableText = "This name is not available.";
@@ -80,6 +90,11 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
     [InlineData("POST", StepsUrl)]
     [InlineData("POST", FollowUrl)]
     [InlineData("PUT", ClosedUrl)]
+    [InlineData("POST", PresenceUrl)]
+    [InlineData("PUT", ConsentUrl)]
+    [InlineData("PUT", AmbianceUrl)]
+    [InlineData("GET", AmbiancesUrl)]
+    [InlineData("GET", OpenSpaceUrl)]
     public async Task Should_Return401_When_CommunityEndpointIsCalledAnonymously(string method, string url)
     {
         var response = await _anonymousClient.SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
@@ -625,6 +640,172 @@ public sealed class CommunityEndpointsTests : IClassFixture<GamificationApiFixtu
 
         Assert.False(former.IsSuccessStatusCode);
         Assert.Equal(unknown.StatusCode, former.StatusCode);
+    }
+
+    // ── Open space, presence, ambiance (#50) ───────────────────────────────
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Should_Return204_When_PresenceRecorded(bool recorded)
+    {
+        RecordPresenceCommand? sent = null;
+        _mediator.DispatchResult = command =>
+        {
+            sent = (RecordPresenceCommand)command;
+            return new RecordPresenceResult(recorded);
+        };
+
+        var response = await _client.PostAsync(PresenceUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.NotNull(sent);
+    }
+
+    [Fact]
+    public async Task Should_Return204_When_PresenceIgnored()
+    {
+        // Not consented or not a member: the heartbeat is silently ignored, never an error.
+        _mediator.DispatchResult = _ => new RecordPresenceResult(false);
+
+        var response = await _client.PostAsync(PresenceUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(0, (await response.Content.ReadAsStringAsync()).Length);
+    }
+
+    [Fact]
+    public async Task Should_Return204_When_PresenceConsented()
+    {
+        _mediator.DispatchResult = _ => ConsentToPresenceResult.Success();
+
+        var response = await _client.PutAsync(ConsentUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Should_Return404NotMember_When_ConsentingWithoutProfile()
+    {
+        _mediator.DispatchResult = _ => ConsentToPresenceResult.Failure(CommunityErrors.Community.NotMember);
+
+        var response = await _client.PutAsync(ConsentUrl, content: null);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertCodeAsync("not-member", response);
+    }
+
+    [Theory]
+    [InlineData("""{ "code": "rain" }""", "rain")]
+    [InlineData("""{ "code": null }""", null)]
+    [InlineData("{}", null)]
+    public async Task Should_Return204AndSendCode_When_AmbianceIsChosen(string body, string? expected)
+    {
+        ChooseAmbianceCommand? sent = null;
+        _mediator.DispatchResult = command =>
+        {
+            sent = (ChooseAmbianceCommand)command;
+            return ChooseAmbianceResult.Success();
+        };
+
+        var response = await PutJsonAsync(AmbianceUrl, body);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(new ChooseAmbianceCommand(expected), sent);
+    }
+
+    [Fact]
+    public async Task Should_Return400UnknownAmbiance_When_CodeNotInCatalogue()
+    {
+        _mediator.DispatchResult = _ => ChooseAmbianceResult.Failure(CommunityErrors.Community.UnknownAmbiance);
+
+        var response = await PutJsonAsync(AmbianceUrl, """{ "code": "nope" }""");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertCodeAsync("unknown-ambiance", response);
+    }
+
+    [Fact]
+    public async Task Should_Return404NotMember_When_ChoosingAmbianceWithoutProfile()
+    {
+        _mediator.DispatchResult = _ => ChooseAmbianceResult.Failure(CommunityErrors.Community.NotMember);
+
+        var response = await PutJsonAsync(AmbianceUrl, """{ "code": "rain" }""");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        await AssertCodeAsync("not-member", response);
+    }
+
+    [Fact]
+    public async Task Should_ReturnAmbianceCatalogue_When_Requested()
+    {
+        _mediator.SendResult = _ => (IReadOnlyList<AmbianceViewModel>)
+            [new AmbianceViewModel("rain", "Rain", "Nature", "https://example.test/rain")];
+
+        var response = await _client.GetAsync(AmbiancesUrl);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await AssertJsonAsync("""
+            [ { "code": "rain", "label": "Rain", "category": "Nature", "url": "https://example.test/rain" } ]
+            """, response);
+    }
+
+    [Fact]
+    public async Task Should_ReturnOpenSpaceContractWithoutIdentifiers_When_Requested()
+    {
+        _mediator.SendResult = _ => new GetOpenSpaceResult(
+            OpenSpaceAccess.Open,
+            ViewerInGroup: false,
+            Desks:
+            [
+                new DeskViewModel(
+                    [new MemberChipViewModel("RenardAgile", null, true), new MemberChipViewModel("LoutreTenace", null, false)],
+                    SharedEnd, "Sprint", "Running", IsClosedToJoin: false,
+                    new AmbianceViewModel("rain", "Rain", "Nature", "https://example.test/rain"))
+            ],
+            Connected: [new MemberChipViewModel("CastorPaisible", "https://avatars.githubusercontent.com/u/3", false)],
+            ConnectedTotal: 1,
+            ActiveToday: new ActiveTodayViewModel(1, [new MemberChipViewModel("CastorPaisible", null, false)]));
+
+        var response = await _client.GetAsync(OpenSpaceUrl);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        AssertNoForbiddenKey(body);
+        Assert.Equal("Open", body["access"]!.GetValue<string>());
+        Assert.True(body["desks"]![0]!["seated"]![0]!["isMe"]!.GetValue<bool>());
+        Assert.False(body["desks"]![0]!["seated"]![1]!["isMe"]!.GetValue<bool>());
+        Assert.Equal("https://example.test/rain", body["desks"]![0]!["ambiance"]!["url"]!.GetValue<string>());
+        Assert.Equal(1, body["connectedTotal"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnAmbiance_When_CurrentSessionRequested()
+    {
+        _mediator.SendResult = _ => new GetCurrentSessionResult(
+            IsGroup: true, Role: "Host", Phase: "Running", StepNumber: 1, SprintNumber: 1,
+            StepType: "Sprint", StepEndsAt: SharedEnd, WaitLimitAt: null, EndReason: null,
+            Others: [], IsClosedToJoin: false,
+            Ambiance: new AmbianceViewModel("rain", "Rain", "Nature", "https://example.test/rain"));
+
+        var response = await _client.GetAsync(CurrentSessionUrl);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await ReadJsonAsync(response);
+        AssertNoForbiddenKey(body);
+        Assert.Equal("rain", body["ambiance"]!["code"]!.GetValue<string>());
+        Assert.Equal("https://example.test/rain", body["ambiance"]!["url"]!.GetValue<string>());
+    }
+
+    // The open sprints list and the active-today list are replaced by the open space (#50).
+    [Theory]
+    [InlineData("api/community/open-sprints")]
+    [InlineData("api/community/active-today")]
+    public async Task Should_Return404_When_OldOpenSprintsRouteRequested(string url)
+    {
+        var response = await _client.GetAsync(url);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     // ── Pomodoro session contract ──────────────────────────────────────────
