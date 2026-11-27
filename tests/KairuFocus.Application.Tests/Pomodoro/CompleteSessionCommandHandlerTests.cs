@@ -116,8 +116,8 @@ public sealed class CompleteSessionCommandHandlerTests
     [Fact]
     public async Task Should_SetSequence2_When_SecondBreakOfTheDay()
     {
-        // première pause déjà enregistrée, le même jour que la seconde : à date fixe, la seconde
-        // est retenue à sa fin prévue (PastStart + 25 min), sans dépendre de l'heure d'exécution
+        // first break already recorded on the same day as the second one: with a fixed date, the
+        // second break is retained at its scheduled end (PastStart + 25 min), whatever the run time
         _journalRepository.Entries.Add(
             JournalEntry.Create(
                 JournalEventType.BreakCompleted,

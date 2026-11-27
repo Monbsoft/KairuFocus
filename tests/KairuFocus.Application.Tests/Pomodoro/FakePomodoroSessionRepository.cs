@@ -16,6 +16,12 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
     /// session in between, reproducing the "rejected but nothing readable" race.</summary>
     public Action? OnInsertRejected { get; set; }
 
+    /// <summary>Clock behind the "today" filters, which mirror the EF repository's
+    /// DateTime.UtcNow.Date. A test pins it so that its setup and the query see the same day.</summary>
+    public TimeProvider TimeProvider { get; set; } = TimeProvider.System;
+
+    private DateTime UtcToday => TimeProvider.GetUtcNow().UtcDateTime.Date;
+
     /// <summary>
     /// Simulates the unique filtered index: the insert is rejected when another Active
     /// session already exists for the same owner.
@@ -64,7 +70,7 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
         Task.FromResult(Sessions.Count(s => s.OwnerId == userId
                                             && s.Status == PomodoroSessionStatus.Completed
                                             && s.EndedAt.HasValue
-                                            && s.EndedAt.Value.Date == DateTime.UtcNow.Date));
+                                            && s.EndedAt.Value.Date == UtcToday));
 
     public Task<int> GetCompletedSprintsTodayCountAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default) =>
         Task.FromResult(Sessions.Count(s => s.OwnerId == userId
@@ -76,7 +82,7 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
 
     public Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, CancellationToken cancellationToken = default) =>
         Task.FromResult(Sessions
-            .Where(s => s.OwnerId == userId && s.Status == PomodoroSessionStatus.Completed && s.EndedAt.HasValue && s.EndedAt.Value.Date == DateTime.UtcNow.Date)
+            .Where(s => s.OwnerId == userId && s.Status == PomodoroSessionStatus.Completed && s.EndedAt.HasValue && s.EndedAt.Value.Date == UtcToday)
             .OrderByDescending(s => s.EndedAt)
             .FirstOrDefault());
 
@@ -86,7 +92,7 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
                         && s.SessionType == PomodoroSessionType.Sprint
                         && s.PlannedDurationMinutes == 0
                         && s.StartedAt.HasValue
-                        && s.StartedAt.Value.Date == DateTime.UtcNow.Date
+                        && s.StartedAt.Value.Date == UtcToday
                         && (s.Status == PomodoroSessionStatus.Completed
                             || s.Status == PomodoroSessionStatus.Interrupted))
             .OrderBy(s => s.StartedAt)

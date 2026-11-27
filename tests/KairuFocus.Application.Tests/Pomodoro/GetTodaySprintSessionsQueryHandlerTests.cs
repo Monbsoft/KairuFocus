@@ -7,7 +7,11 @@ namespace KairuFocus.Application.Tests.Pomodoro;
 
 public sealed class GetTodaySprintSessionsQueryHandlerTests
 {
-    private readonly FakePomodoroSessionRepository _sessionRepository = new();
+    // The fake repository, like the EF one, keeps the sessions started on its current UTC day.
+    // Its clock is pinned so that the setup and the query see the same day, even near midnight UTC.
+    private static readonly DateTimeOffset FixedNow = new(2026, 6, 26, 12, 0, 0, TimeSpan.Zero);
+
+    private readonly FakePomodoroSessionRepository _sessionRepository = new() { TimeProvider = new FixedTimeProvider(FixedNow) };
     private readonly GetTodaySprintSessionsQueryHandler _sut;
 
     public GetTodaySprintSessionsQueryHandlerTests()
@@ -18,10 +22,7 @@ public sealed class GetTodaySprintSessionsQueryHandlerTests
             NullLogger<GetTodaySprintSessionsQueryHandler>.Instance);
     }
 
-    // The fake repository, like the EF one, keeps sessions started on DateTime.UtcNow.Date.
-    // Timestamps are anchored at fixed hours of the current UTC day: offsets relative to now
-    // (now - 1h…) fall on the previous day when the tests run just after midnight UTC.
-    private static DateTime TodayUtcAt(int hour) => DateTime.UtcNow.Date.AddHours(hour);
+    private static DateTime TodayUtcAt(int hour) => FixedNow.UtcDateTime.Date.AddHours(hour);
 
     private PomodoroSession CreateFreeSprintCompleted(DateTime startedAt)
     {
