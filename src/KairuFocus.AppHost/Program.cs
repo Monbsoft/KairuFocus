@@ -1,8 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var api = builder.AddProject<Projects.KairuFocus_Api>("api");
+var api = builder.AddDotnetProject("api", "../KairuFocus.Api/KairuFocus.Api.csproj");
 
-builder.AddProject<Projects.KairuFocus_Web>("web")
+builder.AddDotnetProject("web", "../KairuFocus.Web/KairuFocus.Web.csproj")
     .WithReference(api)
     .WaitFor(api);
 
