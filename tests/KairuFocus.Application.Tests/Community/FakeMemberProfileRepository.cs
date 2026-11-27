@@ -49,19 +49,27 @@ internal sealed class FakeMemberProfileRepository : IMemberProfileRepository
     public int TryUpdateCallCount { get; private set; }
     public int TryRemoveCallCount { get; private set; }
 
-    /// <summary>Stores a row directly (does not count as a call). Goes through the invariants of <see cref="MemberProfile.Join"/>.</summary>
+    /// <summary>
+    /// Stores a row directly (does not count as a call). Goes through the invariants of <see cref="MemberProfile.Join"/>,
+    /// then applies the consent (true: at the join instant, false: none) and the ambiance code.
+    /// </summary>
     public void Seed(
         UserId userId,
         string name,
         ProfileNameSource source = ProfileNameSource.Chosen,
         string? avatarUrl = null,
-        DateTime? joinedAtUtc = null) =>
-        _stored.Add(StoredProfile.From(MemberProfile.Join(
-            userId,
-            ProfileName.Create(name).Value,
-            source,
-            avatarUrl,
-            joinedAtUtc ?? new DateTime(2026, 10, 1, 9, 0, 0, DateTimeKind.Utc))));
+        DateTime? joinedAtUtc = null,
+        bool presenceConsented = true,
+        string? ambianceCode = null)
+    {
+        var joined = joinedAtUtc ?? new DateTime(2026, 10, 1, 9, 0, 0, DateTimeKind.Utc);
+        var profile = MemberProfile.Join(userId, ProfileName.Create(name).Value, source, avatarUrl, joined);
+        _stored.Add(StoredProfile.From(profile) with
+        {
+            PresenceConsentedAtUtc = presenceConsented ? joined : null,
+            AmbianceCode = ambianceCode,
+        });
+    }
 
     /// <summary>Deletes a stored row directly, as a concurrent request would (does not count as a call).</summary>
     public void Delete(UserId userId) => _stored.RemoveAll(p => p.UserId == userId);
@@ -74,7 +82,7 @@ internal sealed class FakeMemberProfileRepository : IMemberProfileRepository
 
         return Task.FromResult(stored is null
             ? null
-            : MemberProfile.Join(stored.UserId, stored.Name, stored.NameSource, stored.AvatarUrl, stored.JoinedAtUtc));
+            : stored.Rehydrate());
     }
 
     public Task<bool> IsNameTakenAsync(ProfileName name, CancellationToken ct = default)
@@ -136,9 +144,21 @@ internal sealed class FakeMemberProfileRepository : IMemberProfileRepository
         ProfileName Name,
         ProfileNameSource NameSource,
         string? AvatarUrl,
-        DateTime JoinedAtUtc)
+        DateTime JoinedAtUtc,
+        DateTime? PresenceConsentedAtUtc,
+        string? AmbianceCode)
     {
+        // The private constructor is the one EF Core materializes through: no public factory is added to the domain for tests.
+        private static readonly System.Reflection.ConstructorInfo Constructor = typeof(MemberProfile)
+            .GetConstructors(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            .Single();
+
         public static StoredProfile From(MemberProfile profile) =>
-            new(profile.Id, profile.Name, profile.NameSource, profile.AvatarUrl, profile.JoinedAtUtc);
+            new(profile.Id, profile.Name, profile.NameSource, profile.AvatarUrl, profile.JoinedAtUtc,
+                profile.PresenceConsentedAtUtc, profile.AmbianceCode);
+
+        public MemberProfile Rehydrate() =>
+            (MemberProfile)Constructor.Invoke(
+                [UserId, Name, Name.Key, NameSource, AvatarUrl, JoinedAtUtc, PresenceConsentedAtUtc, AmbianceCode]);
     }
 }

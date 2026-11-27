@@ -88,6 +88,28 @@ public sealed class EfCoreMemberProfileRepositoryTests
     }
 
     [Fact]
+    public async Task Should_PersistConsentAndAmbiance_When_ProfileUpdated()
+    {
+        var userId = UserId.New();
+        var catalogue = new AmbianceCatalogue([new Ambiance(
+            "lofi-1", "Lofi", AmbianceCategory.Lofi, AmbianceCatalogue.YouTubeVideoPrefix + "abc")]);
+        await _database.SeedAsync(Profile(userId, "LoutreTenace"));
+
+        await using (var context = _database.CreateContext())
+        {
+            var repository = new EfCoreMemberProfileRepository(context);
+            var profile = (await repository.GetByUserIdAsync(userId))!;
+            Assert.True(profile.ChooseAmbiance("lofi-1", catalogue).IsSuccess);
+
+            Assert.True(await repository.TryUpdateAsync(profile));
+        }
+
+        var stored = await GetAsync(userId);
+        Assert.Equal(JoinedAtUtc, stored!.PresenceConsentedAtUtc);
+        Assert.Equal("lofi-1", stored.AmbianceCode);
+    }
+
+    [Fact]
     public async Task Should_DeleteProfile_When_Removed()
     {
         var userId = UserId.New();

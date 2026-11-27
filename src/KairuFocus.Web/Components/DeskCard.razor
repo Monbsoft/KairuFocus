@@ -1,0 +1,157 @@
+@* One desk of the open space (#50, spec §5.3): an open sprint or a group session, as a card on the dark hero.
+   - Head: the host (Seated[0]) with the step badge. "Bureau de nora" links to the profile; "Ton bureau" when I am the host.
+   - Time: the countdown, big ("encore" for a sprint, "reprise dans" for a break); while the group waits for its host,
+     "nora choisit la suite" instead (its end time is already past: a countdown would elapse at once and loop the re-read).
+   - Seats: who sits there, the host first, as a named list (the avatars alone would only give initials); 5 at most, then
+     "+N" (read as "et N autres"). Then the free chair "S'asseoir" (JoinSprintButton AsSeat), only when I sit at no
+     chair of this desk, the desk is not closed to the others and the host is not choosing the next step; in that last
+     case the chair shows greyed, "Bientôt", aria-disabled, described by the sentence saying why.
+   - Me: "Ton bureau" (yellow border) or "Tu es assis ici", then "Aller à ma session"; no chair.
+     A desk closed to the others only reaches me when it is mine (or I sit there): "fermé aux autres".
+   - Ambiance: a link to the host's ambiance, when the host chose one.
+   The root is the list item: the open space owns the list. Nothing here is announced (the countdown has no live region). *@
+@inject CommunityFormatter F
+
+@if (Host is { } host)
+{
+    <li class="kf-desk @(IsMine ? "kf-desk--mine" : "")">
+        <div class="kf-desk__head">
+            <MemberAvatar Name="@host.Name" AvatarUrl="@host.AvatarUrl" Size="28" />
+            <h3 class="kf-desk__title" id="@TitleId">
+                @if (IsMine)
+                {
+                    @F["Desk.Mine"]
+                }
+                else
+                {
+                    <a href="@CommunityFormatter.ProfileHref(host.Name)">@F.Format("Desk.Of", host.Name)</a>
+                }
+            </h3>
+            <span class="kf-desk__state @StateClass"><span aria-hidden="true">@StateIcon</span> @StateText</span>
+        </div>
+
+        @if (Desk.IsClosedToJoin)
+        {
+            <p class="kf-desk__closed">@F["Desk.ClosedToOthers"]</p>
+        }
+
+        @if (IsWaiting)
+        {
+            @* On my own desk, the host is me: "À toi de lancer la suite" rather than my name in the third person. *@
+            <p class="kf-desk__wait" id="@WaitId">@(IsMine ? F["Group.YourTurn"] : F.Format("Desk.Waiting", host.Name))</p>
+        }
+        else
+        {
+            <p class="kf-desk__time">
+                <span class="kf-desk__label">@F[IsSprint ? "Desk.Left.Sprint" : "Desk.Left.Break"]</span>
+                <span class="kf-desk__clock"><SprintCountdown EndsAt="Desk.EndsAt" OnElapsed="OnElapsed" /></span>
+            </p>
+        }
+
+        <div class="kf-desk__seats">
+            <ul class="kf-desk__people" aria-labelledby="@TitleId">
+                @foreach (var member in Desk.Seated.Take(MaxSeatsShown))
+                {
+                    <li @key="member.Name" class="@(member.IsMe ? "kf-desk__person--me" : "")">
+                        <span class="kf-desk__avatar" title="@member.Name" aria-hidden="true">
+                            <MemberAvatar Name="@member.Name" AvatarUrl="@member.AvatarUrl" Size="34" />
+                        </span>
+                        <span class="visually-hidden">@PersonLabel(member)</span>
+                    </li>
+                }
+                @if (HiddenSeats > 0)
+                {
+                    <li class="kf-desk__more">
+                        <span aria-hidden="true">+@F.Number(HiddenSeats)</span>
+                        <span class="visually-hidden">@F.Plural("ActiveToday.More", HiddenSeats, F.Number(HiddenSeats))</span>
+                    </li>
+                }
+            </ul>
+
+            @if (ShowChair)
+            {
+                <div class="kf-desk__chair">
+                    @if (IsWaiting)
+                    {
+                        <button type="button" class="kf-desk__soon" aria-disabled="true" aria-describedby="@WaitId">
+                            <span class="kf-desk__seat" aria-hidden="true">+</span>
+                            @F["Seat.Soon"]
+                        </button>
+                    }
+                    else
+                    {
+                        <JoinSprintButton @key="Desk.EndsAt" TargetName="@host.Name" EndsAt="Desk.EndsAt" ViewerIsMember="true"
+                                          Compact="true" AsSeat="true" IsSprint="IsSprint" OnNoLongerOpen="OnNoLongerOpen"
+                                          OnWaiting="OnWaiting" />
+                    }
+                </div>
+            }
+        </div>
+
+        @if (IsMine || ISitHere)
+        {
+            <p class="kf-desk__me">
+                @if (!IsMine)
+                {
+                    <span>@F["Desk.Seated"]</span>
+                }
+                <a href="pomodoro">@F["Join.SprintActive.Link"]</a>
+            </p>
+        }
+
+        @if (Desk.Ambiance is { } ambiance)
+        {
+            <div class="kf-desk__ambiance">
+                <AmbianceLink Ambiance="ambiance" HostName="@host.Name" />
+            </div>
+        }
+    </li>
+}
+
+@code {
+    /// <summary>The desk; Seated[0] is its host.</summary>
+    [Parameter, EditorRequired] public DeskDto Desk { get; set; } = default!;
+
+    /// <summary>The sprint turned out to be no longer open (410): the open space says it and reads the desks again.</summary>
+    [Parameter] public EventCallback OnNoLongerOpen { get; set; }
+
+    /// <summary>The group turned out to be waiting for its host (409): the open space reads the desks again, silently.</summary>
+    [Parameter] public EventCallback OnWaiting { get; set; }
+
+    /// <summary>The countdown reached zero: the open space reads the desks again.</summary>
+    [Parameter] public EventCallback OnElapsed { get; set; }
+
+    /// <summary>Avatars shown before "+N".</summary>
+    private const int MaxSeatsShown = 5;
+
+    private readonly string _id = Guid.NewGuid().ToString("N")[..8];
+
+    private string TitleId => "desk-" + _id;
+
+    private string WaitId => "desk-wait-" + _id;
+
+    private ActiveMemberDto? Host => Desk.Seated.Count > 0 ? Desk.Seated[0] : null;
+
+    private bool IsMine => Host is { IsMe: true };
+
+    /// <summary>I sit at this desk, but not as its host.</summary>
+    private bool ISitHere => !IsMine && Desk.Seated.Any(member => member.IsMe);
+
+    private bool IsWaiting => Desk.Phase == "WaitingForHost";
+
+    private bool IsSprint => Desk.StepType == "Sprint";
+
+    /// <summary>The free chair: not for me when I already sit here, never on a desk closed to the others.</summary>
+    private bool ShowChair => !IsMine && !ISitHere && !Desk.IsClosedToJoin;
+
+    private int HiddenSeats => Math.Max(0, Desk.Seated.Count - MaxSeatsShown);
+
+    private string StateText => F[IsWaiting ? "Desk.Badge.Waiting" : IsSprint ? "Desk.Badge.Sprint" : "Desk.Badge.Break"];
+
+    private string StateIcon => IsWaiting ? "⏳" : IsSprint ? "🍅" : "☕";
+
+    private string StateClass => IsWaiting ? "kf-desk__state--waiting" : IsSprint ? "kf-desk__state--sprint" : "kf-desk__state--break";
+
+    private string PersonLabel(ActiveMemberDto member) =>
+        member.IsMe ? $"{member.Name} ({F["ActiveToday.You"]})" : member.Name;
+}

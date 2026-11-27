@@ -82,11 +82,33 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                     b.ToTable("GroupSessions", (string)null);
                 });
 
+            modelBuilder.Entity("KairuFocus.Domain.Community.MemberPresence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UserId");
+
+                    b.Property<DateTime>("LastSeenAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id")
+                        .HasName("PK_MemberPresences");
+
+                    b.HasIndex("LastSeenAtUtc")
+                        .HasDatabaseName("IX_MemberPresences_LastSeenAtUtc");
+
+                    b.ToTable("MemberPresences", (string)null);
+                });
+
             modelBuilder.Entity("KairuFocus.Domain.Community.MemberProfile", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("UserId");
+
+                    b.Property<string>("AmbianceCode")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(500)
@@ -110,6 +132,9 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("PresenceConsentedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id")
                         .HasName("PK_MemberProfiles");
@@ -481,6 +506,15 @@ namespace KairuFocus.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("CurrentStep")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KairuFocus.Domain.Community.MemberPresence", b =>
+                {
+                    b.HasOne("KairuFocus.Domain.Community.MemberProfile", null)
+                        .WithOne()
+                        .HasForeignKey("KairuFocus.Domain.Community.MemberPresence", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

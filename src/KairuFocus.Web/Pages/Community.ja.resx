@@ -226,7 +226,7 @@
 	<value>{0}時間</value>
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
-	<value>{0}時間{1}分</value>
+	<value>{0}時間{1:00}分</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>自己ベスト</value>
@@ -702,48 +702,6 @@
   <data name="Settings.Community.Left" xml:space="preserve">
 	<value>コミュニティを退会しました。</value>
   </data>
-  <data name="OpenSprints.Title" xml:space="preserve">
-	<value>今スプリント中</value>
-  </data>
-  <data name="OpenSprints.Sub" xml:space="preserve">
-	<value>すでに始まっているスプリントに参加しましょう。同じ時刻に一緒に終わります。</value>
-  </data>
-  <data name="OpenSprints.Loading" xml:space="preserve">
-	<value>開いているスプリントを読み込み中…</value>
-  </data>
-  <data name="OpenSprints.Error" xml:space="preserve">
-	<value>現在、開いているスプリントを読み込めません。</value>
-  </data>
-  <data name="OpenSprints.Remaining" xml:space="preserve">
-	<value>残り{0}</value>
-  </data>
-  <data name="OpenSprints.Participants.One" xml:space="preserve">
-	<value>{0}人が参加</value>
-  </data>
-  <data name="OpenSprints.Participants.Other" xml:space="preserve">
-	<value>{0}人が参加</value>
-  </data>
-  <data name="OpenSprints.Empty.Title" xml:space="preserve">
-	<value>現在スプリント中の人はいません</value>
-  </data>
-  <data name="OpenSprints.Empty.Body" xml:space="preserve">
-	<value>あなたのスプリントを始めましょう。ほかのメンバーにここで表示され、参加してもらえます。</value>
-  </data>
-  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
-	<value>スプリントを始める</value>
-  </data>
-  <data name="OpenSprints.Alone" xml:space="preserve">
-	<value>まだ誰も参加していません</value>
-  </data>
-  <data name="OpenSprints.More.One" xml:space="preserve">
-	<value>もう1件のスプリントを表示</value>
-  </data>
-  <data name="OpenSprints.More.Other" xml:space="preserve">
-	<value>ほかの{0}件のスプリントを表示</value>
-  </data>
-  <data name="OpenSprints.Less" xml:space="preserve">
-	<value>折りたたむ</value>
-  </data>
   <data name="ActiveToday.Title" xml:space="preserve">
 	<value>今日アクティブな人</value>
   </data>
@@ -761,12 +719,6 @@
   </data>
   <data name="ActiveToday.Error" xml:space="preserve">
 	<value>今日アクティブなメンバーを読み込めません。</value>
-  </data>
-  <data name="OpenSprints.Mine" xml:space="preserve">
-	<value>あなたのスプリント</value>
-  </data>
-  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
-	<value>{0}さんのプロフィール</value>
   </data>
   <data name="Participants.Aria" xml:space="preserve">
 	<value>一緒にスプリント中のメンバー</value>
@@ -804,9 +756,6 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>スプリントの受け付け状態を変更できません。</value>
   </data>
-  <data name="Participants.GroupBreak" xml:space="preserve">
-	<value>グループ休憩：全員同時に終了します。</value>
-  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>このスプリントに参加</value>
   </data>
@@ -817,7 +766,7 @@
 	<value>スプリントに接続中…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>スプリントに参加するには、先にコミュニティを有効にしてください。ほかのメンバーにあなたの名前とXPが表示されます。</value>
+	<value>デスクに座るには、先にコミュニティを有効にしてください。ほかのメンバーにあなたの名前、XP、オンライン中かどうかが表示されます。</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
 	<value>コミュニティを有効にする</value>
@@ -1059,5 +1008,243 @@
   </data>
   <data name="Journal.Entry.TaskCompleted" xml:space="preserve">
 	<value>タスク完了</value>
+  </data>
+  <data name="OpenSpace.Title" xml:space="preserve">
+	<value>オープンスペース</value>
+  </data>
+  <data name="OpenSpace.Desks.One" xml:space="preserve">
+	<value>使用中のデスク：{0}台</value>
+  </data>
+  <data name="OpenSpace.Desks.Other" xml:space="preserve">
+	<value>使用中のデスク：{0}台</value>
+  </data>
+  <data name="OpenSpace.Others.One" xml:space="preserve">
+	<value>ほか{0}人がオンライン</value>
+  </data>
+  <data name="OpenSpace.Others.Other" xml:space="preserve">
+	<value>ほか{0}人がオンライン</value>
+  </data>
+  <data name="OpenSpace.Empty.Title" xml:space="preserve">
+	<value>今スプリント中の人はいません。</value>
+  </data>
+  <data name="OpenSpace.Empty.Body" xml:space="preserve">
+	<value>デスクを開くと、ほかの人が隣に座れます。</value>
+  </data>
+  <data name="OpenSpace.Empty.Cta" xml:space="preserve">
+	<value>自分のデスクを開く</value>
+  </data>
+  <data name="OpenSpace.Gate.NotMember" xml:space="preserve">
+	<value>オープンスペースはコミュニティのメンバー専用です。コミュニティを有効にすると、誰が作業中か確認してデスクに座れます。ほかのメンバーにあなたの名前、XP、オンライン中かどうかが表示されます。</value>
+  </data>
+  <data name="OpenSpace.Gate.Consent" xml:space="preserve">
+	<value>新機能：オープンスペースではオンラインのメンバーが表示されます。入るには、オンライン中であることをほかのメンバーに表示することに同意してください。</value>
+  </data>
+  <data name="OpenSpace.Gate.ConsentCta" xml:space="preserve">
+	<value>オープンスペースに入る</value>
+  </data>
+  <data name="OpenSpace.Gate.ConsentError" xml:space="preserve">
+	<value>同意を保存できませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="Connected.Title" xml:space="preserve">
+	<value>オープンスペース</value>
+  </data>
+  <data name="Desk.Of" xml:space="preserve">
+	<value>{0}のデスク</value>
+  </data>
+  <data name="Desk.Mine" xml:space="preserve">
+	<value>あなたのデスク</value>
+  </data>
+  <data name="Desk.Seated" xml:space="preserve">
+	<value>ここに座っています</value>
+  </data>
+  <data name="Desk.ClosedToOthers" xml:space="preserve">
+	<value>ほかの人には非公開</value>
+  </data>
+  <data name="Desk.Left.Sprint" xml:space="preserve">
+	<value>残り</value>
+  </data>
+  <data name="Desk.Left.Break" xml:space="preserve">
+	<value>再開まで</value>
+  </data>
+  <data name="Desk.Waiting" xml:space="preserve">
+	<value>{0}さんが次を選んでいます</value>
+  </data>
+  <data name="Seat.Sit" xml:space="preserve">
+	<value>座る</value>
+  </data>
+  <data name="Seat.Soon" xml:space="preserve">
+	<value>まもなく</value>
+  </data>
+  <data name="Seat.Aria" xml:space="preserve">
+	<value>{0}さんのデスクに座る（スプリントに参加）</value>
+  </data>
+  <data name="Ambiance.Label" xml:space="preserve">
+	<value>アンビエンス：</value>
+  </data>
+  <data name="Ambiance.Aria" xml:space="preserve">
+	<value>{0}さんのデスクのアンビエンス：{1}（新しいタブ）</value>
+  </data>
+  <data name="Ambiance.None" xml:space="preserve">
+	<value>なし</value>
+  </data>
+  <data name="Ambiance.Category.Lofi" xml:space="preserve">
+	<value>ローファイ</value>
+  </data>
+  <data name="Ambiance.Category.JazzBlues" xml:space="preserve">
+	<value>ジャズ＆ブルース</value>
+  </data>
+  <data name="Ambiance.Category.Classical" xml:space="preserve">
+	<value>クラシック</value>
+  </data>
+  <data name="Ambiance.Category.RelaxFocus" xml:space="preserve">
+	<value>リラックス＆フォーカス</value>
+  </data>
+  <data name="Settings.MyDesk.Title" xml:space="preserve">
+	<value>マイデスク</value>
+  </data>
+  <data name="Settings.MyDesk.Ambiance" xml:space="preserve">
+	<value>デスクのアンビエンス</value>
+  </data>
+  <data name="Settings.MyDesk.Hint" xml:space="preserve">
+	<value>コミュニティページのあなたのデスクと、隣に座る人に表示されます。</value>
+  </data>
+  <data name="Settings.MyDesk.Saved" xml:space="preserve">
+	<value>アンビエンスを保存しました。</value>
+  </data>
+  <data name="Settings.MyDesk.Error" xml:space="preserve">
+	<value>アンビエンスを保存できませんでした。</value>
+  </data>
+  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
+	<value>デスクのアンビエンスを選ぶには、先にコミュニティを有効にしてください。</value>
+  </data>
+  <data name="Settings.Community.Visible.Presence" xml:space="preserve">
+	<value>KairuFocusにオンラインのとき</value>
+  </data>
+  <data name="OpenSpace.Error" xml:space="preserve">
+	<value>オープンスペースを読み込めません。</value>
+  </data>
+  <data name="OpenSpace.Loading" xml:space="preserve">
+	<value>オープンスペースを読み込み中…</value>
+  </data>
+  <data name="OpenSpace.More.One" xml:space="preserve">
+	<value>もう1台のデスクを表示</value>
+  </data>
+  <data name="OpenSpace.More.Other" xml:space="preserve">
+	<value>ほかの{0}台のデスクを表示</value>
+  </data>
+  <data name="OpenSpace.Less" xml:space="preserve">
+	<value>折りたたむ</value>
+  </data>
+  <data name="Desk.Badge.Sprint" xml:space="preserve">
+	<value>スプリント</value>
+  </data>
+  <data name="Desk.Badge.Break" xml:space="preserve">
+	<value>休憩</value>
+  </data>
+  <data name="Desk.Badge.Waiting" xml:space="preserve">
+	<value>待機中</value>
+  </data>
+  <data name="OpenSpace.DeskClosed" xml:space="preserve">
+	<value>このデスクはもう開いていません。</value>
+  </data>
+  <!-- #46 / #50 — session de groupe, attente et retour à la session -->
+  <data name="OpenSprints.BackToSession" xml:space="preserve">
+	<value>自分のセッションに戻る</value>
+  </data>
+  <data name="OpenSprints.Waiting.Hint" xml:space="preserve">
+	<value>次のステップが始まったら参加できます。</value>
+  </data>
+  <data name="Join.WaitingForHost" xml:space="preserve">
+	<value>ホストがまもなく次のステップを始めます。少し待ってからもう一度お試しください。</value>
+  </data>
+  <data name="Profile.Status.Break" xml:space="preserve">
+	<value>休憩中・あと{0}</value>
+  </data>
+  <data name="Profile.Status.Waiting" xml:space="preserve">
+	<value>ホストを待っています</value>
+  </data>
+  <data name="Group.Line" xml:space="preserve">
+	<value>グループセッション・{0}</value>
+  </data>
+  <data name="Group.Step.Sprint" xml:space="preserve">
+	<value>スプリント{0}</value>
+  </data>
+  <data name="Group.Step.ShortBreak" xml:space="preserve">
+	<value>短い休憩</value>
+  </data>
+  <data name="Group.Step.LongBreak" xml:space="preserve">
+	<value>長い休憩</value>
+  </data>
+  <data name="Group.Waiting" xml:space="preserve">
+	<value>ホストを待っています…</value>
+  </data>
+  <data name="Group.YourTurn" xml:space="preserve">
+	<value>次のステップを始めましょう</value>
+  </data>
+  <data name="Group.WaitLimit" xml:space="preserve">
+	<value>選択しない場合、セッションは{0}後に終了します</value>
+  </data>
+  <data name="Group.Stop" xml:space="preserve">
+	<value>セッションを停止</value>
+  </data>
+  <data name="Group.Stop.Title" xml:space="preserve">
+	<value>セッションを停止しますか？</value>
+  </data>
+  <data name="Group.Stop.Body" xml:space="preserve">
+	<value>セッションはグループ全員に対して停止します。</value>
+  </data>
+  <data name="Group.Stop.Body.Sprint" xml:space="preserve">
+	<value>セッションはグループ全員に対して停止します。進行中のスプリントではXPを獲得できません。</value>
+  </data>
+  <data name="Group.Stop.Cancel" xml:space="preserve">
+	<value>続ける</value>
+  </data>
+  <data name="Group.Leave" xml:space="preserve">
+	<value>セッションを退出</value>
+  </data>
+  <data name="Group.Close" xml:space="preserve">
+	<value>セッションを閉じる</value>
+  </data>
+  <data name="Group.Reopen" xml:space="preserve">
+	<value>セッションを再開放</value>
+  </data>
+  <data name="Group.Close.Hint" xml:space="preserve">
+	<value>これ以上は誰も参加できません。すでに参加している人はそのままです。</value>
+  </data>
+  <data name="Group.Reopen.Hint" xml:space="preserve">
+	<value>このセッションは閉じられています。これ以上は誰も参加できません。</value>
+  </data>
+  <data name="Group.Ended.Stopped" xml:space="preserve">
+	<value>ホストがセッションを停止しました。</value>
+  </data>
+  <data name="Group.Ended.HostAbsent" xml:space="preserve">
+	<value>ホストがいなくなったため、セッションは終了しました。</value>
+  </data>
+  <data name="Group.Ended.HostAlone" xml:space="preserve">
+	<value>グループに誰もいなくなったため、セッションは一人で続行します。</value>
+  </data>
+  <data name="Group.Ended.HostLeftCommunity" xml:space="preserve">
+	<value>ホストがコミュニティを退出したため、セッションは終了しました。</value>
+  </data>
+  <data name="Group.Announce.Step" xml:space="preserve">
+	<value>新しいステップ：{0}</value>
+  </data>
+  <data name="Group.Error" xml:space="preserve">
+	<value>現在、グループセッションに接続できません。</value>
+  </data>
+  <data name="Group.Start" xml:space="preserve">
+	<value>グループ向けに開始</value>
+  </data>
+  <data name="Group.YourTurn.Title" xml:space="preserve">
+	<value>グループが次のステップを待っています</value>
+  </data>
+  <data name="Group.Waiting.Body" xml:space="preserve">
+	<value>{0}が開始すると、ここで次のステップが始まります。操作は必要ありません。</value>
+  </data>
+  <data name="Group.Follow.Hint" xml:space="preserve">
+	<value>{0}のペースに合わせています。次のステップは自動で始まります。</value>
+  </data>
+  <data name="Group.Ended.Community" xml:space="preserve">
+	<value>セッション中の人を見る</value>
   </data>
 </root>

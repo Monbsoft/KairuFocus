@@ -25,6 +25,7 @@ public static class DomainErrors
         public const string AlreadyInGroup = "The user is already in this group.";
         public const string NotInGroup = "The user is not in this group.";
         public const string GroupNotAlone = "The group still has members.";
+        public const string UnknownAmbiance = "This ambiance is not in the catalogue.";
         public const string InvalidGroupStep = "A group step must be numbered from 1 and end after it starts.";
     }
 }

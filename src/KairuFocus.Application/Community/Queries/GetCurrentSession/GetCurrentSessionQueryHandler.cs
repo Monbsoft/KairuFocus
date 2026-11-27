@@ -12,6 +12,7 @@ public sealed class GetCurrentSessionQueryHandler : IQueryHandler<GetCurrentSess
     private readonly IGroupSessionRepository _groupRepository;
     private readonly IOpenSprintReadRepository _openSprintRepository;
     private readonly IPomodoroSessionRepository _sessionRepository;
+    private readonly AmbianceCatalogue _catalogue;
     private readonly ICurrentUserService _currentUserService;
     private readonly TimeProvider _timeProvider;
 
@@ -20,6 +21,7 @@ public sealed class GetCurrentSessionQueryHandler : IQueryHandler<GetCurrentSess
         IGroupSessionRepository groupRepository,
         IOpenSprintReadRepository openSprintRepository,
         IPomodoroSessionRepository sessionRepository,
+        AmbianceCatalogue catalogue,
         ICurrentUserService currentUserService,
         TimeProvider timeProvider)
     {
@@ -27,6 +29,7 @@ public sealed class GetCurrentSessionQueryHandler : IQueryHandler<GetCurrentSess
         _groupRepository = groupRepository;
         _openSprintRepository = openSprintRepository;
         _sessionRepository = sessionRepository;
+        _catalogue = catalogue;
         _currentUserService = currentUserService;
         _timeProvider = timeProvider;
     }
@@ -73,7 +76,7 @@ public sealed class GetCurrentSessionQueryHandler : IQueryHandler<GetCurrentSess
             }
         }
 
-        return DescribeSoloOpenSprint(active);
+        return DescribeSoloOpenSprint(active, profile.AmbianceCode);
     }
 
     private async Task<GetCurrentSessionResult> DescribeGroupAsync(
@@ -90,6 +93,9 @@ public sealed class GetCurrentSessionQueryHandler : IQueryHandler<GetCurrentSess
             .Select(m => new SprintMemberViewModel(m.Name.Value, m.AvatarUrl))
             .ToList();
 
+        // The ambiance of the group is its host's, whoever reads it.
+        var hostAmbianceCode = await _openSprintRepository.GetHostAmbianceCodeAsync(group.Id, cancellationToken);
+
         return new GetCurrentSessionResult(
             IsGroup: true,
             Role: group.IsHostedBy(userId) ? "Host" : "Participant",
@@ -103,10 +109,12 @@ public sealed class GetCurrentSessionQueryHandler : IQueryHandler<GetCurrentSess
                 : null,
             EndReason: state.EndReason?.ToString(),
             Others: others,
-            IsClosedToJoin: group.IsClosedToJoin);
+            IsClosedToJoin: group.IsClosedToJoin,
+            Ambiance: AmbianceViewModel.Resolve(hostAmbianceCode, _catalogue));
     }
 
-    private static GetCurrentSessionResult? DescribeSoloOpenSprint(PomodoroSession? active)
+    /// <param name="ownAmbianceCode">The viewer hosts their solo open sprint: the ambiance is their own.</param>
+    private GetCurrentSessionResult? DescribeSoloOpenSprint(PomodoroSession? active, string? ownAmbianceCode)
     {
         if (active is not { SessionType: PomodoroSessionType.Sprint, PlannedDurationMinutes: > 0, SharedSprintId: null }
             || active.ScheduledEndAt is not { } endsAt)
@@ -123,7 +131,8 @@ public sealed class GetCurrentSessionQueryHandler : IQueryHandler<GetCurrentSess
             WaitLimitAt: null,
             EndReason: null,
             Others: [],
-            IsClosedToJoin: active.IsClosedToJoin);
+            IsClosedToJoin: active.IsClosedToJoin,
+            Ambiance: AmbianceViewModel.Resolve(ownAmbianceCode, _catalogue));
     }
 
     private static DateTimeOffset AsUtc(DateTime utc) =>

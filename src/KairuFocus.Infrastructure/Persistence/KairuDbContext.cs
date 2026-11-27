@@ -25,6 +25,7 @@ public sealed class KairuFocusDbContext : DbContext
     public DbSet<McpToken> McpTokens => Set<McpToken>();
     public DbSet<XpGain> XpGains => Set<XpGain>();
     public DbSet<MemberProfile> MemberProfiles => Set<MemberProfile>();
+    public DbSet<MemberPresence> MemberPresences => Set<MemberPresence>();
     public DbSet<GroupSession> GroupSessions => Set<GroupSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,6 +51,7 @@ public sealed class KairuFocusDbContext : DbContext
         modelBuilder.ApplyConfiguration(new McpTokenConfiguration());
         modelBuilder.ApplyConfiguration(new XpGainConfiguration());
         modelBuilder.ApplyConfiguration(new MemberProfileConfiguration());
+        modelBuilder.ApplyConfiguration(new MemberPresenceConfiguration());
         modelBuilder.ApplyConfiguration(new GroupSessionConfiguration());
         modelBuilder.ApplyConfiguration(new GroupMemberConfiguration());
     }

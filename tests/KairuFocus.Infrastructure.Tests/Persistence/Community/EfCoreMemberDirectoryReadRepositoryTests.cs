@@ -13,6 +13,7 @@ public sealed class EfCoreMemberDirectoryReadRepositoryTests
     private static readonly DateTime From = new(2026, 11, 5, 0, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime To = From.AddDays(1);
     private static readonly DateTime JoinedAtUtc = new(2026, 3, 17, 8, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime SeenSince = new(2026, 11, 26, 13, 57, 0, DateTimeKind.Utc);
 
     private static readonly ProfileName LeaName = ProfileName.Create("Lea_Dev").Value;
     private static readonly ProfileName TomName = ProfileName.Create("tomtom").Value;
@@ -373,6 +374,99 @@ public sealed class EfCoreMemberDirectoryReadRepositoryTests
 
         Assert.Equal("https://avatars.githubusercontent.com/u/1", active.Members.Single(m => m.Name.Value == "Lea_Dev").AvatarUrl);
         Assert.Null(active.Members.Single(m => m.Name.Value == "tomtom").AvatarUrl);
+    }
+
+    // --- Connected members ----------------------------------------------------------------------
+
+    [Fact]
+    public async Task Should_ListConsentedMembersSeenSince_When_Queried()
+    {
+        var (noa, zed) = (UserId.New(), UserId.New());
+        await _database.SeedAsync(
+            MemberProfile.Join(_lea, LeaName, ProfileNameSource.GitHub, "https://avatars.githubusercontent.com/u/1", JoinedAtUtc),
+            Member(_tom, TomName),
+            Member(noa, ProfileName.Create("noa_42").Value),
+            Member(zed, ProfileName.Create("Zed_dev").Value),
+            MemberPresence.Record(_lea, SeenSince.AddMinutes(1)),
+            // Seen exactly at the bound: still connected.
+            MemberPresence.Record(_tom, SeenSince),
+            MemberPresence.Record(noa, SeenSince.AddMinutes(2)),
+            MemberPresence.Record(zed, SeenSince.AddSeconds(30)));
+
+        var connected = await QueryAsync(r => r.GetConnectedMembersAsync(SeenSince, 10));
+        var limited = await QueryAsync(r => r.GetConnectedMembersAsync(SeenSince, 2));
+
+        // By name, ordinal: uppercase first, whatever the last sighting.
+        Assert.Equal(
+            [
+                new SprintMember(LeaName, "https://avatars.githubusercontent.com/u/1"),
+                new SprintMember(ProfileName.Create("Zed_dev").Value, null),
+                new SprintMember(ProfileName.Create("noa_42").Value, null),
+                new SprintMember(TomName, null),
+            ],
+            connected);
+        Assert.Equal(["Lea_Dev", "Zed_dev"], limited.Select(m => m.Name.Value));
+    }
+
+    // A member activated before presence existed has not consented (D10): never listed, even if seen.
+    [Fact]
+    public async Task Should_IgnoreMembers_When_NotConsented()
+    {
+        await using (var context = _database.CreateContext())
+        {
+            var withoutConsent = Member(_tom, TomName);
+            context.Add(withoutConsent);
+            context.Entry(withoutConsent).Property(p => p.PresenceConsentedAtUtc).CurrentValue = null;
+            context.AddRange(Member(_lea, LeaName), MemberPresence.Record(_lea, SeenSince), MemberPresence.Record(_tom, SeenSince));
+            await context.SaveChangesAsync();
+        }
+
+        var connected = await QueryAsync(r => r.GetConnectedMembersAsync(SeenSince, 10));
+
+        Assert.Equal(["Lea_Dev"], connected.Select(m => m.Name.Value));
+    }
+
+    [Fact]
+    public async Task Should_IgnoreMembers_When_SeenBeforeWindow()
+    {
+        await _database.SeedAsync(
+            Member(_lea, LeaName),
+            Member(_tom, TomName),
+            MemberPresence.Record(_lea, SeenSince),
+            MemberPresence.Record(_tom, SeenSince.AddTicks(-1)));
+
+        var connected = await QueryAsync(r => r.GetConnectedMembersAsync(SeenSince, 10));
+
+        Assert.Equal(["Lea_Dev"], connected.Select(m => m.Name.Value));
+    }
+
+    // SQL Server cascades the deletion of the profile to the presence; InMemory does not, and the join must
+    // still keep a former member out.
+    [Fact]
+    public async Task Should_NotListMember_When_ProfileRemoved()
+    {
+        await _database.SeedAsync(
+            Member(_lea, LeaName),
+            Member(_tom, TomName),
+            MemberPresence.Record(_lea, SeenSince),
+            MemberPresence.Record(_tom, SeenSince));
+        await using (var context = _database.CreateContext())
+        {
+            context.MemberProfiles.Remove((await context.MemberProfiles.FindAsync(_tom))!);
+            await context.SaveChangesAsync();
+        }
+
+        var connected = await QueryAsync(r => r.GetConnectedMembersAsync(SeenSince, 10));
+
+        Assert.Equal(["Lea_Dev"], connected.Select(m => m.Name.Value));
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmpty_When_NobodyIsSeen()
+    {
+        await _database.SeedAsync(Member(_lea, LeaName), Member(_tom, TomName));
+
+        Assert.Empty(await QueryAsync(r => r.GetConnectedMembersAsync(SeenSince, 10)));
     }
 
     private Task<ActiveMembers> ActiveAsync() =>

@@ -181,13 +181,13 @@
 	<value>{0} sprints · {1} de foco</value>
   </data>
   <data name="Community.Xp.Compare.Week" xml:space="preserve">
-	<value>em comparação com o mesmo momento da semana passada ({1} XP)</value>
+	<value>em comparação com {0} da semana passada no mesmo horário ({1} XP)</value>
   </data>
   <data name="Community.Xp.Compare.Month" xml:space="preserve">
 	<value>em comparação com {0} no mesmo horário ({1} XP)</value>
   </data>
   <data name="Community.Xp.Equal.Week" xml:space="preserve">
-	<value>Igual ao mesmo momento da semana passada ({1} XP)</value>
+	<value>Igual a {0} da semana passada no mesmo horário ({1} XP)</value>
   </data>
   <data name="Community.Xp.Equal.Month" xml:space="preserve">
 	<value>Igual a {0} no mesmo horário ({1} XP)</value>
@@ -226,7 +226,7 @@
 	<value>{0} h</value>
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
-	<value>{0} h {1} min</value>
+	<value>{0} h {1:00} min</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>Recorde pessoal</value>
@@ -702,48 +702,6 @@
   <data name="Settings.Community.Left" xml:space="preserve">
 	<value>Você saiu da comunidade.</value>
   </data>
-  <data name="OpenSprints.Title" xml:space="preserve">
-	<value>Em sprint agora</value>
-  </data>
-  <data name="OpenSprints.Sub" xml:space="preserve">
-	<value>Entre em um sprint já iniciado: vocês terminam juntos, no mesmo horário.</value>
-  </data>
-  <data name="OpenSprints.Loading" xml:space="preserve">
-	<value>Carregando os sprints abertos…</value>
-  </data>
-  <data name="OpenSprints.Error" xml:space="preserve">
-	<value>Não foi possível ler os sprints abertos no momento.</value>
-  </data>
-  <data name="OpenSprints.Remaining" xml:space="preserve">
-	<value>faltam {0}</value>
-  </data>
-  <data name="OpenSprints.Participants.One" xml:space="preserve">
-	<value>{0} participante</value>
-  </data>
-  <data name="OpenSprints.Participants.Other" xml:space="preserve">
-	<value>{0} participantes</value>
-  </data>
-  <data name="OpenSprints.Empty.Title" xml:space="preserve">
-	<value>Ninguém está em sprint agora</value>
-  </data>
-  <data name="OpenSprints.Empty.Body" xml:space="preserve">
-	<value>Inicie o seu: os outros membros vão vê-lo aqui e poderão entrar.</value>
-  </data>
-  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
-	<value>Iniciar um sprint</value>
-  </data>
-  <data name="OpenSprints.Alone" xml:space="preserve">
-	<value>Ninguém entrou ainda</value>
-  </data>
-  <data name="OpenSprints.More.One" xml:space="preserve">
-	<value>Ver o outro sprint</value>
-  </data>
-  <data name="OpenSprints.More.Other" xml:space="preserve">
-	<value>Ver os outros {0} sprints</value>
-  </data>
-  <data name="OpenSprints.Less" xml:space="preserve">
-	<value>Mostrar menos</value>
-  </data>
   <data name="ActiveToday.Title" xml:space="preserve">
 	<value>Ativos hoje</value>
   </data>
@@ -761,12 +719,6 @@
   </data>
   <data name="ActiveToday.Error" xml:space="preserve">
 	<value>Não foi possível carregar os membros ativos hoje.</value>
-  </data>
-  <data name="OpenSprints.Mine" xml:space="preserve">
-	<value>Seu sprint</value>
-  </data>
-  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
-	<value>Perfil de {0}</value>
   </data>
   <data name="Participants.Aria" xml:space="preserve">
 	<value>Com quem você está em sprint</value>
@@ -804,9 +756,6 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>Não foi possível alterar a abertura do sprint no momento.</value>
   </data>
-  <data name="Participants.GroupBreak" xml:space="preserve">
-	<value>Pausa em grupo: termina ao mesmo tempo para todo o grupo.</value>
-  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>Entrar neste sprint</value>
   </data>
@@ -817,7 +766,7 @@
 	<value>Conectando ao sprint…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>Ative a comunidade para entrar em um sprint: os outros membros verão seu nome e seu XP.</value>
+	<value>Ative a comunidade para se sentar a uma mesa: os outros membros verão seu nome, seu XP e quando você está online.</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
 	<value>Ativar a comunidade</value>
@@ -1059,5 +1008,243 @@
   </data>
   <data name="Journal.Entry.TaskCompleted" xml:space="preserve">
 	<value>Tarefa concluída</value>
+  </data>
+  <data name="OpenSpace.Title" xml:space="preserve">
+	<value>Open space</value>
+  </data>
+  <data name="OpenSpace.Desks.One" xml:space="preserve">
+	<value>{0} mesa ocupada</value>
+  </data>
+  <data name="OpenSpace.Desks.Other" xml:space="preserve">
+	<value>{0} mesas ocupadas</value>
+  </data>
+  <data name="OpenSpace.Others.One" xml:space="preserve">
+	<value>{0} outra pessoa online</value>
+  </data>
+  <data name="OpenSpace.Others.Other" xml:space="preserve">
+	<value>{0} outras pessoas online</value>
+  </data>
+  <data name="OpenSpace.Empty.Title" xml:space="preserve">
+	<value>Ninguém está em sprint no momento.</value>
+  </data>
+  <data name="OpenSpace.Empty.Body" xml:space="preserve">
+	<value>Abra sua mesa: os outros poderão se sentar nela.</value>
+  </data>
+  <data name="OpenSpace.Empty.Cta" xml:space="preserve">
+	<value>Abrir minha mesa</value>
+  </data>
+  <data name="OpenSpace.Gate.NotMember" xml:space="preserve">
+	<value>O open space é reservado aos membros da comunidade. Ative-a para ver quem está trabalhando e se sentar a uma mesa: os outros verão seu nome, seu XP e quando você está online.</value>
+  </data>
+  <data name="OpenSpace.Gate.Consent" xml:space="preserve">
+	<value>Novidade: o open space mostra os membros online. Para entrar, aceite que os outros membros vejam quando você está online.</value>
+  </data>
+  <data name="OpenSpace.Gate.ConsentCta" xml:space="preserve">
+	<value>Entrar no open space</value>
+  </data>
+  <data name="OpenSpace.Gate.ConsentError" xml:space="preserve">
+	<value>Não foi possível salvar seu consentimento. Tente novamente.</value>
+  </data>
+  <data name="Connected.Title" xml:space="preserve">
+	<value>No open space</value>
+  </data>
+  <data name="Desk.Of" xml:space="preserve">
+	<value>Mesa de {0}</value>
+  </data>
+  <data name="Desk.Mine" xml:space="preserve">
+	<value>Sua mesa</value>
+  </data>
+  <data name="Desk.Seated" xml:space="preserve">
+	<value>Seu lugar é aqui</value>
+  </data>
+  <data name="Desk.ClosedToOthers" xml:space="preserve">
+	<value>fechada para os outros</value>
+  </data>
+  <data name="Desk.Left.Sprint" xml:space="preserve">
+	<value>faltam</value>
+  </data>
+  <data name="Desk.Left.Break" xml:space="preserve">
+	<value>retoma em</value>
+  </data>
+  <data name="Desk.Waiting" xml:space="preserve">
+	<value>{0} está escolhendo o próximo passo</value>
+  </data>
+  <data name="Seat.Sit" xml:space="preserve">
+	<value>Sentar-se</value>
+  </data>
+  <data name="Seat.Soon" xml:space="preserve">
+	<value>Em breve</value>
+  </data>
+  <data name="Seat.Aria" xml:space="preserve">
+	<value>Sentar à mesa de {0} (entrar no sprint)</value>
+  </data>
+  <data name="Ambiance.Label" xml:space="preserve">
+	<value>Ambiente:</value>
+  </data>
+  <data name="Ambiance.Aria" xml:space="preserve">
+	<value>Ambiente da mesa de {0}: {1} (nova aba)</value>
+  </data>
+  <data name="Ambiance.None" xml:space="preserve">
+	<value>Nenhum</value>
+  </data>
+  <data name="Ambiance.Category.Lofi" xml:space="preserve">
+	<value>Lofi</value>
+  </data>
+  <data name="Ambiance.Category.JazzBlues" xml:space="preserve">
+	<value>Jazz e blues</value>
+  </data>
+  <data name="Ambiance.Category.Classical" xml:space="preserve">
+	<value>Clássica</value>
+  </data>
+  <data name="Ambiance.Category.RelaxFocus" xml:space="preserve">
+	<value>Relaxamento e foco</value>
+  </data>
+  <data name="Settings.MyDesk.Title" xml:space="preserve">
+	<value>Minha mesa</value>
+  </data>
+  <data name="Settings.MyDesk.Ambiance" xml:space="preserve">
+	<value>Ambiente da minha mesa</value>
+  </data>
+  <data name="Settings.MyDesk.Hint" xml:space="preserve">
+	<value>Visível na sua mesa na página Comunidade e para quem se sentar nela.</value>
+  </data>
+  <data name="Settings.MyDesk.Saved" xml:space="preserve">
+	<value>Ambiente salvo.</value>
+  </data>
+  <data name="Settings.MyDesk.Error" xml:space="preserve">
+	<value>Não foi possível salvar o ambiente.</value>
+  </data>
+  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
+	<value>Ative a comunidade para escolher o ambiente da sua mesa.</value>
+  </data>
+  <data name="Settings.Community.Visible.Presence" xml:space="preserve">
+	<value>quando você está online no KairuFocus;</value>
+  </data>
+  <data name="OpenSpace.Error" xml:space="preserve">
+	<value>Não foi possível carregar o open space.</value>
+  </data>
+  <data name="OpenSpace.Loading" xml:space="preserve">
+	<value>Carregando o open space…</value>
+  </data>
+  <data name="OpenSpace.More.One" xml:space="preserve">
+	<value>Ver a outra mesa</value>
+  </data>
+  <data name="OpenSpace.More.Other" xml:space="preserve">
+	<value>Ver as outras {0} mesas</value>
+  </data>
+  <data name="OpenSpace.Less" xml:space="preserve">
+	<value>Mostrar menos</value>
+  </data>
+  <data name="Desk.Badge.Sprint" xml:space="preserve">
+	<value>Sprint</value>
+  </data>
+  <data name="Desk.Badge.Break" xml:space="preserve">
+	<value>Pausa</value>
+  </data>
+  <data name="Desk.Badge.Waiting" xml:space="preserve">
+	<value>Em espera</value>
+  </data>
+  <data name="OpenSpace.DeskClosed" xml:space="preserve">
+	<value>Esta mesa não está mais aberta.</value>
+  </data>
+  <!-- #46 / #50 — session de groupe, attente et retour à la session -->
+  <data name="OpenSprints.BackToSession" xml:space="preserve">
+	<value>Voltar à sua sessão</value>
+  </data>
+  <data name="OpenSprints.Waiting.Hint" xml:space="preserve">
+	<value>Você poderá entrar assim que a próxima etapa começar.</value>
+  </data>
+  <data name="Join.WaitingForHost" xml:space="preserve">
+	<value>O anfitrião vai iniciar a próxima etapa: tente de novo daqui a pouco.</value>
+  </data>
+  <data name="Profile.Status.Break" xml:space="preserve">
+	<value>Em pausa · faltam {0}</value>
+  </data>
+  <data name="Profile.Status.Waiting" xml:space="preserve">
+	<value>Aguardando o anfitrião</value>
+  </data>
+  <data name="Group.Line" xml:space="preserve">
+	<value>Sessão em grupo · {0}</value>
+  </data>
+  <data name="Group.Step.Sprint" xml:space="preserve">
+	<value>Sprint {0}</value>
+  </data>
+  <data name="Group.Step.ShortBreak" xml:space="preserve">
+	<value>Pausa curta</value>
+  </data>
+  <data name="Group.Step.LongBreak" xml:space="preserve">
+	<value>Pausa longa</value>
+  </data>
+  <data name="Group.Waiting" xml:space="preserve">
+	<value>Aguardando o anfitrião…</value>
+  </data>
+  <data name="Group.YourTurn" xml:space="preserve">
+	<value>É a sua vez de iniciar a próxima etapa</value>
+  </data>
+  <data name="Group.WaitLimit" xml:space="preserve">
+	<value>Sem escolha, a sessão termina em {0}</value>
+  </data>
+  <data name="Group.Stop" xml:space="preserve">
+	<value>Encerrar a sessão</value>
+  </data>
+  <data name="Group.Stop.Title" xml:space="preserve">
+	<value>Encerrar a sessão?</value>
+  </data>
+  <data name="Group.Stop.Body" xml:space="preserve">
+	<value>A sessão é encerrada para todo o grupo.</value>
+  </data>
+  <data name="Group.Stop.Body.Sprint" xml:space="preserve">
+	<value>A sessão é encerrada para todo o grupo. Seu sprint em andamento não renderá XP.</value>
+  </data>
+  <data name="Group.Stop.Cancel" xml:space="preserve">
+	<value>Continuar</value>
+  </data>
+  <data name="Group.Leave" xml:space="preserve">
+	<value>Sair da sessão</value>
+  </data>
+  <data name="Group.Close" xml:space="preserve">
+	<value>Fechar a sessão</value>
+  </data>
+  <data name="Group.Reopen" xml:space="preserve">
+	<value>Reabrir a sessão</value>
+  </data>
+  <data name="Group.Close.Hint" xml:space="preserve">
+	<value>Ninguém mais poderá entrar; quem já está nela continua.</value>
+  </data>
+  <data name="Group.Reopen.Hint" xml:space="preserve">
+	<value>Esta sessão está fechada: ninguém mais pode entrar.</value>
+  </data>
+  <data name="Group.Ended.Stopped" xml:space="preserve">
+	<value>O anfitrião encerrou a sessão.</value>
+  </data>
+  <data name="Group.Ended.HostAbsent" xml:space="preserve">
+	<value>O anfitrião não está mais aqui: a sessão terminou.</value>
+  </data>
+  <data name="Group.Ended.HostAlone" xml:space="preserve">
+	<value>Ninguém mais no grupo: a sessão continua em modo individual.</value>
+  </data>
+  <data name="Group.Ended.HostLeftCommunity" xml:space="preserve">
+	<value>O anfitrião saiu da comunidade: a sessão terminou.</value>
+  </data>
+  <data name="Group.Announce.Step" xml:space="preserve">
+	<value>Nova etapa: {0}</value>
+  </data>
+  <data name="Group.Error" xml:space="preserve">
+	<value>Não foi possível acessar a sessão em grupo no momento.</value>
+  </data>
+  <data name="Group.Start" xml:space="preserve">
+	<value>Iniciar para o grupo</value>
+  </data>
+  <data name="Group.YourTurn.Title" xml:space="preserve">
+	<value>Seu grupo está aguardando a próxima etapa</value>
+  </data>
+  <data name="Group.Waiting.Body" xml:space="preserve">
+	<value>A próxima etapa começa aqui assim que {0} a iniciar. Você não precisa fazer nada.</value>
+  </data>
+  <data name="Group.Follow.Hint" xml:space="preserve">
+	<value>Você acompanha o ritmo de {0}: a próxima etapa começa sozinha.</value>
+  </data>
+  <data name="Group.Ended.Community" xml:space="preserve">
+	<value>Ver quem está em sessão</value>
   </data>
 </root>

@@ -13,6 +13,7 @@ internal sealed class FakeMemberDirectoryReadRepository : IMemberDirectoryReadRe
     private readonly Dictionary<string, PublicMemberProfile> _profiles = [];
     private readonly Dictionary<string, MemberActivity> _activities = [];
     private ActiveMembers _active = new(0, []);
+    private List<SprintMember> _connected = [];
 
     /// <summary>Thrown by every read when set.</summary>
     public Exception? ThrowOnRead { get; set; }
@@ -22,6 +23,18 @@ internal sealed class FakeMemberDirectoryReadRepository : IMemberDirectoryReadRe
 
     /// <summary>The window and cap received by the last <see cref="GetActiveMembersAsync"/> call.</summary>
     public (DateTime From, DateTime To, int Max)? LastActiveWindow { get; private set; }
+
+    /// <summary>The bound received by the last <see cref="GetConnectedMembersAsync"/> call; null when never called.</summary>
+    public DateTime? LastConnectedSince { get; private set; }
+
+    /// <summary>The cap received by the last <see cref="GetConnectedMembersAsync"/> call; null when never called.</summary>
+    public int? LastMaxConnected { get; private set; }
+
+    /// <summary>
+    /// Sets the members <see cref="GetConnectedMembersAsync"/> returns, in this order (the bound is not applied:
+    /// who counts as connected is decided by the seed).
+    /// </summary>
+    public void SeedConnected(params SprintMember[] members) => _connected = [.. members];
 
     /// <summary>Sets what <see cref="GetActiveMembersAsync"/> returns.</summary>
     public void SeedActive(ActiveMembers result) => _active = result;
@@ -57,6 +70,17 @@ internal sealed class FakeMemberDirectoryReadRepository : IMemberDirectoryReadRe
         LastActiveWindow = (fromUtc, toUtc, maxMembers);
 
         return Task.FromResult(_active);
+    }
+
+    public Task<IReadOnlyList<SprintMember>> GetConnectedMembersAsync(DateTime seenSinceUtc, int maxMembers, CancellationToken ct = default)
+    {
+        ThrowIfReadFails();
+
+        LastConnectedSince = seenSinceUtc;
+        LastMaxConnected = maxMembers;
+
+        IReadOnlyList<SprintMember> connected = _connected.Take(maxMembers).ToList();
+        return Task.FromResult(connected);
     }
 
     private void ThrowIfReadFails()

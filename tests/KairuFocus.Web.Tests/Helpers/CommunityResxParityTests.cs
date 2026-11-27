@@ -5,12 +5,11 @@ namespace KairuFocus.Web.Tests.Helpers;
 
 /// <summary>
 /// Checks that the translated <c>Community.{lang}.resx</c> files carry the same keys and placeholders
-/// as the French default <c>Community.resx</c>, for the menu, account, dashboard and journal entry strings.
+/// as the French default <c>Community.resx</c>, for every key.
 /// </summary>
 public sealed class CommunityResxParityTests
 {
-    private static readonly string[] Prefixes = ["Nav.", "Account.", "Dashboard.", "Journal.Entry."];
-    private static readonly Regex Placeholder = new(@"\{\d+\}", RegexOptions.CultureInvariant);
+    private static readonly Regex Placeholder = new(@"\{(\d+)(?::[^}]*)?\}", RegexOptions.CultureInvariant);
     private static readonly Lazy<string> PagesDirectory = new(FindPagesDirectory);
 
     // Same lookup as StaticSiteFiles: walk up from the test binaries until KairuFocus.slnx is found.
@@ -37,8 +36,8 @@ public sealed class CommunityResxParityTests
     [InlineData("zh")]
     public void Should_HaveSameKeys_When_ComparingToFrench(string lang)
     {
-        var french = LoadScopedValues("Community.resx");
-        var translated = LoadScopedValues($"Community.{lang}.resx");
+        var french = LoadValues("Community.resx");
+        var translated = LoadValues($"Community.{lang}.resx");
 
         var missing = french.Keys.Except(translated.Keys).OrderBy(k => k, StringComparer.Ordinal).ToList();
         var extra = translated.Keys.Except(french.Keys).OrderBy(k => k, StringComparer.Ordinal).ToList();
@@ -60,8 +59,8 @@ public sealed class CommunityResxParityTests
     [InlineData("zh")]
     public void Should_HaveSamePlaceholders_When_ComparingToFrench(string lang)
     {
-        var french = LoadScopedValues("Community.resx");
-        var translated = LoadScopedValues($"Community.{lang}.resx");
+        var french = LoadValues("Community.resx");
+        var translated = LoadValues($"Community.{lang}.resx");
 
         var offending = french
             .Where(kv => translated.ContainsKey(kv.Key))
@@ -98,7 +97,7 @@ public sealed class CommunityResxParityTests
     }
 
     private static IEnumerable<string> Placeholders(string value) =>
-        Placeholder.Matches(value).Select(m => m.Value);
+        Placeholder.Matches(value).Select(m => "{" + m.Groups[1].Value + "}");
 
     private static bool SamePlaceholders(string frenchValue, string translatedValue)
     {
@@ -107,13 +106,12 @@ public sealed class CommunityResxParityTests
         return expected.SequenceEqual(actual);
     }
 
-    private static Dictionary<string, string> LoadScopedValues(string fileName)
+    private static Dictionary<string, string> LoadValues(string fileName)
     {
         var document = XDocument.Load(Path.Combine(PagesDirectory.Value, fileName));
 
         return document.Root!
             .Elements("data")
-            .Where(e => Prefixes.Any(p => ((string?)e.Attribute("name") ?? string.Empty).StartsWith(p, StringComparison.Ordinal)))
             .ToDictionary(
                 e => (string)e.Attribute("name")!,
                 e => (string?)e.Element("value") ?? string.Empty,

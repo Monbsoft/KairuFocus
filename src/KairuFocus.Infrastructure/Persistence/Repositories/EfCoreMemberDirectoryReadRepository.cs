@@ -7,7 +7,7 @@ namespace KairuFocus.Infrastructure.Persistence.Repositories;
 
 /// <summary>
 /// CROSS-USERS read (ADR-026): the public profile and the aggregated activity of a community member, found
-/// by the normalized key of the name, and the members active in a window. The Users table is never read, and neither a user identifier nor a
+/// by the normalized key of the name, the members active in a window and the members connected. The Users table is never read, and neither a user identifier nor a
 /// session identifier leaves a query: <c>OwnerId</c> is only the join condition with the member profile,
 /// which also keeps non-members out.
 /// <para>
@@ -30,6 +30,27 @@ internal sealed class EfCoreMemberDirectoryReadRepository : IMemberDirectoryRead
             .Where(p => p.NameKey == name.Key)
             .Select(p => new PublicMemberProfile(p.Name, p.NameSource, p.AvatarUrl, p.JoinedAtUtc))
             .FirstOrDefaultAsync(ct);
+
+    public async Task<IReadOnlyList<SprintMember>> GetConnectedMembersAsync(DateTime seenSinceUtc, int maxMembers, CancellationToken ct = default)
+    {
+        // CROSS-USERS read (ADR-026): the member's id is only the join condition between the presence and the
+        // profile (the join also keeps out a presence whose profile is gone); the last sighting only filters.
+        // Only the public name and the avatar come out. Ordering by name runs in memory, to keep the ordinal
+        // comparison whatever the collation; the members seen in the window are few.
+        var rows = await (
+                from presence in _context.MemberPresences.AsNoTracking()
+                join p in _context.MemberProfiles.AsNoTracking() on presence.Id equals p.Id
+                where p.PresenceConsentedAtUtc != null
+                      && presence.LastSeenAtUtc >= seenSinceUtc
+                select new { p.Name, p.AvatarUrl })
+            .ToListAsync(ct);
+
+        return rows
+            .OrderBy(m => m.Name.Value, StringComparer.Ordinal)
+            .Take(maxMembers)
+            .Select(m => new SprintMember(m.Name, m.AvatarUrl))
+            .ToList();
+    }
 
     public async Task<ActiveMembers> GetActiveMembersAsync(DateTime fromUtc, DateTime toUtc, int maxMembers, CancellationToken ct = default)
     {

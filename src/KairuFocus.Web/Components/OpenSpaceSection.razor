@@ -1,0 +1,217 @@
+@* The open space (#50, spec §5.2), first block of the Community page, on the brand hero (it replaces the live strip):
+   - title and subtitle ("2 bureaux occupés · 3 autres personnes connectées", counting only what is shown);
+   - for a visitor who may not see it (not a member, or a member who has not accepted to be seen connected): only the
+     panel that says why (OpenSpaceGate), no name, no number;
+   - the desks, one card each, 6 then "Voir les N autres" (the existing fold), or the invitation to open my desk;
+   - "Dans l'open space" (connected members outside the desks shown), then "Actifs aujourd'hui", each under a rule.
+   The data comes from the page (it refreshes them with its presence loop); this component only shows them.
+   Nothing here is announced: desks and people come and go quietly (the page keeps its single live region), except the
+   "no longer open" notice of a chair (role="status", for 10 s), as in the previous strip. *@
+@implements IDisposable
+@inject CommunityFormatter F
+
+<section class="kf-hero kf-os" aria-labelledby="open-space-title" aria-busy="@(Data is null && !Failed ? "true" : "false")">
+    <div class="kf-os__head">
+        <h2 class="kf-os__title" id="open-space-title" tabindex="-1" @ref="_title">@F["OpenSpace.Title"]</h2>
+        @if (Data is { Access: OpenAccess })
+        {
+            <p class="kf-os__sub">@F.OpenSpaceSubtitle(_desks.Count, _others)</p>
+        }
+        @* Always mounted so that the message is announced when it appears. *@
+        <div role="status">
+            @if (_showClosedNotice)
+            {
+                <p class="kf-os__closed">@F["OpenSpace.DeskClosed"]</p>
+            }
+        </div>
+    </div>
+
+    @if (Failed)
+    {
+        <ZoneAlert Message="@F["OpenSpace.Error"]" OnRetry="OnRetry" />
+    }
+    else if (Data is null)
+    {
+        <div class="kf-os__grid" aria-hidden="true">
+            <div class="kf-skel kf-os__skel"></div>
+            <div class="kf-skel kf-os__skel"></div>
+        </div>
+        <span class="visually-hidden">@F["OpenSpace.Loading"]</span>
+    }
+    else if (Data.Access != OpenAccess)
+    {
+        <OpenSpaceGate Access="@Data.Access" OnConsented="HandleConsentedAsync" />
+    }
+    else
+    {
+        if (_desks.Count == 0)
+        {
+            <div class="kf-os__empty">
+                <div class="kf-os__emptytext">
+                    <p class="kf-os__emptytitle">@F["OpenSpace.Empty.Title"]</p>
+                    <p class="kf-os__sub">@F["OpenSpace.Empty.Body"]</p>
+                </div>
+                @if (Data.ViewerInGroup)
+                {
+                    <a class="kf-btn-light" href="pomodoro">@F["OpenSprints.BackToSession"]</a>
+                }
+                else
+                {
+                    <a class="kf-btn-light" href="pomodoro?type=sprint">@F["OpenSpace.Empty.Cta"]</a>
+                }
+            </div>
+        }
+        else
+        {
+            var hidden = _desks.Count - VisibleDesks;
+            var canFold = hidden > 0;
+
+            <ul class="kf-os__grid" id="open-space-desks">
+                @foreach (var (desk, key) in (canFold && !_expanded ? _desks.Zip(_deskKeys).Take(VisibleDesks) : _desks.Zip(_deskKeys)))
+                {
+                    <DeskCard @key="key" Desk="desk" OnNoLongerOpen="HandleNoLongerOpenAsync"
+                              OnWaiting="OnChanged" OnElapsed="OnChanged" />
+                }
+            </ul>
+
+            @if (canFold)
+            {
+                <button type="button" class="kf-linkbtn kf-os__more" aria-expanded="@(_expanded ? "true" : "false")"
+                        aria-controls="open-space-desks" @onclick="ToggleExpanded"
+                        @onfocus="() => _moreFocused = true" @onblur="() => _moreFocused = false">
+                    @(_expanded ? F["OpenSpace.Less"] : F.Plural("OpenSpace.More", hidden, F.Number(hidden)))
+                </button>
+            }
+        }
+
+        <ConnectedMembersLine Members="Data.Connected" Total="Data.ConnectedTotal" />
+
+        <ActiveTodayStrip Data="Data.ActiveToday" />
+    }
+</section>
+
+@code {
+    /// <summary>The last successful read; null while the first one is pending (or failed).</summary>
+    [Parameter] public OpenSpaceDto? Data { get; set; }
+
+    /// <summary>The read failed and there is nothing to show yet.</summary>
+    [Parameter] public bool Failed { get; set; }
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+
+    /// <summary>A desk turned out to be no longer open (410), waiting (409) or elapsed: the page reads the open space again.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    /// <summary>The viewer just accepted to be seen connected: the page reads the open space again (awaited by the gate).</summary>
+    [Parameter] public EventCallback OnConsented { get; set; }
+
+    private const string OpenAccess = "Open";
+
+    /// <summary>Two rows of cards on a wide screen; the rest is folded behind a button.</summary>
+    private const int VisibleDesks = 6;
+
+    private static readonly TimeSpan NoticeDuration = TimeSpan.FromSeconds(10);
+
+    private readonly CancellationTokenSource _cts = new();
+    private ElementReference _title;
+    private bool _showClosedNotice;
+
+    // The unfolded state survives the reads of the page. If a read brings the desks back to six or less while the
+    // button has the focus, the button goes away: the focus then moves to the title, never to the body.
+    private bool _expanded;
+    private bool _moreFocused;
+    private bool _focusTitle;
+
+    // The consent button goes away once the open space opens: the focus then moves to the title, never to the body.
+    // The first new read after the consent decides (the read that follows it may fail: the panel then stays, and the next
+    // read of the presence loop opens it).
+    private bool _consentedHere;
+    private OpenSpaceDto? _dataAtConsent;
+
+    // What is shown, computed once per read: the desks with somebody seated (an empty one would be an empty card, and
+    // would be counted), and the connected people other than the viewer (the subtitle says "others").
+    private IReadOnlyList<DeskDto> _desks = [];
+    private IReadOnlyList<string> _deskKeys = [];
+    private int _others;
+
+    protected override void OnParametersSet()
+    {
+        _desks = Data is { Access: OpenAccess } shown ? shown.Desks.Where(d => d.Seated.Count > 0).ToList() : [];
+        _deskKeys = DeskKeys(_desks);
+        _others = Data is { Access: OpenAccess } read
+            ? Math.Max(0, read.ConnectedTotal - (read.Connected.Any(m => m.IsMe) ? 1 : 0))
+            : 0;
+
+        if (_consentedHere && !ReferenceEquals(Data, _dataAtConsent) && Data is { Access: OpenAccess })
+        {
+            _consentedHere = false;
+            _focusTitle = true;
+        }
+
+        if (Data is not { Access: OpenAccess } || _desks.Count > VisibleDesks) return;
+
+        if (_moreFocused) _focusTitle = true;
+        _expanded = false;
+        _moreFocused = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_focusTitle) return;
+
+        _focusTitle = false;
+        await _title.FocusAsync();
+    }
+
+    /// <summary>A desk is its host: the same host keeps the same card (and its chair) from one read to the next. The server
+    /// lists one desk per host; should a host still come twice, the next ones get a numbered key, since Blazor rejects
+    /// two siblings with the same key.</summary>
+    private static IReadOnlyList<string> DeskKeys(IReadOnlyList<DeskDto> desks)
+    {
+        var used = new HashSet<string>(StringComparer.Ordinal);
+        var keys = new List<string>(desks.Count);
+        foreach (var desk in desks)
+        {
+            var key = desk.Seated[0].Name;
+            for (var n = 2; !used.Add(key); n++)
+                key = $"{desk.Seated[0].Name}#{n}";
+            keys.Add(key);
+        }
+
+        return keys;
+    }
+
+    private void ToggleExpanded() => _expanded = !_expanded;
+
+    private Task HandleConsentedAsync()
+    {
+        _consentedHere = true;
+        _dataAtConsent = Data;
+        return OnConsented.InvokeAsync();
+    }
+
+    /// <summary>The sprint just closed or ended (410): say it, read the desks again, and let the message fade after a while.</summary>
+    private async Task HandleNoLongerOpenAsync()
+    {
+        _showClosedNotice = true;
+        _ = HideNoticeLaterAsync();
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task HideNoticeLaterAsync()
+    {
+        try
+        {
+            await Task.Delay(NoticeDuration, _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        _showClosedNotice = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

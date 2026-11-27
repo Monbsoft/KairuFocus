@@ -226,7 +226,7 @@
 	<value>{0} 小时</value>
   </data>
   <data name="Community.Duration.HoursMinutes" xml:space="preserve">
-	<value>{0} 小时 {1} 分钟</value>
+	<value>{0} 小时 {1:00} 分钟</value>
   </data>
   <data name="Community.Kpi.Record" xml:space="preserve">
 	<value>个人纪录</value>
@@ -702,48 +702,6 @@
   <data name="Settings.Community.Left" xml:space="preserve">
 	<value>你已退出社区。</value>
   </data>
-  <data name="OpenSprints.Title" xml:space="preserve">
-	<value>正在冲刺</value>
-  </data>
-  <data name="OpenSprints.Sub" xml:space="preserve">
-	<value>加入已经开始的冲刺：你们将在同一时间一起结束。</value>
-  </data>
-  <data name="OpenSprints.Loading" xml:space="preserve">
-	<value>正在加载进行中的冲刺…</value>
-  </data>
-  <data name="OpenSprints.Error" xml:space="preserve">
-	<value>暂时无法读取进行中的冲刺。</value>
-  </data>
-  <data name="OpenSprints.Remaining" xml:space="preserve">
-	<value>还剩 {0}</value>
-  </data>
-  <data name="OpenSprints.Participants.One" xml:space="preserve">
-	<value>{0} 位参与者</value>
-  </data>
-  <data name="OpenSprints.Participants.Other" xml:space="preserve">
-	<value>{0} 位参与者</value>
-  </data>
-  <data name="OpenSprints.Empty.Title" xml:space="preserve">
-	<value>此刻没有人在冲刺</value>
-  </data>
-  <data name="OpenSprints.Empty.Body" xml:space="preserve">
-	<value>开启你的冲刺：其他成员会在这里看到，并可以加入你。</value>
-  </data>
-  <data name="OpenSprints.Empty.Cta" xml:space="preserve">
-	<value>开始冲刺</value>
-  </data>
-  <data name="OpenSprints.Alone" xml:space="preserve">
-	<value>还没有人加入</value>
-  </data>
-  <data name="OpenSprints.More.One" xml:space="preserve">
-	<value>查看另一个冲刺</value>
-  </data>
-  <data name="OpenSprints.More.Other" xml:space="preserve">
-	<value>查看其余 {0} 个冲刺</value>
-  </data>
-  <data name="OpenSprints.Less" xml:space="preserve">
-	<value>收起</value>
-  </data>
   <data name="ActiveToday.Title" xml:space="preserve">
 	<value>今日活跃</value>
   </data>
@@ -761,12 +719,6 @@
   </data>
   <data name="ActiveToday.Error" xml:space="preserve">
 	<value>无法加载今日活跃成员。</value>
-  </data>
-  <data name="OpenSprints.Mine" xml:space="preserve">
-	<value>你的冲刺</value>
-  </data>
-  <data name="OpenSprints.Profile.Aria" xml:space="preserve">
-	<value>{0} 的个人资料</value>
   </data>
   <data name="Participants.Aria" xml:space="preserve">
 	<value>和你一起冲刺的人</value>
@@ -804,9 +756,6 @@
   <data name="Participants.Close.Error" xml:space="preserve">
 	<value>暂时无法修改冲刺的开放状态。</value>
   </data>
-  <data name="Participants.GroupBreak" xml:space="preserve">
-	<value>小组休息：所有人同时结束。</value>
-  </data>
   <data name="Join.Button" xml:space="preserve">
 	<value>加入此冲刺</value>
   </data>
@@ -817,7 +766,7 @@
 	<value>正在连接冲刺…</value>
   </data>
   <data name="Join.NeedMember.Body" xml:space="preserve">
-	<value>要加入冲刺，请先启用社区：其他成员将看到你的名字和 XP。</value>
+	<value>要坐到工位上，请先启用社区：其他成员将看到你的名字、XP 以及你是否在线。</value>
   </data>
   <data name="Join.NeedMember.Link" xml:space="preserve">
 	<value>启用社区</value>
@@ -1059,5 +1008,243 @@
   </data>
   <data name="Journal.Entry.TaskCompleted" xml:space="preserve">
 	<value>任务已完成</value>
+  </data>
+  <data name="OpenSpace.Title" xml:space="preserve">
+	<value>开放办公区</value>
+  </data>
+  <data name="OpenSpace.Desks.One" xml:space="preserve">
+	<value>{0} 个工位已占用</value>
+  </data>
+  <data name="OpenSpace.Desks.Other" xml:space="preserve">
+	<value>{0} 个工位已占用</value>
+  </data>
+  <data name="OpenSpace.Others.One" xml:space="preserve">
+	<value>另外 {0} 人在线</value>
+  </data>
+  <data name="OpenSpace.Others.Other" xml:space="preserve">
+	<value>另外 {0} 人在线</value>
+  </data>
+  <data name="OpenSpace.Empty.Title" xml:space="preserve">
+	<value>目前没有人在冲刺。</value>
+  </data>
+  <data name="OpenSpace.Empty.Body" xml:space="preserve">
+	<value>打开你的工位：其他人就能坐到旁边。</value>
+  </data>
+  <data name="OpenSpace.Empty.Cta" xml:space="preserve">
+	<value>打开我的工位</value>
+  </data>
+  <data name="OpenSpace.Gate.NotMember" xml:space="preserve">
+	<value>开放办公区仅限社区成员。启用社区后，你可以看到谁在工作并坐到工位上：其他成员将看到你的名字、XP 以及你是否在线。</value>
+  </data>
+  <data name="OpenSpace.Gate.Consent" xml:space="preserve">
+	<value>新功能：开放办公区会显示在线成员。要进入，请同意让其他成员看到你是否在线。</value>
+  </data>
+  <data name="OpenSpace.Gate.ConsentCta" xml:space="preserve">
+	<value>进入开放办公区</value>
+  </data>
+  <data name="OpenSpace.Gate.ConsentError" xml:space="preserve">
+	<value>无法保存你的同意。请重试。</value>
+  </data>
+  <data name="Connected.Title" xml:space="preserve">
+	<value>在开放办公区</value>
+  </data>
+  <data name="Desk.Of" xml:space="preserve">
+	<value>{0} 的工位</value>
+  </data>
+  <data name="Desk.Mine" xml:space="preserve">
+	<value>你的工位</value>
+  </data>
+  <data name="Desk.Seated" xml:space="preserve">
+	<value>你坐在这里</value>
+  </data>
+  <data name="Desk.ClosedToOthers" xml:space="preserve">
+	<value>不对他人开放</value>
+  </data>
+  <data name="Desk.Left.Sprint" xml:space="preserve">
+	<value>还剩</value>
+  </data>
+  <data name="Desk.Left.Break" xml:space="preserve">
+	<value>恢复于</value>
+  </data>
+  <data name="Desk.Waiting" xml:space="preserve">
+	<value>{0} 正在选择下一步</value>
+  </data>
+  <data name="Seat.Sit" xml:space="preserve">
+	<value>坐下</value>
+  </data>
+  <data name="Seat.Soon" xml:space="preserve">
+	<value>稍后</value>
+  </data>
+  <data name="Seat.Aria" xml:space="preserve">
+	<value>坐到 {0} 的工位（加入其冲刺）</value>
+  </data>
+  <data name="Ambiance.Label" xml:space="preserve">
+	<value>氛围：</value>
+  </data>
+  <data name="Ambiance.Aria" xml:space="preserve">
+	<value>{0} 的工位氛围：{1}（新标签页）</value>
+  </data>
+  <data name="Ambiance.None" xml:space="preserve">
+	<value>无</value>
+  </data>
+  <data name="Ambiance.Category.Lofi" xml:space="preserve">
+	<value>Lofi</value>
+  </data>
+  <data name="Ambiance.Category.JazzBlues" xml:space="preserve">
+	<value>爵士与蓝调</value>
+  </data>
+  <data name="Ambiance.Category.Classical" xml:space="preserve">
+	<value>古典</value>
+  </data>
+  <data name="Ambiance.Category.RelaxFocus" xml:space="preserve">
+	<value>放松与专注</value>
+  </data>
+  <data name="Settings.MyDesk.Title" xml:space="preserve">
+	<value>我的工位</value>
+  </data>
+  <data name="Settings.MyDesk.Ambiance" xml:space="preserve">
+	<value>我的工位氛围</value>
+  </data>
+  <data name="Settings.MyDesk.Hint" xml:space="preserve">
+	<value>显示在社区页面你的工位上，也对坐到旁边的人可见。</value>
+  </data>
+  <data name="Settings.MyDesk.Saved" xml:space="preserve">
+	<value>氛围已保存。</value>
+  </data>
+  <data name="Settings.MyDesk.Error" xml:space="preserve">
+	<value>无法保存氛围。</value>
+  </data>
+  <data name="Settings.MyDesk.NeedMember" xml:space="preserve">
+	<value>启用社区后，才能选择工位氛围。</value>
+  </data>
+  <data name="Settings.Community.Visible.Presence" xml:space="preserve">
+	<value>你在 KairuFocus 上在线时；</value>
+  </data>
+  <data name="OpenSpace.Error" xml:space="preserve">
+	<value>无法加载开放办公区。</value>
+  </data>
+  <data name="OpenSpace.Loading" xml:space="preserve">
+	<value>正在加载开放办公区…</value>
+  </data>
+  <data name="OpenSpace.More.One" xml:space="preserve">
+	<value>查看另一个工位</value>
+  </data>
+  <data name="OpenSpace.More.Other" xml:space="preserve">
+	<value>查看其余 {0} 个工位</value>
+  </data>
+  <data name="OpenSpace.Less" xml:space="preserve">
+	<value>收起</value>
+  </data>
+  <data name="Desk.Badge.Sprint" xml:space="preserve">
+	<value>冲刺</value>
+  </data>
+  <data name="Desk.Badge.Break" xml:space="preserve">
+	<value>休息</value>
+  </data>
+  <data name="Desk.Badge.Waiting" xml:space="preserve">
+	<value>等待中</value>
+  </data>
+  <data name="OpenSpace.DeskClosed" xml:space="preserve">
+	<value>此工位已不再开放。</value>
+  </data>
+  <!-- #46 / #50 — session de groupe, attente et retour à la session -->
+  <data name="OpenSprints.BackToSession" xml:space="preserve">
+	<value>返回你的会话</value>
+  </data>
+  <data name="OpenSprints.Waiting.Hint" xml:space="preserve">
+	<value>下一步开始后就可以加入。</value>
+  </data>
+  <data name="Join.WaitingForHost" xml:space="preserve">
+	<value>主持人即将开始下一步：请稍后再试。</value>
+  </data>
+  <data name="Profile.Status.Break" xml:space="preserve">
+	<value>休息中 · 还剩 {0}</value>
+  </data>
+  <data name="Profile.Status.Waiting" xml:space="preserve">
+	<value>正在等待主持人</value>
+  </data>
+  <data name="Group.Line" xml:space="preserve">
+	<value>小组会话 · {0}</value>
+  </data>
+  <data name="Group.Step.Sprint" xml:space="preserve">
+	<value>冲刺 {0}</value>
+  </data>
+  <data name="Group.Step.ShortBreak" xml:space="preserve">
+	<value>短休息</value>
+  </data>
+  <data name="Group.Step.LongBreak" xml:space="preserve">
+	<value>长休息</value>
+  </data>
+  <data name="Group.Waiting" xml:space="preserve">
+	<value>正在等待主持人…</value>
+  </data>
+  <data name="Group.YourTurn" xml:space="preserve">
+	<value>轮到你开始下一步了</value>
+  </data>
+  <data name="Group.WaitLimit" xml:space="preserve">
+	<value>若不作选择，会话将在 {0} 后结束</value>
+  </data>
+  <data name="Group.Stop" xml:space="preserve">
+	<value>停止会话</value>
+  </data>
+  <data name="Group.Stop.Title" xml:space="preserve">
+	<value>停止会话？</value>
+  </data>
+  <data name="Group.Stop.Body" xml:space="preserve">
+	<value>会话将为整个小组停止。</value>
+  </data>
+  <data name="Group.Stop.Body.Sprint" xml:space="preserve">
+	<value>会话将为整个小组停止。你当前的冲刺不会获得 XP。</value>
+  </data>
+  <data name="Group.Stop.Cancel" xml:space="preserve">
+	<value>继续</value>
+  </data>
+  <data name="Group.Leave" xml:space="preserve">
+	<value>退出会话</value>
+  </data>
+  <data name="Group.Close" xml:space="preserve">
+	<value>关闭会话</value>
+  </data>
+  <data name="Group.Reopen" xml:space="preserve">
+	<value>重新开放会话</value>
+  </data>
+  <data name="Group.Close.Hint" xml:space="preserve">
+	<value>之后没有人能再加入；已在其中的人不受影响。</value>
+  </data>
+  <data name="Group.Reopen.Hint" xml:space="preserve">
+	<value>此会话已关闭：没有人能再加入。</value>
+  </data>
+  <data name="Group.Ended.Stopped" xml:space="preserve">
+	<value>主持人已停止会话。</value>
+  </data>
+  <data name="Group.Ended.HostAbsent" xml:space="preserve">
+	<value>主持人已不在：会话已结束。</value>
+  </data>
+  <data name="Group.Ended.HostAlone" xml:space="preserve">
+	<value>小组里已没有其他人：会话将单人继续。</value>
+  </data>
+  <data name="Group.Ended.HostLeftCommunity" xml:space="preserve">
+	<value>主持人已离开社区：会话已结束。</value>
+  </data>
+  <data name="Group.Announce.Step" xml:space="preserve">
+	<value>新步骤：{0}</value>
+  </data>
+  <data name="Group.Error" xml:space="preserve">
+	<value>暂时无法连接小组会话。</value>
+  </data>
+  <data name="Group.Start" xml:space="preserve">
+	<value>为小组开始</value>
+  </data>
+  <data name="Group.YourTurn.Title" xml:space="preserve">
+	<value>你的小组正在等待下一步</value>
+  </data>
+  <data name="Group.Waiting.Body" xml:space="preserve">
+	<value>{0} 一开始，下一步就会在这里启动。你无需做任何事。</value>
+  </data>
+  <data name="Group.Follow.Hint" xml:space="preserve">
+	<value>你正在跟随 {0} 的节奏：下一步会自动开始。</value>
+  </data>
+  <data name="Group.Ended.Community" xml:space="preserve">
+	<value>查看谁在会话中</value>
   </data>
 </root>

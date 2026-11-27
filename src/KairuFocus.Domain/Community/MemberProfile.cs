@@ -12,9 +12,12 @@ public sealed class MemberProfile : AggregateRoot<UserId>
 {
     // Parameter names match property names: EF Core materializes via constructor binding
     // (same pattern as XpGain).
-    private MemberProfile(UserId id, ProfileName name, string nameKey, ProfileNameSource nameSource, string? avatarUrl, DateTime joinedAtUtc)
+    private MemberProfile(UserId id, ProfileName name, string nameKey, ProfileNameSource nameSource, string? avatarUrl, DateTime joinedAtUtc,
+        DateTime? presenceConsentedAtUtc, string? ambianceCode)
         : base(id)
     {
+        PresenceConsentedAtUtc = presenceConsentedAtUtc;
+        AmbianceCode = ambianceCode;
         Name = name;
         NameKey = nameKey;
         NameSource = nameSource;
@@ -31,6 +34,14 @@ public sealed class MemberProfile : AggregateRoot<UserId>
     public string? AvatarUrl { get; private set; }
     public DateTime JoinedAtUtc { get; private set; }
 
+    /// <summary>When the member agreed to be shown as connected; null while they have not.</summary>
+    public DateTime? PresenceConsentedAtUtc { get; private set; }
+
+    public bool HasConsentedToPresence => PresenceConsentedAtUtc is not null;
+
+    /// <summary>Code of the chosen <see cref="Ambiance"/>, null when none.</summary>
+    public string? AmbianceCode { get; private set; }
+
     /// <summary>
     /// Creates the profile of a user joining the community. Guards throw: invalid arguments are
     /// programmer errors (name validity and uniqueness are checked upstream), not part of the normal
@@ -43,7 +54,8 @@ public sealed class MemberProfile : AggregateRoot<UserId>
         if (joinedAtUtc == default)
             throw new ArgumentException("JoinedAtUtc must be a valid UTC instant.", nameof(joinedAtUtc));
 
-        return new MemberProfile(userId, name, name.Key, source, AvatarFor(source, avatarUrl), joinedAtUtc);
+        return new MemberProfile(userId, name, name.Key, source, AvatarFor(source, avatarUrl), joinedAtUtc,
+            presenceConsentedAtUtc: joinedAtUtc, ambianceCode: null);
     }
 
     /// <summary>
@@ -58,6 +70,31 @@ public sealed class MemberProfile : AggregateRoot<UserId>
         NameKey = name.Key;
         NameSource = source;
         AvatarUrl = AvatarFor(source, avatarUrl);
+    }
+
+    /// <summary>Records the consent to presence. The first consent is kept.</summary>
+    public void ConsentToPresence(DateTime nowUtc) => PresenceConsentedAtUtc ??= nowUtc;
+
+    /// <summary>
+    /// Chooses the ambiance of <paramref name="code"/>; null clears it. A code missing from
+    /// <paramref name="catalogue"/> is refused and changes nothing.
+    /// </summary>
+    public Result ChooseAmbiance(string? code, AmbianceCatalogue catalogue)
+    {
+        ArgumentNullException.ThrowIfNull(catalogue);
+
+        if (code is null)
+        {
+            AmbianceCode = null;
+            return Result.Success();
+        }
+
+        var ambiance = catalogue.Find(code);
+        if (ambiance is null)
+            return Result.Failure(DomainErrors.Community.UnknownAmbiance);
+
+        AmbianceCode = ambiance.Code;
+        return Result.Success();
     }
 
     // Only a GitHub name may show the avatar: the check is on GitHub, not on "not Chosen", so that

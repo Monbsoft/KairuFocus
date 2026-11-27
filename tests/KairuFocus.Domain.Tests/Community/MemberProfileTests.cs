@@ -99,4 +99,67 @@ public sealed class MemberProfileTests
         Assert.Throws<ArgumentNullException>(() =>
             profile.ChangeName(null!, ProfileNameSource.Chosen, null));
     }
+
+    private static readonly AmbianceCatalogue Catalogue = new(
+    [
+        new Ambiance("lofi", "Lofi", AmbianceCategory.Lofi, AmbianceCatalogue.YouTubeVideoPrefix + "abc123")
+    ]);
+
+    private static MemberProfile NewProfile() =>
+        MemberProfile.Join(User, Name("octocat"), ProfileNameSource.GitHub, AvatarUrl, JoinedAtUtc);
+
+    [Fact]
+    public void Should_ConsentToPresence_When_Joining()
+    {
+        var profile = NewProfile();
+
+        Assert.True(profile.HasConsentedToPresence);
+        Assert.Equal(JoinedAtUtc, profile.PresenceConsentedAtUtc);
+    }
+
+    [Fact]
+    public void Should_KeepFirstConsent_When_ConsentingTwice()
+    {
+        var profile = NewProfile();
+
+        profile.ConsentToPresence(JoinedAtUtc.AddDays(1));
+
+        Assert.Equal(JoinedAtUtc, profile.PresenceConsentedAtUtc);
+    }
+
+    [Fact]
+    public void Should_SetAmbiance_When_CodeIsInCatalogue()
+    {
+        var profile = NewProfile();
+
+        var result = profile.ChooseAmbiance("lofi", Catalogue);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("lofi", profile.AmbianceCode);
+    }
+
+    [Fact]
+    public void Should_ClearAmbiance_When_CodeIsNull()
+    {
+        var profile = NewProfile();
+        profile.ChooseAmbiance("lofi", Catalogue);
+
+        var result = profile.ChooseAmbiance(null, Catalogue);
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(profile.AmbianceCode);
+    }
+
+    [Fact]
+    public void Should_RefuseAmbiance_When_CodeIsUnknown()
+    {
+        var profile = NewProfile();
+        profile.ChooseAmbiance("lofi", Catalogue);
+
+        var result = profile.ChooseAmbiance("nope", Catalogue);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.Community.UnknownAmbiance, result.Error);
+        Assert.Equal("lofi", profile.AmbianceCode);
+    }
 }

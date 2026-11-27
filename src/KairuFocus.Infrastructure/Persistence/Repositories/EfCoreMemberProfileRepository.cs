@@ -1,17 +1,12 @@
 using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Identity;
 using KairuFocus.Infrastructure.Persistence.Configurations;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace KairuFocus.Infrastructure.Persistence.Repositories;
 
 internal sealed class EfCoreMemberProfileRepository : IMemberProfileRepository
 {
-    // SQL Server error numbers for a unique index/constraint violation.
-    private const int DuplicateKeyRowError = 2601;
-    private const int DuplicateKeyConstraintError = 2627;
-
     private readonly KairuFocusDbContext _context;
 
     public EfCoreMemberProfileRepository(KairuFocusDbContext context)
@@ -37,7 +32,7 @@ internal sealed class EfCoreMemberProfileRepository : IMemberProfileRepository
             await _context.SaveChangesAsync(ct);
             return true;
         }
-        catch (DbUpdateException ex) when (IsUniquenessViolation(
+        catch (DbUpdateException ex) when (UniquenessViolation.IsOn(
             ex, MemberProfileConfiguration.PrimaryKeyName, MemberProfileConfiguration.NameKeyIndexName))
         {
             // A concurrent join of the same user (key) or a concurrent claim of the same name.
@@ -64,7 +59,7 @@ internal sealed class EfCoreMemberProfileRepository : IMemberProfileRepository
             _context.Entry(profile).State = EntityState.Detached;
             return false;
         }
-        catch (DbUpdateException ex) when (IsUniquenessViolation(ex, MemberProfileConfiguration.NameKeyIndexName))
+        catch (DbUpdateException ex) when (UniquenessViolation.IsOn(ex, MemberProfileConfiguration.NameKeyIndexName))
         {
             // The new name was taken concurrently. Detach the rejected change (same reason as above).
             _context.Entry(profile).State = EntityState.Detached;
@@ -88,12 +83,4 @@ internal sealed class EfCoreMemberProfileRepository : IMemberProfileRepository
             return false;
         }
     }
-
-    // Restricted to the named constraints: any other unique constraint added later on this table must
-    // not be silently reported as a uniqueness conflict. The names come from the EF configuration that
-    // declares them, so the two cannot drift.
-    private static bool IsUniquenessViolation(DbUpdateException exception, params string[] constraintNames) =>
-        exception.InnerException is SqlException sqlException
-        && sqlException.Number is DuplicateKeyRowError or DuplicateKeyConstraintError
-        && constraintNames.Any(name => sqlException.Message.Contains(name, StringComparison.Ordinal));
 }

@@ -1,0 +1,38 @@
+/* On the dark open space (.kf-hero): the text and one light button (.kf-btn-light, global). Community page only (page tokens available). */
+.kf-gate {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-5);
+}
+
+.kf-gate__text {
+    max-width: 60ch;
+    color: var(--hero-text);
+    line-height: 1.5;
+}
+
+.kf-gate__btn {
+    border: 0;
+    cursor: pointer;
+}
+
+/* Busy during the call: aria-disabled rather than disabled, so that the keyboard focus stays on the button. */
+.kf-gate__btn[aria-disabled="true"] {
+    opacity: 0.65;
+    cursor: progress;
+}
+
+.kf-gate__error {
+    flex: 1 1 100%;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--hero-text);
+    font-size: var(--text-sm);
+}
+
+.kf-gate :focus-visible {
+    outline-color: var(--kf-blue-100);
+}

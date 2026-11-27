@@ -1,0 +1,58 @@
+@implements IAsyncDisposable
+@inject CommunityApiClient Community
+@inject TimeProvider Clock
+
+@code {
+    private static readonly TimeSpan Period = TimeSpan.FromSeconds(60);
+
+    private readonly CancellationTokenSource _cts = new();
+    private Task? _loop;
+
+    // Started once, after the first render. Deliberately ignores the tab visibility (unlike the Community page's
+    // refresh loop): a member working in another tab is still connected.
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) _loop = RunAsync(_cts.Token);
+    }
+
+    private async Task RunAsync(CancellationToken ct)
+    {
+        try
+        {
+            await SendAsync(ct);
+            using var timer = new PeriodicTimer(Period, Clock);
+            while (await timer.WaitForNextTickAsync(ct))
+                await SendAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // Disposed.
+        }
+    }
+
+    private async Task SendAsync(CancellationToken ct)
+    {
+        try
+        {
+            await Community.RecordPresenceAsync(ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // A missed heartbeat is not worth telling anyone: the next one will do.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _cts.CancelAsync();
+        if (_loop is not null)
+        {
+            try { await _loop; } catch { /* already swallowed */ }
+        }
+        _cts.Dispose();
+    }
+}

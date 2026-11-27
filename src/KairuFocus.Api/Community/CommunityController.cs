@@ -1,18 +1,21 @@
 using System.ComponentModel.DataAnnotations;
 using KairuFocus.Application.Community.Commands.ChangeProfileName;
+using KairuFocus.Application.Community.Commands.ChooseAmbiance;
+using KairuFocus.Application.Community.Commands.ConsentToPresence;
 using KairuFocus.Application.Community.Commands.JoinCommunity;
 using KairuFocus.Application.Community.Commands.FollowGroupHost;
 using KairuFocus.Application.Community.Commands.JoinOpenSprint;
 using KairuFocus.Application.Community.Commands.LaunchGroupStep;
 using KairuFocus.Application.Community.Commands.LeaveCommunity;
 using KairuFocus.Application.Community.Commands.LeaveOrStopGroupSession;
+using KairuFocus.Application.Community.Commands.RecordPresence;
 using KairuFocus.Application.Community.Commands.SetSprintClosed;
 using KairuFocus.Application.Community.Common;
-using KairuFocus.Application.Community.Queries.GetActiveToday;
+using KairuFocus.Application.Community.Queries.GetAmbiances;
 using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Community.Queries.GetCurrentSession;
 using KairuFocus.Application.Community.Queries.GetMemberProfile;
-using KairuFocus.Application.Community.Queries.GetOpenSprints;
+using KairuFocus.Application.Community.Queries.GetOpenSpace;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Monbsoft.BrilliantMediator.Abstractions;
@@ -104,14 +107,6 @@ public sealed class CommunityController : ControllerBase
             : NotFound();
     }
 
-    [HttpGet("open-sprints")]
-    public async Task<IActionResult> GetOpenSprints(CancellationToken ct)
-    {
-        var result = await _mediator.SendAsync<GetOpenSprintsQuery, GetOpenSprintsResult>(
-            new GetOpenSprintsQuery(), ct);
-        return Ok(result);
-    }
-
     [HttpPost("open-sprints/{name}/join")]
     public async Task<IActionResult> JoinOpenSprint(string name, CancellationToken ct)
     {
@@ -191,13 +186,50 @@ public sealed class CommunityController : ControllerBase
             : ErrorResponse(result.Error!);
     }
 
-    // ── Active today (UC-CO-13) ────────────────────────────────────────────
+    // ── Open space, presence and ambiance (#50) ────────────────────────────
 
-    [HttpGet("active-today")]
-    public async Task<IActionResult> GetActiveToday(CancellationToken ct)
+    /// <summary>Heartbeat: always 204, whether a presence was written or ignored (not a member, not consented).</summary>
+    [HttpPost("presence")]
+    public async Task<IActionResult> RecordPresence(CancellationToken ct)
     {
-        var result = await _mediator.SendAsync<GetActiveTodayQuery, GetActiveTodayResult>(
-            new GetActiveTodayQuery(), ct);
+        await _mediator.DispatchAsync<RecordPresenceCommand, RecordPresenceResult>(new RecordPresenceCommand(), ct);
+        return NoContent();
+    }
+
+    [HttpPut("presence/consent")]
+    public async Task<IActionResult> ConsentToPresence(CancellationToken ct)
+    {
+        var result = await _mediator.DispatchAsync<ConsentToPresenceCommand, ConsentToPresenceResult>(
+            new ConsentToPresenceCommand(), ct);
+
+        return result.IsSuccess
+            ? NoContent()
+            : ErrorResponse(result.Error!);
+    }
+
+    [HttpPut("membership/ambiance")]
+    public async Task<IActionResult> ChooseAmbiance([FromBody] AmbianceBody body, CancellationToken ct)
+    {
+        var result = await _mediator.DispatchAsync<ChooseAmbianceCommand, ChooseAmbianceResult>(
+            new ChooseAmbianceCommand(body.Code), ct);
+
+        return result.IsSuccess
+            ? NoContent()
+            : ErrorResponse(result.Error!);
+    }
+
+    [HttpGet("ambiances")]
+    public async Task<IActionResult> GetAmbiances(CancellationToken ct)
+    {
+        var result = await _mediator.SendAsync<GetAmbiancesQuery, IReadOnlyList<AmbianceViewModel>>(
+            new GetAmbiancesQuery(), ct);
+        return Ok(result);
+    }
+
+    [HttpGet("open-space")]
+    public async Task<IActionResult> GetOpenSpace(CancellationToken ct)
+    {
+        var result = await _mediator.SendAsync<GetOpenSpaceQuery, GetOpenSpaceResult>(new GetOpenSpaceQuery(), ct);
         return Ok(result);
     }
 
@@ -247,6 +279,8 @@ public sealed class CommunityController : ControllerBase
                 Body(StatusCodes.Status404NotFound, error, "not-in-group"),
             CommunityErrors.Community.InvalidGroupStep =>
                 Body(StatusCodes.Status400BadRequest, error, "invalid-step"),
+            CommunityErrors.Community.UnknownAmbiance =>
+                Body(StatusCodes.Status400BadRequest, error, "unknown-ambiance"),
             // Not in the contract (UserNotFound, for example): nothing to tell the client.
             _ => StatusCode(StatusCodes.Status500InternalServerError, new { error = UnexpectedErrorText })
         };
@@ -262,3 +296,6 @@ public sealed record SprintClosedBody([Required] bool? Closed);
 
 /// <summary>A missing type is a generic 400; an unknown one is answered by <c>invalid-step</c>.</summary>
 public sealed record GroupStepBody([Required] string? Type);
+
+/// <summary>A null or missing code clears the ambiance; an unknown one is answered by <c>unknown-ambiance</c>.</summary>
+public sealed record AmbianceBody(string? Code);

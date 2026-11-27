@@ -8,7 +8,8 @@ namespace KairuFocus.Infrastructure.Persistence.Repositories;
 
 /// <summary>
 /// CROSS-USERS read (ADR-026) of what a member can join: the sprints nobody joined yet, read from
-/// <c>PomodoroSessions</c>, and the group sessions, read from <c>GroupSessions</c> and <c>GroupSessionMembers</c>.
+/// <c>PomodoroSessions</c>, and the group sessions, read from <c>GroupSessions</c> and <c>GroupSessionMembers</c>;
+/// and the desks of the open space built on them (who is seated, the ambiance of the host).
 /// Community members only (inner joins with <c>MemberProfiles</c>), never the Users table. <c>OwnerId</c>,
 /// <c>HostId</c> and the members' <c>UserId</c> only appear in join and filter conditions: no user identifier
 /// leaves a query.
@@ -28,21 +29,20 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
         _context = context;
     }
 
+    /// <summary>
+    /// The rows of <see cref="GetDesksAsync"/>, each with a participant count instead of the seated members. No
+    /// longer on the port (the open space replaced the cards): kept for the infrastructure tests that pin the
+    /// shared candidates, preference rule and order.
+    /// </summary>
     public async Task<IReadOnlyList<OpenSprintGroup>> GetOpenGroupsAsync(
         DateTime nowUtc,
         int maxGroups,
         CancellationToken ct = default)
     {
-        var soloSprints = await ReadSoloSprintsAsync(SoloSprints(), nowUtc, ct);
-        var groups = await ReadLiveAsync(OpenGroups(nowUtc), nowUtc, ct);
+        var shown = await ReadShownAsync(nowUtc, maxGroups, ct);
         var memberCounts = await CountActiveMembersAsync(OpenGroups(nowUtc), ct);
 
-        var candidates = soloSprints.Select(Candidate.Solo).Concat(groups.Select(Candidate.Group));
-
-        // One card per lead (see Preferred), then most time left first: a waiting group comes last.
-        return candidates
-            .GroupBy(c => c.Lead.Name.Key)
-            .Select(byLead => Preferred(byLead)!)
+        return shown
             .Select(c => new OpenSprintGroup(
                 c.RootSessionId,
                 c.Lead,
@@ -50,9 +50,6 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
                 ParticipantCount: c.IsGroup ? 1 + memberCounts.GetValueOrDefault(c.RootSessionId) : 1,
                 c.StepType,
                 c.Phase))
-            .OrderByDescending(g => g.EndsAtUtc)
-            .ThenBy(g => g.Lead.Name.Value, StringComparer.Ordinal)
-            .Take(maxGroups)
             .ToList();
     }
 
@@ -89,6 +86,56 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
             : null;
     }
 
+    public async Task<IReadOnlyList<OpenSpaceDesk>> GetDesksAsync(DateTime nowUtc, int maxDesks, CancellationToken ct = default) =>
+        await ToDesksAsync(await ReadShownAsync(nowUtc, maxDesks, ct), ct);
+
+    public async Task<OpenSpaceDesk?> GetDeskAsync(Guid rootSessionId, DateTime nowUtc, CancellationToken ct = default)
+    {
+        // Closed to joins or not. A group row stands for its root sprint whatever its state: the sprint is only
+        // read when no live group has this id, and ReadSoloSprintsAsync drops it when an ended group has.
+        var group = (await ReadLiveAsync(LiveGroups(nowUtc).Where(m => m.Group.Id == rootSessionId), nowUtc, ct))
+            .SingleOrDefault();
+
+        Candidate? desk;
+        if (group is not null)
+        {
+            desk = Candidate.Group(group);
+        }
+        else
+        {
+            var sessionId = PomodoroSessionId.From(rootSessionId);
+            var sprint = (await ReadSoloSprintsAsync(Sprints().Where(m => m.Session.Id == sessionId), nowUtc, ct))
+                .SingleOrDefault();
+            desk = sprint is null ? null : Candidate.Solo(sprint);
+        }
+
+        return desk is null ? null : (await ToDesksAsync([desk], ct))[0];
+    }
+
+    public async Task<string?> GetHostAmbianceCodeAsync(Guid rootSessionId, CancellationToken ct = default)
+    {
+        // Whatever the state of the group or sprint. The row is wrapped so that a host without ambiance is told
+        // apart from an unknown group.
+        var ofGroup = await (
+                from g in _context.GroupSessions.AsNoTracking()
+                join p in _context.MemberProfiles.AsNoTracking()
+                    on EF.Property<UserId>(g, GroupSessionConfiguration.HostField) equals p.Id
+                where g.Id == rootSessionId
+                select new { p.AmbianceCode })
+            .FirstOrDefaultAsync(ct);
+        if (ofGroup is not null)
+            return ofGroup.AmbianceCode;
+
+        // Otherwise the owner of the root session: a joined step is not a root, its owner hosts nothing.
+        var sessionId = PomodoroSessionId.From(rootSessionId);
+        return await (
+                from s in _context.PomodoroSessions.AsNoTracking()
+                join p in _context.MemberProfiles.AsNoTracking() on s.OwnerId equals p.Id
+                where s.Id == sessionId && s.SharedSprintId == null
+                select p.AmbianceCode)
+            .FirstOrDefaultAsync(ct);
+    }
+
     public async Task<IReadOnlyList<SprintMember>> GetGroupMembersAsync(Guid rootSessionId, CancellationToken ct = default)
     {
         // Whatever the state of the group: those already present stay visible to each other after a closure,
@@ -101,30 +148,89 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
                 select new { p.Name, p.AvatarUrl })
             .FirstOrDefaultAsync(ct);
 
-        var members = await (
-                from m in _context.Set<GroupMember>().AsNoTracking()
-                join p in _context.MemberProfiles.AsNoTracking()
-                    on EF.Property<UserId>(m, GroupMemberConfiguration.UserField) equals p.Id
-                where EF.Property<Guid>(m, GroupMemberConfiguration.GroupField) == rootSessionId
-                      && m.LeftAtUtc == null
-                select new { p.Name, p.AvatarUrl, m.JoinedAtUtc })
-            .ToListAsync(ct);
+        var members = await ReadActiveMembersAsync([rootSessionId], ct);
 
-        var result = new List<SprintMember>(members.Count + 1);
+        var result = new List<SprintMember>();
         if (host is not null)
             result.Add(new SprintMember(host.Name, host.AvatarUrl));
 
-        result.AddRange(members
-            .OrderBy(m => m.JoinedAtUtc)
-            .ThenBy(m => m.Name.Value, StringComparer.Ordinal)
-            .Select(m => new SprintMember(m.Name, m.AvatarUrl)));
-
+        result.AddRange(members[rootSessionId]);
         return result;
     }
 
-    // A timed sprint not joined itself and not closed. It may still be the root of a group:
+    /// <summary>
+    /// The rows shown to the community, shared by the cards and the desks: one per lead (see
+    /// <see cref="Preferred"/>), then most time left first (a waiting group comes last), at most
+    /// <paramref name="max"/>.
+    /// </summary>
+    private async Task<List<Candidate>> ReadShownAsync(DateTime nowUtc, int max, CancellationToken ct)
+    {
+        var soloSprints = await ReadSoloSprintsAsync(SoloSprints(), nowUtc, ct);
+        var groups = await ReadLiveAsync(OpenGroups(nowUtc), nowUtc, ct);
+
+        return soloSprints.Select(Candidate.Solo)
+            .Concat(groups.Select(Candidate.Group))
+            .GroupBy(c => c.Lead.Name.Key)
+            .Select(byLead => Preferred(byLead)!)
+            .OrderByDescending(c => c.EndsAtUtc)
+            .ThenBy(c => c.Lead.Name.Value, StringComparer.Ordinal)
+            .Take(max)
+            .ToList();
+    }
+
+    // The members of all the group desks come from one query; a sprint nobody joined seats its lead alone.
+    private async Task<List<OpenSpaceDesk>> ToDesksAsync(IReadOnlyList<Candidate> desks, CancellationToken ct)
+    {
+        var groupIds = desks.Where(d => d.IsGroup).Select(d => d.RootSessionId).ToList();
+        var members = await ReadActiveMembersAsync(groupIds, ct);
+
+        return desks
+            .Select(d => new OpenSpaceDesk(
+                d.RootSessionId,
+                d.IsGroup ? [d.Lead, .. members[d.RootSessionId]] : [d.Lead],
+                d.HostAmbianceCode,
+                d.EndsAtUtc,
+                d.StepType,
+                d.Phase,
+                d.IsClosedToJoin))
+            .ToList();
+    }
+
+    /// <summary>
+    /// The active members of the given groups who are still community members (rows of users without a profile
+    /// stay until their group is deleted), by arrival then name (ordinal), in one query. Only the group id, the
+    /// public name, the avatar and the arrival come out.
+    /// </summary>
+    private async Task<ILookup<Guid, SprintMember>> ReadActiveMembersAsync(IReadOnlyCollection<Guid> groupIds, CancellationToken ct)
+    {
+        if (groupIds.Count == 0)
+            return Array.Empty<SprintMember>().ToLookup(_ => Guid.Empty);
+
+        var rows = await (
+                from m in _context.Set<GroupMember>().AsNoTracking()
+                join p in _context.MemberProfiles.AsNoTracking()
+                    on EF.Property<UserId>(m, GroupMemberConfiguration.UserField) equals p.Id
+                where groupIds.Contains(EF.Property<Guid>(m, GroupMemberConfiguration.GroupField))
+                      && m.LeftAtUtc == null
+                select new
+                {
+                    GroupId = EF.Property<Guid>(m, GroupMemberConfiguration.GroupField),
+                    p.Name,
+                    p.AvatarUrl,
+                    m.JoinedAtUtc,
+                })
+            .ToListAsync(ct);
+
+        // ToLookup keeps the order of the source within each group.
+        return rows
+            .OrderBy(m => m.JoinedAtUtc)
+            .ThenBy(m => m.Name.Value, StringComparer.Ordinal)
+            .ToLookup(m => m.GroupId, m => new SprintMember(m.Name, m.AvatarUrl));
+    }
+
+    // A timed sprint not joined itself, closed to joins or not. It may still be the root of a group:
     // ReadSoloSprintsAsync drops those.
-    private IQueryable<MemberSprint> SoloSprints() =>
+    private IQueryable<MemberSprint> Sprints() =>
         from s in _context.PomodoroSessions.AsNoTracking()
         join p in _context.MemberProfiles.AsNoTracking() on s.OwnerId equals p.Id
         where s.SessionType == PomodoroSessionType.Sprint
@@ -132,8 +238,11 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
               && s.PlannedDurationMinutes > 0
               && s.StartedAt.HasValue
               && s.SharedSprintId == null
-              && !s.IsClosedToJoin
         select new MemberSprint { Session = s, Profile = p };
+
+    // The sprints others can join: not closed.
+    private IQueryable<MemberSprint> SoloSprints() =>
+        Sprints().Where(m => !m.Session.IsClosedToJoin);
 
     /// <summary>
     /// The unexpired sprints nobody joined: a sprint whose id is a <c>GroupSessions</c> row is the root of a
@@ -162,9 +271,10 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
             : unexpired.Where(s => !groupRoots.Contains(s.Id.Value)).ToList();
     }
 
-    // Groups open to new members, led by their host (a member of the community). The end of the current step
-    // pre-filters the groups whose host wait limit has passed: end <= now − limit is exactly the Ended phase.
-    private IQueryable<GroupWithHost> OpenGroups(DateTime nowUtc)
+    // Groups not over, closed to joins or not, led by their host (a member of the community). The end of the
+    // current step pre-filters the groups whose host wait limit has passed: end <= now − limit is exactly the
+    // Ended phase.
+    private IQueryable<GroupWithHost> LiveGroups(DateTime nowUtc)
     {
         var earliestStepEnd = nowUtc - GroupRules.HostWaitLimit;
 
@@ -172,10 +282,13 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
                join h in _context.MemberProfiles.AsNoTracking()
                    on EF.Property<UserId>(g, GroupSessionConfiguration.HostField) equals h.Id
                where g.EndedAtUtc == null
-                     && !g.IsClosedToJoin
                      && g.CurrentStep.EndsAtUtc > earliestStepEnd
                select new GroupWithHost { Group = g, Host = h };
     }
+
+    // Groups open to new members.
+    private IQueryable<GroupWithHost> OpenGroups(DateTime nowUtc) =>
+        LiveGroups(nowUtc).Where(m => !m.Group.IsClosedToJoin);
 
     // Streamed: only the rows still running are kept.
     private static async Task<List<SprintRow>> ReadUnexpiredAsync(
@@ -188,8 +301,10 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
                 m.Session.Id,
                 m.Session.StartedAt!.Value,
                 m.Session.PlannedDurationMinutes,
+                m.Session.IsClosedToJoin,
                 m.Profile.Name,
-                m.Profile.AvatarUrl))
+                m.Profile.AvatarUrl,
+                m.Profile.AmbianceCode))
             .AsAsyncEnumerable()
             .WithCancellation(ct);
 
@@ -215,8 +330,10 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
                 m.Group.Id,
                 m.Group.CurrentStep.Type,
                 m.Group.CurrentStep.EndsAtUtc,
+                m.Group.IsClosedToJoin,
                 m.Host.Name,
                 m.Host.AvatarUrl,
+                m.Host.AmbianceCode,
             })
             .AsAsyncEnumerable()
             .WithCancellation(ct);
@@ -228,7 +345,7 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
             var endsAtUtc = DateTime.SpecifyKind(row.EndsAtUtc, DateTimeKind.Utc);
             var phase = GroupRules.PhaseAt(endsAtUtc, endedAtUtc: null, nowUtc);
             if (phase != GroupPhase.Ended)
-                live.Add(new GroupRow(row.Id, row.Type, endsAtUtc, phase, row.Name, row.AvatarUrl));
+                live.Add(new GroupRow(row.Id, row.Type, endsAtUtc, phase, row.IsClosedToJoin, row.Name, row.AvatarUrl, row.AmbianceCode));
         }
 
         return live;
@@ -277,15 +394,17 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
         GroupStepType StepType,
         GroupPhase Phase,
         DateTime EndsAtUtc,
-        SprintMember Lead)
+        SprintMember Lead,
+        bool IsClosedToJoin,
+        string? HostAmbianceCode)
     {
         public static Candidate Solo(SprintRow sprint) =>
             new(sprint.Id.Value, IsGroup: false, GroupStepType.Sprint, GroupPhase.Running, sprint.EndsAtUtc,
-                new SprintMember(sprint.Name, sprint.AvatarUrl));
+                new SprintMember(sprint.Name, sprint.AvatarUrl), sprint.IsClosedToJoin, sprint.AmbianceCode);
 
         public static Candidate Group(GroupRow group) =>
             new(group.Id, IsGroup: true, group.StepType, group.Phase, group.EndsAtUtc,
-                new SprintMember(group.HostName, group.HostAvatarUrl));
+                new SprintMember(group.HostName, group.HostAvatarUrl), group.IsClosedToJoin, group.HostAmbianceCode);
     }
 
     /// <summary>Object initializer on purpose: EF Core can compose further filters through its members.</summary>
@@ -306,8 +425,10 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
         PomodoroSessionId Id,
         DateTime StartedAt,
         int PlannedDurationMinutes,
+        bool IsClosedToJoin,
         ProfileName Name,
-        string? AvatarUrl)
+        string? AvatarUrl,
+        string? AmbianceCode)
     {
         /// <summary>Start + planned duration. UTC, like all session instants: a datetime2 column comes back
         /// with an unspecified kind.</summary>
@@ -320,6 +441,8 @@ internal sealed class EfCoreOpenSprintReadRepository : IOpenSprintReadRepository
         GroupStepType StepType,
         DateTime EndsAtUtc,
         GroupPhase Phase,
+        bool IsClosedToJoin,
         ProfileName HostName,
-        string? HostAvatarUrl);
+        string? HostAvatarUrl,
+        string? HostAmbianceCode);
 }

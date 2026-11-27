@@ -1,7 +1,10 @@
 @inherits LayoutComponentBase
 @using KairuFocus.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @inject SettingsApiClient SettingsApi
 @inject IJSRuntime JSRuntime
+
+<AuthorizeView><Authorized><PresenceHeartbeat /></Authorized></AuthorizeView>
 
 <div class="page">
     <div class="sidebar">

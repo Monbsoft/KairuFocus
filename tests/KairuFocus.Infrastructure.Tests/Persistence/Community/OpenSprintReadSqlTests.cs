@@ -13,23 +13,31 @@ namespace KairuFocus.Infrastructure.Tests.Persistence.Community;
 /// </summary>
 public sealed class OpenSprintReadSqlTests
 {
-    private const string OpenGroups = nameof(IOpenSprintReadRepository.GetOpenGroupsAsync);
+    private const string OpenGroups = nameof(EfCoreOpenSprintReadRepository.GetOpenGroupsAsync);
     private const string Joinable = nameof(IOpenSprintReadRepository.FindJoinableAsync);
     private const string GroupMembers = nameof(IOpenSprintReadRepository.GetGroupMembersAsync);
+    private const string Desks = nameof(IOpenSprintReadRepository.GetDesksAsync);
+    private const string Desk = nameof(IOpenSprintReadRepository.GetDeskAsync);
+    private const string HostAmbiance = nameof(IOpenSprintReadRepository.GetHostAmbianceCodeAsync);
 
     private static readonly DateTime Now = new(2026, 11, 8, 14, 0, 0, DateTimeKind.Utc);
+    private static readonly Guid Root = Guid.Parse("5f0c1a52-8d3e-4b7a-9c61-2e4d8f0b7a13");
 
     private static readonly string[] IdentifierColumns = ["OwnerId", "HostId", "UserId"];
 
-    // Columns a cross-user read may return: session and step columns, public name and avatar, counts.
+    // Columns a cross-user read may return: session and step columns, closure, public name, avatar and ambiance,
+    // counts.
     private static readonly Regex AllowedProjection = new(
-        @"^(TOP\([@\w]+\) )?(\[\w+\]\.\[(Id|StartedAt|PlannedDurationMinutes|CurrentStepType|CurrentStepEndsAtUtc|GroupSessionId|JoinedAtUtc|ProfileName|AvatarUrl)\]|COUNT\(\*\))( AS \[\w+\])?$",
+        @"^(TOP\([@\w]+\) )?(\[\w+\]\.\[(Id|StartedAt|PlannedDurationMinutes|CurrentStepType|CurrentStepEndsAtUtc|GroupSessionId|JoinedAtUtc|IsClosedToJoin|ProfileName|AvatarUrl|AmbianceCode)\]|COUNT\(\*\))( AS \[\w+\])?$",
         RegexOptions.CultureInvariant);
 
     [Theory]
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
     [InlineData(GroupMembers)]
+    [InlineData(Desks)]
+    [InlineData(Desk)]
+    [InlineData(HostAmbiance)]
     public async Task Should_NotReferenceUsersEmailOrDisplayName_When_Queried(string method)
     {
         foreach (var command in await CaptureAsync(method))
@@ -44,6 +52,9 @@ public sealed class OpenSprintReadSqlTests
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
     [InlineData(GroupMembers)]
+    [InlineData(Desks)]
+    [InlineData(Desk)]
+    [InlineData(HostAmbiance)]
     public async Task Should_NotProjectOwnerIdHostIdOrUserId_When_Queried(string method)
     {
         foreach (var command in await CaptureAsync(method))
@@ -60,6 +71,9 @@ public sealed class OpenSprintReadSqlTests
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
     [InlineData(GroupMembers)]
+    [InlineData(Desks)]
+    [InlineData(Desk)]
+    [InlineData(HostAmbiance)]
     public async Task Should_ProjectOnlyStepColumnsNamesAndAvatars_When_Queried(string method)
     {
         foreach (var command in await CaptureAsync(method))
@@ -71,6 +85,9 @@ public sealed class OpenSprintReadSqlTests
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
     [InlineData(GroupMembers)]
+    [InlineData(Desks)]
+    [InlineData(Desk)]
+    [InlineData(HostAmbiance)]
     public async Task Should_JoinHostOnMemberProfiles_When_ReadingGroups(string method)
     {
         var commands = await CaptureAsync(method);
@@ -84,6 +101,9 @@ public sealed class OpenSprintReadSqlTests
     [Theory]
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
+    [InlineData(Desks)]
+    [InlineData(Desk)]
+    [InlineData(HostAmbiance)]
     public async Task Should_JoinOwnerOnMemberProfiles_When_ReadingSoloSprints(string method)
     {
         var commands = await CaptureAsync(method);
@@ -97,6 +117,9 @@ public sealed class OpenSprintReadSqlTests
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
     [InlineData(GroupMembers)]
+    [InlineData(Desks)]
+    [InlineData(Desk)]
+    [InlineData(HostAmbiance)]
     public async Task Should_KeepDeadlineRulesOutOfSql_When_Queried(string method)
     {
         foreach (var command in await CaptureAsync(method))
@@ -110,6 +133,7 @@ public sealed class OpenSprintReadSqlTests
     [Theory]
     [InlineData(OpenGroups)]
     [InlineData(Joinable)]
+    [InlineData(Desks)]
     public async Task Should_CheckClosure_When_ReadingOpenSprintsAndGroups(string method)
     {
         var commands = await CaptureAsync(method);
@@ -134,6 +158,29 @@ public sealed class OpenSprintReadSqlTests
         }
     }
 
+    // A desk read by its root is returned closed to joins or not: only its end filters it.
+    [Fact]
+    public async Task Should_NotFilterOnClosure_When_ReadingDeskByRoot()
+    {
+        var commands = await CaptureAsync(Desk);
+
+        Assert.Contains(commands, command =>
+            command.Text.Contains("FROM [GroupSessions]", StringComparison.Ordinal)
+            && command.Text.Contains("[EndedAtUtc] IS NULL", StringComparison.Ordinal));
+        Assert.All(commands, command =>
+            Assert.DoesNotContain("[IsClosedToJoin] = CAST(0 AS bit)", command.Text, StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(Desk)]
+    [InlineData(HostAmbiance)]
+    public async Task Should_FilterOnRoot_When_ReadingByRoot(string method)
+    {
+        var commands = await CaptureAsync(method);
+
+        Assert.All(commands, command => Assert.Contains(command.Parameters, p => Equals(p.Value, Root)));
+    }
+
     [Fact]
     public async Task Should_LookUpTheNameKey_When_ReadingJoinableSprint()
     {
@@ -155,6 +202,9 @@ public sealed class OpenSprintReadSqlTests
                 OpenGroups => repository.GetOpenGroupsAsync(Now, 10),
                 Joinable => repository.FindJoinableAsync(ProfileName.Create("LEA_dev").Value, Now),
                 GroupMembers => repository.GetGroupMembersAsync(Guid.NewGuid()),
+                Desks => repository.GetDesksAsync(Now, 10),
+                Desk => repository.GetDeskAsync(Root, Now),
+                HostAmbiance => repository.GetHostAmbianceCodeAsync(Root),
                 _ => throw new ArgumentOutOfRangeException(nameof(method), method, null),
             };
         });

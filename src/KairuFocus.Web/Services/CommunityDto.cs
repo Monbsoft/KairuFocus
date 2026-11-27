@@ -13,7 +13,9 @@ public sealed record CommunityMembershipDto(
     string? NameSource,
     string? AvatarUrl,
     string? GitHubLogin,
-    bool GitHubLoginAvailable);
+    bool GitHubLoginAvailable,
+    bool PresenceConsented = false,
+    string? AmbianceCode = null);
 
 /// <summary>A member shown in a stack or a list: name and optional avatar.</summary>
 public sealed record SprintMemberDto(string Name, string? AvatarUrl);
@@ -46,16 +48,23 @@ public sealed record ActivityDayDto(DateOnly Date, int Sprints);
 public sealed record OpenSprintStatusDto(DateTimeOffset EndsAt, IReadOnlyList<SprintMemberDto> Others, bool IncludesViewer,
     string StepType, string Phase);
 
-/// <summary>GET open-sprints: one row per group.</summary>
-public sealed record OpenSprintsDto(bool ViewerIsMember, bool ViewerInGroup, IReadOnlyList<OpenSprintRowDto> Groups);
-
-public sealed record OpenSprintRowDto(string Name, string? AvatarUrl, DateTimeOffset EndsAt, int ParticipantCount,
-    bool IsMine, string StepType, string Phase);
-
-/// <summary>GET active-today: members who finished a sprint today (UTC); Members lists at most 5, Total counts all of them.</summary>
+/// <summary>"Actifs aujourd'hui" (part of GET open-space): members who finished a sprint today (UTC); Members lists at
+/// most 5, Total counts all of them.</summary>
 public sealed record ActiveTodayDto(int Total, IReadOnlyList<ActiveMemberDto> Members);
 
 public sealed record ActiveMemberDto(string Name, string? AvatarUrl, bool IsMe);
+
+/// <summary>GET open-space (iteration #50). Access is "Open", "NotMember" or "ConsentRequired"; the other fields are
+/// empty and ActiveToday is null unless it is "Open".</summary>
+public sealed record OpenSpaceDto(string Access, bool ViewerInGroup, IReadOnlyList<DeskDto> Desks,
+    IReadOnlyList<ActiveMemberDto> Connected, int ConnectedTotal, ActiveTodayDto? ActiveToday);
+
+/// <summary>One open desk: who sits there, the running step, and the host's ambiance (null when none).</summary>
+public sealed record DeskDto(IReadOnlyList<ActiveMemberDto> Seated, DateTimeOffset EndsAt, string StepType,
+    string Phase, bool IsClosedToJoin, AmbianceDto? Ambiance);
+
+/// <summary>A listening ambiance of the catalogue; Category is "Lofi", "JazzBlues", "Classical" or "RelaxFocus".</summary>
+public sealed record AmbianceDto(string Code, string Label, string Category, string Url);
 
 /// <summary>GET current-session: my group session (as host or participant). Role and Phase are
 /// the server strings (contract of the group-session API); WaitLimitAt and EndReason are null when they do not apply.</summary>
@@ -70,7 +79,8 @@ public sealed record CurrentGroupSessionDto(
     DateTimeOffset? WaitLimitAt,
     string? EndReason,
     IReadOnlyList<SprintMemberDto> Others,
-    bool IsClosedToJoin);
+    bool IsClosedToJoin,
+    AmbianceDto? Ambiance = null);
 
 /// <summary>Session is null with Succeeded when there is none (204); Succeeded is false when the read failed.</summary>
 public sealed record CurrentGroupSessionLookup(CurrentGroupSessionDto? Session, bool Succeeded);

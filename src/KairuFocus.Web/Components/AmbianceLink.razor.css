@@ -1,0 +1,44 @@
+/* Used on the dark desk card and on the Pomodoro page: no page token, the caller may set
+   --kf-ambiance-muted, --kf-ambiance-link and --kf-ambiance-focus; Bootstrap values otherwise (light and dark themes). */
+.kf-ambiance {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.375rem;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--kf-ambiance-muted, var(--bs-secondary-color, #6c757d));
+}
+
+.kf-ambiance__icon {
+    flex: none;
+}
+
+.kf-ambiance__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    min-height: 44px;
+    color: var(--kf-ambiance-link, var(--bs-link-color, #0d6efd));
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.kf-ambiance__link:hover {
+    color: var(--kf-ambiance-link, var(--bs-link-hover-color, #0a58ca));
+    text-decoration-thickness: 2px;
+}
+
+.kf-ambiance__link:focus-visible {
+    outline: 2px solid var(--kf-ambiance-focus, var(--bs-primary, #0d6efd));
+    outline-offset: 2px;
+}
+
+/* A long label without spaces wraps instead of widening the card. */
+.kf-ambiance__name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}

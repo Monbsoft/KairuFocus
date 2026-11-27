@@ -501,5 +501,8 @@ public sealed class GetMemberProfileQueryHandlerTests
 
         public Task<ActiveMembers> GetActiveMembersAsync(DateTime fromUtc, DateTime toUtc, int maxMembers, CancellationToken ct = default) =>
             inner.GetActiveMembersAsync(fromUtc, toUtc, maxMembers, ct);
+
+        public Task<IReadOnlyList<SprintMember>> GetConnectedMembersAsync(DateTime seenSinceUtc, int maxMembers, CancellationToken ct = default) =>
+            inner.GetConnectedMembersAsync(seenSinceUtc, maxMembers, ct);
     }
 }

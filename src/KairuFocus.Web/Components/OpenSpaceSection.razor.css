@@ -1,0 +1,88 @@
+/* The open space: the existing .kf-hero (brand background, white text, skeletons and alerts on dark), in one column.
+   Rendered on the Community page only: its tokens (--space-*, --text-*, --kf-blue-100, --target-min...) are available. */
+.kf-os {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: var(--space-4);
+}
+
+.kf-os__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+/* A real title rather than the eyebrow of .kf-hero h2: the open space is the first block of the page (mock-up B). */
+.kf-os__title {
+    color: var(--hero-text);
+    font-size: var(--text-md);
+    font-weight: 700;
+    letter-spacing: normal;
+    text-transform: none;
+    line-height: 1.3;
+}
+
+.kf-os__sub {
+    color: var(--kf-blue-100);
+    font-size: var(--text-sm);
+}
+
+.kf-os__closed {
+    margin: var(--space-2) 0 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: var(--text-sm);
+}
+
+/* Desks: as many columns of at least 230 px as fit (one column when the open space is narrower). */
+.kf-os__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kf-os__skel {
+    height: 180px;
+    border-radius: var(--radius-lg);
+}
+
+.kf-os__empty {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-5);
+}
+
+.kf-os__emptytext {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 52ch;
+}
+
+.kf-os__emptytitle {
+    font-size: var(--text-md);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.kf-os__more {
+    align-self: flex-start;
+}
+
+/* The focus ring of the page is blue on blue here: a light one on the dark open space (links, buttons, and the title
+   once focused by code). Child components (alerts, lines) carry their own. */
+.kf-os ::deep a:focus-visible,
+.kf-os ::deep .kf-linkbtn:focus-visible {
+    outline-color: var(--kf-blue-100);
+}
+
+.kf-os h2:focus-visible {
+    outline-color: var(--kf-blue-100);
+}

@@ -62,6 +62,12 @@ else
             }
         }
 
+        <!-- Ambiance du bureau (#50) : celle de l'hôte, pour l'hôte et ceux qui sont assis chez lui -->
+        @if (ShowAmbiance && _group!.Ambiance is { } ambiance && AmbianceHostName is { } ambianceHost)
+        {
+            <AmbianceLink Ambiance="ambiance" HostName="@ambianceHost" />
+        }
+
         @if (IsHostWaiting)
         {
             <p class="kf-group-yourturn mb-0">@F["Group.YourTurn.Title"]</p>
@@ -389,6 +395,7 @@ else
 
     // ── Shared sprint (community) ─────────────────────────────────────────
     private bool _isMember;      // read once, without blocking the page; a failure means "not a member" (no button)
+    private string? _myName;     // my community name, read with the membership: names my own desk's ambiance
     private bool _closingGroup;  // a close/reopen request is in flight
     private bool _disposed;
 
@@ -439,6 +446,14 @@ else
 
     /// <summary>For a participant, the host is the first of the others (the members read lists the host first).</summary>
     private string? HostName => IsGroupLive && !IsHost && _group!.Others.Count > 0 ? _group.Others[0].Name : null;
+
+    /// <summary>Whose desk the ambiance belongs to: mine when I host, the host's otherwise.</summary>
+    private string? AmbianceHostName => IsHost ? _myName : HostName;
+
+    /// <summary>The desk's ambiance, only while it is a desk: during a step (as <see cref="CanManageGroup"/>), or between
+    /// two steps of a live group. A solo sprint that ended leaves <c>_group</c> as it was (it is not read again): the
+    /// session state decides then.</summary>
+    private bool ShowAmbiance => _group is { Phase: not "Ended" } && (IsSessionActive || IsGroupLive);
 
     /// <summary>"Sans choix, la session se termine dans {0}" cut around its placeholder, so that the countdown takes its place.</summary>
     private (string Before, string After) WaitLimit
@@ -688,6 +703,7 @@ else
             if (_disposed) return;
 
             _isMember = membership?.IsMember == true;
+            _myName = membership?.Name;
             await InvokeAsync(StateHasChanged);
         }
         catch (Exception)

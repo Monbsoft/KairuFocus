@@ -1,4 +1,4 @@
-@* "Join this sprint" for the open sprint of TargetName. A visitor outside the community gets a link to the settings.
+@* "Join this sprint" for the open sprint of TargetName (AsSeat: "S'asseoir", the free chair of a desk in the open space). A visitor outside the community gets a link to the settings.
    During the call the button is aria-disabled (not disabled, so the keyboard focus stays on it) and the handler ignores
    a second click: it cannot start a second session. Once the answer is in, the button is usable again (except for a
    closed sprint, where it is hidden): a refusal can be retried, the server refuses again if nothing changed.
@@ -36,9 +36,13 @@
 
         @if (_outcome != JoinSprintOutcome.SprintClosed)
         {
-            <button type="button" class="kf-join__btn" aria-disabled="@(_busy ? "true" : null)" aria-busy="@(_busy ? "true" : null)"
-                    aria-label="@F.Format("Join.Button.Aria", TargetName)" @onclick="JoinAsync">
-                @F[_busy ? "Join.Joining" : "Join.Button"]
+            <button type="button" class="kf-join__btn @(AsSeat ? "kf-join__btn--seat" : "")" aria-disabled="@(_busy ? "true" : null)"
+                    aria-busy="@(_busy ? "true" : null)" aria-label="@AriaLabel" @onclick="JoinAsync">
+                @if (AsSeat)
+                {
+                    <span class="kf-join__seat" aria-hidden="true">+</span>
+                }
+                @ButtonText
             </button>
         }
 
@@ -81,6 +85,10 @@
     /// <summary>For a list of sprints: a visitor outside the community only gets the link (no explanatory text).</summary>
     [Parameter] public bool Compact { get; set; }
 
+    /// <summary>The free chair of a desk in the open space (#50): "S'asseoir", styled for the dark open space.
+    /// Same behaviour as "Rejoindre".</summary>
+    [Parameter] public bool AsSeat { get; set; }
+
     /// <summary>The sprint was closed, elapsed or finished (410): the parent refreshes its data.</summary>
     [Parameter] public EventCallback OnNoLongerOpen { get; set; }
 
@@ -97,6 +105,10 @@
     private DateTimeOffset _warningScheduledFor;
 
     private bool ShortOnTime => EndsAt - Clock.GetUtcNow() < XpThreshold;
+
+    private string ButtonText => F[_busy ? "Join.Joining" : AsSeat ? "Seat.Sit" : "Join.Button"];
+
+    private string AriaLabel => F.Format(AsSeat ? "Seat.Aria" : "Join.Button.Aria", TargetName);
 
     protected override void OnParametersSet()
     {

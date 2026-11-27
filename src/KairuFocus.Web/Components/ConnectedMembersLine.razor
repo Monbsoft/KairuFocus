@@ -1,0 +1,51 @@
+@* "Dans l'open space" (#50): the members connected right now who sit at no desk shown, the viewer included (named "toi",
+   linking to my own profile). No status next to the names: some are in a sprint closed to the others, a free sprint or a
+   break, and saying so would go beyond what they consented to (spec §5.2). Up to 12 names (the server caps the list),
+   then "et N autres". Same line as "Actifs aujourd'hui", under a rule.
+   Arrivals and departures are not announced: no live region here. Nothing at all when nobody is left to show. *@
+@inject CommunityFormatter F
+
+@if (Members.Count > 0 || Total > 0)
+{
+    <div class="kf-connected">
+        <p class="kf-connected__title" id="@_titleId">@F["Connected.Title"]</p>
+
+        @if (Members.Count > 0)
+        {
+            <ul class="kf-connected__list" aria-labelledby="@_titleId">
+                @foreach (var member in Members)
+                {
+                    <li @key="member.Name">
+                        <a class="kf-connected__chip @(member.IsMe ? "kf-connected__chip--me" : "")" href="@Href(member)">
+                            <MemberAvatar Name="@member.Name" AvatarUrl="@member.AvatarUrl" Size="28" />
+                            <span class="kf-connected__name">@Label(member)</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (Others > 0)
+        {
+            <span class="kf-connected__more">@F.Plural("ActiveToday.More", Others, F.Number(Others))</span>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>The connected members shown, the server's order (at most 12).</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<ActiveMemberDto> Members { get; set; } = [];
+
+    /// <summary>All the connected members outside the desks shown, those listed included.</summary>
+    [Parameter] public int Total { get; set; }
+
+    private readonly string _titleId = "connected-title-" + Guid.NewGuid().ToString("N")[..8];
+
+    private int Others => Math.Max(0, Total - Members.Count);
+
+    private string Label(ActiveMemberDto member) =>
+        member.IsMe ? $"{member.Name} ({F["ActiveToday.You"]})" : member.Name;
+
+    private static string Href(ActiveMemberDto member) =>
+        member.IsMe ? "profil" : CommunityFormatter.ProfileHref(member.Name);
+}

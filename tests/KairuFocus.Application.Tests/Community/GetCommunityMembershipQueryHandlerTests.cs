@@ -1,4 +1,4 @@
-﻿using KairuFocus.Application.Community.Queries.GetCommunityMembership;
+using KairuFocus.Application.Community.Queries.GetCommunityMembership;
 using KairuFocus.Application.Tests.Identity;
 using KairuFocus.Domain.Community;
 using KairuFocus.Domain.Identity;
@@ -32,6 +32,20 @@ public sealed class GetCommunityMembershipQueryHandlerTests
         Assert.Equal("octocat", result.GitHubLogin);
         // The login is the member's own name: it does not count as taken.
         Assert.True(result.GitHubLoginAvailable);
+    }
+
+    [Fact]
+    public async Task Should_ReturnConsentAndAmbiance_When_MembershipRead()
+    {
+        var me = User.Create("gh-1", "octocat", "The Octocat", null, MembershipTestData.AvatarUrl);
+        var sut = CreateSut(me);
+        _profiles.Seed(me.Id, "bobby", ambianceCode: "test1");
+        _profiles.Seed(UserId.New(), "lea", presenceConsented: false);
+
+        var result = await sut.Handle(new GetCommunityMembershipQuery());
+
+        Assert.True(result.PresenceConsented);
+        Assert.Equal("test1", result.AmbianceCode);
     }
 
     [Fact]

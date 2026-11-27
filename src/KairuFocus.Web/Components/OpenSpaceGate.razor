@@ -1,0 +1,61 @@
+@* The panel that stands in for the whole open space when the viewer may not see it (#50, spec §5.3 case 5 and §5.5):
+   - NotMember: the open space is for community members; a link to activate the community in the settings;
+   - ConsentRequired: a member activated before #50 accepts to be seen connected, with one button (the consent is saved
+     here, then OnConsented makes the page read the open space again).
+   No name, no avatar, no number of desks: the server sends none to these visitors.
+   During the call the button is aria-disabled (not disabled, so that the keyboard focus stays on it) and a second click
+   is ignored; it stays so while the page reads the open space again. A failure is said under the button and can be retried. *@
+@inject CommunityApiClient Community
+@inject CommunityFormatter F
+
+<div class="kf-gate">
+    @if (Access == "ConsentRequired")
+    {
+        <p class="kf-gate__text">@F["OpenSpace.Gate.Consent"]</p>
+        <button type="button" class="kf-btn-light kf-gate__btn" aria-disabled="@(_busy ? "true" : null)"
+                aria-busy="@(_busy ? "true" : null)" @onclick="ConsentAsync">
+            @F["OpenSpace.Gate.ConsentCta"]
+        </button>
+        @if (_failed)
+        {
+            <p class="kf-gate__error" role="alert">@F["OpenSpace.Gate.ConsentError"]</p>
+        }
+    }
+    else
+    {
+        <p class="kf-gate__text">@F["OpenSpace.Gate.NotMember"]</p>
+        <a class="kf-btn-light kf-gate__btn" href="settings#communaute">@F["Join.NeedMember.Link"]</a>
+    }
+</div>
+
+@code {
+    /// <summary>"NotMember" or "ConsentRequired" (the access of the open-space read).</summary>
+    [Parameter, EditorRequired] public string Access { get; set; } = "";
+
+    /// <summary>The consent was saved: the page reads the open space again (awaited, so that the button stays busy meanwhile).</summary>
+    [Parameter] public EventCallback OnConsented { get; set; }
+
+    private bool _busy;
+    private bool _failed;
+
+    private async Task ConsentAsync()
+    {
+        if (_busy) return;
+        _busy = true;
+        _failed = false;
+
+        try
+        {
+            if (await Community.ConsentToPresenceAsync())
+                await OnConsented.InvokeAsync();
+            else
+                _failed = true;
+        }
+        finally
+        {
+            // Usable again: after a failure, or when the read that followed the consent failed and the page still shows
+            // this panel (consenting again is harmless).
+            _busy = false;
+        }
+    }
+}

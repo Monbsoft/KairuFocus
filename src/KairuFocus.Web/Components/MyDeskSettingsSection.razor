@@ -1,0 +1,126 @@
+@* "Mon bureau" in the settings of a community member: the ambiance of one's desk (a link to a music playlist,
+   shown on the desk in the Community page and to those who sit at it). The choice is saved as soon as it changes. *@
+@inject CommunityApiClient Community
+@inject CommunityFormatter F
+
+<section class="kf-mydesk" aria-labelledby="mydesk-title">
+    <h5 id="mydesk-title" class="kf-mydesk__title">@F["Settings.MyDesk.Title"]</h5>
+
+    <label class="form-label" for="mydesk-ambiance">@F["Settings.MyDesk.Ambiance"]</label>
+    <select id="mydesk-ambiance" class="form-select kf-mydesk__select" @ref="_select"
+            @bind:get="_selected" @bind:set="ChangeAsync"
+            disabled="@(_busy || _catalogue is null)"
+            aria-busy="@(_busy ? "true" : null)"
+            aria-describedby="mydesk-hint">
+        <option value="">@F["Ambiance.None"]</option>
+        @foreach (var group in Groups)
+        {
+            <optgroup label="@group.Label">
+                @foreach (var ambiance in group.Items)
+                {
+                    <option value="@ambiance.Code">@ambiance.Label</option>
+                }
+            </optgroup>
+        }
+        @foreach (var ambiance in Ungrouped)
+        {
+            <option value="@ambiance.Code">@ambiance.Label</option>
+        }
+    </select>
+    <div class="form-text" id="mydesk-hint">@F["Settings.MyDesk.Hint"]</div>
+
+    @* Always mounted, so that what is added later is announced. *@
+    <div role="status" aria-live="polite" class="kf-mydesk__status @(_failed ? "text-danger" : "text-success")">@_message</div>
+</section>
+
+@code {
+    private static readonly string[] Categories = ["Lofi", "JazzBlues", "Classical", "RelaxFocus"];
+
+    [Parameter, EditorRequired] public CommunityMembershipDto Membership { get; set; } = default!;
+
+    private ElementReference _select;
+    private IReadOnlyList<AmbianceDto>? _catalogue;
+    private string _selected = "";
+    private string _savedCode = "";
+    private string? _lastMembershipCode;
+    private bool _busy;
+    private bool _failed;
+    private string? _message;
+    private bool _refocus;
+
+    private IEnumerable<(string Label, IEnumerable<AmbianceDto> Items)> Groups =>
+        Categories
+            .Select(c => (Label: F[$"Ambiance.Category.{c}"], Items: (_catalogue ?? []).Where(a => a.Category == c).ToList().AsEnumerable()))
+            .Where(g => g.Items.Any());
+
+    /// <summary>A category this version does not know: its entries stay reachable, without a group.</summary>
+    private IEnumerable<AmbianceDto> Ungrouped => (_catalogue ?? []).Where(a => !Categories.Contains(a.Category));
+
+    protected override async Task OnInitializedAsync()
+    {
+        // An unreadable catalogue is treated as an empty one: only "Aucune" is offered.
+        _catalogue = await Community.GetAmbiancesAsync() ?? [];
+        Sync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_catalogue is not null && Membership.AmbianceCode != _lastMembershipCode)
+            Sync();
+    }
+
+    /// <summary>A stored code the catalogue no longer holds shows as "Aucune".</summary>
+    private void Sync()
+    {
+        _lastMembershipCode = Membership.AmbianceCode;
+        var code = Membership.AmbianceCode;
+        _savedCode = code is not null && _catalogue!.Any(a => a.Code == code) ? code : "";
+        _selected = _savedCode;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // The select was disabled during the request and lost the focus.
+        if (_refocus && !_busy)
+        {
+            _refocus = false;
+            try
+            {
+                await _select.FocusAsync();
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or JSException)
+            {
+                // Not on screen any more: leave the focus where it is.
+            }
+        }
+    }
+
+    private async Task ChangeAsync(string? value)
+    {
+        if (_busy) return;
+        var code = value ?? "";
+        if (code == _savedCode) return;
+
+        _selected = code;
+        _busy = true;
+        _message = null;
+        _failed = false;
+
+        var saved = await Community.SetAmbianceAsync(code.Length == 0 ? null : code);
+        _busy = false;
+        _refocus = true;
+
+        if (saved)
+        {
+            _savedCode = code;
+            _message = F["Settings.MyDesk.Saved"];
+        }
+        else
+        {
+            // Back to what is really stored.
+            _selected = _savedCode;
+            _failed = true;
+            _message = F["Settings.MyDesk.Error"];
+        }
+    }
+}
