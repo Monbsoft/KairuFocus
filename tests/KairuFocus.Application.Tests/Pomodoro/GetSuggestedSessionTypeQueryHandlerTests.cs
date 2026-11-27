@@ -7,25 +7,33 @@ namespace KairuFocus.Application.Tests.Pomodoro;
 
 public sealed class GetSuggestedSessionTypeQueryHandlerTests
 {
-    // Existing tests use TimeProvider.System so that sessions created with DateTime.UtcNow
-    // are found by FakePomodoroSessionRepository.GetLatestCompletedTodayAsync (which also
-    // compares against DateTime.UtcNow.Date). The new offset test uses a FixedTimeProvider.
+    // The handler's clock is pinned (2026-06-26 12:00 UTC by default), so the local day is
+    // deterministic whatever the time the tests run at.
+    private static readonly DateTimeOffset FixedNow = new(2026, 6, 26, 12, 0, 0, TimeSpan.Zero);
+
     private readonly FakePomodoroSessionRepository _sessionRepository = new();
     private readonly FakePomodoroSettingsRepository _settingsRepository = new();
     private readonly GetSuggestedSessionTypeQueryHandler _sut;
 
+    // Successive sessions added by AddCompleted(type, count) end 30 minutes apart, from 08:00 UTC
+    // on the day of FixedNow, so that "the latest one" is unambiguous.
+    private int _sequence;
+
     public GetSuggestedSessionTypeQueryHandlerTests()
     {
-        _sut = BuildSut(TimeProvider.System);
+        _sut = BuildSut(FixedNow);
     }
 
-    private GetSuggestedSessionTypeQueryHandler BuildSut(TimeProvider timeProvider) =>
+    private GetSuggestedSessionTypeQueryHandler BuildSut(DateTimeOffset now) =>
         new(
             _sessionRepository,
             _settingsRepository,
             new FakeCurrentUserService(),
             NullLogger<GetSuggestedSessionTypeQueryHandler>.Instance,
-            timeProvider);
+            new FixedTimeProvider(now));
+
+    private static DateTime Utc(int year, int month, int day, int hour, int minute) =>
+        new(year, month, day, hour, minute, 0, DateTimeKind.Utc);
 
     private void AddCompleted(PomodoroSessionType type, DateTime endedAt)
     {
@@ -38,7 +46,7 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     private void AddCompleted(PomodoroSessionType type, int count = 1)
     {
         for (var i = 0; i < count; i++)
-            AddCompleted(type, DateTime.UtcNow);
+            AddCompleted(type, FixedNow.UtcDateTime.Date.AddHours(8).AddMinutes(30 * _sequence++));
     }
 
     // ── Nominal tests (UTC, offset=0) ─────────────────────────────────────
@@ -117,32 +125,68 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     [Fact]
     public async Task Should_UseLocalDayWindow_When_OffsetNonZero()
     {
-        // Fixed now = 2026-06-26 12:00 UTC, offset = +120 (UTC+2).
+        // Now = 2026-06-26 12:00 UTC, offset = +120 (UTC+2).
         // Local window: startUtc = 2026-06-25 22:00 UTC, endUtc = 2026-06-26 22:00 UTC.
-        //
-        // Four sprints ending at 2026-06-26 10:00 UTC (= 12:00 local) => in local window.
-        // GetLatestCompletedTodayAsync in the Fake uses DateTime.UtcNow.Date; we set EndedAt
-        // to an absolute UTC date that is unambiguously "today local" for the fixed window,
-        // but we must also ensure GetLatestCompletedTodayAsync finds the session.
-        // Since the Fake compares EndedAt.Date == DateTime.UtcNow.Date, and UtcNow.Date
-        // right now is 2026-06-27, we cannot use an absolute 2026-06-26 date.
-        //
-        // Solution: use DateTime.UtcNow for the session timestamps so the Fake finds them,
-        // and use a FixedTimeProvider set to *today's* real UTC noon to keep the window
-        // consistent.  The test verifies that with offset=+120 the four sprints are counted
-        // in the local window (they all end within the last 2h of the local day).
-        var fixedNow = new DateTimeOffset(DateTime.UtcNow.Date.AddHours(12), TimeSpan.Zero);
-        var sut = BuildSut(new FixedTimeProvider(fixedNow));
-
-        // Four sprints completed today UTC at 10:00 => 12:00 local (still within local window).
-        var sprintEndedAt = DateTime.UtcNow.Date.AddHours(10);
+        // Four sprints ending at 2026-06-26 10:00 UTC (= 12:00 local) are all in that window.
+        var sprintEndedAt = Utc(2026, 6, 26, 10, 0);
         for (var i = 0; i < 4; i++)
             AddCompleted(PomodoroSessionType.Sprint, sprintEndedAt);
 
-        var result = await sut.Handle(new GetSuggestedSessionTypeQuery(OffsetMinutes: 120));
+        var result = await _sut.Handle(new GetSuggestedSessionTypeQuery(OffsetMinutes: 120));
 
         // 4 sprints today local => multiple of SprintsBeforeLongBreak (4) => LongBreak.
         Assert.Equal(PomodoroSessionType.LongBreak, result.SuggestedType);
+    }
+
+    [Fact]
+    public async Task Should_SuggestShortBreak_When_SprintEndedAfterLocalMidnightWithPositiveOffset()
+    {
+        // Now = 2026-06-27 00:30 UTC = 01:30 local on the 27th (UTC+1): the local day starts at 2026-06-26 23:00 UTC.
+        // The sprint ended at 23:10 UTC = 00:10 local on the 27th: it belongs to today (UTC day: yesterday).
+        AddCompleted(PomodoroSessionType.Sprint, Utc(2026, 6, 26, 23, 10));
+
+        var result = await BuildSut(new DateTimeOffset(2026, 6, 27, 0, 30, 0, TimeSpan.Zero))
+            .Handle(new GetSuggestedSessionTypeQuery(OffsetMinutes: 60));
+
+        Assert.Equal(PomodoroSessionType.ShortBreak, result.SuggestedType);
+    }
+
+    [Fact]
+    public async Task Should_SuggestSprint_When_SprintEndedBeforeLocalMidnightWithPositiveOffset()
+    {
+        // Same day as above, but the sprint ended at 22:50 UTC = 23:50 local on the 26th: it is yesterday.
+        AddCompleted(PomodoroSessionType.Sprint, Utc(2026, 6, 26, 22, 50));
+
+        var result = await BuildSut(new DateTimeOffset(2026, 6, 27, 0, 30, 0, TimeSpan.Zero))
+            .Handle(new GetSuggestedSessionTypeQuery(OffsetMinutes: 60));
+
+        Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
+    }
+
+    [Fact]
+    public async Task Should_SuggestShortBreak_When_SprintEndedOnSameLocalDayWithNegativeOffset()
+    {
+        // Now = 2026-06-27 01:00 UTC = 20:00 local on the 26th (UTC-5): the local day starts at 2026-06-26 05:00 UTC.
+        // The sprint ended at 2026-06-26 23:50 UTC = 18:50 local on the 26th: it belongs to today.
+        AddCompleted(PomodoroSessionType.Sprint, Utc(2026, 6, 26, 23, 50));
+
+        var result = await BuildSut(new DateTimeOffset(2026, 6, 27, 1, 0, 0, TimeSpan.Zero))
+            .Handle(new GetSuggestedSessionTypeQuery(OffsetMinutes: -300));
+
+        Assert.Equal(PomodoroSessionType.ShortBreak, result.SuggestedType);
+    }
+
+    [Fact]
+    public async Task Should_SuggestSprint_When_SprintEndedOnPreviousLocalDayWithNegativeOffset()
+    {
+        // Now = 2026-06-26 06:00 UTC = 01:00 local on the 26th (UTC-5): the local day starts at 2026-06-26 05:00 UTC.
+        // The sprint ended at 04:50 UTC = 23:50 local on the 25th: it is yesterday (UTC day: today).
+        AddCompleted(PomodoroSessionType.Sprint, Utc(2026, 6, 26, 4, 50));
+
+        var result = await BuildSut(new DateTimeOffset(2026, 6, 26, 6, 0, 0, TimeSpan.Zero))
+            .Handle(new GetSuggestedSessionTypeQuery(OffsetMinutes: -300));
+
+        Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
     }
 
     // ── Clamp test (correction E) ──────────────────────────────────────────
@@ -163,10 +207,10 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     {
         // Started two days ago, completion reported now: EndedAt is retained at the scheduled end
         // (two days ago), so no sprint counts as completed today.
-        var start = DateTime.UtcNow.AddDays(-2);
+        var start = FixedNow.UtcDateTime.AddDays(-2);
         var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 25, FakeCurrentUserService.TestUserId);
         session.Start(start);
-        session.Complete(DateTime.UtcNow);
+        session.Complete(FixedNow.UtcDateTime);
         _sessionRepository.Sessions.Add(session);
 
         var result = await _sut.Handle(new GetSuggestedSessionTypeQuery());

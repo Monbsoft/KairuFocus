@@ -20,9 +20,20 @@ public interface IPomodoroSessionRepository
     /// </summary>
     Task<PomodoroSession?> GetLatestEndedAsync(UserId userId, CancellationToken cancellationToken = default);
     Task UpdateAsync(PomodoroSession session, CancellationToken cancellationToken = default);
-    Task<int> GetCompletedTodayCountAsync(UserId userId, CancellationToken cancellationToken = default);
-    Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<PomodoroSession>> GetTodaySprintSessionsAsync(UserId userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The most recent (by EndedAt) completed session of any type whose EndedAt falls within
+    /// [startUtc, endUtc). Null when the user has none in that window.
+    /// Uses UTC range comparison (provider-safe: no .Date or AddMinutes in SQL).
+    /// </summary>
+    Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Free sprint sessions (no planned duration), completed or interrupted, whose StartedAt
+    /// falls within [startUtc, endUtc), ordered by StartedAt.
+    /// Uses UTC range comparison (provider-safe).
+    /// </summary>
+    Task<IReadOnlyList<PomodoroSession>> GetTodaySprintSessionsAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Count of completed sprint sessions whose EndedAt falls within [startUtc, endUtc).
