@@ -127,10 +127,12 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     {
         // Now = 2026-06-26 12:00 UTC, offset = +120 (UTC+2).
         // Local window: startUtc = 2026-06-25 22:00 UTC, endUtc = 2026-06-26 22:00 UTC.
-        // Four sprints ending at 2026-06-26 10:00 UTC (= 12:00 local) are all in that window.
-        var sprintEndedAt = Utc(2026, 6, 26, 10, 0);
-        for (var i = 0; i < 4; i++)
-            AddCompleted(PomodoroSessionType.Sprint, sprintEndedAt);
+        // Three sprints end at 2026-06-26 10:00 UTC (= 12:00 local, the latest one); a fourth ended at
+        // 2026-06-25 23:00 UTC (= 01:00 local on the 26th): in the local window, but outside the UTC day
+        // of the 26th. Only the local window counts four sprints.
+        AddCompleted(PomodoroSessionType.Sprint, Utc(2026, 6, 25, 23, 0));
+        for (var i = 0; i < 3; i++)
+            AddCompleted(PomodoroSessionType.Sprint, Utc(2026, 6, 26, 10, 0));
 
         var result = await _sut.Handle(new GetSuggestedSessionTypeQuery(OffsetMinutes: 120));
 

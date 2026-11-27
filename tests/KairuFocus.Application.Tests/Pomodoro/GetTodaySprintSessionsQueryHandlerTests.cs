@@ -132,14 +132,17 @@ public sealed class GetTodaySprintSessionsQueryHandlerTests
     {
         // Now = 2026-06-27 02:00 UTC = 21:00 local on the 26th (UTC-5): local day starts at 2026-06-26 05:00 UTC.
         var sut = BuildSut(new DateTimeOffset(2026, 6, 27, 2, 0, 0, TimeSpan.Zero));
-        var sameLocalDay = CreateFreeSprintCompleted(Utc(2026, 6, 27, 1, 0)); // 20:00 local, the 26th
+        var afterUtcMidnight = CreateFreeSprintCompleted(Utc(2026, 6, 27, 1, 0)); // 20:00 local, the 26th
+        var beforeUtcMidnight = CreateFreeSprintCompleted(Utc(2026, 6, 26, 23, 0)); // 18:00 local, the 26th (UTC day: the 26th)
         var previousLocalDay = CreateFreeSprintCompleted(Utc(2026, 6, 26, 4, 30)); // 23:30 local, the 25th
-        _sessionRepository.Sessions.Add(sameLocalDay);
+        _sessionRepository.Sessions.Add(afterUtcMidnight);
         _sessionRepository.Sessions.Add(previousLocalDay);
+        _sessionRepository.Sessions.Add(beforeUtcMidnight);
 
         var result = await sut.Handle(new GetTodaySprintSessionsQuery(OffsetMinutes: -300));
 
-        var listed = Assert.Single(result.Sessions);
-        Assert.Equal(sameLocalDay.Id.Value, listed.Id);
+        Assert.Equal(
+            [beforeUtcMidnight.Id.Value, afterUtcMidnight.Id.Value],
+            result.Sessions.Select(s => s.Id));
     }
 }

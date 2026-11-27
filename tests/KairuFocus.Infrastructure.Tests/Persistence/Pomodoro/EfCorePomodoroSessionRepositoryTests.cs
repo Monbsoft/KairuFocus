@@ -9,8 +9,9 @@ public sealed class EfCorePomodoroSessionRepositoryTests
 {
     private static readonly DateTime Start = new(2026, 10, 30, 9, 0, 0, DateTimeKind.Utc);
 
-    // A local-day window expressed in UTC (here simply the UTC day of 2026-10-30).
-    private static readonly DateTime WindowStart = new(2026, 10, 30, 0, 0, 0, DateTimeKind.Utc);
+    // A local-day window expressed in UTC: the 2026-10-30 local day of a UTC+1 user,
+    // i.e. [2026-10-29 23:00, 2026-10-30 23:00[ UTC. It straddles two UTC days on purpose.
+    private static readonly DateTime WindowStart = new(2026, 10, 29, 23, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime WindowEnd = WindowStart.AddDays(1);
 
     private readonly InMemoryDatabase _database = new();
