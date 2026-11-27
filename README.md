@@ -32,7 +32,7 @@ KairuFocus centralise en un seul endroit tout ce dont un développeur a besoin p
 - **API** : ASP.NET Core Web API
 - **Web** : Blazor WebAssembly
 - **Mobile/Desktop** : .NET MAUI (Blazor Hybrid) — Windows, Android, iOS, macOS
-- **Orchestration** : .NET Aspire 13.6
+- **Orchestration** : Aspire 17
 - **Base de données** : SQL Server (LocalDB en local, Azure SQL en production) + EF Core 10
 - **Auth** : GitHub OAuth 2.0 + JWT HS256 (Web), token personnel (MCP)
 - **Tests** : xUnit — 804 tests (Domain, Application, Infrastructure, Api)
@@ -79,6 +79,7 @@ docs/
 ### Prérequis
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [CLI Aspire 17](https://aspire.dev/get-started/install-cli/) pour l'option A : l'AppHost en tire l'orchestrateur et le dashboard (`aspire update --self` met à jour une CLI existante)
 - SQL Server LocalDB (instance `(localdb)\mssqllocaldb`, base `kairufocus` : l'API applique les migrations au démarrage)
 - Une [GitHub OAuth App](https://github.com/settings/developers) (voir ci-dessous)
 

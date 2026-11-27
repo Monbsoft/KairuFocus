@@ -1,21 +1,17 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.6.3">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- Orchestration (DCP, tableau de bord) restaurée par NuGet : pas de bundle CLI Aspire. -->
-    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+    <!-- Aspire 17 : l'orchestration (DCP, tableau de bord) vient du bundle de la CLI Aspire,
+         qui doit être installée en 17.0.0 (https://aspire.dev/get-started/install-cli/). -->
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../KairuFocus.Api/KairuFocus.Api.csproj">
-      <IsAspireProjectResource>true</IsAspireProjectResource>
-    </ProjectReference>
-    <ProjectReference Include="../KairuFocus.Web/KairuFocus.Web.csproj">
-      <IsAspireProjectResource>true</IsAspireProjectResource>
-    </ProjectReference>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="17.0.0" />
+    <PackageReference Include="Aspire.Hosting.Dotnet" Version="17.0.0" />
   </ItemGroup>
 
 </Project>
