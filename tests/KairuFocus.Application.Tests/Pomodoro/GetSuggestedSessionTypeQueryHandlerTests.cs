@@ -156,10 +156,12 @@ public sealed class GetSuggestedSessionTypeQueryHandlerTests
     [Fact]
     public async Task Should_SuggestSprint_When_SprintEndedBeforeLocalMidnightWithPositiveOffset()
     {
-        // Same day as above, but the sprint ended at 22:50 UTC = 23:50 local on the 26th: it is yesterday.
+        // Now = 2026-06-26 23:30 UTC = 00:30 local on the 27th (UTC+1): the local day starts at 2026-06-26 23:00 UTC.
+        // The sprint ended at 22:50 UTC = 23:50 local on the 26th: it is yesterday, although it is still
+        // the same UTC day (the 26th) — a UTC-day filter would find it and suggest a break.
         AddCompleted(PomodoroSessionType.Sprint, Utc(2026, 6, 26, 22, 50));
 
-        var result = await BuildSut(new DateTimeOffset(2026, 6, 27, 0, 30, 0, TimeSpan.Zero))
+        var result = await BuildSut(new DateTimeOffset(2026, 6, 26, 23, 30, 0, TimeSpan.Zero))
             .Handle(new GetSuggestedSessionTypeQuery(OffsetMinutes: 60));
 
         Assert.Equal(PomodoroSessionType.Sprint, result.SuggestedType);
