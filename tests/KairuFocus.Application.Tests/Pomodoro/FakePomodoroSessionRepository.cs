@@ -16,12 +16,6 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
     /// session in between, reproducing the "rejected but nothing readable" race.</summary>
     public Action? OnInsertRejected { get; set; }
 
-    /// <summary>Clock behind the "today" filters, which mirror the EF repository's
-    /// DateTime.UtcNow.Date. A test pins it so that its setup and the query see the same day.</summary>
-    public TimeProvider TimeProvider { get; set; } = TimeProvider.System;
-
-    private DateTime UtcToday => TimeProvider.GetUtcNow().UtcDateTime.Date;
-
     /// <summary>
     /// Simulates the unique filtered index: the insert is rejected when another Active
     /// session already exists for the same owner.
@@ -66,12 +60,6 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
         return Task.CompletedTask;
     }
 
-    public Task<int> GetCompletedTodayCountAsync(UserId userId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Sessions.Count(s => s.OwnerId == userId
-                                            && s.Status == PomodoroSessionStatus.Completed
-                                            && s.EndedAt.HasValue
-                                            && s.EndedAt.Value.Date == UtcToday));
-
     public Task<int> GetCompletedSprintsTodayCountAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default) =>
         Task.FromResult(Sessions.Count(s => s.OwnerId == userId
                                             && s.SessionType == PomodoroSessionType.Sprint
@@ -80,19 +68,24 @@ internal sealed class FakePomodoroSessionRepository : IPomodoroSessionRepository
                                             && s.EndedAt.Value >= startUtc
                                             && s.EndedAt.Value < endUtc));
 
-    public Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, CancellationToken cancellationToken = default) =>
+    public Task<PomodoroSession?> GetLatestCompletedTodayAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default) =>
         Task.FromResult(Sessions
-            .Where(s => s.OwnerId == userId && s.Status == PomodoroSessionStatus.Completed && s.EndedAt.HasValue && s.EndedAt.Value.Date == UtcToday)
+            .Where(s => s.OwnerId == userId
+                        && s.Status == PomodoroSessionStatus.Completed
+                        && s.EndedAt.HasValue
+                        && s.EndedAt.Value >= startUtc
+                        && s.EndedAt.Value < endUtc)
             .OrderByDescending(s => s.EndedAt)
             .FirstOrDefault());
 
-    public Task<IReadOnlyList<PomodoroSession>> GetTodaySprintSessionsAsync(UserId userId, CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyList<PomodoroSession>> GetTodaySprintSessionsAsync(UserId userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<PomodoroSession>>(Sessions
             .Where(s => s.OwnerId == userId
                         && s.SessionType == PomodoroSessionType.Sprint
                         && s.PlannedDurationMinutes == 0
                         && s.StartedAt.HasValue
-                        && s.StartedAt.Value.Date == UtcToday
+                        && s.StartedAt.Value >= startUtc
+                        && s.StartedAt.Value < endUtc
                         && (s.Status == PomodoroSessionStatus.Completed
                             || s.Status == PomodoroSessionStatus.Interrupted))
             .OrderBy(s => s.StartedAt)

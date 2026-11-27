@@ -170,7 +170,9 @@ public sealed class PomodoroApiClient
 
     public async Task<List<PomodoroSessionDto>> GetTodaySprintSessionsAsync()
     {
-        var response = await _http.GetAsync("api/pomodoro/sessions/today-sprints");
+        // local = UTC + offsetMinutes (cf. GetFocusSummaryAsync).
+        var offsetMinutes = (int)DateTimeOffset.Now.Offset.TotalMinutes;
+        var response = await _http.GetAsync($"api/pomodoro/sessions/today-sprints?offsetMinutes={offsetMinutes}");
         if (!response.IsSuccessStatusCode) return [];
         return await response.Content.ReadFromJsonAsync<List<PomodoroSessionDto>>() ?? [];
     }

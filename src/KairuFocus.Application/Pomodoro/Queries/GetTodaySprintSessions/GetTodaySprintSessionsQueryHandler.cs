@@ -12,15 +12,18 @@ public sealed class GetTodaySprintSessionsQueryHandler
     private readonly IPomodoroSessionRepository _sessionRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<GetTodaySprintSessionsQueryHandler> _logger;
+    private readonly TimeProvider _timeProvider;
 
     public GetTodaySprintSessionsQueryHandler(
         IPomodoroSessionRepository sessionRepository,
         ICurrentUserService currentUserService,
-        ILogger<GetTodaySprintSessionsQueryHandler> logger)
+        ILogger<GetTodaySprintSessionsQueryHandler> logger,
+        TimeProvider timeProvider)
     {
         _sessionRepository = sessionRepository;
         _currentUserService = currentUserService;
         _logger = logger;
+        _timeProvider = timeProvider;
     }
 
     public async Task<GetTodaySprintSessionsResult> Handle(
@@ -29,9 +32,13 @@ public sealed class GetTodaySprintSessionsQueryHandler
     {
         var userId = _currentUserService.CurrentUserId;
 
-        _logger.LogDebug("Fetching today sprint sessions for user {UserId}", userId);
+        _logger.LogDebug("Fetching today sprint sessions for user {UserId} (offsetMinutes={Offset})", userId, query.OffsetMinutes);
 
-        var sessions = await _sessionRepository.GetTodaySprintSessionsAsync(userId, cancellationToken);
+        // Local "today" window expressed as a UTC range (offset clamped inside LocalDayWindow.From).
+        var window = LocalDayWindow.From(_timeProvider.GetUtcNow().UtcDateTime, query.OffsetMinutes);
+
+        var sessions = await _sessionRepository.GetTodaySprintSessionsAsync(
+            userId, window.StartUtc, window.EndUtc, cancellationToken);
 
         var viewModels = sessions
             .OrderBy(s => s.StartedAt)

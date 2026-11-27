@@ -69,7 +69,9 @@ public sealed class PomodoroApiClient
 
     public async Task<List<PomodoroSessionDto>> GetTodaySprintSessionsAsync()
     {
-        var response = await _http.GetAsync("api/pomodoro/sessions/today-sprints");
+        // DateTimeOffset.Now.Offset reflects the device's local UTC offset on MAUI.
+        var offsetMinutes = (int)DateTimeOffset.Now.Offset.TotalMinutes;
+        var response = await _http.GetAsync($"api/pomodoro/sessions/today-sprints?offsetMinutes={offsetMinutes}");
         if (!response.IsSuccessStatusCode) return [];
         return await response.Content.ReadFromJsonAsync<List<PomodoroSessionDto>>() ?? [];
     }

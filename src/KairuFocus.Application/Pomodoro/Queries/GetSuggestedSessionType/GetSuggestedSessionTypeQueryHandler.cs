@@ -37,15 +37,18 @@ public sealed class GetSuggestedSessionTypeQueryHandler : IQueryHandler<GetSugge
         _logger.LogDebug("Computing suggested session type for user {UserId}", userId);
 
         var settings = await _settingsRepository.GetByUserIdAsync(userId, cancellationToken);
-        var latestSession = await _sessionRepository.GetLatestCompletedTodayAsync(userId, cancellationToken);
+
+        // The user's local-day window (aligned with GetFocusSummaryQueryHandler), computed once:
+        // the latest session and the "sprints today" count cover the same local day, near midnight too.
+        // Offset is clamped to a valid timezone range inside LocalDayWindow.From (correction E).
+        var window = LocalDayWindow.From(_timeProvider.GetUtcNow().UtcDateTime, query.OffsetMinutes);
+
+        var latestSession = await _sessionRepository.GetLatestCompletedTodayAsync(
+            userId, window.StartUtc, window.EndUtc, cancellationToken);
 
         PomodoroSessionType suggestedType;
         if (latestSession?.SessionType == PomodoroSessionType.Sprint)
         {
-            // Use the user's local-day window (aligned with GetFocusSummaryQueryHandler)
-            // so that both "sprints today" counts are consistent near midnight.
-            // Offset is clamped to a valid timezone range inside LocalDayWindow.From (correction E).
-            var window = LocalDayWindow.From(_timeProvider.GetUtcNow().UtcDateTime, query.OffsetMinutes);
             var sprintsToday = await _sessionRepository.GetCompletedSprintsTodayCountAsync(
                 userId, window.StartUtc, window.EndUtc, cancellationToken);
 

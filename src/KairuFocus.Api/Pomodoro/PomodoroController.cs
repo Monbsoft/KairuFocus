@@ -111,10 +111,10 @@ public sealed class PomodoroController : ControllerBase
     }
 
     [HttpGet("sessions/today-sprints")]
-    public async Task<IActionResult> GetTodaySprintSessions(CancellationToken ct)
+    public async Task<IActionResult> GetTodaySprintSessions([FromQuery] int offsetMinutes = 0, CancellationToken ct = default)
     {
         var result = await _mediator.SendAsync<GetTodaySprintSessionsQuery, GetTodaySprintSessionsResult>(
-            new GetTodaySprintSessionsQuery(), ct);
+            new GetTodaySprintSessionsQuery(offsetMinutes), ct);
         return Ok(result.Sessions);
     }
 
