@@ -116,16 +116,17 @@ public sealed class CompleteSessionCommandHandlerTests
     [Fact]
     public async Task Should_SetSequence2_When_SecondBreakOfTheDay()
     {
-        // première pause déjà enregistrée
+        // première pause déjà enregistrée, le même jour que la seconde : à date fixe, la seconde
+        // est retenue à sa fin prévue (PastStart + 25 min), sans dépendre de l'heure d'exécution
         _journalRepository.Entries.Add(
             JournalEntry.Create(
                 JournalEventType.BreakCompleted,
                 Guid.NewGuid(),
-                DateTime.UtcNow.AddHours(-1),
+                PastStart.AddHours(-1),
                 FakeCurrentUserService.TestUserId,
                 1));
 
-        AddActiveSession(PomodoroSessionType.ShortBreak);
+        AddActiveSession(PomodoroSessionType.ShortBreak, PastStart);
 
         await _sut.Handle(new CompleteSessionCommand());
 

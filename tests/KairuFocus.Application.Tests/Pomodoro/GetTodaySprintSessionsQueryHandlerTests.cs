@@ -18,6 +18,11 @@ public sealed class GetTodaySprintSessionsQueryHandlerTests
             NullLogger<GetTodaySprintSessionsQueryHandler>.Instance);
     }
 
+    // The fake repository, like the EF one, keeps sessions started on DateTime.UtcNow.Date.
+    // Timestamps are anchored at fixed hours of the current UTC day: offsets relative to now
+    // (now - 1h…) fall on the previous day when the tests run just after midnight UTC.
+    private static DateTime TodayUtcAt(int hour) => DateTime.UtcNow.Date.AddHours(hour);
+
     private PomodoroSession CreateFreeSprintCompleted(DateTime startedAt)
     {
         var session = PomodoroSession.Create(PomodoroSessionType.Sprint, 0, FakeCurrentUserService.TestUserId);
@@ -53,9 +58,8 @@ public sealed class GetTodaySprintSessionsQueryHandlerTests
     [Fact]
     public async Task Should_ReturnFreeSprintSessions_When_SessionsExist()
     {
-        var now = DateTime.UtcNow;
-        var completed = CreateFreeSprintCompleted(now.AddHours(-2));
-        var interrupted = CreateFreeSprintInterrupted(now.AddHours(-1));
+        var completed = CreateFreeSprintCompleted(TodayUtcAt(9));
+        var interrupted = CreateFreeSprintInterrupted(TodayUtcAt(10));
         _sessionRepository.Sessions.Add(completed);
         _sessionRepository.Sessions.Add(interrupted);
 
@@ -68,10 +72,9 @@ public sealed class GetTodaySprintSessionsQueryHandlerTests
     [Fact]
     public async Task Should_NotReturnRegularSprintSessions_When_MixedSessionsExist()
     {
-        var now = DateTime.UtcNow;
-        var freeSprint = CreateFreeSprintCompleted(now.AddHours(-3));
-        var regularSprint25 = CreateRegularSprintCompleted(25, now.AddHours(-2));
-        var regularSprint50 = CreateRegularSprintCompleted(50, now.AddHours(-1));
+        var freeSprint = CreateFreeSprintCompleted(TodayUtcAt(9));
+        var regularSprint25 = CreateRegularSprintCompleted(25, TodayUtcAt(10));
+        var regularSprint50 = CreateRegularSprintCompleted(50, TodayUtcAt(11));
         _sessionRepository.Sessions.Add(freeSprint);
         _sessionRepository.Sessions.Add(regularSprint25);
         _sessionRepository.Sessions.Add(regularSprint50);
@@ -85,10 +88,9 @@ public sealed class GetTodaySprintSessionsQueryHandlerTests
     [Fact]
     public async Task Should_OrderSessionsChronologically_When_MultipleSessionsExist()
     {
-        var now = DateTime.UtcNow;
-        var first = CreateFreeSprintCompleted(now.AddHours(-3));
-        var second = CreateFreeSprintInterrupted(now.AddHours(-2));
-        var third = CreateFreeSprintCompleted(now.AddHours(-1));
+        var first = CreateFreeSprintCompleted(TodayUtcAt(9));
+        var second = CreateFreeSprintInterrupted(TodayUtcAt(10));
+        var third = CreateFreeSprintCompleted(TodayUtcAt(11));
         // Ajout dans le désordre
         _sessionRepository.Sessions.Add(third);
         _sessionRepository.Sessions.Add(first);
